@@ -1,0 +1,10 @@
+{
+  "file": "torque/torque-parser.cc",
+  "mod": "torque_torque_parser",
+  "state": "error",
+  "src_mtime": 1789639145232.2725,
+  "bin_sha": "739ce796e37776f71c374d80c4f3ba14a578de6797cfb5db722d98f6cd7bbe7c",
+  "rules_fp": "a99fa10d4f64904f5fdadd184b8c07de1afb6f76bd91c8a0a5abc3740d5891d0",
+  "flags_fp": "ba631f821e072cfc116204e58f358cdc1768220babd9deb7a42d0cd40945114e",
+  "error": "/Users/z/git/v8/v8/third_party/abseil-cpp/absl/crc/crc32c.h:188:35: error: 'FormatSpecTemplate<void>' is unavailable: Format specified does not match the arguments passed."
+}

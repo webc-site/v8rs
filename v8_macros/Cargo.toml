@@ -1,0 +1,32 @@
+[package]
+name = "v8_macros"
+version = "0.1.0"
+edition = "2024"
+license = "MulanPSL-2.0"
+repository = "https://github.com/webc-site/v8rs.git"
+homepage = "https://github.com/webc-site/v8rs/tree/main/v8_macros"
+description = "v8_macros"
+keywords = []
+categories = []
+
+[lib]
+proc-macro = true
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+proc-macro2 = "1.0.107"
+quote = "1.0.47"
+syn = { version = "2", features = ["full", "visit-mut", "extra-traits"] }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"
+

@@ -1,0 +1,10 @@
+{
+  "file": "builtins/builtins-intl.cc",
+  "mod": "builtins_builtins_intl",
+  "state": "error",
+  "src_mtime": 1789639144922.5547,
+  "bin_sha": "739ce796e37776f71c374d80c4f3ba14a578de6797cfb5db722d98f6cd7bbe7c",
+  "rules_fp": "a99fa10d4f64904f5fdadd184b8c07de1afb6f76bd91c8a0a5abc3740d5891d0",
+  "flags_fp": "ba631f821e072cfc116204e58f358cdc1768220babd9deb7a42d0cd40945114e",
+  "error": "builtins-intl.cc:6:2: error: Internationalization is expected to be enabled."
+}

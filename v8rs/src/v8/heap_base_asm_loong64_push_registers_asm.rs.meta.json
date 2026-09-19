@@ -1,0 +1,10 @@
+{
+  "file": "heap/base/asm/loong64/push_registers_asm.cc",
+  "mod": "heap_base_asm_loong64_push_registers_asm",
+  "state": "error",
+  "src_mtime": 1789639145070.56,
+  "bin_sha": "739ce796e37776f71c374d80c4f3ba14a578de6797cfb5db722d98f6cd7bbe7c",
+  "rules_fp": "a99fa10d4f64904f5fdadd184b8c07de1afb6f76bd91c8a0a5abc3740d5891d0",
+  "flags_fp": "ba631f821e072cfc116204e58f358cdc1768220babd9deb7a42d0cd40945114e",
+  "error": "error: expected item, found `b\".text                                               \\n.global PushAllRegistersAndIterateStack             \\n.type PushAllRegistersAndIterateStack, %function    \\n.hidden PushAllRegistersAndIterateStack             \\nPushAllRegistersAndIterateStack:                    \\n  addi.d $sp, $sp, -96                              \\n  st.d $s8, $sp, 88                                 \\n  st.d $s7, $sp, 80                                 \\n  st.d $s6, $sp, 72                                 \\n  st.d $s5, $sp, 64                                 \\n  st.d $s4, $sp, 56                                 \\n  st.d $s3, $sp, 48                                 \\n  st.d $s2, $sp, 40                                 \\n  st.d $s1, $sp, 32                                 \\n  st.d $s0, $sp, 24                                 \\n  st.d $fp, $sp, 16                                 \\n  st.d $sp, $sp,  8                                 \\n  st.d $ra, $sp,  0                                 \\n  addi.d $fp, $sp, 0                                \\n  addi.d $t7, $a2, 0                                \\n  addi.d $a2, $sp, 0                                \\n  jirl $ra, $t7, 0                                  \\n  ld.d $ra, $sp, 0                                  \\n  ld.d $fp, $sp, 16                                 \\n  addi.d $sp, $sp, 96                               \\n  jirl $zero, $ra, 0                                \\n.Lfunc_end0:                                        \\n.size PushAllRegistersAndIterateStack, .Lfunc_end0-PushAllRegistersAndIterateStack         \\n\"`"
+}
