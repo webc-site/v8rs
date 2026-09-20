@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = ["example","v8_macros", "v8rs"]
+exclude = ["cpp2rust", "v8"]
+
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+overflow-checks = false
+
+[profile.bench]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

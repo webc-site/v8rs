@@ -1,0 +1,181 @@
+// Copyright (c) 2022-present INESC-ID.
+// Distributed under the MIT license that can be found in the LICENSE file.
+
+use std::{
+  any::{Any, TypeId},
+  marker::PhantomData,
+  ops::Deref,
+  rc::Rc,
+};
+
+use crate::rt::{
+  ByteRepr,
+  rc::Ptr,
+  void::{AnyPtr, ErasedPtr},
+};
+
+pub trait FnAddr {
+  fn fn_addr(&self) -> usize;
+}
+
+macro_rules! impl_fn_addr {
+    () => {
+        impl_fn_addr!(@gen A B C D E F G H I J K L M N O P);
+    };
+    (@gen $($a:ident)*) => {
+        impl<R $(, $a)*> FnAddr for fn($($a,)*) -> R {
+            #[inline]
+            fn fn_addr(&self) -> usize { *self as *const () as usize }
+        }
+        impl_fn_addr!(@peel $($a)*);
+    };
+    (@peel) => {};
+    (@peel $head:ident $($tail:ident)*) => {
+        impl_fn_addr!(@gen $($tail)*);
+    };
+}
+impl_fn_addr!();
+
+trait ErasedFn: Any {
+  fn addr(&self) -> usize;
+}
+
+impl<T: FnAddr + Any> ErasedFn for T {
+  fn addr(&self) -> usize {
+    self.fn_addr()
+  }
+}
+
+pub struct FnPtr<T> {
+  original: Option<Rc<dyn ErasedFn>>,
+  current_cast: Option<Rc<dyn ErasedFn>>,
+  // FnPtr does not use T, hence wrap in PhantomData
+  _marker: PhantomData<T>,
+}
+
+impl<T> FnPtr<T> {
+  #[inline]
+  pub fn null() -> Self {
+    FnPtr {
+      original: None,
+      current_cast: None,
+      _marker: PhantomData,
+    }
+  }
+
+  #[inline]
+  pub fn is_null(&self) -> bool {
+    self.original.is_none()
+  }
+}
+
+impl<T: FnAddr + 'static> FnPtr<T> {
+  pub fn new(f: T) -> Self {
+    let rc: Rc<dyn ErasedFn> = Rc::new(f);
+    FnPtr {
+      original: Some(rc.clone()),
+      current_cast: Some(rc),
+      _marker: PhantomData,
+    }
+  }
+}
+
+impl<T: 'static> FnPtr<T> {
+  pub fn cast<U: FnAddr + 'static>(&self, adapter: Option<U>) -> FnPtr<U> {
+    let original = self.original.as_ref().expect("ub: null fn pointer cast");
+
+    let current_cast = if self
+      .current_cast
+      .as_ref()
+      .is_some_and(|rc| Any::type_id(&**rc) == TypeId::of::<U>())
+    {
+      self.current_cast.clone()
+    } else if Any::type_id(&**original) == TypeId::of::<U>() {
+      Some(original.clone())
+    } else {
+      adapter.map(|a| Rc::new(a) as Rc<dyn ErasedFn>)
+    };
+
+    FnPtr {
+      original: Some(original.clone()),
+      current_cast,
+      _marker: PhantomData,
+    }
+  }
+}
+
+impl<T: 'static> Deref for FnPtr<T> {
+  type Target = T;
+  fn deref(&self) -> &T {
+    if self.original.is_none() {
+      panic!("ub: null fn pointer call");
+    }
+    let rc = self
+      .current_cast
+      .as_ref()
+      .expect("ub: calling through incompatible fn pointer type");
+    let any: &dyn Any = &**rc;
+    any
+      .downcast_ref::<T>()
+      .expect("ub: fn pointer type mismatch")
+  }
+}
+
+impl<T> Clone for FnPtr<T> {
+  fn clone(&self) -> Self {
+    FnPtr {
+      original: self.original.clone(),
+      current_cast: self.current_cast.clone(),
+      _marker: PhantomData,
+    }
+  }
+}
+
+impl<T> Default for FnPtr<T> {
+  fn default() -> Self {
+    Self::null()
+  }
+}
+
+impl<T> PartialEq for FnPtr<T> {
+  fn eq(&self, other: &Self) -> bool {
+    match (&self.original, &other.original) {
+      (None, None) => true,
+      (Some(a), Some(b)) => a.addr() == b.addr(),
+      _ => false,
+    }
+  }
+}
+
+impl<T> Eq for FnPtr<T> {}
+
+impl<T: 'static> ByteRepr for FnPtr<T> {}
+
+impl<T: 'static> ErasedPtr for FnPtr<T> {
+  fn as_bytes(&self) -> Ptr<u8> {
+    panic!("byte view not supported on fn pointer");
+  }
+  fn as_any(&self) -> &dyn Any {
+    self
+  }
+  fn equals(&self, other: &dyn ErasedPtr) -> bool {
+    other.as_any().downcast_ref::<FnPtr<T>>() == Some(self)
+  }
+  fn is_null(&self) -> bool {
+    FnPtr::is_null(self)
+  }
+}
+
+impl<T: 'static> FnPtr<T> {
+  pub fn to_any(&self) -> AnyPtr {
+    AnyPtr {
+      ptr: Rc::new(self.clone()),
+    }
+  }
+}
+
+impl AnyPtr {
+  pub fn cast_fn<T: 'static>(&self) -> Option<FnPtr<T>> {
+    self.ptr.as_any().downcast_ref::<FnPtr<T>>().cloned()
+  }
+}

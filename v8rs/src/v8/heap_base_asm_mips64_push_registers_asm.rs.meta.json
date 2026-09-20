@@ -1,0 +1,10 @@
+{
+  "file": "heap/base/asm/mips64/push_registers_asm.cc",
+  "mod": "heap_base_asm_mips64_push_registers_asm",
+  "state": "error",
+  "src_mtime": 1789639145070.6328,
+  "bin_sha": "88def1326cd1936c53c682b0cb244bdd90ac53940110931d1105e6a5ed8649bc",
+  "rules_fp": "488f7fb49b6add31653d41dda7365b2ed0884ab281ad29221d6b69071bd9edd6",
+  "flags_fp": "80658985500b38841072f7ac7ea000ca7c88dd2e261897f5508f0aad37dc2d50",
+  "error": "error: expected item, found `b\".text                                               \\n.set noreorder                                      \\n.global PushAllRegistersAndIterateStack             \\n.type PushAllRegistersAndIterateStack, %function    \\n.hidden PushAllRegistersAndIterateStack             \\nPushAllRegistersAndIterateStack:                    \\n  daddiu $sp, $sp, -96                              \\n  sd $ra, 88($sp)                                   \\n  sd $s8, 80($sp)                                   \\n  sd $sp, 72($sp)                                   \\n  sd $gp, 64($sp)                                   \\n  sd $s7, 56($sp)                                   \\n  sd $s6, 48($sp)                                   \\n  sd $s5, 40($sp)                                   \\n  sd $s4, 32($sp)                                   \\n  sd $s3, 24($sp)                                   \\n  sd $s2, 16($sp)                                   \\n  sd $s1,  8($sp)                                   \\n  sd $s0,  0($sp)                                   \\n  move $s8, $sp                                     \\n  move $t9, $a2                                     \\n  jalr $t9                                          \\n  move $a2, $sp                                     \\n  ld $ra, 88($sp)                                   \\n  ld $s8, 80($sp)                                   \\n  jr $ra                                            \\n  daddiu $sp, $sp, 96                               \\n\"`"
+}

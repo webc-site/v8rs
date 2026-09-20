@@ -1,0 +1,10 @@
+{
+  "file": "diagnostics/ppc/eh-frame-ppc.cc",
+  "mod": "diagnostics_ppc_eh_frame_ppc",
+  "state": "error",
+  "src_mtime": 1789639145048.8848,
+  "bin_sha": "88def1326cd1936c53c682b0cb244bdd90ac53940110931d1105e6a5ed8649bc",
+  "rules_fp": "488f7fb49b6add31653d41dda7365b2ed0884ab281ad29221d6b69071bd9edd6",
+  "flags_fp": "80658985500b38841072f7ac7ea000ca7c88dd2e261897f5508f0aad37dc2d50",
+  "error": "/Users/z/git/v8-gen/v8/src/codegen/arm64/constants-arm64.h:33:18: error: redefinition of 'kMaxPCRelativeCodeRangeInMB'"
+}

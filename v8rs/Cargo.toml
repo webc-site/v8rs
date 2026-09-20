@@ -1,0 +1,32 @@
+[package]
+name = "v8rs"
+version = "0.1.0"
+edition = "2024"
+license = "MulanPSL-2.0"
+repository = "https://github.com/webc-site/v8rs.git"
+homepage = "https://github.com/webc-site/v8rs/tree/main/v8rs"
+description = "v8rs"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+jiff = "0.2.37"
+libc = "0.2.189"
+nix = { version = "0.31.3", features = ["socket", "net", "fs", "poll", "time", "user", "dir", "term", "event", "hostname"] }
+sprintf = "0.4.3"
+thiserror = "2.0.20"
+v8_macros = { version = "0.1.0", path = "../v8_macros" }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"
+

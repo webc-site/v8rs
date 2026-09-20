@@ -1,0 +1,10 @@
+{
+  "file": "compiler/backend/mips64/code-generator-mips64.cc",
+  "mod": "compiler_backend_mips64_code_generator_mips64",
+  "state": "crash",
+  "src_mtime": 1789639144980.9023,
+  "bin_sha": "88def1326cd1936c53c682b0cb244bdd90ac53940110931d1105e6a5ed8649bc",
+  "rules_fp": "488f7fb49b6add31653d41dda7365b2ed0884ab281ad29221d6b69071bd9edd6",
+  "flags_fp": "80658985500b38841072f7ac7ea000ca7c88dd2e261897f5508f0aad37dc2d50",
+  "error": "cpp2rust 崩溃，信号: SIGABRT"
+}
