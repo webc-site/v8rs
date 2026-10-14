@@ -134,17 +134,17 @@ pub enum NativeFn {
   ArrayConcat(Arc<RwLock<Vec<Value>>>),
   /// 排序需要回调比较器, 只能在 `call_function` 里截获 (对标 FunctionCall/FunctionApply 标记)
   ArraySort(Arc<RwLock<Vec<Value>>>),
-  StringCharCodeAt(String),
-  StringCharAt(String),
-  StringIndexOf(String),
-  StringSubstring(String),
-  StringSplit(String),
-  StringReplace(String),
-  StringMatch(String),
-  StringToLowerCase(String),
-  StringToUpperCase(String),
+  StringCharCodeAt(Arc<str>),
+  StringCharAt(Arc<str>),
+  StringIndexOf(Arc<str>),
+  StringSubstring(Arc<str>),
+  StringSplit(Arc<str>),
+  StringReplace(Arc<str>),
+  StringMatch(Arc<str>),
+  StringToLowerCase(Arc<str>),
+  StringToUpperCase(Arc<str>),
   NumberToString(f64),
-  ConstString(String),
+  ConstString(Arc<str>),
   /// 装箱原始值 (new Boolean/new Number/new String) 的 valueOf: 原样回吐预置的原始值
   Const(Box<Value>),
   Context(Arc<NativeContext>),
@@ -217,7 +217,7 @@ impl NativeFn {
     match self {
       Self::Ptr(f) => f(receiver, args),
       Self::Noop | Self::FunctionCall | Self::FunctionApply => Ok(Value::Undefined),
-      Self::ConstString(s) => Ok(Value::String(s.clone())),
+      Self::ConstString(s) => Ok(Value::new_string(s.clone())),
       Self::Const(v) => Ok(v.as_ref().clone()),
       Self::NumberToString(n) => {
         if let Some(r_val) = args.first() {
@@ -245,7 +245,7 @@ impl NativeFn {
               }
               s = s.chars().rev().collect();
             }
-            return Ok(Value::String(s));
+            return Ok(Value::new_string(s));
           }
         }
         let s = if n.fract() == 0.0 && *n >= (i64::MIN as f64) && *n <= (i64::MAX as f64) {
@@ -254,7 +254,7 @@ impl NativeFn {
         } else {
           n.to_string()
         };
-        Ok(Value::String(s))
+        Ok(Value::new_string(s))
       }
       Self::ArrayPush(arr) => {
         let mut guard = arr.write();
@@ -318,7 +318,7 @@ impl NativeFn {
             res.push_str(&v.to_str_lossy());
           }
         }
-        Ok(Value::String(res))
+        Ok(Value::new_string(res))
       }
       Self::ArrayIndexOf(arr) => {
         let target = args.first().unwrap_or(&Value::Undefined);
@@ -415,12 +415,12 @@ impl NativeFn {
         let idx = args.first().map(|v| v.to_u32() as usize).unwrap_or(0);
         if string.is_ascii() {
           if let Some(&b) = string.as_bytes().get(idx) {
-            return Ok(Value::String((b as char).to_string()));
+            return Ok(Value::new_string((b as char).to_string()));
           }
         } else if let Some(ch) = string.chars().nth(idx) {
-          return Ok(Value::String(ch.to_string()));
+          return Ok(Value::new_string(ch.to_string()));
         }
-        Ok(Value::String(String::new()))
+        Ok(Value::new_string(String::new()))
       }
       Self::StringIndexOf(string) => {
         let search = args
@@ -483,13 +483,13 @@ impl NativeFn {
         } else {
           ""
         };
-        Ok(Value::String(sub.to_string()))
+        Ok(Value::new_string(sub.to_string()))
       }
       Self::StringSplit(string) => Value::string_split_inlined(string, args),
       Self::StringReplace(string) => Value::string_replace_inlined(string, args),
       Self::StringMatch(string) => Value::string_match_inlined(string, args),
-      Self::StringToLowerCase(string) => Ok(Value::String(string.to_lowercase())),
-      Self::StringToUpperCase(string) => Ok(Value::String(string.to_uppercase())),
+      Self::StringToLowerCase(string) => Ok(Value::new_string(string.to_lowercase())),
+      Self::StringToUpperCase(string) => Ok(Value::new_string(string.to_uppercase())),
       Self::Context(ctx) => (ctx.call_fn)(ctx.payload, receiver, args),
     }
   }
@@ -505,7 +505,12 @@ pub enum Value {
   Boolean(bool),
   Smi(i32),
   Number(f64),
-  String(String),
+  /// 字符串值
+  ///
+  /// 存 `Arc<str>` 而非 `String`: 寄存器与累加器之间的每次传递都是值克隆, 原版是堆指针拷贝,
+  /// 用 String 就等于每条 `LdaConstant`/`Star` 都 malloc + memcpy 一遍字面量 (profile 里
+  /// clone/drop 占掉解释循环的三成)。克隆退化为一次引用计数, 字面量也不再逐份复制。
+  String(Arc<str>),
   BigInt(String),
   Array(Arc<RwLock<Vec<Value>>>),
   Object(Arc<RwLock<HashMap<String, Value>>>),
@@ -581,6 +586,16 @@ impl Value {
     Self::Array(Arc::new(RwLock::new(elems)))
   }
 
+  /// 构造字符串值
+  ///
+  /// 变体存 `Arc<str>`, 但各处来源 (`String` / `&str` / `char`) 不一; 走构造器让它们统一
+  /// 收敛成一次 `Into<Arc<str>>`, 免得每个站点手写转换。
+  #[inline]
+  #[must_use]
+  pub fn new_string(s: impl Into<Arc<str>>) -> Self {
+    Self::String(s.into())
+  }
+
   /// 构造空对象
   #[inline]
   #[must_use]
@@ -609,7 +624,7 @@ impl Value {
       && let Self::Native(split_fn, _) = split_val
     {
       return split_fn.call(&Self::Undefined, &[
-        Self::String(string.to_string()),
+        Self::new_string(string.to_string()),
         args.get(1).cloned().unwrap_or(Self::Undefined),
       ]);
     }
@@ -620,7 +635,7 @@ impl Value {
       let mut parts = Vec::new();
       let mut last_end = 0;
       let mut cur_search_pos = 0;
-      let text_val = Self::String(string.to_string());
+      let text_val = Self::new_string(string.to_string());
 
       loop {
         if cur_search_pos > string.len() {
@@ -642,7 +657,7 @@ impl Value {
           } else {
             ""
           };
-          parts.push(Self::String(piece.to_string()));
+          parts.push(Self::new_string(piece.to_string()));
           last_end = end_idx;
 
           if match_str.is_empty() {
@@ -659,7 +674,7 @@ impl Value {
       } else {
         ""
       };
-      parts.push(Self::String(remainder.to_string()));
+      parts.push(Self::new_string(remainder.to_string()));
       let _ = sep.set_property(LAST_INDEX_KEY, Self::Smi(0));
       return Ok(Self::new_array_with_elements(parts));
     }
@@ -668,12 +683,12 @@ impl Value {
     let parts: Vec<Self> = if sep_str.is_empty() {
       string
         .chars()
-        .map(|c| Self::String(c.to_string()))
+        .map(|c| Self::new_string(c.to_string()))
         .collect()
     } else {
       string
         .split(&*sep_str)
-        .map(|s| Self::String(s.to_string()))
+        .map(|s| Self::new_string(s.to_string()))
         .collect()
     };
     Ok(Self::new_array_with_elements(parts))
@@ -687,7 +702,7 @@ impl Value {
       && let Ok(rep_val) = pattern.get_property(REPLACE_KEY)
       && let Self::Native(rep_fn, _) = rep_val
     {
-      return rep_fn.call(&Self::Undefined, &[Self::String(string.to_string()), Self::String(replacement)]);
+      return rep_fn.call(&Self::Undefined, &[Self::new_string(string.to_string()), Self::new_string(replacement)]);
     }
 
     if let Ok(exec_val) = pattern.get_property(EXEC_KEY)
@@ -703,7 +718,7 @@ impl Value {
         let mut out = String::new();
         let mut last_end = 0;
         let mut cur_search_pos = 0;
-        let text_val = Self::String(string.to_string());
+        let text_val = Self::new_string(string.to_string());
 
         loop {
           if cur_search_pos > string.len() {
@@ -739,9 +754,9 @@ impl Value {
           out.push_str(&string[last_end..]);
         }
         let _ = pattern.set_property(LAST_INDEX_KEY, Self::Smi(0));
-        Ok(Self::String(out))
+        Ok(Self::new_string(out))
       } else {
-        let match_res = exec_fn.call(&Self::Undefined, &[Self::String(string.to_string()), Self::Smi(0)])?;
+        let match_res = exec_fn.call(&Self::Undefined, &[Self::new_string(string.to_string()), Self::Smi(0)])?;
         if let Self::Array(arr) = &match_res {
           let guard = arr.read();
           let match_str = guard.first().map(Self::to_string_lossy).unwrap_or_default();
@@ -759,9 +774,9 @@ impl Value {
           if end_idx <= string.len() {
             out.push_str(&string[end_idx..]);
           }
-          Ok(Self::String(out))
+          Ok(Self::new_string(out))
         } else {
-          Ok(Self::String(string.to_string()))
+          Ok(Self::new_string(string.to_string()))
         }
       }
     } else {
@@ -771,9 +786,9 @@ impl Value {
         out.push_str(&string[..pos]);
         out.push_str(&replacement);
         out.push_str(&string[pos + pat_str.len()..]);
-        Ok(Self::String(out))
+        Ok(Self::new_string(out))
       } else {
-        Ok(Self::String(string.to_string()))
+        Ok(Self::new_string(string.to_string()))
       }
     }
   }
@@ -784,7 +799,7 @@ impl Value {
       && let Ok(m_val) = pat.get_property(MATCH_KEY)
       && let Self::Native(m_fn, _) = m_val
     {
-      return m_fn.call(&Self::Undefined, &[Self::String(string.to_string())]);
+      return m_fn.call(&Self::Undefined, &[Self::new_string(string.to_string())]);
     }
     if let Ok(exec_val) = pat.get_property(EXEC_KEY)
       && let Self::Native(exec_fn, _) = exec_val
@@ -793,7 +808,7 @@ impl Value {
         .get_property(GLOBAL_KEY)
         .map(|v| v.to_boolean())
         .unwrap_or(false);
-      let text_val = Self::String(string.to_string());
+      let text_val = Self::new_string(string.to_string());
       let _ = pat.set_property(LAST_INDEX_KEY, Self::Smi(0));
 
       if is_global {
@@ -814,7 +829,7 @@ impl Value {
             };
             let end_idx = start_idx + match_str.len();
 
-            results.push(Self::String(match_str.clone()));
+            results.push(Self::new_string(match_str.clone()));
 
             if match_str.is_empty() {
               cur_search_pos = start_idx + 1;
@@ -863,7 +878,7 @@ impl Value {
     );
     let _ = obj.set_property(
       TO_STRING_KEY,
-      Self::new_native_bare(NativeFn::ConstString(as_string)),
+      Self::new_native_bare(NativeFn::ConstString(as_string.into())),
     );
     obj
   }
@@ -987,10 +1002,10 @@ impl Value {
         {
           if s.is_ascii() {
             if let Some(&b) = s.as_bytes().get(idx) {
-              return Ok(Self::String((b as char).to_string()));
+              return Ok(Self::new_string((b as char).to_string()));
             }
           } else if let Some(ch) = s.chars().nth(idx) {
-            return Ok(Self::String(ch.to_string()));
+            return Ok(Self::new_string(ch.to_string()));
           }
         }
         match prop {
@@ -1016,7 +1031,7 @@ impl Value {
           return Ok(Self::Smi(func.params.len() as i32));
         }
         if prop == NAME_KEY {
-          return Ok(Self::String(func.name.clone().unwrap_or_default()));
+          return Ok(Self::new_string(func.name.clone().unwrap_or_default()));
         }
         if prop == CALL_KEY {
           return Ok(FUNCTION_CALL.clone());
@@ -1076,7 +1091,7 @@ impl Value {
           )))))
         } else if prop == TO_STRING_KEY {
           let s = if *b { "true" } else { "false" };
-          Ok(Self::new_native_bare(NativeFn::ConstString(s.to_string())))
+          Ok(Self::new_native_bare(NativeFn::ConstString(s.into())))
         } else {
           Ok(Self::Undefined)
         }
@@ -1154,12 +1169,12 @@ impl Value {
       Self::String(s) => {
         if s.is_ascii() {
           if let Some(&b) = s.as_bytes().get(index) {
-            Ok(Self::String((b as char).to_string()))
+            Ok(Self::new_string((b as char).to_string()))
           } else {
             Ok(Self::Undefined)
           }
         } else if let Some(ch) = s.chars().nth(index) {
-          Ok(Self::String(ch.to_string()))
+          Ok(Self::new_string(ch.to_string()))
         } else {
           Ok(Self::Undefined)
         }
@@ -1301,7 +1316,7 @@ impl Value {
           Cow::Owned(n.to_string())
         }
       }
-      Self::String(s) => Cow::Borrowed(s.as_str()),
+      Self::String(s) => Cow::Borrowed(s),
       Self::BigInt(s) => Cow::Borrowed(s.as_str()),
       Self::Array(arr) => {
         let guard = arr.read();
@@ -1338,14 +1353,14 @@ impl Value {
       let mut out = String::with_capacity(a.len() + other_str.len());
       out.push_str(a);
       out.push_str(&other_str);
-      return Self::String(out);
+      return Self::new_string(out);
     }
     if let (_, Self::String(b)) = (self, other) {
       let self_str = self.to_str_lossy();
       let mut out = String::with_capacity(self_str.len() + b.len());
       out.push_str(&self_str);
       out.push_str(b);
-      return Self::String(out);
+      return Self::new_string(out);
     }
     if let (Self::Smi(a), Self::Smi(b)) = (self, other)
       && let Some(sum) = a.checked_add(*b)
@@ -1809,8 +1824,8 @@ impl BytecodeDispatcher {
       _ => ("Error".to_string(), raw),
     };
     let obj = Value::new_object();
-    let _ = obj.set_property(NAME_KEY, Value::String(name.clone()));
-    let _ = obj.set_property("message", Value::String(message));
+    let _ = obj.set_property(NAME_KEY, Value::new_string(name.clone()));
+    let _ = obj.set_property("message", Value::new_string(message));
     if let Some(proto) = self.global_proto(&name) {
       let _ = obj.set_property(PROTO_KEY, proto);
     }
@@ -1943,7 +1958,7 @@ impl BytecodeDispatcher {
     }
     if prop == TO_STRING_KEY {
       return Ok(Value::new_native_bare(NativeFn::ConstString(
-        "[object Object]".to_string(),
+        "[object Object]".into(),
       )));
     }
     Ok(Value::Undefined)
@@ -2386,7 +2401,7 @@ impl BytecodeDispatcher {
           if let Some(entry) = bytecode_array.constants().get(idx) {
             self.accumulator = match entry {
               ConstantPoolEntry::Number(n) => Value::Number(*n),
-              ConstantPoolEntry::String(s) => Value::String(s.clone()),
+              ConstantPoolEntry::String(s) => Value::new_string(s.clone()),
               ConstantPoolEntry::BigInt(b) => Value::BigInt(b.clone()),
               ConstantPoolEntry::Function(f) => Value::new_function(Arc::clone(f)),
             };
@@ -2981,7 +2996,7 @@ impl BytecodeDispatcher {
         }
         Bytecode::TypeOf => {
           let _slot = it.get_unsigned_operand(0)?;
-          self.accumulator = Value::String(self.accumulator.type_of().to_string());
+          self.accumulator = Value::new_string(self.accumulator.type_of().to_string());
           it.advance();
         }
         Bytecode::Throw | Bytecode::ReThrow => {
@@ -3010,21 +3025,21 @@ impl BytecodeDispatcher {
                 .keys()
                 .filter(|k| !k.starts_with("__"))
                 .cloned()
-                .map(Value::String)
+                .map(Value::new_string)
                 .collect()
             }
             Value::Array(arr) => {
               let len = arr.read().len();
               let mut buf = ItoaBuffer::new();
               (0..len)
-                .map(|i| Value::String(buf.format(i).to_string()))
+                .map(|i| Value::new_string(buf.format(i).to_string()))
                 .collect()
             }
             Value::String(s) => {
               let len = s.chars().count();
               let mut buf = ItoaBuffer::new();
               (0..len)
-                .map(|i| Value::String(buf.format(i).to_string()))
+                .map(|i| Value::new_string(buf.format(i).to_string()))
                 .collect()
             }
             _ => Vec::new(),

@@ -876,7 +876,7 @@ fn interp_to_js_with_visited(
     InterpreterValue::Boolean(b) => JsValue::Boolean(*b),
     InterpreterValue::Smi(n) => JsValue::Number(*n as f64),
     InterpreterValue::Number(n) => JsValue::Number(*n),
-    InterpreterValue::String(s) => JsValue::String(s.clone()),
+    InterpreterValue::String(s) => JsValue::String(s.to_string()),
     InterpreterValue::BigInt(s) => JsValue::String(s.clone()),
     InterpreterValue::Array(arr) => {
       let ptr = Arc::as_ptr(arr) as usize;
@@ -1000,7 +1000,7 @@ pub fn js_value_to_interpreter_value(val: &JsValue) -> Option<InterpreterValue> 
       let mut buf = Buffer::new();
       Some(InterpreterValue::BigInt(buf.format(*n).to_string()))
     }
-    JsValue::String(s) => Some(InterpreterValue::String(s.clone())),
+    JsValue::String(s) => Some(InterpreterValue::new_string(s.clone())),
     JsValue::Symbol(_) => Some(InterpreterValue::Undefined),
     _ => {
       let mut visited = HashSet::default();
@@ -1034,7 +1034,7 @@ fn js_value_to_interp_with_visited(
       let mut buf = Buffer::new();
       Some(InterpreterValue::BigInt(buf.format(*n).to_string()))
     }
-    JsValue::String(s) => Some(InterpreterValue::String(s.clone())),
+    JsValue::String(s) => Some(InterpreterValue::new_string(s.clone())),
     JsValue::Symbol(_) => Some(InterpreterValue::Undefined),
     JsValue::Array(arr) => {
       let ptr = Arc::as_ptr(arr) as usize;
@@ -1152,14 +1152,14 @@ fn js_value_to_interp_with_visited(
     }
     JsValue::RegExp(re) => {
       let obj = InterpreterValue::new_object();
-      let _ = obj.set_property(SOURCE_KEY, InterpreterValue::String(re.pattern.clone()));
-      let _ = obj.set_property(FLAGS_KEY, InterpreterValue::String(re.flags.clone()));
+      let _ = obj.set_property(SOURCE_KEY, InterpreterValue::new_string(re.pattern.clone()));
+      let _ = obj.set_property(FLAGS_KEY, InterpreterValue::new_string(re.flags.clone()));
       let _ = obj.set_property(GLOBAL_KEY, InterpreterValue::Boolean(re.global));
       let _ = obj.set_property(LAST_INDEX_KEY, InterpreterValue::Smi(0));
       let re_clone = Arc::clone(re);
       let exec_fn = InterpNativeFn::from_context(re_clone, |re_clone, _receiver, args| {
         let text_cow = match args.first() {
-          Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
+          Some(InterpreterValue::String(s)) => Cow::Borrowed(&**s),
           Some(other) => Cow::Owned(other.to_string_lossy()),
           None => Cow::Borrowed(""),
         };
@@ -1185,7 +1185,7 @@ fn js_value_to_interp_with_visited(
             let mut list = Vec::with_capacity(caps.len());
             for m in caps.iter() {
               if let Some(mat) = m {
-                list.push(InterpreterValue::String(mat.as_str().to_string()));
+                list.push(InterpreterValue::new_string(mat.as_str().to_string()));
               } else {
                 list.push(InterpreterValue::Undefined);
               }
@@ -1210,13 +1210,13 @@ fn js_value_to_interp_with_visited(
       let re_rep = Arc::clone(re);
       let replace_fn = InterpNativeFn::from_context(re_rep, |re_rep, _receiver, args| {
         let text_cow = match args.first() {
-          Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
+          Some(InterpreterValue::String(s)) => Cow::Borrowed(&**s),
           Some(other) => Cow::Owned(other.to_string_lossy()),
           None => Cow::Borrowed(""),
         };
         let text = text_cow.as_ref();
         let repl_cow = match args.get(1) {
-          Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
+          Some(InterpreterValue::String(s)) => Cow::Borrowed(&**s),
           Some(other) => Cow::Owned(other.to_string_lossy()),
           None => Cow::Borrowed(""),
         };
@@ -1226,14 +1226,14 @@ fn js_value_to_interp_with_visited(
         } else {
           re_rep.compiled.replace(text, repl)
         };
-        Ok(InterpreterValue::String(res.into_owned()))
+        Ok(InterpreterValue::new_string(res.into_owned()))
       });
       let _ = obj.set_property(REPLACE_KEY, InterpreterValue::new_native(replace_fn));
 
       let re_split = Arc::clone(re);
       let split_fn = InterpNativeFn::from_context(re_split, |re_split, _receiver, args| {
         let text_cow = match args.first() {
-          Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
+          Some(InterpreterValue::String(s)) => Cow::Borrowed(&**s),
           Some(other) => Cow::Owned(other.to_string_lossy()),
           None => Cow::Borrowed(""),
         };
@@ -1253,12 +1253,12 @@ fn js_value_to_interp_with_visited(
         let parts: Vec<InterpreterValue> = if let Some(lim) = limit {
           let mut list = Vec::with_capacity(lim.min(text.len() + 1));
           for p in iter.take(lim) {
-            list.push(InterpreterValue::String(p.unwrap_or("").to_string()));
+            list.push(InterpreterValue::new_string(p.unwrap_or("").to_string()));
           }
           list
         } else {
           iter
-            .map(|p| InterpreterValue::String(p.unwrap_or("").to_string()))
+            .map(|p| InterpreterValue::new_string(p.unwrap_or("").to_string()))
             .collect()
         };
         Ok(InterpreterValue::new_array_with_elements(parts))
@@ -1268,7 +1268,7 @@ fn js_value_to_interp_with_visited(
       let re_match = Arc::clone(re);
       let match_fn = InterpNativeFn::from_context(re_match, |re_match, _receiver, args| {
         let text_cow = match args.first() {
-          Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
+          Some(InterpreterValue::String(s)) => Cow::Borrowed(&**s),
           Some(other) => Cow::Owned(other.to_string_lossy()),
           None => Cow::Borrowed(""),
         };
@@ -1278,7 +1278,7 @@ fn js_value_to_interp_with_visited(
           let mut cur_pos = 0;
           while cur_pos <= text.len() {
             if let Ok(Some(mat)) = re_match.compiled.find_from_pos(text, cur_pos) {
-              results.push(InterpreterValue::String(mat.as_str().to_string()));
+              results.push(InterpreterValue::new_string(mat.as_str().to_string()));
               if mat.end() == cur_pos {
                 cur_pos += 1;
               } else {
@@ -1299,7 +1299,7 @@ fn js_value_to_interp_with_visited(
               let mut list = Vec::with_capacity(caps.len());
               for m in caps.iter() {
                 if let Some(mat) = m {
-                  list.push(InterpreterValue::String(mat.as_str().to_string()));
+                  list.push(InterpreterValue::new_string(mat.as_str().to_string()));
                 } else {
                   list.push(InterpreterValue::Undefined);
                 }
@@ -1315,7 +1315,7 @@ fn js_value_to_interp_with_visited(
       let re_test = Arc::clone(re);
       let test_fn = InterpNativeFn::from_context(re_test, |re_test, _receiver, args| {
         let text_cow = match args.first() {
-          Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
+          Some(InterpreterValue::String(s)) => Cow::Borrowed(&**s),
           Some(other) => Cow::Owned(other.to_string_lossy()),
           None => Cow::Borrowed(""),
         };
