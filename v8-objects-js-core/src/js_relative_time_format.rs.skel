@@ -1,0 +1,25 @@
+// 由 tool/src/objects/js-relative-time-format.h.js 从 v8/src/objects/js-relative-time-format.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSRelativeTimeFormat 槽位/Numeric 位域差集骨架
+
+//! JSRelativeTimeFormat: Intl.RelativeTimeFormat; icu_formatter_ 为 Foreign 槽
+//! 承载 Managed<icu::RelativeDateTimeFormatter>。
+
+/// v8: src/objects/js-relative-time-format.h JSRelativeTimeFormat::locale_
+pub const K_LOCALE_OFFSET: usize = 24;
+/// v8: src/objects/js-relative-time-format.h JSRelativeTimeFormat::numberingSystem_
+pub const K_NUMBERING_SYSTEM_OFFSET: usize = 32;
+/// v8: src/objects/js-relative-time-format.h JSRelativeTimeFormat::icu_formatter_
+pub const K_ICU_FORMATTER_OFFSET: usize = 40;
+/// v8: src/objects/js-relative-time-format.h JSRelativeTimeFormat::flags_
+pub const K_FLAGS_OFFSET: usize = 48;
+/// v8: src/objects/js-relative-time-format.h JSRelativeTimeFormat::kHeaderSize
+pub const K_HEADER_SIZE: usize = 56;
+
+/// v8: src/objects/js-relative-time-format.h JSRelativeTimeFormat::Numeric
+#[derive(Clone, Copy, PartialEq)]
+pub enum Numeric { Always = 0, Auto = 1 } // NumericBit: bit 0, 宽 1
+pub const K_NUMERIC_SHIFT: u32 = 0;
+pub const K_NUMERIC_BITS: u32 = 1;
+
+// 方法映射 (语义推迟, 依赖 ICU/Isolate): New / ResolvedOptions / Format / FormatToParts /
+//   GetAvailableLocales / NumericAsString ("always"|"auto")

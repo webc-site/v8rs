@@ -1,0 +1,144 @@
+// 由 tool/src/compiler/redundancy-elimination.js 从 v8/src/compiler/redundancy-elimination.h + redundancy-elimination.cc 生成; 修订就地改, 复跑覆盖
+// 效应路径上的冗余检查消除
+
+//! redundancy-elimination — 同效应路径等价检查复用
+//!
+//! EffectPathChecks: 检查节点单向链 (copy-on-write, Merge 取最长公共尾);
+//! PathChecksForEffectNodes: NodeId → 当前路径检查集。
+
+/// 原版 RedundancyElimination::Check — 链表节点
+pub struct Check<'n> {
+  /// node
+  pub node: &'n Node,
+  /// next
+  pub next: Option<&'n Check<'n>>,
+}
+
+/// 原版 EffectPathChecks — 效应路径检查集 (不可变链 + 长度)
+pub struct EffectPathChecks<'n> {
+  /// head_
+  pub head: Option<&'n Check<'n>>,
+  /// size_
+  pub size: usize,
+}
+
+impl EffectPathChecks<'_> {
+  /// 原版 Copy — 拷贝 (链共享, O(1) 语义)
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Copy
+  pub fn copy(zone: &Zone<'_>, checks: &Self) -> &Self {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Copy")
+  }
+
+  /// 原版 Empty — 空集
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Empty
+  pub fn empty(zone: &Zone<'_>) -> &Self {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Empty")
+  }
+
+  /// 原版 Equals — 链逐节点等价
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Equals
+  pub fn equals(&self, that: &Self) -> bool {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Equals")
+  }
+
+  /// 原版 Merge — 最长公共尾合并
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Merge
+  pub fn merge(&self, that: &Self) {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::Merge")
+  }
+
+  /// 原版 AddCheck — 头插返回新集
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::AddCheck
+  pub fn add_check<'z>(&self, zone: &'z Zone<'z>, node: &Node) -> &EffectPathChecks<'z> {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::AddCheck")
+  }
+
+  /// 原版 LookupCheck — 等价检查节点查询
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::LookupCheck
+  pub fn lookup_check(&self, node: &Node, jsgraph: &JSGraph<'_>) -> Option<&Node> {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::LookupCheck")
+  }
+
+  /// 原版 LookupBoundsCheckFor — BoundsCheck 专用查询
+  /// v8: src/compiler/redundancy-elimination.cc EffectPathChecks::LookupBoundsCheckFor
+  pub fn lookup_bounds_check_for(&self, node: &Node) -> Option<&Node> {
+    todo!("v8: src/compiler/redundancy-elimination.cc EffectPathChecks::LookupBoundsCheckFor")
+  }
+}
+
+/// 原版 RedundancyElimination — AdvancedReducer
+pub struct RedundancyElimination<'z, 'g> {
+  /// node_checks_ — PathChecksForEffectNodes
+  pub node_checks: PathChecksForEffectNodes<'z>,
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+}
+
+impl RedundancyElimination<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "RedundancyElimination";
+
+  /// 原版 ReduceCheckNode
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceCheckNode
+  fn reducechecknode(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceCheckNode")
+  }
+
+  /// 原版 ReduceEffectPhi
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceEffectPhi
+  fn reduceeffectphi(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceEffectPhi")
+  }
+
+  /// 原版 ReduceSpeculativeNumberComparison
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceSpeculativeNumberComparison
+  fn reducespeculativenumbercomparison(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceSpeculativeNumberComparison")
+  }
+
+  /// 原版 ReduceSpeculativeNumberOperation
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceSpeculativeNumberOperation
+  fn reducespeculativenumberoperation(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceSpeculativeNumberOperation")
+  }
+
+  /// 原版 ReduceStart
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceStart
+  fn reducestart(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceStart")
+  }
+
+  /// 原版 ReduceOtherNode
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceOtherNode
+  fn reduceothernode(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::ReduceOtherNode")
+  }
+
+  /// 原版 TakeChecksFromFirstEffect
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::TakeChecksFromFirstEffect
+  fn takechecksfromfirsteffect(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::TakeChecksFromFirstEffect")
+  }
+
+  /// 原版 UpdateChecks
+  /// v8: src/compiler/redundancy-elimination.cc RedundancyElimination::UpdateChecks
+  fn updatechecks(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/redundancy-elimination.cc RedundancyElimination::UpdateChecks")
+  }
+}
+
+/// 原版 PathChecksForEffectNodes — NodeId 索引的逐节点检查集
+pub struct PathChecksForEffectNodes<'z> {
+  /// info_for_node_
+  pub info_for_node: ZoneVector<Option<&'z EffectPathChecks<'z>>>,
+}
+
+impl PathChecksForEffectNodes<'_> {
+  /// 原版 Get / Set
+  /// v8: src/compiler/redundancy-elimination.h PathChecksForEffectNodes::Get
+  pub fn get(&self, node: &Node) -> Option<&EffectPathChecks<'_>> {
+    todo!("v8: src/compiler/redundancy-elimination.cc PathChecksForEffectNodes::Get")
+  }
+}

@@ -1,0 +1,19 @@
+// 由 tool/src/heap/read-only-spaces.js 从 v8/src/heap/read-only-spaces.cc (族 .h: src/heap/read-only-spaces.h) 生成; 修订就地改, 复跑覆盖
+// 只读页/空间与跨 isolate artifacts
+/// v8: src/heap/read-only-spaces.h ReadOnlyPage (BasePage 派生)
+/// 构造: (heap, space, chunk_size, area_start, area_end, virtual_memory, executable)
+/// v8: ReadOnlyPage::ReadOnlyPage (cc) 及页释放路径
+
+/// v8: src/heap/read-only-spaces.h ReadOnlyArtifacts
+/// 持有脱离的只读页集合, 供后续 isolate 重新挂载;
+/// 含 checksum 校验 (InitializeChecksum / VerifyChecksum) 与
+/// shared 状态 (ReinstallReadOnlySpace / VerifyHeapAndSpaceRelationships)。
+/// cc 方法 6 个。
+
+/// v8: src/heap/read-only-spaces.h ReadOnlySpace (BaseSpace(RO_SPACE))
+/// cc 方法 25 个 (构造 BaseSpace(heap, RO_SPACE) / TearDown /
+/// DetachPagesAndAddToArtifacts / AttachPageToSpace / RemovePage /
+/// ShrinkPages / ReleaseFreeMemory / SetPermissionsForPages 等)
+/// v8: SharedReadOnlySpace::TearDown (cc, 2 个)
+
+/// v8: src/heap/read-only-spaces.h kReadOnlySpaceArtifacts 共享面

@@ -1,0 +1,456 @@
+// 由 tool/src/heap/sweeper.cc.js 从 v8/src/heap/sweeper.{h,cc} + src/common/globals.h (空间计数) 生成; 修订就地改, 复跑覆盖
+// 清扫并发常量/ZappingMode 规则; 枚举面在 sweeper_enums.rs
+
+//! Sweeper 的机械规则面。
+//!
+//! - ZappingMode: 死对象处置三态 (filler / filler+zap), 由构建与 flag 决定
+//! - kZapTagged: kZapValue 截断到 Tagged_t (指针压缩 → u32) = 0xbeadbeef
+//! - 并发任务: 主清扫空间数 = 可清扫空间数 - 1 (剥 NEW_SPACE); 每 2 页 1 任务
+//! - kNewSpace (MinorSweeperJob 的清扫空间): sticky_mark_bits 时走 OLD_SPACE
+
+/// 死对象处置模式 (enum class ZappingMode, cc:630)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ZappingMode {
+  /// kNone — 不处置
+  None = 0,
+  /// kCreateFillers — 仅铺 filler (保守栈扫描需要)
+  CreateFillers = 1,
+  /// kCreateFillersAndZap — 铺 filler 并 zap (verify-heap / 对象统计需要)
+  CreateFillersAndZap = 2,
+}
+
+/// 死对象处置模式选择 — ShouldZapDeadObjectsOnPage 的 1:1 转写
+/// v8: src/heap/sweeper.cc:631
+#[must_use]
+pub const fn should_zap_dead_objects_on_page(
+  should_zap_garbage: bool,
+  track_gc_object_stats: bool,
+  conservative_stack_scanning: bool,
+) -> ZappingMode {
+  if should_zap_garbage || track_gc_object_stats {
+    // verify-heap / 对象统计要求死对象仍是合法对象
+    ZappingMode::CreateFillersAndZap
+  } else if conservative_stack_scanning {
+    // 保守栈扫描要求全死对象铺 filler, 防栈上假引用复活死对象
+    ZappingMode::CreateFillers
+  } else {
+    ZappingMode::None
+  }
+}
+
+/// 原子 zap 的填充字 (kZapTagged = kZapValue 截断到 Tagged_t; 指针压缩 → u32)
+/// v8: src/heap/sweeper.cc:54 AtomicZapBlock
+pub const K_ZAP_TAGGED: u32 = 0xbeadbeef;
+
+/// NEW_SPACE 判别值 (AllocationSpace, globals.h:1481)
+pub const K_NEW_SPACE: u8 = 1;
+/// OLD_SPACE 判别值
+pub const K_OLD_SPACE: u8 = 2;
+/// FIRST_SWEEPABLE_SPACE = NEW_SPACE (globals.h:1512)
+pub const K_FIRST_SWEEPABLE_SPACE: u8 = 1;
+/// LAST_SWEEPABLE_SPACE = SHARED_TRUSTED_SPACE (globals.h:1513)
+pub const K_LAST_SWEEPABLE_SPACE: u8 = 6;
+/// 可清扫空间数 (kNumberOfSweepingSpaces = LAST - FIRST + 1, sweeper.h:207)
+pub const K_NUMBER_OF_SWEEPING_SPACES: u8 = 6;
+/// 主清扫空间数 (kNumberOfMajorSweepingSpaces = 上者 - 1, 剥 NEW_SPACE; cc:135)
+pub const K_NUMBER_OF_MAJOR_SWEEPING_SPACES: u8 = 5;
+/// 主清扫任务上限 (MajorSweeperJob::kMaxTasks; cc:139)
+pub const K_MAX_TASKS_MAJOR: u8 = 5;
+/// 次清扫任务上限 (MinorSweeperJob::kMaxTasks = 1; cc:215)
+pub const K_MAX_TASKS_MINOR: u8 = 1;
+/// 每任务页数 (两 Job 的 GetMaxConcurrency 内 kPagePerTask = 2; cc:169/245)
+pub const K_PAGE_PER_TASK: u8 = 2;
+
+/// MinorSweeperJob 的清扫空间 — kNewSpace = sticky_mark_bits ? OLD_SPACE : NEW_SPACE
+/// v8: src/heap/sweeper.cc:98
+#[must_use]
+pub const fn concurrent_minor_space(sticky_mark_bits: bool) -> u8 {
+  if sticky_mark_bits { K_OLD_SPACE } else { K_NEW_SPACE }
+}
+
+/// GetMaxConcurrency 并发度式 — min(并发清扫器数, worker + (页数 + 每任务页数 - 1) / 每任务页数)
+/// v8: src/heap/sweeper.cc:168 MajorSweeperJob::GetMaxConcurrency (Minor 同式)
+#[must_use]
+pub const fn get_max_concurrency(concurrent_sweepers: usize, worker_count: usize, sweeping_page_count: usize) -> usize {
+  let per_task = worker_count + (sweeping_page_count + K_PAGE_PER_TASK as usize - 1) / K_PAGE_PER_TASK as usize;
+  if concurrent_sweepers < per_task { concurrent_sweepers } else { per_task }
+}
+
+// —— 方法签名骨架 (语义实现由 Developer 就地修订) ——
+/// 原版签名: Sweeper::SweepingState<scope>::SweepingState(Sweeper* sweeper)
+/// v8: src/heap/sweeper.cc:282
+pub fn sweeping_state_sweeping_state() {
+  todo!("就地修订")
+}
+/// 原版签名: Sweeper::SweepingState<scope>::~SweepingState()
+/// v8: src/heap/sweeper.cc:286
+pub fn sweeping_state_sweeping_state_v2() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::SweepingState<scope>::HasValidJob() const
+/// v8: src/heap/sweeper.cc:293
+pub fn sweeping_state_has_valid_job() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::SweepingState<scope>::HasActiveJob() const
+/// v8: src/heap/sweeper.cc:298
+pub fn sweeping_state_has_active_job() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::StopConcurrentSweeping()
+/// v8: src/heap/sweeper.cc:303
+pub fn sweeping_state_stop_concurrent_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::InitializeSweeping()
+/// v8: src/heap/sweeper.cc:308
+pub fn sweeping_state_initialize_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::StartSweeping()
+/// v8: src/heap/sweeper.cc:324
+pub fn sweeping_state_start_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::StartConcurrentSweeping()
+/// v8: src/heap/sweeper.cc:334
+pub fn sweeping_state_start_concurrent_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::JoinSweeping()
+/// v8: src/heap/sweeper.cc:363
+pub fn sweeping_state_join_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::FinishSweeping()
+/// v8: src/heap/sweeper.cc:369
+pub fn sweeping_state_finish_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::Pause()
+/// v8: src/heap/sweeper.cc:379
+pub fn sweeping_state_pause() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepingState<scope>::Resume()
+/// v8: src/heap/sweeper.cc:388
+pub fn sweeping_state_resume() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::LocalSweeper::ParallelSweepSpace(AllocationSpace identity, SweepingMode sweeping_mode, bool is_main_thread, uint32_t max_pages)
+/// v8: src/heap/sweeper.cc:395
+pub fn local_sweeper_parallel_sweep_space() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::LocalSweeper::ParallelSweepPage(NormalPage* page, AllocationSpace identity, SweepingMode sweeping_mode, bool is_main_thread)
+/// v8: src/heap/sweeper.cc:423
+pub fn local_sweeper_parallel_sweep_page() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::LocalSweeper::ContributeAndWaitForPromotedPagesIteration( JobDelegate* delegate)
+/// v8: src/heap/sweeper.cc:454
+pub fn local_sweeper_contribute_and_wait_for_promoted_pages_iteration() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::LocalSweeper::ContributeAndWaitForPromotedPagesIteration()
+/// v8: src/heap/sweeper.cc:460
+pub fn local_sweeper_contribute_and_wait_for_promoted_pages_iteration_v2() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::LocalSweeper::ParallelIteratePromotedPages( JobDelegate* delegate)
+/// v8: src/heap/sweeper.cc:464
+pub fn local_sweeper_parallel_iterate_promoted_pages() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::LocalSweeper::ParallelIteratePromotedPages()
+/// v8: src/heap/sweeper.cc:470
+pub fn local_sweeper_parallel_iterate_promoted_pages_v2() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::LocalSweeper::ParallelIteratePromotedPage(MutablePage* page)
+/// v8: src/heap/sweeper.cc:663
+pub fn local_sweeper_parallel_iterate_promoted_page() {
+  todo!("就地修订")
+}
+/// 原版签名: Sweeper::Sweeper(Heap* heap)
+/// v8: src/heap/sweeper.cc:706
+pub fn sweeper_sweeper() {
+  todo!("就地修订")
+}
+/// 原版签名: Sweeper::~Sweeper() = default; void Sweeper::TearDown()
+/// v8: src/heap/sweeper.cc:711
+pub fn sweeper_sweeper_v2() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::TearDown()
+/// v8: src/heap/sweeper.cc:713
+pub fn sweeper_tear_down() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::InitializeMajorSweeping()
+/// v8: src/heap/sweeper.cc:718
+pub fn sweeper_initialize_major_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::InitializeMinorSweeping()
+/// v8: src/heap/sweeper.cc:722
+pub fn sweeper_initialize_minor_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::StartMajorSweeping()
+/// v8: src/heap/sweeper.cc:741
+pub fn sweeper_start_major_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::StartMinorSweeping()
+/// v8: src/heap/sweeper.cc:759
+pub fn sweeper_start_minor_sweeping() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::StartMajorSweeperTasks()
+/// v8: src/heap/sweeper.cc:791
+pub fn sweeper_start_major_sweeper_tasks() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::StartMinorSweeperTasks()
+/// v8: src/heap/sweeper.cc:834
+pub fn sweeper_start_minor_sweeper_tasks() {
+  todo!("就地修订")
+}
+/// 原版签名: NormalPage* Sweeper::GetSweptPageSafe(PagedSpaceBase* space)
+/// v8: src/heap/sweeper.cc:855
+pub fn sweeper_get_swept_page_safe() {
+  todo!("就地修订")
+}
+/// 原版签名: Sweeper::SweptList Sweeper::GetAllSweptPagesSafe(PagedSpaceBase* space)
+/// v8: src/heap/sweeper.cc:870
+pub fn sweeper_get_all_swept_pages_safe() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::FinishMajorJobs()
+/// v8: src/heap/sweeper.cc:879
+pub fn sweeper_finish_major_jobs() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::EnsureMajorCompleted()
+/// v8: src/heap/sweeper.cc:912
+pub fn sweeper_ensure_major_completed() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::FinishMinorJobs()
+/// v8: src/heap/sweeper.cc:948
+pub fn sweeper_finish_minor_jobs() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::EnsureMinorCompleted()
+/// v8: src/heap/sweeper.cc:982
+pub fn sweeper_ensure_minor_completed() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::AreMinorSweeperTasksRunning() const
+/// v8: src/heap/sweeper.cc:993
+pub fn sweeper_are_minor_sweeper_tasks_running() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::AreMajorSweeperTasksRunning() const
+/// v8: src/heap/sweeper.cc:997
+pub fn sweeper_are_major_sweeper_tasks_running() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::UsingMajorSweeperTasks() const
+/// v8: src/heap/sweeper.cc:1001
+pub fn sweeper_using_major_sweeper_tasks() {
+  todo!("就地修订")
+}
+/// 原版签名: V8_INLINE size_t Sweeper::FreeAndProcessFreedMemory( Address free_start, Address free_end, NormalPage* page, Space* space, FreeSpaceTreatmentMode free_space_treatment_mode, bool should_reduce_memory)
+/// v8: src/heap/sweeper.cc:1005
+pub fn sweeper_free_and_process_freed_memory() {
+  todo!("就地修订")
+}
+/// 原版签名: std::optional<base::AddressRegion> Sweeper::ComputeDiscardMemoryArea( Address start, Address end)
+/// v8: src/heap/sweeper.cc:1034
+pub fn sweeper_compute_discard_memory_area() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::ZeroOrDiscardUnusedMemory(NormalPage* page, Address addr, size_t size)
+/// v8: src/heap/sweeper.cc:1047
+pub fn sweeper_zero_or_discard_unused_memory() {
+  todo!("就地修订")
+}
+/// 原版签名: V8_INLINE void Sweeper::CleanupRememberedSetEntriesForFreedMemory( Address free_start, Address free_end, NormalPage* page, bool record_free_ranges, TypedSlotSet::FreeRangesMap* free_ranges_map, SweepingMode sweeping_mode)
+/// v8: src/heap/sweeper.cc:1100
+pub fn sweeper_cleanup_remembered_set_entries_for_freed_memory() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::CleanupTypedSlotsInFreeMemory( NormalPage* page, const TypedSlotSet::FreeRangesMap& free_ranges_map, SweepingMode sweeping_mode)
+/// v8: src/heap/sweeper.cc:1142
+pub fn sweeper_cleanup_typed_slots_in_free_memory() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::ClearMarkBitsAndHandleLivenessStatistics(NormalPage* page, size_t live_bytes)
+/// v8: src/heap/sweeper.cc:1168
+pub fn sweeper_clear_mark_bits_and_handle_liveness_statistics() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::RawSweep(NormalPage* p, FreeSpaceTreatmentMode free_space_treatment_mode, SweepingMode sweeping_mode, bool should_reduce_memory, bool is_main_thread)
+/// v8: src/heap/sweeper.cc:1179
+pub fn sweeper_raw_sweep() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::IsIteratingPromotedPages() const
+/// v8: src/heap/sweeper.cc:1276
+pub fn sweeper_is_iterating_promoted_pages() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::ContributeAndWaitForPromotedPagesIteration()
+/// v8: src/heap/sweeper.cc:1280
+pub fn sweeper_contribute_and_wait_for_promoted_pages_iteration() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::NotifyPromotedPageIterationFinished(MutablePage* chunk)
+/// v8: src/heap/sweeper.cc:1284
+pub fn sweeper_notify_promoted_page_iteration_finished() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::NotifyPromotedPagesIterationFinished()
+/// v8: src/heap/sweeper.cc:1294
+pub fn sweeper_notify_promoted_pages_iteration_finished() {
+  todo!("就地修订")
+}
+/// 原版签名: size_t Sweeper::ConcurrentMinorSweepingPageCount()
+/// v8: src/heap/sweeper.cc:1302
+pub fn sweeper_concurrent_minor_sweeping_page_count() {
+  todo!("就地修订")
+}
+/// 原版签名: size_t Sweeper::ConcurrentMajorSweepingPageCount()
+/// v8: src/heap/sweeper.cc:1309
+pub fn sweeper_concurrent_major_sweeping_page_count() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::ParallelSweepSpace(AllocationSpace identity, SweepingMode sweeping_mode, bool is_main_thread, uint32_t max_pages)
+/// v8: src/heap/sweeper.cc:1320
+pub fn sweeper_parallel_sweep_space() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::EnsurePageIsSwept(NormalPage* page)
+/// v8: src/heap/sweeper.cc:1328
+pub fn sweeper_ensure_page_is_swept() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::WaitForPageToBeSwept(NormalPage* page)
+/// v8: src/heap/sweeper.cc:1368
+pub fn sweeper_wait_for_page_to_be_swept() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::TryRemoveSweepingPageSafe(AllocationSpace space, NormalPage* page)
+/// v8: src/heap/sweeper.cc:1378
+pub fn sweeper_try_remove_sweeping_page_safe() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::TryRemovePromotedPageSafe(MutablePage* chunk)
+/// v8: src/heap/sweeper.cc:1395
+pub fn sweeper_try_remove_promoted_page_safe() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::AddPage(AllocationSpace space, NormalPage* page)
+/// v8: src/heap/sweeper.cc:1407
+pub fn sweeper_add_page() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::AddNewSpacePage(NormalPage* page)
+/// v8: src/heap/sweeper.cc:1412
+pub fn sweeper_add_new_space_page() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::AddPageImpl(AllocationSpace space, NormalPage* page)
+/// v8: src/heap/sweeper.cc:1422
+pub fn sweeper_add_page_impl() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::AddPromotedPage(MutablePage* chunk)
+/// v8: src/heap/sweeper.cc:1439
+pub fn sweeper_add_promoted_page() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::PrepareToBeSweptPage(AllocationSpace space, NormalPage* page)
+/// v8: src/heap/sweeper.cc:1478
+pub fn sweeper_prepare_to_be_swept_page() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::PrepareToBeIteratedPromotedPage(NormalPage* page)
+/// v8: src/heap/sweeper.cc:1498
+pub fn sweeper_prepare_to_be_iterated_promoted_page() {
+  todo!("就地修订")
+}
+/// 原版签名: NormalPage* Sweeper::GetSweepingPageSafe(AllocationSpace space)
+/// v8: src/heap/sweeper.cc:1514
+pub fn sweeper_get_sweeping_page_safe() {
+  todo!("就地修订")
+}
+/// 原版签名: MutablePage* Sweeper::GetPromotedPageSafe()
+/// v8: src/heap/sweeper.cc:1531
+pub fn sweeper_get_promoted_page_safe() {
+  todo!("就地修订")
+}
+/// 原版签名: GCTracer::Scope::ScopeId Sweeper::GetTracingScope(AllocationSpace space, bool is_joining_thread)
+/// v8: src/heap/sweeper.cc:1541
+pub fn sweeper_get_tracing_scope() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::IsSweepingDoneForSpace(AllocationSpace space) const
+/// v8: src/heap/sweeper.cc:1551
+pub fn sweeper_is_sweeping_done_for_space() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::AddSweptPage(NormalPage* page, AllocationSpace identity)
+/// v8: src/heap/sweeper.cc:1556
+pub fn sweeper_add_swept_page() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::ShouldRefillFreelistForSpace(AllocationSpace space) const
+/// v8: src/heap/sweeper.cc:1566
+pub fn sweeper_should_refill_freelist_for_space() {
+  todo!("就地修订")
+}
+/// 原版签名: void Sweeper::SweepEmptyNewSpacePage(NormalPage* page)
+/// v8: src/heap/sweeper.cc:1572
+pub fn sweeper_sweep_empty_new_space_page() {
+  todo!("就地修订")
+}
+/// 原版签名: uint64_t Sweeper::GetTraceIdForFlowEvent( GCTracer::Scope::ScopeId scope_id) const
+/// v8: src/heap/sweeper.cc:1631
+pub fn sweeper_get_trace_id_for_flow_event() {
+  todo!("就地修订")
+}
+/// 原版签名: bool Sweeper::HasUnsweptPagesForMajorSweeping() const
+/// v8: src/heap/sweeper.cc:1639
+pub fn sweeper_has_unswept_pages_for_major_sweeping() {
+  todo!("就地修订")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(K_ZAP_TAGGED == 0xbead_beef);
+  assert!(K_NEW_SPACE == 1);
+  assert!(K_OLD_SPACE == 2);
+  assert!(K_FIRST_SWEEPABLE_SPACE == 1);
+  assert!(K_LAST_SWEEPABLE_SPACE == 6);
+  assert!(K_NUMBER_OF_SWEEPING_SPACES == 6);
+  assert!(K_NUMBER_OF_MAJOR_SWEEPING_SPACES == 5);
+  assert!(K_MAX_TASKS_MAJOR == 5);
+  assert!(K_MAX_TASKS_MINOR == 1);
+  assert!(K_PAGE_PER_TASK == 2);
+  assert!(concurrent_minor_space(false) == 1);
+  assert!(concurrent_minor_space(true) == 2);
+  assert!(matches!(should_zap_dead_objects_on_page(true, false, false), ZappingMode::CreateFillersAndZap));
+  assert!(matches!(should_zap_dead_objects_on_page(false, true, false), ZappingMode::CreateFillersAndZap));
+  assert!(matches!(should_zap_dead_objects_on_page(false, false, true), ZappingMode::CreateFillers));
+  assert!(matches!(should_zap_dead_objects_on_page(false, false, false), ZappingMode::None));
+  assert!(get_max_concurrency(5, 1, 0) == 1);
+  assert!(get_max_concurrency(5, 0, 3) == 2); // 3 页 / 每任务 2 页 → 2
+  assert!(get_max_concurrency(3, 8, 9) == 3);
+  assert!(ZappingMode::None as u8 == 0);
+  assert!(ZappingMode::CreateFillers as u8 == 1);
+  assert!(ZappingMode::CreateFillersAndZap as u8 == 2);
+};

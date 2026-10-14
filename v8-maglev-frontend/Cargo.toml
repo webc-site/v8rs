@@ -1,0 +1,30 @@
+[package]
+name = "v8-maglev-frontend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-maglev-frontend"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+gxhash = "3.5.0"
+thiserror = "2.0.20"
+v8-base = { version = "0.1.0", path = "../v8-base", default-features = false }
+v8-interpreter = { version = "0.1.0", path = "../v8-interpreter", default-features = false }
+v8-maglev-ir = { version = "0.1.0", path = "../v8-maglev-ir", default-features = false }
+v8-zone = { version = "0.1.0", path = "../v8-zone", default-features = false }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"

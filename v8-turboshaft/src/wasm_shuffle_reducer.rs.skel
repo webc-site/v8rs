@@ -1,0 +1,33 @@
+// 由 tool/src/compiler/turboshaft/wasm-shuffle-reducer.h.js 从 v8/src/compiler/turboshaft/wasm-shuffle-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm shuffle 优化: 按需求字节裁剪与模式识别
+
+/// 原版 ShuffleSide — 32 字节 shuffle 掩码的左右操作数侧
+/// v8: wasm-shuffle-reducer.h ShuffleSide
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ShuffleSide {
+  /// kLeft: 字节 0..=15
+  Left = 0,
+  /// kRight: 字节 16..=31
+  Right = 1,
+}
+
+/// 原版 DemandedByteAnalysis 常量:
+/// - kMaxNumOperations = 300 (分析规模上限, 超出放弃)
+/// - kMaxPassThruDepth = 8 (穿透深度上限)
+/// - 低半操作表: unary 10 个 / binary 6 个 Opcode
+/// v8: wasm-shuffle-reducer.h DemandedByteAnalysis
+pub const K_MAX_NUM_OPERATIONS: i32 = 300;
+pub const K_MAX_PASS_THRU_DEPTH: u8 = 8;
+
+/// 原版结构面:
+/// - DemandedBytes: 每输出字节的需求位集 (u32 掩码)
+/// - DemandState / MultiUserBits: 穿透分析状态与多用户位
+/// - WasmShuffleAnalyzer: 识别解交织载入 (DeinterleaveLoadCandidate +
+///   ShuffleWindow 滑窗) 与点积 (DotCandidate); SearchResult{kContinue,kAbort}
+/// - WasmShuffleReducer: 按 analyzer 结果重写 shuffle 链
+///   (DeinterleaveLoadShuffle/DeinterleaveLoad 结构)
+/// - cc analyzer 方法面 (14 个): Run, Process, ProcessUnary, ProcessBinary, ProcessReplaceLane, ProcessExtractLane, ProcessLaneMemory, ProcessReduce, ProcessShuffleOfShuffle, CouldLoadPair, AddLoadMultipleCandidate, ProcessShuffleOfLoads, TryReduceFromMSB, ProcessShuffle
+/// v8: src/compiler/turboshaft/wasm-shuffle-reducer.{h,cc}
+pub struct WasmShuffleAnalyzer;
+pub struct WasmShuffleReducer;

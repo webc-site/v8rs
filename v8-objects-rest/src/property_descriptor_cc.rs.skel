@@ -1,0 +1,52 @@
+// 由 tool/src/objects/property-descriptor.cc.js 从 v8/src/objects/property-descriptor.cc 生成; 修订就地改, 复跑覆盖
+// PropertyDescriptor 运行时: ES6 6.2.4.4-6.2.4.6 对象互转 + 九位标志编码
+//! PropertyDescriptor 运行时面: JS 对象 ↔ PropertyDescriptor 互转 (ES6 6.2.4.4-6)。
+
+// ── ToPropertyDescriptorObject 九位标志编码 (.cc 唯一公式) ──
+/// 位序: IsEnumerable | HasEnumerable | IsConfigurable | HasConfigurable
+///     | IsWritable | HasWritable | HasValue | HasGet | HasSet (低位起)。
+pub fn to_property_descriptor_object_flags(
+  enumerable: bool, has_enumerable: bool, configurable: bool, has_configurable: bool,
+  writable: bool, has_writable: bool, has_value: bool, has_get: bool, has_set: bool,
+) -> i32 {
+  (enumerable as i32)
+    | ((has_enumerable as i32) << 1)
+    | ((configurable as i32) << 2)
+    | ((has_configurable as i32) << 3)
+    | ((writable as i32) << 4)
+    | ((has_writable as i32) << 5)
+    | ((has_value as i32) << 6)
+    | ((has_get as i32) << 7)
+    | ((has_set as i32) << 8)
+}
+
+/// 原版 PropertyDescriptor::ToPropertyDescriptor (ES6 6.2.4.5, 步骤 1-23) —
+/// 快路径 (JS_OBJECT_TYPE + 纯 data 字段 + 无原形链干扰) 失败即整体重走慢路径;
+/// 六键读取序 enumerable→configurable→value→writable→get→set;
+/// get/set 须 IsCallable 或 undefined; get/set 与 value/writable 互斥抛 kValueAndAccessor。
+pub fn to_property_descriptor(isolate: &Isolate, obj: Handle<JSAny>, desc: &mut PropertyDescriptor) -> bool {
+  todo!("就地修订: property-descriptor.cc")
+}
+
+/// 原版 PropertyDescriptor::ToObject (ES6 6.2.4.4 FromPropertyDescriptor) —
+/// 正则 accessor 用 accessor_property_descriptor_map (kGet/kSet/kEnumerable/kConfigurable);
+/// 正则 data 用 data_property_descriptor_map (kValue/kWritable/kEnumerable/kConfigurable);
+/// 其余退普通 JSObject 逐键 CreateDataProperty。
+pub fn to_object(desc: &PropertyDescriptor, isolate: &Isolate) -> DirectHandle<JSObject> {
+  todo!("就地修订: property-descriptor.cc")
+}
+
+/// 原版 PropertyDescriptor::CompletePropertyDescriptor (ES6 6.2.4.6) —
+/// data 侧补 value=undefined/writable=false; accessor 侧补 get/set=undefined;
+/// enumerable/configurable 一律补 false。
+pub fn complete_property_descriptor(desc: &mut PropertyDescriptor, isolate: &Isolate) {
+  todo!("就地修订: property-descriptor.cc")
+}
+
+// ── 提取不变式断言 ──
+const _: () = {
+  assert!(FLAG_BITS == 9);
+  assert!(to_property_descriptor_object_flags(true, true, false, false, false, false, false, false, false) == 0b11);
+  assert!(to_property_descriptor_object_flags(false, false, false, false, false, false, false, false, true) == 1 << 8);
+};
+pub const FLAG_BITS: usize = 9;

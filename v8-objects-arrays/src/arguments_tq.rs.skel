@@ -1,0 +1,103 @@
+// 由 tool/src/objects/arguments.tq.js 从 v8/src/objects/arguments.{tq,-inl.h} 生成; 修订就地改, 复跑覆盖
+// arguments 差集 (h 归 arguments.h.js 席): tq 布局 + macro/builtin 清单 + -inl 方法
+
+//! 差集骨架: arguments 对象族 (JSArgumentsObject/JSSloppy/JSStrict shape、
+//! SloppyArgumentsElements、AliasedArgumentsEntry)。
+//! 配置: 64 位非压缩 (kTaggedSize=8, FixedArrayBase 头 = map(8)+length(4)+padding(4) = 16)。
+//! 语义面 (新建 arguments 对象的宏族 / 参数映射迭代器 / 快慢路径访问) 留 Developer 就地修订。
+
+// —— tq 布局 ——
+/// v8: src/objects/arguments.tq JSArgumentsObject extends JSObject (无自有字段)
+/// v8: src/objects/arguments.tq SloppyArgumentsElements extends FixedArrayBase:
+///   context offset=16 (Context), arguments offset=24 (FixedArray|NumberDictionary),
+///   mapped_entries offset=32.. (indexed[length], Smi|TheHole)
+pub const K_SLOPPY_ARGUMENTS_ELEMENTS_DATA_START: usize = 32;
+/// v8: src/objects/arguments.tq AliasedArgumentsEntry extends Struct:
+///   aliased_context_slot offset=8 (Smi; 尺寸 12, 对齐取整登记留 Developer)
+pub const K_ALIASED_ARGUMENTS_ENTRY_SIZE: usize = 12;
+
+/// tq 布局字段表 (1:1 顺序)。
+pub const SLOPPY_ARGUMENTS_ELEMENTS_FIELDS: [(&str, &str); 3] = [
+  ("context", "Context"),
+  ("arguments", "FixedArray|NumberDictionary"),
+  ("mapped_entries", "Smi|TheHole"),
+];
+
+/// v8: src/objects/arguments.tq shape JSSloppyArgumentsObject (length, callee)
+///   / JSStrictArgumentsObject (length) — 起始形态, 属性可后移
+pub const ARGUMENTS_SHAPES: &[(&str, &[&str])] = &[
+  ("JSSloppyArgumentsObject", &["length", "callee"]),
+  ("JSStrictArgumentsObject", &["length"]),
+];
+
+/// v8: src/objects/arguments.tq NewSloppyArgumentsElements<Iterator> —
+///   8 字节 tagged 配置多一个 optional_padding: 0 字段 (本配置登记即 TAGGED_SIZE_8_BYTES)
+
+// —— macro / builtin 清单 ——
+/// v8: src/objects/arguments.tq namespace arguments 内 + 顶层宏 (22 个)
+pub const ARGUMENTS_TQ_MACROS: &[&str] = &[
+  "IsJSArgumentsObjectWithLength",
+  "NewJSStrictArgumentsObject",
+  "NewJSSloppyArgumentsObject",
+  "NewJSFastAliasedArgumentsObject",
+  "NewParameterMapIterator",
+  "NewParameterValueIterator",
+  "NewAllArguments",
+  "NewRestArgumentsElements",
+  "NewRestArguments",
+  "NewStrictArgumentsElements",
+  "NewStrictArguments",
+  "NewSloppyArgumentsElements",
+  "NewSloppyArguments",
+  "EmitFastNewAllArguments",
+  "EmitFastNewRestArguments",
+  "EmitFastNewStrictArguments",
+  "EmitFastNewSloppyArguments",
+  "NewRestArgumentsFromArguments",
+  "AccessSloppyArgumentsCommon",
+  "SloppyArgumentsLoad",
+  "SloppyArgumentsHas",
+  "SloppyArgumentsStore",
+];
+
+/// v8: src/objects/arguments.tq builtin (6 个)
+pub const ARGUMENTS_TQ_BUILTINS: &[&str] = &[
+  "NewSloppyArgumentsElements",
+  "NewStrictArgumentsElements",
+  "NewRestArgumentsElements",
+  "FastNewSloppyArguments",
+  "FastNewStrictArguments",
+  "FastNewRestArguments",
+];
+
+/// v8: src/objects/arguments.tq @export 宏 (8 个)
+pub const ARGUMENTS_TQ_EXPORTS: &[&str] = &[
+  "IsJSArgumentsObjectWithLength",
+  "EmitFastNewAllArguments",
+  "EmitFastNewRestArguments",
+  "EmitFastNewStrictArguments",
+  "EmitFastNewSloppyArguments",
+  "SloppyArgumentsLoad",
+  "SloppyArgumentsHas",
+  "SloppyArgumentsStore",
+];
+
+// —— -inl 合并指引 (9 个定义; Rust 无 inl, 语义并入实现时就地修订) ——
+/// v8: src/objects/arguments-inl.h — 命名映射: tagged 访问转常规方法;
+///   mapped_entries(index, RelaxedLoadTag) → mapped_entries_relaxed(index);
+///   set_mapped_entries(index, value, RelaxedStoreTag) → set_mapped_entries_relaxed(index, value)。
+/// 语义要点:
+///   1. AliasedArgumentsEntry 构造: map 取 roots.aliased_arguments_entry_map, 槽位 Smi::FromInt
+///   2. aliased_context_slot(): Smi 解值
+///   3. mapped_entries: 越界 DCHECK 后 objects()[index] relaxed 读写 (Smi|Hole 双态)
+pub const ARGUMENTS_INL_METHODS: &[&str] = &[
+  "AliasedArgumentsEntry::AliasedArgumentsEntry",
+  "AliasedArgumentsEntry::aliased_context_slot",
+  "SloppyArgumentsElements::context",
+  "SloppyArgumentsElements::set_context",
+  "SloppyArgumentsElements::arguments",
+  "SloppyArgumentsElements::set_arguments",
+  "SloppyArgumentsElements::mapped_entries",
+  "SloppyArgumentsElements::set_mapped_entries",
+  "SloppyArgumentsElements::set_mapped_entries",
+];

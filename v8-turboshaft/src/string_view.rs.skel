@@ -1,0 +1,29 @@
+// 由 tool/src/compiler/turboshaft/string-view.h.js 从 v8/src/compiler/turboshaft/string-view.h 生成; 修订就地改, 复跑覆盖
+// 字符串视图: 逐字符迭代 (ForeachIterable)
+
+/// 原版 StringView — 实现 ForeachIterable 概念, 迭代字符串字符。
+/// 前提: SeqOneByteString 与 SeqTwoByteString 的数据起始偏移相等
+/// (static_assert), 步长 1/2 按编码; 无 GC 保证时原版 UNIMPLEMENTED
+/// (can_rely_on_no_gc_ == nullptr 分支)。
+/// v8: src/compiler/turboshaft/string-view.h StringView
+pub struct StringView {
+  pub string: V<String>,
+  pub encoding: StringEncoding,
+  pub start_index: ConstOrV<WordPtr>,
+  /// character_count 未给且非常量时原版 UNIMPLEMENTED (TODO 从 string 读)
+  pub character_count: ConstOrV<WordPtr>,
+  pub end_offset: V<WordPtr>,
+}
+
+impl StringView {
+  /// v8: Begin — begin = BitcastTaggedToWordPtr(string) +
+  ///   (data_offset - kHeapObjectTag) + start_index * stride
+  /// end_offset_ = begin + count * stride
+  pub fn begin<A: Assembler>(&mut self, asm: &mut A) -> V<WordPtr> { todo!() }
+  /// v8: IsEnd — UintPtrLessThanOrEqual(end_offset_, it)
+  pub fn is_end<A: Assembler>(&self, asm: &mut A, it: V<WordPtr>) -> OptionV<Word32> { todo!() }
+  /// v8: Advance — it + stride (one-byte=1 / two-byte=2)
+  pub fn advance<A: Assembler>(&self, asm: &mut A, it: V<WordPtr>) -> V<WordPtr> { todo!() }
+  /// v8: Dereference — Load RawAligned, Uint8/Uint16 (8/16 按编码)
+  pub fn dereference<A: Assembler>(&self, asm: &mut A, it: V<WordPtr>) -> V<Word32> { todo!() }
+}

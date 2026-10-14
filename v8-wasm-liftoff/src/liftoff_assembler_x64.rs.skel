@@ -1,0 +1,59 @@
+// 由 tool/src/wasm/baseline/x64/liftoff-assembler-x64-inl.h.js 从 v8/src/wasm/baseline/x64/liftoff-assembler-x64-inl.h 生成; 修订就地改, 复跑覆盖
+// x64 Liftoff 汇编层约定 (scratch/栈槽/内存操作数)
+
+//! x64 平台 Liftoff 桩: 寄存器与帧布局约定。
+/// v8: src/wasm/baseline/x64/liftoff-assembler-x64-inl.h namespace liftoff
+
+/// 第二 scratch 寄存器 (第一为 kScratchRegister, x64 上是 r10)
+/// v8: src/wasm/baseline/x64/liftoff-assembler-x64-inl.h kScratchRegister2
+pub const SCRATCH_REGISTER_2: &str = "r11";
+/// v8: kScratchDoubleReg2
+pub const SCRATCH_DOUBLE_REG_2: &str = "xmm14";
+
+/// scratch 寄存器绝不进 liftoff 缓存寄存器组 (GP/FP 各一条断言)
+/// v8: static_assert "scratch registers must not be used as cache registers"
+pub const SCRATCH_NEVER_CACHED: bool = true;
+
+/// 栈槽寻址: [rbp - offset]
+/// v8: src/wasm/baseline/x64/liftoff-assembler-x64-inl.h GetStackSlot
+pub const STACK_SLOT_BASE: &str = "rbp";
+pub fn stack_slot_operand(offset: i32) -> /* Operand */ i32 {
+    -offset
+}
+
+/// liftoff 帧槽偏移 (fp 之下, 按系统指针宽计)
+/// v8: src/execution/x64/frame-constants-x64.h WasmLiftoffFrameConstants
+pub const FEEDBACK_VECTOR_OFFSET: i32 = 24;
+pub const INSTANCE_DATA_OFFSET: i32 = 16;
+
+/// 实例数据槽操作数 (编译期常量)
+/// v8: kInstanceDataOperand
+pub const INSTANCE_DATA_OPERAND: &str = "[rbp - 16]";
+/// OSR 目标槽
+/// v8: kOSRTargetSlot
+pub const OSR_TARGET_SLOT_OPERAND: &str = "[rbp - kOSRTargetOffset]";
+
+/// 内存操作数: 偏移立即可用条件 is_uint31 (超出走 64 位加法序列)
+/// v8: GetMemOp is_uint31 分支
+pub const MEM_OFFSET_IMM_BITS: u32 = 31;
+/// 索引寄存器默认缩放 1
+/// v8: GetMemOp scale_factor = times_1
+pub const DEFAULT_SCALE_FACTOR: u32 = 1;
+
+/// 缺 CPU 特性时桩返回 false (调用方 bail out)
+/// v8: RETURN_FALSE_IF_MISSING_CPU_FEATURE
+pub const MISSING_CPU_FEATURE_BAILS_OUT: bool = true;
+
+/// LiftoffAssembler 方法实现数 (本架构)
+/// v8: LiftoffAssembler::* 全部特化
+pub const ASSEMBLER_METHODS_COUNT: usize = 446;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(SCRATCH_REGISTER_2, "r11");
+    assert_eq!(SCRATCH_DOUBLE_REG_2, "xmm14");
+    assert_eq!(INSTANCE_DATA_OFFSET, 16);
+    assert_eq!(FEEDBACK_VECTOR_OFFSET, 24);
+    assert_eq!(stack_slot_operand(16), -16);
+    assert!(ASSEMBLER_METHODS_COUNT >= 400);
+};

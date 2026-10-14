@@ -1,0 +1,121 @@
+// 由 tool/src/compiler/processed-feedback.h.js 从 v8/src/compiler/processed-feedback.h 生成; 修订就地改, 复跑覆盖
+// 反馈槽处理后的多态容器
+
+//! processed-feedback — ProcessedFeedback 族: 各反馈槽种类的处理结果
+//!
+//! Kind 判别 17 值; IsInsufficient 短路; As* 为静态下取
+//! (Rust 侧以 enum 重构, As* → 模式匹配)。
+
+/// 原版 ProcessedFeedback::Kind (顺序 = 判别值)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, strum::EnumCount, strum::EnumIter)]
+#[repr(u8)]
+pub enum ProcessedFeedbackKind {
+  /// kInsufficient
+  Insufficient,
+  /// kBinaryOperation
+  BinaryOperation,
+  /// kCall
+  Call,
+  /// kCompareOperation
+  CompareOperation,
+  /// kElementAccess
+  ElementAccess,
+  /// kForIn
+  ForIn,
+  /// kGlobalAccess
+  GlobalAccess,
+  /// kInstanceOf
+  InstanceOf,
+  /// kJumpLoop
+  JumpLoop,
+  /// kTypeOf
+  TypeOf,
+  /// kLiteral
+  Literal,
+  /// kHomomorphicPropertyAccess
+  HomomorphicPropertyAccess,
+  /// kMegaDOMPropertyAccess
+  MegaDOMPropertyAccess,
+  /// kNamedAccess
+  NamedAccess,
+  /// kProxy
+  Proxy,
+  /// kRegExpLiteral
+  RegExpLiteral,
+  /// kTemplateObject
+  TemplateObject,
+}
+
+/// 原版 ProcessedFeedback — 基类面 (kind + slot_kind)
+pub struct ProcessedFeedback {
+  /// kind_
+  pub kind: ProcessedFeedbackKind,
+  /// slot_kind_ — 原 FeedbackSlotKind
+  pub slot_kind: FeedbackSlotKind,
+}
+
+impl ProcessedFeedback {
+  /// 原版 IsInsufficient
+  /// v8: src/compiler/processed-feedback.h ProcessedFeedback::IsInsufficient
+  pub fn is_insufficient(&self) -> bool {
+    self.kind == ProcessedFeedbackKind::Insufficient
+  }
+}
+
+/// Rust 重构面 — 原 As* 静态下取 16 个, 对应模式匹配臂
+/// v8: src/compiler/processed-feedback.h ProcessedFeedback::As*
+///
+/// 本文件定义 (9): InsufficientFeedback, GlobalAccessFeedback, ElementAccessFeedback, NamedAccessFeedback, HomomorphicPropertyAccessFeedback, MegaDOMPropertyAccessFeedback, CallFeedback, ProxyFeedback, SingleValueFeedback
+/// 外部定义 (前向声明, 9): BinaryOperationFeedback, TypeOfOpFeedback, CompareOperationFeedback, ForInFeedback, InstanceOfFeedback, JumpLoopFeedback, LiteralFeedback, RegExpLiteralFeedback, TemplateObjectFeedback
+/// v8: src/compiler/processed-feedback.h class InsufficientFeedback
+pub struct InsufficientFeedback;
+
+/// v8: src/compiler/processed-feedback.h class GlobalAccessFeedback
+pub struct GlobalAccessFeedback;
+
+/// v8: src/compiler/processed-feedback.h class ElementAccessFeedback
+pub struct ElementAccessFeedback;
+
+/// v8: src/compiler/processed-feedback.h class NamedAccessFeedback
+pub struct NamedAccessFeedback;
+
+/// v8: src/compiler/processed-feedback.h class HomomorphicPropertyAccessFeedback
+pub struct HomomorphicPropertyAccessFeedback;
+
+/// v8: src/compiler/processed-feedback.h class MegaDOMPropertyAccessFeedback
+pub struct MegaDOMPropertyAccessFeedback;
+
+/// v8: src/compiler/processed-feedback.h class CallFeedback
+pub struct CallFeedback;
+
+/// v8: src/compiler/processed-feedback.h class ProxyFeedback
+pub struct ProxyFeedback;
+
+/// v8: src/compiler/processed-feedback.h class SingleValueFeedback
+pub struct SingleValueFeedback;
+
+/// 原版 InsufficientFeedback — 空反馈占位
+/// v8: src/compiler/processed-feedback.h InsufficientFeedback
+pub fn as_insufficient(fb: &ProcessedFeedback) -> &InsufficientFeedback {
+  todo!("v8: src/compiler/processed-feedback.h ProcessedFeedback::AsInsufficient")
+}
+
+/// 原版 GlobalAccessFeedback — 全局访问 (property cell / script context 槽)
+/// v8: src/compiler/processed-feedback.h GlobalAccessFeedback
+impl GlobalAccessFeedback {
+  pub fn is_megamorphic(&self) -> bool {
+    todo!("v8: src/compiler/processed-feedback.h GlobalAccessFeedback::IsMegamorphic")
+  }
+
+  pub fn is_property_cell(&self) -> bool {
+    todo!("v8: src/compiler/processed-feedback.h GlobalAccessFeedback::IsPropertyCell")
+  }
+
+  pub fn is_script_context_slot(&self) -> bool {
+    todo!("v8: src/compiler/processed-feedback.h GlobalAccessFeedback::IsScriptContextSlot")
+  }
+
+  pub fn get_constant_hint(&self, broker: &JSHeapBroker) -> OptionalObjectRef {
+    todo!("v8: src/compiler/processed-feedback.h GlobalAccessFeedback::GetConstantHint")
+  }
+}

@@ -1,0 +1,650 @@
+// v8-strings 核心评测操作定义 (genbench 第 2 步)。
+// 评测 id 基于 StringBench::NAME 生成: <op>/<NAME>/<sample>。
+// 对比库映射 (todo 10.2 v8-strings 行): memchr (单字节/子串搜索) / unicode-ident (字符谓词
+// 扫描) / unicode-normalization (规范化) / std (对照基线)。icu4x 不引入: 本体量 (properties +
+// normals 表) 对冒烟门禁过重, 且 crate 的 CaseMap/Normalization 语义层在 objects 侧承接
+// (见 crate readme), 登记此说明, 后续需要再开 bench-icu 特性。
+
+//! 评测核心操作: UTF-16/UTF-8 转码、CopyChars、字符谓词扫描、大小写映射、单字节/子串搜索、规范化。
+//! 样本为固定确定性语料 (ASCII / Latin / CJK / 代理对混合), LCG 生成, 无运行时随机漂移。
+
+use std::hint::black_box;
+
+use v8_strings::{
+  char_predicates,
+  string_case::{self, CaseMapping},
+  string_search,
+  unicode::{self, utf8::encode_string_two_byte},
+  unicode_decoder::Utf8Decoder,
+};
+
+/// 除 normalize 外的全部核心操作 (v8rs / std 的专属集: crate 与 std 均无规范化内核,
+/// 规范化对比仅由 unicode-normalization 承接, 直通计数不计测)。
+const OPS_WITHOUT_NORMALIZE: &[&str] = &[
+  "transcode_encode",
+  "transcode_decode",
+  "copy_chars",
+  "scan_identifier",
+  "case_lower",
+  "find_byte",
+  "find_substring",
+];
+
+/// 参与评测的全部核心操作 (评测 id 的 op 段)。
+pub const OPS: &[&str] = &[
+  "transcode_encode",
+  "transcode_decode",
+  "copy_chars",
+  "scan_identifier",
+  "case_lower",
+  "find_byte",
+  "find_substring",
+  "normalize",
+];
+
+/// 本 crate 核心评测操作 trait: 所有参与评测的实现 (v8rs / 对比库 / std 对照) 各自 impl。
+pub trait StringBench {
+  /// 实现名, 评测 id 基于它生成。
+  const NAME: &'static str;
+  /// 该实现专属评测的操作 (其余操作由 std 对照承接, 不重复计测)。
+  const OWNED_OPS: &'static [&'static str];
+
+  /// UTF-16 → UTF-8 转码 (含代理对合并), 返回写入字节数。
+  fn transcode_encode(&self, src: &[u16], dst: &mut [u8]) -> usize;
+  /// UTF-8 → UTF-16 转码 (有损), 返回写入码元数。
+  fn transcode_decode(&self, src: &[u8], dst: &mut [u16]) -> usize;
+  /// CopyChars 语义: 码元复制 + 孤立代理修复, 返回写入码元数。
+  fn copy_chars(&self, src: &[u16], dst: &mut [u16]) -> usize;
+  /// 标识符 start/continue 谓词扫描, 返回命中字符数。
+  fn scan_identifier(&self, chars: &[u32]) -> usize;
+  /// ASCII 小写映射, 返回写入字节数。
+  fn case_lower(&self, src: &[u8], dst: &mut [u8]) -> usize;
+  /// 单字节搜索, 返回首命中下标, 未命中 usize::MAX。
+  fn find_byte(&self, haystack: &[u8], needle: u8) -> usize;
+  /// 子串搜索, 返回首命中下标, 未命中 usize::MAX。
+  fn find_substring(&self, haystack: &[u8], needle: &[u8]) -> usize;
+  /// NFC 规范化, 返回规范化后 UTF-16 码元数。
+  fn normalize(&self, src: &[u16]) -> usize;
+}
+
+/// 确定性 LCG (xorshift64), 语料生成不用 fastrand, 保证跨机器可复现。
+struct Lcg {
+  state: u64,
+}
+
+impl Lcg {
+  const fn new(seed: u64) -> Self {
+    Self { state: seed }
+  }
+  fn next_u64(&mut self) -> u64 {
+    self.state ^= self.state << 13;
+    self.state ^= self.state >> 7;
+    self.state ^= self.state << 17;
+    self.state
+  }
+  fn pick(&mut self, lo: u32, hi: u32) -> u32 {
+    lo + (self.next_u64() % u64::from(hi - lo + 1)) as u32
+  }
+}
+
+/// 一组固定语料样本: 码点序列及其 UTF-16 / UTF-8 视图 + 确定性搜索 needle。
+pub struct Corpus {
+  pub name: &'static str,
+  pub chars: Vec<u32>,
+  pub utf16: Vec<u16>,
+  pub bytes: Vec<u8>,
+  pub needle_byte: u8,
+  pub needle_substr: Vec<u8>,
+}
+
+impl Corpus {
+  fn build(name: &'static str, len: usize, seed: u64, kind: u8) -> Self {
+    const SPACES: [u32; 1] = [0x20];
+    let mut lcg = Lcg::new(seed);
+    let mut chars: Vec<u32> = Vec::with_capacity(len);
+    for i in 0..len {
+      if i % 8 == 7 {
+        chars.extend_from_slice(&SPACES);
+        continue;
+      }
+      let c = match kind {
+        // ASCII 标识符风格: 字母数字 / '_' / '$' + 少量非标识符分隔字符
+        0 => {
+          let pool: [u32; 64] = [
+            u32::from(b'a'),
+            u32::from(b'b'),
+            u32::from(b'c'),
+            u32::from(b'd'),
+            u32::from(b'e'),
+            u32::from(b'f'),
+            u32::from(b'g'),
+            u32::from(b'h'),
+            u32::from(b'i'),
+            u32::from(b'j'),
+            u32::from(b'k'),
+            u32::from(b'l'),
+            u32::from(b'm'),
+            u32::from(b'n'),
+            u32::from(b'o'),
+            u32::from(b'p'),
+            u32::from(b'q'),
+            u32::from(b'r'),
+            u32::from(b's'),
+            u32::from(b't'),
+            u32::from(b'u'),
+            u32::from(b'v'),
+            u32::from(b'w'),
+            u32::from(b'x'),
+            u32::from(b'y'),
+            u32::from(b'z'),
+            u32::from(b'A'),
+            u32::from(b'B'),
+            u32::from(b'C'),
+            u32::from(b'D'),
+            u32::from(b'E'),
+            u32::from(b'F'),
+            u32::from(b'G'),
+            u32::from(b'H'),
+            u32::from(b'I'),
+            u32::from(b'J'),
+            u32::from(b'K'),
+            u32::from(b'L'),
+            u32::from(b'M'),
+            u32::from(b'N'),
+            u32::from(b'O'),
+            u32::from(b'P'),
+            u32::from(b'Q'),
+            u32::from(b'R'),
+            u32::from(b'S'),
+            u32::from(b'T'),
+            u32::from(b'U'),
+            u32::from(b'V'),
+            u32::from(b'W'),
+            u32::from(b'X'),
+            u32::from(b'Y'),
+            u32::from(b'Z'),
+            u32::from(b'0'),
+            u32::from(b'1'),
+            u32::from(b'2'),
+            u32::from(b'3'),
+            u32::from(b'4'),
+            u32::from(b'5'),
+            u32::from(b'_'),
+            u32::from(b'$'),
+            u32::from(b'!'),
+            u32::from(b'?'),
+            u32::from(b'+'),
+            u32::from(b'='),
+          ];
+          pool[(lcg.next_u64() % 64) as usize]
+        }
+        // Latin 补充区 (2 字节 UTF-8, XID 字母)
+        1 => lcg.pick(0xA0, 0x17F),
+        // CJK 基本区 (3 字节 UTF-8)
+        2 => lcg.pick(0x4E00, 0x9FA5),
+        // 混合: ASCII / Latin / CJK / 增补平面 emoji (UTF-16 代理对)
+        _ => match lcg.next_u64() % 4 {
+          0 => lcg.pick(0x61, 0x7A),
+          1 => lcg.pick(0xA0, 0x17F),
+          2 => lcg.pick(0x4E00, 0x9FA5),
+          _ => lcg.pick(0x1F300, 0x1F5FF),
+        },
+      };
+      chars.push(c);
+    }
+
+    let mut utf16: Vec<u16> = Vec::with_capacity(len * 2);
+    let mut bytes: Vec<u8> = Vec::with_capacity(len * 4);
+    for &c in &chars {
+      let Some(ch) = char::from_u32(c) else {
+        continue;
+      };
+      if c <= 0xFFFF {
+        utf16.push(c as u16);
+      } else {
+        // 增补平面: 手动展开代理对 (原版 Utf16::Encode 语义)
+        utf16.push(unicode::utf16::lead_surrogate(c));
+        utf16.push(unicode::utf16::trail_surrogate(c));
+      }
+      let mut buf = [0u8; 4];
+      bytes.extend_from_slice(ch.encode_utf8(&mut buf).as_bytes());
+    }
+    let mid = bytes.len() / 2;
+    let needle_byte = bytes.get(mid).copied().unwrap_or(b'a');
+    let needle_substr = bytes
+      .get(mid..mid + 8)
+      .map(<[u8]>::to_vec)
+      .unwrap_or_else(|| b"abcdefgh".to_vec());
+    Self {
+      name,
+      chars,
+      utf16,
+      bytes,
+      needle_byte,
+      needle_substr,
+    }
+  }
+}
+
+/// 全部固定语料样本 (ASCII / Latin / CJK / 代理对混合, 不同长度)。
+#[must_use]
+pub fn corpora() -> Vec<Corpus> {
+  vec![
+    Corpus::build("ascii_1k", 1024, 0x9E37_79B9_7F4A_7C15, 0),
+    Corpus::build("latin_1k", 1024, 0x85EB_50D0_486C_3F75, 1),
+    Corpus::build("cjk_1k", 1024, 0xC2B2_AE3D_271F_C6B5, 2),
+    Corpus::build("mixed_1k", 1024, 0x1656_67B1_9E37_79F9, 3),
+    Corpus::build("mixed_32", 32, 0x2717_0B12_E080_5A8C, 3),
+  ]
+}
+
+/// 谓词扫描公共骨架 (三个实现的 scan_identifier 共用, 保证计测口径一致)。
+fn scan_with(
+  chars: &[u32],
+  is_start: impl Fn(u32) -> bool,
+  is_part: impl Fn(u32) -> bool,
+) -> usize {
+  let mut hits = 0usize;
+  let mut at_start = true;
+  for &c in chars {
+    if at_start {
+      if is_start(c) {
+        hits += 1;
+        at_start = false;
+      }
+    } else if is_part(c) {
+      hits += 1;
+    } else {
+      at_start = true;
+    }
+  }
+  hits
+}
+
+// ---- std 对照实现 (基线, 亦作对比库不覆盖操作的兜底路径) ----
+
+const DOLLAR: u32 = b'$' as u32;
+const UNDERSCORE: u32 = b'_' as u32;
+
+fn std_transcode_encode(src: &[u16], dst: &mut [u8]) -> usize {
+  // std 路径: String::from_utf16_lossy 分配中转再拷出 (对照口径)
+  let s = String::from_utf16_lossy(src);
+  let n = s.len().min(dst.len());
+  dst[..n].copy_from_slice(&s.as_bytes()[..n]);
+  n
+}
+
+fn std_transcode_decode(src: &[u8], dst: &mut [u16]) -> usize {
+  let s = String::from_utf8_lossy(src);
+  let mut w = 0usize;
+  let mut tmp = [0u16; 2];
+  for ch in s.chars() {
+    for u in ch.encode_utf16(&mut tmp).iter().copied() {
+      if w < dst.len() {
+        dst[w] = u;
+        w += 1;
+      }
+    }
+  }
+  w
+}
+
+fn std_copy_chars(src: &[u16], dst: &mut [u16]) -> usize {
+  let n = src.len().min(dst.len());
+  dst[..n].copy_from_slice(&src[..n]);
+  n
+}
+
+/// std 近似谓词: is_alphabetic / is_alphanumeric (Rust Unicode 表, 非 ECMAScript 精确)。
+fn std_scan_identifier(chars: &[u32]) -> usize {
+  scan_with(
+    chars,
+    |c| char::from_u32(c).is_some_and(|ch| ch.is_alphabetic() || c == DOLLAR || c == UNDERSCORE),
+    |c| char::from_u32(c).is_some_and(char::is_alphanumeric) || c == DOLLAR || c == UNDERSCORE,
+  )
+}
+
+fn std_case_lower(src: &[u8], dst: &mut [u8]) -> usize {
+  let n = src.len().min(dst.len());
+  for i in 0..n {
+    dst[i] = src[i].to_ascii_lowercase();
+  }
+  n
+}
+
+fn std_find_byte(haystack: &[u8], needle: u8) -> usize {
+  haystack
+    .iter()
+    .position(|&b| b == needle)
+    .unwrap_or(usize::MAX)
+}
+
+fn std_find_substring(haystack: &[u8], needle: &[u8]) -> usize {
+  if needle.is_empty() || needle.len() > haystack.len() {
+    return usize::MAX;
+  }
+  haystack
+    .windows(needle.len())
+    .position(|w| w == needle)
+    .unwrap_or(usize::MAX)
+}
+
+/// std 无 NFC 内核: 直通计数 (仅登记, 不参与 normalize 计测)。
+fn std_normalize(src: &[u16]) -> usize {
+  src.len()
+}
+
+/// std 对照 (OWNED_OPS = 除 normalize 外全部)。
+#[derive(Default)]
+pub struct StdBench;
+
+impl StringBench for StdBench {
+  const NAME: &'static str = "std";
+  const OWNED_OPS: &'static [&'static str] = OPS_WITHOUT_NORMALIZE;
+
+  fn transcode_encode(&self, src: &[u16], dst: &mut [u8]) -> usize {
+    std_transcode_encode(src, dst)
+  }
+  fn transcode_decode(&self, src: &[u8], dst: &mut [u16]) -> usize {
+    std_transcode_decode(src, dst)
+  }
+  fn copy_chars(&self, src: &[u16], dst: &mut [u16]) -> usize {
+    std_copy_chars(src, dst)
+  }
+  fn scan_identifier(&self, chars: &[u32]) -> usize {
+    std_scan_identifier(chars)
+  }
+  fn case_lower(&self, src: &[u8], dst: &mut [u8]) -> usize {
+    std_case_lower(src, dst)
+  }
+  fn find_byte(&self, haystack: &[u8], needle: u8) -> usize {
+    std_find_byte(haystack, needle)
+  }
+  fn find_substring(&self, haystack: &[u8], needle: &[u8]) -> usize {
+    std_find_substring(haystack, needle)
+  }
+  fn normalize(&self, src: &[u16]) -> usize {
+    std_normalize(src)
+  }
+}
+
+// ---- v8rs 实现 ----
+
+/// v8-strings crate 本体实现。
+#[derive(Default)]
+pub struct V8rsBench;
+
+impl StringBench for V8rsBench {
+  const NAME: &'static str = "v8rs";
+  const OWNED_OPS: &'static [&'static str] = OPS_WITHOUT_NORMALIZE;
+
+  fn transcode_encode(&self, src: &[u16], dst: &mut [u8]) -> usize {
+    // 原版 Utf8::Encode 整串路径 (unicode-inl.h:209-281)
+    encode_string_two_byte(src, dst, false, true).bytes_written
+  }
+
+  fn transcode_decode(&self, src: &[u8], dst: &mut [u16]) -> usize {
+    // 原版 Utf8Decoder 两段式: 预扫描 + 一次性解码到双字节
+    let decoder = Utf8Decoder::new(src);
+    decoder.decode_to_two_byte(dst, src);
+    // 预扫描的 utf16_length 即写入码元数 (well-formed 样本下与 dst 容量无截断冲突)
+    decoder.utf16_length().max(0) as usize
+  }
+
+  fn copy_chars(&self, src: &[u16], dst: &mut [u16]) -> usize {
+    // CopyChars 语义承载: 码元复制 + 孤立代理 → U+FFFD (well-formed 输入下即纯复制)
+    unicode::utf16::replace_unpaired_surrogates(src, dst);
+    src.len().min(dst.len())
+  }
+
+  fn scan_identifier(&self, chars: &[u32]) -> usize {
+    scan_with(
+      chars,
+      char_predicates::is_identifier_start,
+      char_predicates::is_identifier_part,
+    )
+  }
+
+  fn case_lower(&self, src: &[u8], dst: &mut [u8]) -> usize {
+    string_case::fast_ascii_convert(CaseMapping::ToLower, dst, src)
+  }
+
+  fn find_byte(&self, haystack: &[u8], needle: u8) -> usize {
+    // 单字符策略 (SingleCharSearch, 底层 memchr)
+    string_search::search_string_u8(haystack, &[needle], 0).unwrap_or(usize::MAX)
+  }
+
+  fn find_substring(&self, haystack: &[u8], needle: &[u8]) -> usize {
+    string_search::search_string_u8(haystack, needle, 0).unwrap_or(usize::MAX)
+  }
+
+  fn normalize(&self, src: &[u16]) -> usize {
+    // crate 无规范化内核: CaseMap/Normalization 语义层由 objects 侧 icu 承接 (见 readme),
+    // OWNED_OPS 不含 normalize, 此路径不进计测。
+    src.len()
+  }
+}
+
+// ---- memchr 对比库 (feature bench-memchr) ----
+
+/// memchr 实现: 搜索类操作为专属评测, 其余走 std 兜底 (不计测)。
+#[cfg(feature = "bench-memchr")]
+#[derive(Default)]
+pub struct MemchrBench;
+
+#[cfg(feature = "bench-memchr")]
+impl StringBench for MemchrBench {
+  const NAME: &'static str = "memchr";
+  const OWNED_OPS: &'static [&'static str] = &["find_byte", "find_substring"];
+
+  fn transcode_encode(&self, src: &[u16], dst: &mut [u8]) -> usize {
+    std_transcode_encode(src, dst)
+  }
+  fn transcode_decode(&self, src: &[u8], dst: &mut [u16]) -> usize {
+    std_transcode_decode(src, dst)
+  }
+  fn copy_chars(&self, src: &[u16], dst: &mut [u16]) -> usize {
+    std_copy_chars(src, dst)
+  }
+  fn scan_identifier(&self, chars: &[u32]) -> usize {
+    std_scan_identifier(chars)
+  }
+  fn case_lower(&self, src: &[u8], dst: &mut [u8]) -> usize {
+    std_case_lower(src, dst)
+  }
+  fn find_byte(&self, haystack: &[u8], needle: u8) -> usize {
+    memchr::memchr(needle, haystack).unwrap_or(usize::MAX)
+  }
+  fn find_substring(&self, haystack: &[u8], needle: &[u8]) -> usize {
+    memchr::memmem::find(haystack, needle).unwrap_or(usize::MAX)
+  }
+  fn normalize(&self, src: &[u16]) -> usize {
+    std_normalize(src)
+  }
+}
+
+// ---- unicode-ident 对比库 (feature bench-unicode-ident) ----
+
+/// unicode-ident 实现: 标识符谓词扫描为专属评测, 其余走 std 兜底 (不计测)。
+#[cfg(feature = "bench-unicode-ident")]
+#[derive(Default)]
+pub struct UnicodeIdentBench;
+
+#[cfg(feature = "bench-unicode-ident")]
+impl StringBench for UnicodeIdentBench {
+  const NAME: &'static str = "unicode-ident";
+  const OWNED_OPS: &'static [&'static str] = &["scan_identifier"];
+
+  fn transcode_encode(&self, src: &[u16], dst: &mut [u8]) -> usize {
+    std_transcode_encode(src, dst)
+  }
+  fn transcode_decode(&self, src: &[u8], dst: &mut [u16]) -> usize {
+    std_transcode_decode(src, dst)
+  }
+  fn copy_chars(&self, src: &[u16], dst: &mut [u16]) -> usize {
+    std_copy_chars(src, dst)
+  }
+  fn scan_identifier(&self, chars: &[u32]) -> usize {
+    scan_with(
+      chars,
+      |c| char::from_u32(c).is_some_and(unicode_ident::is_xid_start),
+      |c| char::from_u32(c).is_some_and(unicode_ident::is_xid_continue),
+    )
+  }
+  fn case_lower(&self, src: &[u8], dst: &mut [u8]) -> usize {
+    std_case_lower(src, dst)
+  }
+  fn find_byte(&self, haystack: &[u8], needle: u8) -> usize {
+    std_find_byte(haystack, needle)
+  }
+  fn find_substring(&self, haystack: &[u8], needle: &[u8]) -> usize {
+    std_find_substring(haystack, needle)
+  }
+  fn normalize(&self, src: &[u16]) -> usize {
+    std_normalize(src)
+  }
+}
+
+// ---- unicode-normalization 对比库 (feature bench-unicode-normalization) ----
+
+/// unicode-normalization 实现: NFC 规范化为专属评测, 其余走 std 兜底 (不计测)。
+#[cfg(feature = "bench-unicode-normalization")]
+#[derive(Default)]
+pub struct UnicodeNormBench;
+
+#[cfg(feature = "bench-unicode-normalization")]
+impl StringBench for UnicodeNormBench {
+  const NAME: &'static str = "unicode-normalization";
+  const OWNED_OPS: &'static [&'static str] = &["normalize"];
+
+  fn transcode_encode(&self, src: &[u16], dst: &mut [u8]) -> usize {
+    std_transcode_encode(src, dst)
+  }
+  fn transcode_decode(&self, src: &[u8], dst: &mut [u16]) -> usize {
+    std_transcode_decode(src, dst)
+  }
+  fn copy_chars(&self, src: &[u16], dst: &mut [u16]) -> usize {
+    std_copy_chars(src, dst)
+  }
+  fn scan_identifier(&self, chars: &[u32]) -> usize {
+    std_scan_identifier(chars)
+  }
+  fn case_lower(&self, src: &[u8], dst: &mut [u8]) -> usize {
+    std_case_lower(src, dst)
+  }
+  fn find_byte(&self, haystack: &[u8], needle: u8) -> usize {
+    std_find_byte(haystack, needle)
+  }
+  fn find_substring(&self, haystack: &[u8], needle: &[u8]) -> usize {
+    std_find_substring(haystack, needle)
+  }
+  fn normalize(&self, src: &[u16]) -> usize {
+    use unicode_normalization::UnicodeNormalization;
+    let s = String::from_utf16_lossy(src);
+    s.chars().nfc().map(char::len_utf16).sum()
+  }
+}
+
+/// 单条已注册评测的元数据 (main.rs 写出 manifest 供 bench.js 关联样本规模)。
+pub struct BenchMeta {
+  pub op: &'static str,
+  pub imp: &'static str,
+  pub sample: &'static str,
+  pub elems: usize,
+}
+
+/// 评测注册表: 每个 OWNED_OPS 操作 × 语料样本注册一个 criterion benchmark,
+/// id = <op>/<NAME>/<sample>; 同时回填 manifest 元数据。
+pub fn register<I: StringBench + Default>(
+  c: &mut criterion::Criterion,
+  corpora: &[Corpus],
+  metas: &mut Vec<BenchMeta>,
+) {
+  let imp = I::default();
+  for co in corpora {
+    for &op in OPS {
+      if !I::OWNED_OPS.contains(&op) {
+        continue;
+      }
+      let id = format!("{op}/{}/{sample}", I::NAME, sample = co.name);
+      let elems;
+      match op {
+        "transcode_encode" => {
+          elems = co.utf16.len();
+          c.bench_function(&id, |b| {
+            let mut dst = vec![0u8; co.utf16.len() * 4 + 8];
+            b.iter(|| {
+              let r = imp.transcode_encode(black_box(&co.utf16), &mut dst);
+              black_box(r)
+            });
+          });
+        }
+        "transcode_decode" => {
+          elems = co.bytes.len();
+          c.bench_function(&id, |b| {
+            let mut dst = vec![0u16; co.bytes.len() + 8];
+            b.iter(|| {
+              let r = imp.transcode_decode(black_box(&co.bytes), &mut dst);
+              black_box(r)
+            });
+          });
+        }
+        "copy_chars" => {
+          elems = co.utf16.len();
+          c.bench_function(&id, |b| {
+            let mut dst = vec![0u16; co.utf16.len() + 8];
+            b.iter(|| {
+              let r = imp.copy_chars(black_box(&co.utf16), &mut dst);
+              black_box(r)
+            });
+          });
+        }
+        "scan_identifier" => {
+          elems = co.chars.len();
+          c.bench_function(&id, |b| {
+            b.iter(|| black_box(imp.scan_identifier(black_box(&co.chars))));
+          });
+        }
+        "case_lower" => {
+          elems = co.bytes.len();
+          c.bench_function(&id, |b| {
+            let mut dst = vec![0u8; co.bytes.len() + 8];
+            b.iter(|| {
+              let r = imp.case_lower(black_box(&co.bytes), &mut dst);
+              black_box(r)
+            });
+          });
+        }
+        "find_byte" => {
+          elems = co.bytes.len();
+          let needle = co.needle_byte;
+          c.bench_function(&id, |b| {
+            b.iter(|| black_box(imp.find_byte(black_box(&co.bytes), needle)));
+          });
+        }
+        "find_substring" => {
+          elems = co.bytes.len();
+          let needle = co.needle_substr.clone();
+          c.bench_function(&id, |b| {
+            b.iter(|| black_box(imp.find_substring(black_box(&co.bytes), &needle)));
+          });
+        }
+        "normalize" => {
+          elems = co.utf16.len();
+          c.bench_function(&id, |b| {
+            b.iter(|| black_box(imp.normalize(black_box(&co.utf16))));
+          });
+        }
+        _ => {
+          elems = 0;
+        }
+      }
+      metas.push(BenchMeta {
+        op,
+        imp: I::NAME,
+        sample: co.name,
+        elems,
+      });
+    }
+  }
+}

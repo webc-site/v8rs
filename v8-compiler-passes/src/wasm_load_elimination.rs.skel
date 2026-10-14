@@ -1,0 +1,148 @@
+// 由 tool/src/compiler/wasm-load-elimination.js 从 v8/src/compiler/wasm-load-elimination.h + wasm-load-elimination.cc 生成; 修订就地改, 复跑覆盖
+// wasm 结构字段/数组元素载入消除
+
+//! wasm-load-elimination — 效应路径上的字段值缓存
+//!
+//! 三层: FieldOrElementValue (值) → HalfState (Equals/IsEmpty/IntersectWith/KillField/AddField/LookupField/Print 不可变
+//! 半区, OuterMap 双层) → AbstractState (可变 mutable_state / 不可变 immutable_state);
+//! Reduce* 面 10 个。
+
+/// 原版 FieldOrElementValue — 单槽缓存值
+pub struct FieldOrElementValue {
+  /// value (null = 空)
+  pub value: *mut Node,
+}
+
+impl FieldOrElementValue {
+  /// 原版 IsEmpty
+  /// v8: src/compiler/wasm-load-elimination.h FieldOrElementValue::IsEmpty
+  pub fn is_empty(&self) -> bool {
+    self.value.is_null()
+  }
+}
+
+/// 原版 HalfState — 字段缓存半区 (ZoneObject, 不可变共享)
+pub struct HalfState<'z> {
+  /// zone_
+  pub zone: &'z Zone<'z>,
+  // OuterMap<OuterKey> → (inner_key → FieldOrElementValue)
+}
+
+impl HalfState<'_> {
+  /// 原版 Equals
+  /// v8: src/compiler/wasm-load-elimination.cc HalfState::Equals
+  pub fn equals(&self, that: &Self) -> bool {
+    todo!("v8: src/compiler/wasm-load-elimination.cc HalfState::Equals")
+  }
+
+  /// 原版 IsEmpty
+  /// v8: src/compiler/wasm-load-elimination.cc HalfState::IsEmpty
+  pub fn is_empty(&self) -> bool {
+    todo!("v8: src/compiler/wasm-load-elimination.cc HalfState::IsEmpty")
+  }
+
+  /// 原版 IntersectWith — 分支汇聚取交
+  /// v8: src/compiler/wasm-load-elimination.cc HalfState::IntersectWith
+  pub fn intersect_with(&mut self, that: &Self) {
+    todo!("v8: src/compiler/wasm-load-elimination.cc HalfState::IntersectWith")
+  }
+
+  /// 原版 KillField — 写即杀 (copy-on-write)
+  /// v8: src/compiler/wasm-load-elimination.cc HalfState::KillField
+  pub fn kill_field<'z>(&self, field_index: i32, object: &Node) -> &HalfState<'z> {
+    todo!("v8: src/compiler/wasm-load-elimination.cc HalfState::KillField")
+  }
+
+  /// 原版 AddField — 记录字段值 (copy-on-write)
+  /// v8: src/compiler/wasm-load-elimination.cc HalfState::AddField
+  pub fn add_field<'z>(&self, field_index: i32, object: &Node, value: &Node) -> &HalfState<'z> {
+    todo!("v8: src/compiler/wasm-load-elimination.cc HalfState::AddField")
+  }
+
+  /// 原版 LookupField — 字段值查询
+  /// v8: src/compiler/wasm-load-elimination.cc HalfState::LookupField
+  pub fn lookup_field(&self, field_index: i32, object: &Node) -> FieldOrElementValue {
+    todo!("v8: src/compiler/wasm-load-elimination.cc HalfState::LookupField")
+  }
+}
+
+/// 原版 AbstractState — 双 HalfState (可变 mutable_state / 不可变 immutable_state)
+pub struct AbstractState<'z> {
+  /// mutable_state
+  pub mutable_state: *const HalfState<'z>,
+  /// immutable_state
+  pub immutable_state: *const HalfState<'z>,
+}
+
+/// 原版 WasmLoadElimination — AdvancedReducer
+pub struct WasmLoadElimination<'z, 'g> {
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+}
+
+impl WasmLoadElimination<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "WasmLoadElimination";
+
+  /// 原版 ReduceWasmStructGet
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmStructGet
+  fn reduce_wasm_struct_get(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmStructGet")
+  }
+
+  /// 原版 ReduceWasmStructSet
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmStructSet
+  fn reduce_wasm_struct_set(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmStructSet")
+  }
+
+  /// 原版 ReduceWasmArrayLength
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmArrayLength
+  fn reduce_wasm_array_length(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmArrayLength")
+  }
+
+  /// 原版 ReduceWasmArrayInitializeLength
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmArrayInitializeLength
+  fn reduce_wasm_array_initialize_length(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceWasmArrayInitializeLength")
+  }
+
+  /// 原版 ReduceStringPrepareForGetCodeunit
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceStringPrepareForGetCodeunit
+  fn reduce_string_prepare_for_get_codeunit(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceStringPrepareForGetCodeunit")
+  }
+
+  /// 原版 ReduceStringAsWtf16
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceStringAsWtf16
+  fn reduce_string_as_wtf16(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceStringAsWtf16")
+  }
+
+  /// 原版 ReduceAnyConvertExtern
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceAnyConvertExtern
+  fn reduce_any_convert_extern(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceAnyConvertExtern")
+  }
+
+  /// 原版 ReduceEffectPhi
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceEffectPhi
+  fn reduce_effect_phi(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceEffectPhi")
+  }
+
+  /// 原版 ReduceStart
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceStart
+  fn reduce_start(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceStart")
+  }
+
+  /// 原版 ReduceOtherNode
+  /// v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceOtherNode
+  fn reduce_other_node(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-load-elimination.cc WasmLoadElimination::ReduceOtherNode")
+  }
+}

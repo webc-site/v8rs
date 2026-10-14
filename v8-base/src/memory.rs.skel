@@ -1,0 +1,26 @@
+// 由 tool/src/base/memory.h.js 从 v8/src/base/memory.h 生成; 修订就地改, 复跑覆盖
+// 裸内存访问 (对齐引用 + 非对齐/小端读写)
+
+//! v8: src/base/memory.h
+
+/// v8: src/base/memory.h Address = uintptr_t
+pub type Address = usize;
+
+/// v8: src/base/memory.h Memory<T>(Address) — reinterpret 引用, DCHECK 对齐 alignof(T)
+/// v8: Memory<T>(uint8_t*) — 指针版转 Address 再走上者
+/// Rust: &*(addr as *const T), 由 Developer 包 unsafe + debug_assert 对齐
+pub fn memory_ref<T>(addr: Address) -> &T;
+
+/// v8: src/base/memory.h ReadUnalignedValue<V>(Address)
+/// memcpy 到栈副本返回 (ASSERT_TRIVIALLY_COPYABLE); char[]/int8_t[](非 Solaris)/uint8_t[] 转发重载共 4
+/// Rust: ptr::read_unaligned
+pub unsafe fn read_unaligned_value<V: Copy>(p: Address) -> V;
+
+/// v8: src/base/memory.h WriteUnalignedValue<V>(Address, value) — memcpy 写; char[] 转发共 2
+pub unsafe fn write_unaligned_value<V: Copy>(p: Address, value: V);
+
+/// v8: src/base/memory.h ReadLittleEndianValue — 小端目标直读; 大端逐字节反序
+/// v8: WriteLittleEndianValue — 同上写侧; V* 重载带禁数组 static_assert
+/// Rust: 目标恒小端时退化为非对齐读写, cfg(target_endian = "big") 分支 Developer 补
+pub unsafe fn read_little_endian_value<V: Copy>(p: Address) -> V;
+pub unsafe fn write_little_endian_value<V: Copy>(p: Address, value: V);

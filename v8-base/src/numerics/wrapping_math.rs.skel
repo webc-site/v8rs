@@ -1,0 +1,25 @@
+// 由 tool/src/base/numerics/wrapping_math.h.js 从 v8/src/base/numerics/wrapping_math.h 生成; 修订就地改, 复跑覆盖
+// 模 2^N 回绕加减
+
+//! v8 侧模板函数 2 个: WrappingAdd, WrappingSub
+
+/// a + b 按模 2^N 回绕 (N = T 位宽)
+/// v8: src/base/numerics/wrapping_math.h WrappingAdd(a, b)
+/// v8 实现策略: 转无符号相加再转回 (绕开有符号 UB); Rust 用 wrapping_add 无 UB
+/// 注意: T 小于 int 时 C++ 整型提升, WrappingMul 需复杂实现 (v8 原注)
+pub fn wrapping_add<T>(a: T, b: T) -> T
+where
+    T: Copy + core::ops::WrappingAdd<Output = T>,
+{
+    a.wrapping_add(&b)
+}
+
+/// a - b 按模 2^N 回绕 (N = T 位宽)
+/// v8: src/base/numerics/wrapping_math.h WrappingSub(a, b)
+/// v8 实现策略: 转无符号相减再转回; Rust 用 wrapping_sub 无 UB
+pub fn wrapping_sub<T>(a: T, b: T) -> T
+where
+    T: Copy + core::ops::WrappingSub<Output = T>,
+{
+    a.wrapping_sub(&b)
+}

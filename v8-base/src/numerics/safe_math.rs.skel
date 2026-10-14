@@ -1,0 +1,41 @@
+// 由 tool/src/base/numerics/safe_math.h.js 从 v8/src/base/numerics/safe_math{,_shared_impl,_clang_gcc_impl,_arm_impl}.h 生成; 修订就地改, 复跑覆盖
+// 安全算术伞头 + 编译器快速路径分派
+
+//! v8 侧: umbrella re-export 3 个 (checked_math, clamped_math, safe_conversions)
+//! FastOp 存根 7 (shared) / 特化 7 (clang_gcc) / Asm 特化 4 (clang) + 4 (arm)
+//! __builtin 溢出原语: __builtin_add_overflow, __builtin_sub_overflow, __builtin_mul_overflow
+//! Rust 策略: checked_*/saturating_* 原生即最优代码生成, 快速路径分派层整体删除
+
+// ---- umbrella (v8 safe_math.h = 三头合一 re-export) ----
+pub use super::checked_math::*; // v8: #include "src/base/numerics/checked_math.h" IWYU export
+pub use super::clamped_math::*; // v8: #include "src/base/numerics/clamped_math.h" IWYU export
+pub use super::safe_conversions::*; // v8: #include "src/base/numerics/safe_conversions.h" IWYU export
+
+// ---- BASE_HAS_OPTIMIZED_SAFE_MATH 编译开关 ----
+/// v8: safe_math_shared_impl.h BASE_HAS_OPTIMIZED_SAFE_MATH (0/1, 按编译器)
+/// 意义: 启用 __builtin_*_overflow / arm 内联汇编快速路径; Rust 恒为 "启用" (原生等价)
+pub const BASE_HAS_OPTIMIZED_SAFE_MATH: bool = true;
+
+// ---- FastOp 矩阵 ----
+/// v8: safe_math_shared_impl.h struct CheckedAddFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_shared_impl.h struct CheckedSubFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_shared_impl.h struct CheckedMulFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_shared_impl.h struct ClampedAddFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_shared_impl.h struct ClampedSubFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_shared_impl.h struct ClampedMulFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_shared_impl.h struct ClampedNegFastOp — is_supported=false 存根
+/// (clang/gcc 或 arm 侧特化为 is_supported=true + __builtin/asm Do())
+/// v8: safe_math_arm_impl.h struct CheckedMulFastAsmOp — 内联汇编特化
+/// v8: safe_math_arm_impl.h struct ClampedAddFastAsmOp — 内联汇编特化
+/// v8: safe_math_arm_impl.h struct ClampedSubFastAsmOp — 内联汇编特化
+/// v8: safe_math_arm_impl.h struct ClampedMulFastAsmOp — 内联汇编特化
+// 语义对照:
+//   __builtin_add_overflow → checked_*
+//   __builtin_sub_overflow → checked_*
+//   __builtin_mul_overflow → checked_*

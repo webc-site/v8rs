@@ -1,0 +1,197 @@
+type void;
+type never;
+
+type IntegerLiteral constexpr 'IntegerLiteral';
+
+namespace torque_internal {
+  struct Reference<T: type> {
+    const object: HeapObject;
+    const offset: intptr;
+  }
+  type ConstReference<T : type> extends Reference<T>;
+  type MutableReference<T : type> extends ConstReference<T>;
+
+  type UninitializedHeapObject extends HeapObject;
+  macro DownCastForTorqueClass<T : type extends HeapObject>(o: HeapObject):
+      T labels _CastError {
+    return %RawDownCast<T>(o);
+  }
+  macro IsWithContext<T : type extends HeapObject>(o: HeapObject): bool {
+    return false;
+  }
+}
+
+namespace torque_internal {
+  intrinsic %SizeOf<T: type>(): constexpr int31;
+  macro TimesSizeOf<T: type>(i: intptr): intptr {
+    return i * %SizeOf<T>();
+  }
+  struct Slice<T: type, Reference: type> {
+    macro AtIndex(index: intptr): Reference {
+      return unsafe::NewReference<T>(
+          this.object, this.offset + TimesSizeOf<T>(index));
+    }
+    const object: HeapObject;
+    const offset: intptr;
+    const length: intptr;
+  }
+  namespace unsafe {
+    macro NewReference<T: type>(object: HeapObject, offset: intptr): &T {
+      return %RawDownCast<&T>(Reference<T>{object: object, offset: offset});
+    }
+    macro NewMutableSlice<T: type>(
+        object: HeapObject, offset: intptr, length: intptr): MutableSlice<T> {
+      return %RawDownCast<MutableSlice<T>>(
+          Slice<T, &T>{object: object, offset: offset, length: length});
+    }
+    macro NewConstSlice<T: type>(
+        object: HeapObject, offset: intptr, length: intptr): ConstSlice<T> {
+      return %RawDownCast<ConstSlice<T>>(
+          Slice<T, const &T>{object: object, offset: offset, length: length});
+    }
+  }
+  intrinsic %IndexedFieldLength<T: type>(o: T, f: constexpr string): intptr;
+  intrinsic %FieldSlice<T: type, TSlice: type>(o: T, f: constexpr string):
+      TSlice;
+}
+type MutableSlice<T : type> extends torque_internal::Slice<T, &T>;
+type ConstSlice<T : type> extends torque_internal::Slice<T, const &T>;
+
+type Tagged generates 'TNode<MaybeObject>' constexpr 'MaybeObject';
+type StrongTagged extends Tagged
+    generates 'TNode<Object>' constexpr 'Object';
+type Smi extends StrongTagged generates 'TNode<Smi>' constexpr 'Smi';
+type WeakHeapObject extends Tagged;
+type Weak<T : type extends HeapObject> extends WeakHeapObject;
+type TaggedIndex extends StrongTagged;
+type TaggedZeroPattern extends TaggedIndex;
+
+@abstract
+@doNotGenerateCppClass
+extern class HeapObject extends StrongTagged {
+  map: Map;
+}
+type Map extends HeapObject generates 'TNode<Map>';
+type Object = Smi | HeapObject;
+type Number = Smi|HeapNumber;
+type JSReceiver extends HeapObject generates 'TNode<JSReceiver>';
+type JSObject extends JSReceiver generates 'TNode<JSObject>';
+type int32 generates 'TNode<Int32T>' constexpr 'int32_t';
+type uint32 generates 'TNode<Uint32T>' constexpr 'uint32_t';
+type int31 extends int32
+    generates 'TNode<Int32T>' constexpr 'int31_t';
+type uint31 extends uint32
+    generates 'TNode<Uint32T>' constexpr 'uint31_t';
+type int16 extends int31
+    generates 'TNode<Int16T>' constexpr 'int16_t';
+type uint16 extends uint31
+    generates 'TNode<Uint16T>' constexpr 'uint16_t';
+type int8 extends int16 generates 'TNode<Int8T>' constexpr 'int8_t';
+type uint8 extends uint16
+    generates 'TNode<Uint8T>' constexpr 'uint8_t';
+type int64 generates 'TNode<Int64T>' constexpr 'int64_t';
+type uint64 generates 'TNode<UInt64T>' constexpr 'uint64_t';
+type intptr generates 'TNode<IntPtrT>' constexpr 'intptr_t';
+type uintptr generates 'TNode<UintPtrT>' constexpr 'uintptr_t';
+type float32 generates 'TNode<Float32T>' constexpr 'float';
+type float64 generates 'TNode<Float64T>' constexpr 'double';
+type bool generates 'TNode<BoolT>' constexpr 'bool';
+type bint generates 'TNode<BInt>' constexpr 'BInt';
+type string constexpr 'const char*';
+type RawPtr generates 'TNode<RawPtrT>' constexpr 'void*';
+type ExternalPointer
+    generates 'TNode<ExternalPointerT>' constexpr 'ExternalPointer_t';
+type CppHeapPointer
+    generates 'TNode<CppHeapPointerT>' constexpr 'CppHeapPointer_t';
+type TrustedPointer
+    generates 'TNode<TrustedPointerT>' constexpr 'TrustedPointer_t';
+type ProtectedPointer extends Tagged;
+type InstructionStream extends HeapObject generates 'TNode<InstructionStream>';
+type BuiltinPtr extends Smi generates 'TNode<BuiltinPtr>';
+type Context extends HeapObject generates 'TNode<Context>';
+type NativeContext extends Context;
+type SmiTagged<T : type extends uint31> extends Smi;
+type String extends HeapObject;
+type HeapNumber extends HeapObject;
+type FixedArrayBase extends HeapObject;
+type Lazy<T: type>;
+
+struct float64_or_undefined_or_hole {
+  is_undefined: bool;
+  is_hole: bool;
+  value: float64;
+}
+
+extern operator '+' macro IntPtrAdd(intptr, intptr): intptr;
+extern operator '*' macro IntPtrMul(intptr, intptr): intptr;
+extern operator '!' macro Word32BinaryNot(bool): bool;
+extern operator '==' macro Word32Equal(int32, int32): bool;
+
+intrinsic %FromConstexpr<To: type, From: type>(b: From): To;
+macro Convert<To: type, From: type>(i: From): To;
+extern macro SmiUntag(Smi): intptr;
+Convert<intptr, Smi>(s: Smi): intptr {
+  return SmiUntag(s);
+}
+Convert<intptr, constexpr int31>(i: constexpr int31): intptr {
+  return %FromConstexpr<intptr>(i);
+}
+intrinsic %RawDownCast<To: type, From: type>(x: From): To;
+intrinsic %RawConstexprCast<To: type, From: type>(f: From): To;
+extern macro SmiConstant(constexpr Smi): Smi;
+extern macro TaggedToSmi(Object): Smi
+    labels CastError;
+extern macro TaggedToHeapObject(Object): HeapObject
+    labels CastError;
+extern macro Float64SilenceNaN(float64): float64;
+
+extern macro IntPtrConstant(constexpr int31): intptr;
+extern macro ConstexprIntegerLiteralToInt32(constexpr IntegerLiteral): constexpr int32;
+extern macro SmiFromInt32(int32): Smi;
+
+macro FromConstexpr<To: type, From: type>(o: From): To;
+FromConstexpr<Smi, constexpr Smi>(s: constexpr Smi): Smi {
+  return SmiConstant(s);
+}
+FromConstexpr<Smi, constexpr int31>(s: constexpr int31): Smi {
+  return %FromConstexpr<Smi>(s);
+}
+FromConstexpr<intptr, constexpr int31>(i: constexpr int31): intptr {
+  return IntPtrConstant(i);
+}
+FromConstexpr<intptr, constexpr intptr>(i: constexpr intptr): intptr {
+  return %FromConstexpr<intptr>(i);
+}
+FromConstexpr<intptr, constexpr IntegerLiteral>(
+    i: constexpr IntegerLiteral): intptr {
+  return %FromConstexpr<intptr>(i);
+}
+extern macro BoolConstant(constexpr bool): bool;
+FromConstexpr<bool, constexpr bool>(b: constexpr bool): bool {
+  return BoolConstant(b);
+}
+FromConstexpr<int32, constexpr int31>(i: constexpr int31): int32 {
+  return %FromConstexpr<int32>(i);
+}
+FromConstexpr<int32, constexpr int32>(i: constexpr int32): int32 {
+  return %FromConstexpr<int32>(i);
+}
+FromConstexpr<int32, constexpr IntegerLiteral>(i: constexpr IntegerLiteral): int32 {
+  return FromConstexpr<int32>(ConstexprIntegerLiteralToInt32(i));
+}
+FromConstexpr<Smi, constexpr IntegerLiteral>(i: constexpr IntegerLiteral): Smi {
+  return SmiFromInt32(FromConstexpr<int32>(i));
+}
+
+macro Cast<A : type extends Object>(implicit context: Context)(o: Object): A
+    labels CastError {
+  return Cast<A>(TaggedToHeapObject(o) otherwise CastError)
+      otherwise CastError;
+}
+macro Cast<A : type extends HeapObject>(o: HeapObject): A
+    labels CastError;
+Cast<Smi>(o: Object): Smi
+    labels CastError {
+  return TaggedToSmi(o) otherwise CastError;
+}
+

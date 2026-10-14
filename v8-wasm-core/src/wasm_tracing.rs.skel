@@ -1,0 +1,72 @@
+// 由 tool/src/wasm/wasm-tracing.h.js 从 v8/src/wasm/wasm-tracing.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 内存/全局变量追踪记录布局与打印格式
+
+//! --trace-wasm 生成的内存访问/全局变量读写记录。
+/// v8: src/wasm/wasm-tracing.h MemoryTraceEntry
+
+/// 生成代码中构造的低阶信息 (布局必须与机器码写出的一致)
+/// v8: src/wasm/wasm-tracing.h MemoryTracingInfo
+#[repr(C)]
+pub struct MemoryTracingInfo {
+    /// v8: uintptr_t offset
+    pub offset: usize,
+    /// v8: uint32_t mem_index
+    pub mem_index: u32,
+    /// v8: uint8_t is_store (0 or 1)
+    pub is_store: u8,
+    /// v8: uint8_t mem_rep (MachineRepresentation 的 u8 底层)
+    pub mem_rep: u8,
+}
+
+/// v8: src/wasm/wasm-tracing.h GlobalTracingInfo
+#[repr(C)]
+pub struct GlobalTracingInfo {
+    /// v8: uint32_t global_index
+    pub global_index: u32,
+    /// v8: uint8_t is_store (0 or 1)
+    pub is_store: u8,
+}
+
+/// 值字节缓冲宽度 (所有 kind 统一 16 字节)
+/// v8: src/wasm/wasm-tracing.h value_bytes[16]
+pub const VALUE_BYTES_LEN: usize = 16;
+
+/// MachineRepresentation -> 打印标签
+/// v8: src/wasm/wasm-tracing.cc PrintMemoryTraceString
+pub fn rep_tag(rep: MachineRepresentation) -> Option<&'static str> {
+    Some(match rep {
+        MachineRepresentation::Word8 => "i8",
+        MachineRepresentation::Word16 => "i16",
+        MachineRepresentation::Word32 => "i32",
+        MachineRepresentation::Word64 => "i64",
+        MachineRepresentation::Float32 => "f32",
+        MachineRepresentation::Float64 => "f64",
+        MachineRepresentation::Simd128 => "s128",
+        _ => return None,
+    })
+}
+
+/// 内存访问行格式 (tier func_idx:frame_pos mem_idx opcode dir offset)
+/// v8: src/wasm/wasm-tracing.cc PrintMemoryTraceString
+pub const MEMORY_TRACE_FORMAT: &str = "%-8s func %5d:0x%-4x mem %d %-12s %s %016x val: ";
+
+/// 全局变量行格式
+/// v8: src/wasm/wasm-tracing.cc PrintGlobalTraceString
+pub const GLOBAL_TRACE_FORMAT: &str = "%-8s func %5d:0x%-4x %s %d val: %s:";
+
+/// store/load 方向串
+/// v8: src/wasm/wasm-tracing.cc "to  " / "from"
+pub const DIRECTION_STORE: &str = "to  ";
+pub const DIRECTION_LOAD: &str = "from";
+
+/// 值打印: 有符号十进制 / 十六进制位表示双写; s128 四道 u32
+/// v8: src/wasm/wasm-tracing.cc PrintMemoryTraceValue
+pub const VALUE_FORMAT: &str = "%4s:%v / 0x%x";
+pub const VALUE_FORMAT_U8: &str = "%4s:%u / 0x%x";
+pub const SIMD128_FORMAT: &str = "s128:%d %d %d %d / %08x %08x %08x %08x";
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(VALUE_BYTES_LEN, 16);
+    assert_eq!(DIRECTION_STORE.len(), 4);
+};

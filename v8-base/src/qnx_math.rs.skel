@@ -1,0 +1,12 @@
+// 由 tool/src/base/qnx-math.h.js 从 v8/src/base/qnx-math.h 生成; 修订就地改, 复跑覆盖
+// QNX 数学宏污染清洗 (Rust 无此问题, 登记语义对账)
+
+//! v8 侧: #undef 6 项; using std:: 1 项
+//! QNX 的 math.h 把这些函数做成宏污染全局; Rust 侧方法/自由函数无宏, 本文件为空壳对账
+
+/// v8: src/base/qnx-math.h #undef 清单
+pub const UNDEF_MACROS: &[&str] = &["fpclassify", "isfinite", "isinf", "isnan", "isnormal", "signbit"];
+
+/// v8: src/base/qnx-math.h using std::lrint — 就近整数 (ties 偶) 
+/// Rust: f64::round_ties_even (Rust 1.77+) 或手动; 语义面就地修订
+pub fn lrint(x: f64) -> i64 { /* 语义: round half to even → i64 */ todo!() }

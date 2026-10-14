@@ -1,0 +1,51 @@
+// 由 tool/src/compiler/turboshaft/block-instrumentation-reducer.h.js 从 v8/src/compiler/turboshaft/block-instrumentation-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 基本块计数插桩 reducer (d8 --trace-turbo 计数骨架)
+
+/// v8: src/compiler/turboshaft/block-instrumentation-reducer.h BlockInstrumentationReducer
+///
+/// 策略 (原版保留):
+/// - kCatchBlockBegin/kDidntThrow/kParameter 保留在块首, 不插桩
+/// - 其余块内首个操作前 EmitBlockInstrumentation(block_number)
+/// - Bind 时 SetBlockId + 计数清零; on_heap_counters_ 下预建计数数组
+pub struct BlockInstrumentationReducer {
+  /// operations_emitted_in_current_block_
+  pub operations_emitted_in_current_block: i32,
+  /// counters_array_handle_ (on_heap_counters_)
+  pub counters_array_handle: Option<()>,
+}
+
+impl BlockInstrumentationReducer {
+  /// 原版 void Bind(Block* new_block) — 块切换: SetBlockId + 计数清零
+  pub fn bind(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 template <Opcode, Continuation, Args...> OpIndex ReduceOperation(Args...) — 全 opcode 钩子: 块首触发插桩
+  pub fn reduce_operation(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 EmitBlockInstrumentation(int block_number) — 插桩调用 (CountersArray 写入)
+  pub fn emit_block_instrumentation(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 REDUCE(Parameter) — 块首保留操作直通 Next
+  /// v8: src/compiler/turboshaft/block-instrumentation-reducer.h BlockInstrumentationReducer::REDUCE(Parameter)
+  pub fn reduce_parameter(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 REDUCE(CatchBlockBegin) — 块首保留操作直通 Next
+  /// v8: src/compiler/turboshaft/block-instrumentation-reducer.h BlockInstrumentationReducer::REDUCE(CatchBlockBegin)
+  pub fn reduce_catch_block_begin(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 REDUCE(DidntThrow) — 块首保留操作直通 Next
+  /// v8: src/compiler/turboshaft/block-instrumentation-reducer.h BlockInstrumentationReducer::REDUCE(DidntThrow)
+  pub fn reduce_didnt_throw(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/block-instrumentation-reducer.cc detail::CreateCountersArray
+pub fn create_counters_array(isolate: &mut crate::phase::Isolate) -> Option<()> {
+  // 原版: ReadOnlyRoots(isolate).basic_block_counters_marker()
+  unimplemented!("签名骨架, Developer 修订")
+}

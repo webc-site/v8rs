@@ -1,0 +1,13 @@
+# 精简 YAML 基准测试声明：基于分组管理，列表组织用例，避免重复信息
+v8-v7:
+  dir: benches/v8-v7
+  base: base.js
+  cases:
+    - richards
+    - deltablue
+    - crypto
+    - raytrace
+    - earley-boyer
+    - regexp
+    - splay
+    - navier-stokes

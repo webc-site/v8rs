@@ -1,0 +1,20 @@
+// 由 tool/src/compiler/backend/x64/instruction-scheduler-x64.js 从 v8/src/compiler/backend/x64/instruction-scheduler-x64.cc 生成; 修订就地改, 复跑覆盖
+// x64 调度架构面: GetTargetInstructionFlags (353 case) + SchedulerSupported
+
+//! 台账: SchedulerSupported()=true (x64 启用调度); GetTargetInstructionFlags
+//!   case kX64 ×353 → 位标志组合 (kHasSideEffect/kIsLoadOperation/
+//!   kMayNeedDeoptOrTrapCheck/kIsBarrier, 见公共 instruction_scheduler 台账);
+//!   默认臂 UNREACHABLE。
+
+/// v8: InstructionScheduler::GetTargetInstructionFlags (x64)
+// pub fn get_target_instruction_flags(instr: &Instruction) -> i32
+/// v8: InstructionScheduler::SchedulerSupported (x64) — true
+pub const SCHEDULER_SUPPORTED: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(SCHEDULER_SUPPORTED);
+  assert!(TARGET_CASE_COUNT == 353);
+};
+/// v8: GetTargetInstructionFlags case kX64 分发数 (实测)
+pub const TARGET_CASE_COUNT: usize = 353;

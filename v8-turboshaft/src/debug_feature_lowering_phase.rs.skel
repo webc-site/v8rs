@@ -1,0 +1,30 @@
+// 由 tool/src/compiler/turboshaft/debug-feature-lowering-phase.h.js 从 v8/src/compiler/turboshaft/debug-feature-lowering-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 调试特性降级 phase: DEBUG_CODE 条件链编排骨架
+
+/// v8: src/compiler/turboshaft/debug-feature-lowering-phase.h DebugFeatureLoweringPhase
+pub struct DebugFeatureLoweringPhase;
+
+impl DebugFeatureLoweringPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "DebugFeatureLowering"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftDebugFeatureLowering";
+
+  /// CopyingPhase reducer 链 (保序) — 原版整体包在 #ifdef V8_ENABLE_DEBUG_CODE 内,
+  /// release 构建下 Run 为空操作
+  pub const REDUCERS: &'static [&'static str] = &[
+    "DebugFeatureLoweringReducer",
+    "InstructionSelectionNormalizationReducer",
+  ];
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/debug-feature-lowering-phase.cc DebugFeatureLoweringPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: #ifdef V8_ENABLE_DEBUG_CODE CopyingPhase<...>::Run(data, temp_zone); #endif
+    unimplemented!("Developer 修订: DEBUG_CODE 条件下编排链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(DebugFeatureLoweringPhase::PHASE_NAME == "V8.TFTurboshaftDebugFeatureLowering");
+  assert!(DebugFeatureLoweringPhase::REDUCERS.len() == 2);
+};

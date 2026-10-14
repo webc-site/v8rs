@@ -1,0 +1,30 @@
+// 由 tool/src/base/platform/platform-cygwin.js 从 v8/src/base/platform/platform-cygwin.cc 生成; 修订就地改, 复跑覆盖
+// Cygwin 平台面 (非目标; Win32 API 的 POSIX 壳)
+
+/// 对齐分配重试上限 (原版 const int kMaxAttempts)
+/// v8: src/base/platform/platform-cygwin.cc kMaxAttempts
+pub const MAX_ATTEMPTS: i32 = 3;
+
+// —— OS 12 方法登记 ——
+/// v8: src/base/platform/platform-cygwin.cc OS::Allocate
+/// 填充分配法: padded = size + (alignment - page_size), RandomizedVirtualAlloc
+/// 落点后裁剪出头尾 (VirtualFree), 最多 kMaxAttempts 轮
+/// v8: src/base/platform/platform-cygwin.cc OS::Free / OS::Release
+/// VirtualFree(MEM_DECOMMIT / MEM_RELEASE) 分档
+/// v8: src/base/platform/platform-cygwin.cc OS::SetPermissions
+/// kNoAccess → VirtualFree(MEM_DECOMMIT); 其余 → VirtualAlloc(MEM_COMMIT, protect)
+/// v8: src/base/platform/platform-cygwin.cc OS::RecommitPages / DiscardSystemPages
+/// v8: src/base/platform/platform-cygwin.cc OS::SealPages — 恒 false (不支持)
+/// v8: src/base/platform/platform-cygwin.cc OS::HasLazyCommits
+/// v8: src/base/platform/platform-cygwin.cc OS::GetSharedLibraryAddresses
+/// fscanf 逐行解析 /proc/self/maps (r-x 条目 + 路径列),
+/// kLibNameLen = FILENAME_MAX + 1 名缓冲; DiscardVirtualMemory 经
+/// GetModuleHandle(Kernel32.dll) 动态解析
+/// v8: src/base/platform/platform-cygwin.cc OS::SignalCodeMovingGC
+/// v8: src/base/platform/platform-cygwin.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-cygwin.cc OS::GetFirstFreeMemoryRangeWithin
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(MAX_ATTEMPTS, 3);
+};

@@ -1,0 +1,102 @@
+// 由 tool/src/heap/local-heap.h.js 从 v8/src/heap/local-heap.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 本地堆: 线程 Parked/Running 状态机与安全点
+
+/// 线程状态 (对应 LocalHeap::ThreadState, 3 个 1-bit: bit0 Parked /
+/// bit1 SafepointRequested / bit2 CollectionRequested)。
+/// v8: src/heap/local-heap.h LocalHeap::ThreadState
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct ThreadState(pub u8);
+
+impl ThreadState {
+  pub const PARKED_BIT: u8 = 1 << 0;
+  pub const SAFEPOINT_REQUESTED_BIT: u8 = 1 << 1;
+  pub const COLLECTION_REQUESTED_BIT: u8 = 1 << 2;
+
+  /// 对应 static Parked(): 仅 Parked 位
+  pub const PARKED: ThreadState = ThreadState(Self::PARKED_BIT);
+  /// 对应 static Running(): 0
+  pub const RUNNING: ThreadState = ThreadState(0);
+
+  /// 对应 IsRunning: !Parked
+  pub fn is_running(self) -> bool {
+    self.0 & Self::PARKED_BIT == 0
+  }
+
+  /// 对应 IsParked
+  pub fn is_parked(self) -> bool {
+    self.0 & Self::PARKED_BIT != 0
+  }
+
+  /// 对应 SetRunning: 清 Parked 位
+  pub fn set_running(self) -> Self {
+    Self(self.0 & !Self::PARKED_BIT)
+  }
+
+  /// 对应 SetParked: 置 Parked 位
+  pub fn set_parked(self) -> Self {
+    Self(Self::PARKED_BIT | self.0)
+  }
+
+  /// 对应 IsSafepointRequested
+  pub fn is_safepoint_requested(self) -> bool {
+    self.0 & Self::SAFEPOINT_REQUESTED_BIT != 0
+  }
+
+  /// 对应 IsCollectionRequested
+  pub fn is_collection_requested(self) -> bool {
+    self.0 & Self::COLLECTION_REQUESTED_BIT != 0
+  }
+
+  /// 对应 IsRunningWithSlowPathFlag: Running 且 (SafepointRequested|CollectionRequested)
+  pub fn is_running_with_slow_path_flag(self) -> bool {
+    self.is_running() && (self.0 & (Self::SAFEPOINT_REQUESTED_BIT | Self::COLLECTION_REQUESTED_BIT)) != 0
+  }
+}
+
+/// 本地堆骨架 (对应 class LocalHeap; GC 借它追踪所有可访问堆的线程)。
+/// v8: src/heap/local-heap.h LocalHeap
+pub struct LocalHeapSkeleton {
+  pub state: core::sync::atomic::AtomicU8,
+  pub allocation_failed: bool,
+}
+
+impl LocalHeapSkeleton {
+  /// 对应 Safepoint() 快路径: relaxed 读状态, 带慢路径标志才走 SafepointSlowPath
+  /// v8: src/heap/local-heap.h LocalHeap::Safepoint
+  pub fn safepoint(&self) -> bool {
+    let current = ThreadState(self.state.load(core::sync::atomic::Ordering::Relaxed));
+    if current.is_running_with_slow_path_flag() {
+      // SafepointSlowPath(): 停车等待请求处理, 此处骨架返回 true 表示走了慢路径
+      true
+    } else {
+      false
+    }
+  }
+
+  /// 对应 IsRetryOfFailedAllocation/SetRetryOfFailedAllocation
+  pub fn set_retry_of_failed_allocation(&mut self, value: bool) {
+    self.allocation_failed = value;
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  let s = ThreadState::RUNNING;
+  assert!(s.is_running() && !s.is_parked());
+  assert!(!s.is_running_with_slow_path_flag());
+  let s2 = ThreadState::PARKED;
+  assert!(s2.is_parked());
+  assert!(!s2.is_running_with_slow_path_flag()); // 停车不算慢路径
+  // Running + CollectionRequested → 慢路径
+  let s3 = ThreadState(ThreadState::COLLECTION_REQUESTED_BIT);
+  assert!(s3.is_running_with_slow_path_flag());
+  let s4 = ThreadState(ThreadState::SAFEPOINT_REQUESTED_BIT);
+  assert!(s4.is_safepoint_requested() && s4.is_running_with_slow_path_flag());
+  // SetParked/SetRunning 往返
+  assert!(s.set_parked().is_parked());
+  assert!(s2.set_running().is_running());
+  // 原子快路径: 停车状态无慢路径标志
+  let lh = LocalHeapSkeleton { state: core::sync::atomic::AtomicU8::new(ThreadState::PARKED.0), allocation_failed: false };
+  assert!(!lh.safepoint());
+};

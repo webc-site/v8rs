@@ -1,0 +1,27 @@
+// 由 tool/src/maglev/codegen.js 从 v8/src/maglev/arm/maglev-assembler-arm-inl.h, src/maglev/arm/maglev-assembler-arm.cc, src/maglev/arm/maglev-ir-arm.cc, src/maglev/arm64/maglev-assembler-arm64-inl.h, src/maglev/arm64/maglev-assembler-arm64.cc, src/maglev/arm64/maglev-ir-arm64.cc, src/maglev/loong64/maglev-assembler-loong64-inl.h, src/maglev/loong64/maglev-assembler-loong64.cc, src/maglev/loong64/maglev-ir-loong64.cc, src/maglev/ppc/maglev-assembler-ppc-inl.h, src/maglev/ppc/maglev-assembler-ppc.cc, src/maglev/ppc/maglev-ir-ppc.cc, src/maglev/riscv/maglev-assembler-riscv-inl.h, src/maglev/riscv/maglev-assembler-riscv.cc, src/maglev/riscv/maglev-ir-riscv.cc, src/maglev/s390/maglev-assembler-s390-inl.h, src/maglev/s390/maglev-assembler-s390.cc, src/maglev/s390/maglev-ir-s390.cc, src/maglev/x64/maglev-assembler-x64-inl.h, src/maglev/x64/maglev-assembler-x64.cc, src/maglev/x64/maglev-ir-x64.cc 生成; 修订就地改, 复跑覆盖
+// 架构族 7×3=21; x64+arm64 先行
+
+//! 修订: x64/arm64 全量; arm/loong64/ppc/riscv/s390 后置可选 crate, 不阻塞里程碑。
+//   ARCH src/maglev/arm/maglev-assembler-arm-inl.h
+//   ARCH src/maglev/arm/maglev-assembler-arm.cc
+//   ARCH src/maglev/arm/maglev-ir-arm.cc
+//   ARCH src/maglev/arm64/maglev-assembler-arm64-inl.h
+//   ARCH src/maglev/arm64/maglev-assembler-arm64.cc
+//   ARCH src/maglev/arm64/maglev-ir-arm64.cc
+//   ARCH src/maglev/loong64/maglev-assembler-loong64-inl.h
+//   ARCH src/maglev/loong64/maglev-assembler-loong64.cc
+//   ARCH src/maglev/loong64/maglev-ir-loong64.cc
+//   ARCH src/maglev/ppc/maglev-assembler-ppc-inl.h
+//   ARCH src/maglev/ppc/maglev-assembler-ppc.cc
+//   ARCH src/maglev/ppc/maglev-ir-ppc.cc
+//   ARCH src/maglev/riscv/maglev-assembler-riscv-inl.h
+//   ARCH src/maglev/riscv/maglev-assembler-riscv.cc
+//   ARCH src/maglev/riscv/maglev-ir-riscv.cc
+//   ARCH src/maglev/s390/maglev-assembler-s390-inl.h
+//   ARCH src/maglev/s390/maglev-assembler-s390.cc
+//   ARCH src/maglev/s390/maglev-ir-s390.cc
+//   ARCH src/maglev/x64/maglev-assembler-x64-inl.h
+//   ARCH src/maglev/x64/maglev-assembler-x64.cc
+//   ARCH src/maglev/x64/maglev-ir-x64.cc
+
+// 对数: 21 文件存在性全过 (各 arch 3 文件: assembler-inl.h/assembler.cc/ir.cc)

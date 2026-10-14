@@ -1,0 +1,110 @@
+// 由 tool/src/compiler/node-observer.js 从 v8/src/compiler/node-observer.h + node-observer.cc 生成; 修订就地改, 复跑覆盖
+// %ObserveNode 观察: 节点创建/变更回调基础设施
+
+//! node-observer — %ObserveNode(expr) 内建的观察面
+//!
+//! 无副作用语义; 观察点: 节点创建 / operator 或 type 变更 / 被替换。
+//! ObservableNodeState 以 (id, op, type) 三元组判等 (operator== 全等才等)。
+
+/// 原版 NodeObserver::Observation — 回调后是否继续观察
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Observation {
+  /// kContinue — 继续观察后续变更
+  Continue,
+  /// kStop — 停止观察
+  Stop,
+}
+
+/// 原版 ObservableNodeState — 被观察节点的状态快照 (id + op + type 三元组)
+pub struct ObservableNodeState {
+  /// id_
+  pub id: u32,
+  /// op_ (变更前 operator)
+  pub op: *const Operator,
+  /// type_
+  pub type_: Type,
+}
+
+impl PartialEq for ObservableNodeState {
+  /// 原版 operator== — id/op/type 三元组全等
+  /// v8: src/compiler/node-observer.h operator==(ObservableNodeState, ObservableNodeState)
+  fn eq(&self, other: &Self) -> bool {
+    self.id == other.id && self.op == other.op && self.type_ == other.type_
+  }
+}
+
+impl ObservableNodeState {
+  /// 原版 opcode() — op_->opcode()
+  pub fn opcode(&self) -> i16 {
+    todo!("v8: src/compiler/node-observer.h ObservableNodeState::opcode")
+  }
+}
+
+/// 原版 NodeObserver — 观察回调 trait (ZoneObject; has_observed_changes 原子位)
+pub trait NodeObserver {
+  /// 原版 OnNodeCreated — 节点创建回调 (默认 kContinue)
+  /// v8: src/compiler/node-observer.h NodeObserver::OnNodeCreated
+  fn on_node_created(&mut self, node: &Node) -> Observation {
+    Observation::Continue
+  }
+
+  /// 原版 OnNodeChanged — operator/type 变更回调 (默认 kContinue)
+  /// v8: src/compiler/node-observer.h NodeObserver::OnNodeChanged
+  fn on_node_changed(&mut self, reducer_name: &str, node: &Node, old_state: &ObservableNodeState) -> Observation {
+    Observation::Continue
+  }
+
+  /// 原版 set_has_observed_changes / has_observed_changes
+  /// v8: src/compiler/node-observer.h NodeObserver::set_has_observed_changes
+  fn has_observed_changes(&self) -> bool;
+}
+
+/// 原版 NodeObservation — (observer, state) 对
+pub struct NodeObservation<'n> {
+  /// observer
+  pub observer: &'n mut dyn NodeObserver,
+  /// state
+  pub state: ObservableNodeState,
+}
+
+/// 原版 ObserveNodeManager — NodeId → NodeObservation 管理器
+pub struct ObserveNodeManager<'z, 'n> {
+  /// observations_ — ZoneMap<NodeId, NodeObservation*>
+  pub observations: ZoneMap<NodeId, NodeObservation<'n>>,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+}
+
+impl ObserveNodeManager<'_, '_> {
+  /// 原版 StartObserving — 登记观察点
+  /// v8: src/compiler/node-observer.cc ObserveNodeManager::StartObserving
+  pub fn start_observing(&mut self, node: &Node, observer: &mut dyn NodeObserver) {
+    todo!("v8: src/compiler/node-observer.cc ObserveNodeManager::StartObserving")
+  }
+
+  /// 原版 OnNodeChanged — 旧节点状态对比新节点, 触发回调
+  /// v8: src/compiler/node-observer.cc ObserveNodeManager::OnNodeChanged
+  pub fn on_node_changed(&mut self, reducer_name: &str, old_node: &Node, new_node: &Node) {
+    todo!("v8: src/compiler/node-observer.cc ObserveNodeManager::OnNodeChanged")
+  }
+}
+
+/// 原版 ObserveNodeInfo — (manager, observer) 可空对 (编译信息携带)
+pub struct ObserveNodeInfo<'m, 'n> {
+  /// observe_node_manager
+  pub observe_node_manager: Option<&'m mut ObserveNodeManager<'m, 'n>>,
+  /// node_observer
+  pub node_observer: Option<&'n mut dyn NodeObserver>,
+}
+
+impl ObserveNodeInfo<'_, '_> {
+  /// 原版 StartObserving — manager 在位时转发登记
+  /// v8: src/compiler/node-observer.h ObserveNodeInfo::StartObserving
+  pub fn start_observing(&mut self, node: &Node) {
+    if let Some(m) = self.observe_node_manager.as_deref_mut() {
+      if let Some(o) = self.node_observer.as_deref_mut() {
+        m.start_observing(node, o);
+      }
+    }
+  }
+}

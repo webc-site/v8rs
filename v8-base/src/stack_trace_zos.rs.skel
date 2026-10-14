@@ -1,0 +1,27 @@
+// 由 tool/src/base/debug/stack_trace_zos.cc.js 从 v8/src/base/debug/stack_trace_zos.cc 生成; 修订就地改, 复跑覆盖
+// z/OS 后端 (zoslib 回溯 + 专职信号线程)
+
+//! v8: src/base/debug/stack_trace_zos.cc — 仅 z/OS 构建, 依赖 zoslib
+
+// v8: 专职线程 StackDumpingSignalThread — 主线程 sigfillset 屏蔽全部信号后,
+//     信号线程注册 SIGILL SIGABRT SIGFPE SIGBUS SIGSEGV SIGSYS SIGINT SIGTERM (SA_RESETHAND|SA_SIGINFO|SA_ONSTACK),
+//     SIGPIPE 置 SIG_IGN; 线程栈最小 4MB (kDefaultStackSize)
+// v8: StackDumpSignalHandler — SIGABRT 直接 abort (zoslib 先 __display_traceback);
+//     其余信号 IsDumpStackInSignalHandler 时 __display_backtrace(STDERR_FILENO) 后 raise
+
+/// v8: zos EnableInProcessStackDumping — 起信号线程 + 主线程屏蔽全信号
+pub fn enable_in_process_stack_dumping() -> bool;
+/// v8: zos DisableSignalStackDump — 关开关 + __set_backtrace_on_abort(false)
+pub fn disable_signal_stack_dump();
+
+impl StackTrace {
+    /// v8: zos StackTrace() — 空构造
+    #[cfg(target_os = "zos")]
+    pub fn capture() -> Self;
+    /// v8: zos Print — __display_backtrace(STDERR_FILENO) 直出
+    #[cfg(target_os = "zos")]
+    pub fn print(&self);
+    /// v8: zos OutputToStream — UNREACHABLE (zoslib 无 ostream 版, TODO 登记)
+    #[cfg(target_os = "zos")]
+    pub fn output_to_stream(&self, _os: &mut dyn std::io::Write) -> !;
+}

@@ -1,0 +1,16 @@
+// 由 tool/src/compiler/turboshaft/loop-optimization-reducer.h.js 从 v8/src/compiler/turboshaft/loop-optimization-reducer.h 生成; 修订就地改, 复跑覆盖
+// 循环优化 reducer
+
+/// v8: src/compiler/turboshaft/loop-optimization-reducer.h LoopOptimizationReducer
+/// PrepareForLoop 前置 (licm 由 phase 编排)
+pub struct LoopOptimizationReducer {
+  pub placeholder: (),
+}
+
+impl LoopOptimizationReducer {
+  /// 原版 V<None> REDUCE(PrepareForLoop)(V<EagerFrameState> frame_state, FeedbackSource feedback_source)
+  /// v8: src/compiler/turboshaft/loop-optimization-reducer.h LoopOptimizationReducer::REDUCE(PrepareForLoop)
+  pub fn reduce_prepare_for_loop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

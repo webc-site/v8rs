@@ -1,0 +1,107 @@
+// 由 tool/src/heap/cppgc-internal/heap-growing.js 从 v8/src/heap/cppgc-internal/heap-growing.h + src/heap/cppgc-internal/heap-growing.cc 生成; 修订就地改, 复跑覆盖
+// 定比堆增长: 原子限/增量限双阈值
+
+#![allow(dead_code)]
+
+pub mod constants {
+    /// v8: src/heap/cppgc-internal/heap-growing.h HeapGrowing::kGrowingFactor
+    pub const K_GROWING_FACTOR: f64 = 1.5;
+    /// v8: HeapGrowing::kMinLimitIncrease = kPageSize * kNumberOfRegularSpaces
+    pub const K_MIN_LIMIT_INCREASE: usize = K_PAGE_SIZE * RawHeap::K_NUMBER_OF_REGULAR_SPACES;
+    /// v8: src/heap/cppgc-internal/heap-growing.cc kMaximumLimitRatioForIncrementalGC
+    pub const K_MAXIMUM_LIMIT_RATIO_FOR_INCREMENTAL_GC: f64 = 0.9;
+    /// v8: src/heap/cppgc-internal/heap-growing.cc kMinimumLimitRatioForIncrementalGC
+    pub const K_MINIMUM_LIMIT_RATIO_FOR_INCREMENTAL_GC: f64 = 0.5;
+    /// v8: src/heap/cppgc-internal/heap-growing.cc initial_heap_size_
+    pub const K_INITIAL_HEAP_SIZE: usize = 1 * K_MB;
+}
+
+/// v8: src/heap/cppgc-internal/heap-growing.cc HeapGrowing::HeapGrowingImpl
+pub struct HeapGrowingImpl {
+    /// v8: collector_
+    collector: *mut dyn GarbageCollector,
+    /// v8: stats_collector_
+    stats_collector: *mut StatsCollector,
+    /// v8: initial_heap_size_ (ResourceConstraints.initial_heap_size_bytes 可覆盖)
+    initial_heap_size: usize,
+    /// v8: limit_for_atomic_gc_
+    limit_for_atomic_gc: usize,
+    /// v8: limit_for_incremental_gc_
+    limit_for_incremental_gc: usize,
+    /// v8: disabled_for_testing_
+    disabled_for_testing: bool,
+    /// v8: marking_support_ / sweeping_support_
+    marking_support: MarkingType,
+    sweeping_support: SweepingType,
+}
+
+impl HeapGrowingImpl {
+    /// v8: src/heap/cppgc-internal/heap-growing.cc HeapGrowingImpl 构造
+    /// constraints.initial_heap_size_bytes > 0 覆盖默认; 首次 ConfigureLimit(0); RegisterObserver。
+    pub fn new(collector: *mut dyn GarbageCollector, stats_collector: *mut StatsCollector,
+               initial_heap_size: usize, marking_support: MarkingType, sweeping_support: SweepingType) -> Self {
+        let mut s = Self {
+            collector, stats_collector,
+            initial_heap_size: if initial_heap_size > 0 { initial_heap_size } else { constants::K_INITIAL_HEAP_SIZE },
+            limit_for_atomic_gc: 0, limit_for_incremental_gc: 0,
+            disabled_for_testing: false, marking_support, sweeping_support,
+        };
+        s.configure_limit(0);
+        s
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-growing.cc HeapGrowingImpl::ConfigureLimit
+    /// base = max(allocated, initial);
+    /// atomic = max(base*1.5, base + kMinLimitIncrease);
+    /// est = ceil(kEstimatedMarkingTime.ms × 分配速度);
+    /// incremental = clamp(atomic - est, base + (atomic-base)*0.5, base + (atomic-base)*0.9)。
+    pub fn configure_limit(&mut self, allocated_object_size: usize) {
+        let size = allocated_object_size.max(self.initial_heap_size);
+        self.limit_for_atomic_gc = ((size as f64 * constants::K_GROWING_FACTOR) as usize)
+            .max(size + constants::K_MIN_LIMIT_INCREASE);
+        let estimated = Self::estimate_bytes_during_incremental_gc(self.stats_collector);
+        let based_on_rate = self.limit_for_atomic_gc.saturating_sub(estimated);
+        let span = self.limit_for_atomic_gc - size;
+        let maximum = size + (span as f64 * constants::K_MAXIMUM_LIMIT_RATIO_FOR_INCREMENTAL_GC) as usize;
+        let minimum = size + (span as f64 * constants::K_MINIMUM_LIMIT_RATIO_FOR_INCREMENTAL_GC) as usize;
+        self.limit_for_incremental_gc = based_on_rate.clamp(minimum, maximum);
+    }
+
+    /// v8: kEstimatedMarkingTime × GetRecentAllocationSpeedInBytesPerMs
+    fn estimate_bytes_during_incremental_gc(_stats: *mut StatsCollector) -> usize {
+        todo!("IncrementalMarkingSchedule::kEstimatedMarkingTime 依赖, 语义面留锚")
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-growing.cc HeapGrowingImpl::AllocatedObjectSizeIncreased
+    /// > atomic 限 → 保守原子全 GC; > incremental 限且支持增量 → 起增量 GC。
+    pub fn allocated_object_size_increased(&mut self) {
+        if self.disabled_for_testing { return; }
+        let allocated = unsafe { (*self.stats_collector).allocated_object_size() };
+        if allocated > self.limit_for_atomic_gc {
+            unsafe { (*self.collector).collect_garbage(GcConfig {
+                collection_type: CollectionType::Major,
+                stack_state: StackState::MayContainHeapPointers,
+                marking_type: MarkingType::Atomic,
+                sweeping_type: self.sweeping_support,
+                ..GcConfig::DEFAULT
+            }); }
+        } else if allocated > self.limit_for_incremental_gc {
+            if self.marking_support == MarkingType::Atomic { return; }
+            unsafe { (*self.collector).start_incremental_garbage_collection(GcConfig {
+                collection_type: CollectionType::Major,
+                stack_state: StackState::MayContainHeapPointers,
+                marking_type: self.marking_support,
+                sweeping_type: self.sweeping_support,
+                ..GcConfig::DEFAULT
+            }); }
+        }
+    }
+
+    /// v8: HeapGrowingImpl::ResetAllocatedObjectSize
+    pub fn reset_allocated_object_size(&mut self, allocated: usize) { self.configure_limit(allocated); }
+    /// v8: HeapGrowingImpl::limit_for_atomic_gc / limit_for_incremental_gc
+    pub fn limit_for_atomic_gc(&self) -> usize { self.limit_for_atomic_gc }
+    pub fn limit_for_incremental_gc(&self) -> usize { self.limit_for_incremental_gc }
+    /// v8: HeapGrowingImpl::DisableForTesting
+    pub fn disable_for_testing(&mut self) { self.disabled_for_testing = true; }
+}

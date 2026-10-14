@@ -1,0 +1,97 @@
+// 由 tool/src/heap/collection-barrier.h.js 从 v8/src/heap/collection-barrier.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 后台线程 GC 请求栅栏: RequestedGCKind 优先级位状态机
+
+/// 请求的 GC 种类 (对应 src/common/globals.h enum class RequestedGCKind : uint8_t)。
+/// kMajor = 1, kLastResort = 1 << 1; 数值即优先级 (大者优先)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum RequestedGCKind {
+  /// kMajor = 1
+  MAJOR = 1,
+  /// kLastResort = 1 << 1
+  LAST_RESORT = 1 << 1,
+}
+
+/// 后台线程的 GC 请求位标志 (对应 CollectionBarrier::CollectionRequest)。
+/// state_ 位语义: bit0 = kMajor, bit1 = kLastResort; 数值大者优先。
+/// v8: src/heap/collection-barrier.h CollectionBarrier::CollectionRequest
+#[derive(Debug, Default)]
+pub struct CollectionRequest {
+  state: core::sync::atomic::AtomicU8,
+}
+
+impl CollectionRequest {
+  /// 对应 Set: fetch_or(kind); 返回此前是否已有同级或更高优先级请求
+  /// (previous_state >= kind, 因为低位被设后数值不小于任一已设位)
+  /// v8: src/heap/collection-barrier.cc CollectionRequest::Set
+  pub fn set(&self, kind: RequestedGCKind) -> bool {
+    let previous_state =
+      self.state.fetch_or(kind as u8, core::sync::atomic::Ordering::Relaxed);
+    previous_state >= kind as u8
+  }
+
+  /// 对应 Clear: fetch_and(!(kind | kind - 1)); 清 kind 及所有更低优先级位,
+  /// 返回 kind 位此前是否被设
+  /// v8: src/heap/collection-barrier.cc CollectionRequest::Clear
+  pub fn clear(&self, kind: RequestedGCKind) -> bool {
+    let mask = !(kind as u8 | (kind as u8 - 1));
+    let previous_state = self.state.fetch_and(mask, core::sync::atomic::Ordering::Relaxed);
+    (previous_state & kind as u8) != 0
+  }
+
+  /// 对应 ClearAll: state_.store(0)
+  /// v8: src/heap/collection-barrier.cc CollectionRequest::ClearAll
+  pub fn clear_all(&self) {
+    self.state.store(0, core::sync::atomic::Ordering::Relaxed);
+  }
+
+  /// 对应 Has: state & kind
+  /// v8: src/heap/collection-barrier.cc CollectionRequest::Has
+  pub fn has(&self, kind: RequestedGCKind) -> bool {
+    (self.state.load(core::sync::atomic::Ordering::Relaxed) & kind as u8) != 0
+  }
+
+  /// 对应 Get: 先查 kLastResort 再查 kMajor, 皆无则 None
+  /// v8: src/heap/collection-barrier.cc CollectionRequest::Get
+  pub fn get(&self) -> Option<RequestedGCKind> {
+    let state = self.state.load(core::sync::atomic::Ordering::Relaxed);
+    if (state & RequestedGCKind::LAST_RESORT as u8) != 0 {
+      Some(RequestedGCKind::LAST_RESORT)
+    } else if (state & RequestedGCKind::MAJOR as u8) != 0 {
+      Some(RequestedGCKind::MAJOR)
+    } else {
+      None
+    }
+  }
+
+  /// 对应 HasAny: state != 0
+  /// v8: src/heap/collection-barrier.cc CollectionRequest::HasAny
+  pub fn has_any(&self) -> bool {
+    self.state.load(core::sync::atomic::Ordering::Relaxed) != 0
+  }
+}
+
+/// 停放/唤醒所有等待 GC 的后台线程 (对应 class CollectionBarrier)。
+/// 互斥量/条件变量/计时器/TaskRunner 语义面留 Developer。
+/// v8: src/heap/collection-barrier.h CollectionBarrier
+pub struct CollectionBarrierSkeleton {
+  pub collection_performed: bool,
+  pub shutdown_requested: bool,
+}
+
+// —— 提取不变式断言 (原版位语义) ——
+const _: () = {
+  assert!(RequestedGCKind::MAJOR as u8 == 1);
+  assert!(RequestedGCKind::LAST_RESORT as u8 == 2);
+  let r = CollectionRequest::default();
+  assert!(!r.has_any());
+  assert!(r.set(RequestedGCKind::MAJOR) == false);
+  assert!(r.set(RequestedGCKind::MAJOR) == true);
+  assert!(r.get() == Some(RequestedGCKind::MAJOR));
+  assert!(r.set(RequestedGCKind::LAST_RESORT) == false);
+  assert!(r.get() == Some(RequestedGCKind::LAST_RESORT));
+  assert!(r.clear(RequestedGCKind::LAST_RESORT) == true);
+  // Clear(LAST_RESORT) 同时清了 MAJOR 位 (kind | kind-1 掩码)
+  assert!(!r.has(RequestedGCKind::MAJOR));
+  assert!(!r.has_any());
+};

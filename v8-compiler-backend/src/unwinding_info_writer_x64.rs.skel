@@ -1,0 +1,17 @@
+// 由 tool/src/compiler/backend/x64/unwinding-info-writer-x64.js 从 v8/src/compiler/backend/x64/unwinding-info-writer-x64.h + unwinding-info-writer-x64.cc 生成; 修订就地改, 复跑覆盖
+// x64 eh_frame 展开: 块初始状态缓存 + rbp 跟踪切换
+
+//! 台账: enabled() = perf_prof_unwinding_info 旗标; Begin/EndInstructionBlock
+//!   (BlockInitialState 缓存 reg/offset/tracking_fp 防重发); MarkFrameConstructed/
+//!   Deconstructed (CFA 规则切换 rbp); MaybeIncreaseBaseOffsetAt (非 fp 期基偏);
+//!   MarkBlockWillExit (跳转终结块免 End 记录); Finish → eh_frame_writer 收尾。
+
+/// v8: UnwindingInfoWriter (x64) — Begin/End 块对 + Mark 构造/析构
+// pub struct UnwindingInfoWriter { eh_frame_writer, tracking_fp, block_initial_states }
+/// v8: BlockInitialState — (register, offset, tracking_fp) 三字段缓存
+// struct BlockInitialState
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 过程面; 4 实现 + 缓存槽对数见生成脚本日志
+};

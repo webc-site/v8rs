@@ -1,0 +1,30 @@
+// 由 tool/src/base/sys-info.h.js 从 v8/src/base/sys-info.h + .cc 生成; 修订就地改, 复跑覆盖
+// 系统信息静态面
+
+//! v8 侧: 静态方法 4; 平台分派矩阵见下
+//! Rust 策略: std::thread::available_parallelism / sysinfo crate 或 libc 直调
+
+pub struct SysInfo;
+
+impl SysInfo {
+    /// v8: NumberOfProcessors — 逻辑核数; sysconf(_SC_NPROCESSORS_ONLN), 失败 1
+    pub fn number_of_processors() -> i32 { /* 语义: available_parallelism */ todo!() }
+
+    /// v8: AmountOfPhysicalMemory — 物理内存字节; POSIX: _SC_PHYS_PAGES * _SC_PAGESIZE
+    pub fn amount_of_physical_memory() -> i64 { todo!() }
+
+    /// v8: AmountOfVirtualMemory — 进程虚拟内存上限; getrlimit(RLIMIT_DATA), 无限→0
+    pub fn amount_of_virtual_memory() -> i64 { todo!() }
+
+    /// v8: AddressSpaceEnd — 可寻址上界+1; WIN: lpMaximumApplicationAddress+1; 其他: usize::MAX
+    /// v8 注: 不查 RLIMIT_AS (它限映射大小不限地址)
+    pub fn address_space_end() -> usize { todo!() }
+}
+
+// ---- 平台分派对账 (v8 cc 解析) ----
+// NumberOfProcessors: V8_OS_OPENBSD / V8_OS_ZOS / V8_OS_POSIX / V8_OS_WIN / V8_OS_STARBOARD
+// AmountOfPhysicalMemory: V8_OS_DARWIN / V8_OS_FREEBSD / V8_OS_CYGWIN / V8_OS_QNX / V8_OS_AIX / V8_OS_ZOS / V8_OS_POSIX / V8_OS_STARBOARD
+// AmountOfVirtualMemory: V8_OS_WIN / V8_OS_POSIX / V8_OS_STARBOARD
+// AddressSpaceEnd: V8_OS_WIN
+// 语义: Rust 侧按 target cfg 分派, Darwin sysctl(HW_MEMSIZE)/FreeBSD vm.stats.win32 GlobalMemoryStatusEx
+// 等低频平台仅在需要时补 — Developer 决定

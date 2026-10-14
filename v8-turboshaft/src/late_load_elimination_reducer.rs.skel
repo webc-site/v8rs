@@ -1,0 +1,88 @@
+// 由 tool/src/compiler/turboshaft/late-load-elimination-reducer.h.js 从 v8/src/compiler/turboshaft/late-load-elimination-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 晚期载入消除: 内存内容快照表与替换判定骨架
+
+/// v8: src/compiler/turboshaft/late-load-elimination-reducer.h LoadEliminationReplacement::Kind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReplacementKind {
+  /// kNone (0)
+  /// kLoadElimination (1)
+  /// kTaggedLoadToInt32Load (2)
+  /// kTaggedBitcastElimination (3)
+  /// kInt32TruncationElimination (4)
+  none, loadElimination, taggedLoadToInt32Load, taggedBitcastElimination, int32TruncationElimination,
+}
+
+/// v8: src/compiler/turboshaft/late-load-elimination-reducer.h RawBaseAssumption
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RawBaseAssumption {
+  /// kNoInnerPointer — CSA 路径 (无内部指针)
+  noInnerPointer,
+  /// kMaybeInnerPointer — JS 路径 (可能有内部指针)
+  maybeInnerPointer,
+}
+
+/// v8: src/compiler/turboshaft/late-load-elimination-reducer.h MemoryAddress
+/// base + (可选) index 二元组 (operator<< 见 cc)
+pub struct MemoryAddress {
+  pub base: crate::index::OpIndex,
+  pub index: Option<crate::index::OpIndex>,
+}
+
+/// v8: src/compiler/turboshaft/late-load-elimination-reducer.h BaseData
+/// with_offsets / with_indices: DoublyThreadedList<Key> 双链
+pub struct BaseData {
+  pub with_offsets: (),
+  pub with_indices: (),
+}
+
+/// v8: src/compiler/turboshaft/late-load-elimination-reducer.h LateLoadEliminationAnalyzer
+///
+/// MemoryContentTable (base,offset→value 快照表) + MapTable 精确 map 跟踪;
+/// cc 方法面 (定义核对 6/6):
+/// - Run
+/// - ProcessBlock
+/// - ProcessLoad
+/// - ProcessTrustedLoad
+/// - ProcessStore
+/// - WipeAllMaps
+pub struct LateLoadEliminationAnalyzer {
+  pub raw_base_assumption: RawBaseAssumption,
+}
+
+impl LateLoadEliminationAnalyzer {
+  /// 原版 void Run() — v8: src/compiler/turboshaft/late-load-elimination-reducer.cc
+  pub fn run(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void ProcessBlock(const Block& block, ...) — 块序处理 + 快照回滚
+  pub fn process_block(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void ProcessLoad(OpIndex op_idx, const LoadOp& load, ...)
+  pub fn process_load(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void ProcessTrustedLoad(...) — trusted 空间载入
+  pub fn process_trusted_load(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void ProcessStore(OpIndex op_idx, const StoreOp& store, ...)
+  pub fn process_store(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void WipeAllMaps() — 任意写后清 map 状态
+  pub fn wipe_all_maps(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/late-load-elimination-reducer.h LateLoadEliminationReducer
+pub struct LateLoadEliminationReducer;
+
+impl LateLoadEliminationReducer {
+  /// 原版 V<None> REDUCE(AssumeMap)(V<HeapObject>, ZoneRefSet<Map>)
+  /// v8: src/compiler/turboshaft/late-load-elimination-reducer.h LateLoadEliminationReducer::REDUCE(AssumeMap)
+  pub fn reduce_assume_map(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

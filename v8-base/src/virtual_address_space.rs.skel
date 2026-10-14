@@ -1,0 +1,56 @@
+// 由 tool/src/base/virtual-address-space.h.js 从 v8/src/base/virtual-address-space.h + .cc 生成; 修订就地改, 复跑覆盖
+// 进程虚拟地址空间与子空间
+
+//! v8 侧: override 总 33 (根空间 16 + 子空间 17 + Base 纯虚); 三层类
+//! Rust 策略: trait VirtualAddressSpace (v8-platform 接口); 根空间直调 OS; 子空间包 RegionAllocator
+
+/// v8: class VirtualAddressSpaceBase — 公共父类, 负责子空间析构回调 (FreeSubspace 纯虚)
+pub trait VirtualAddressSpaceBase {
+    /// v8: FreeSubspace(subspace) — 子空间析构时由父释放预留
+    fn free_subspace(&mut self, subspace: &mut VirtualAddressSubspace);
+}
+
+/// v8: class VirtualAddressSpace : public VirtualAddressSpaceBase
+/// 当前进程的整个虚拟地址空间; 单例语义
+pub struct VirtualAddressSpace {
+    /// v8: root 语义, 无成员 (cc 构造仅断言页大小)
+}
+
+impl VirtualAddressSpace {
+    pub fn new() -> Self { Self {} }
+
+    /// v8: SetRandomSeed(seed) / RandomPageAddress()
+    pub fn set_random_seed(&self, seed: i64) { todo!() }
+    pub fn random_page_address(&self) -> usize { todo!() }
+    /// v8: AllocatePages(hint, size, alignment, access) / FreePages
+    /// v8: SetPagePermissions / AllocateGuardRegion / FreeGuardRegion
+    /// v8: AllocateSharedPages(hint, size, perms, handle, offset) / FreeSharedPages
+    /// v8: ActiveMemoryProtectionKey() / CanAllocateSubspaces() / AllocateSubspace(...)
+    /// v8: RecommitPages / DiscardSystemPages / DecommitPages
+    /// v8: SetName(name) — 根空间恒 false
+    pub fn allocate_pages(&self, hint: usize, size: usize, alignment: usize, access: PagePermissions) -> usize { todo!() }
+    pub fn free_pages(&self, address: usize, size: usize) { todo!() }
+    pub fn allocate_subspace(&self, hint: usize, size: usize, alignment: usize, max: PagePermissions) -> Box<VirtualAddressSubspace> { todo!() }
+}
+
+/// v8: class VirtualAddressSubspace — 父空间内连续预留区
+/// 布局: RegionAllocator (地址切分) + 地址换算 (base/scale) + 保护键 + name
+pub struct VirtualAddressSubspace {
+    /// v8: region_allocator_ — 预留区切分管理
+    region_allocator: super::region_allocator::RegionAllocator,
+    /// v8: Memory protection key (pkey) — 有
+    protection_key: Option<u32>,
+    /// v8: name_ — SetName 命名
+    name: Option<String>,
+}
+
+impl VirtualAddressSubspace {
+    /// v8: 同名 override 17 个; 地址经 base/scale 换算到父空间后委托
+    /// v8: CanAllocateSubspaces() 恒 true
+    pub fn allocate_pages(&self, hint: usize, size: usize, alignment: usize, access: PagePermissions) -> usize { todo!() }
+    pub fn free_pages(&self, address: usize, size: usize) { todo!() }
+    pub fn set_name(&mut self, name: &str) -> bool { todo!() }
+}
+
+/// v8: PagePermissions — 位标志 (来自 v8-platform, platform 席位承接枚举本体)
+pub type PagePermissions = u32;

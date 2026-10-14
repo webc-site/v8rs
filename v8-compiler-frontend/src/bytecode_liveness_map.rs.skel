@@ -1,0 +1,91 @@
+// 由 tool/src/compiler/bytecode-liveness-map.js 从 v8/src/compiler/bytecode-liveness-map.h + bytecode-liveness-map.cc 生成; 修订就地改, 复跑覆盖
+// 字节码活性: BitVector 布局 accumulator@0 + register@index+1
+
+//! BytecodeLivenessState — 单条字节码的寄存器/累加器活性。
+//!
+//! BitVector 布局 1:1: bit0 = accumulator, bit(index+1) = register index。
+//! register_count = bit_vector.length - 1; live_value_count 含 accumulator。
+
+/// 活性状态 — 位向量 [acc, r0, r1, ...]
+/// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState
+pub struct BytecodeLivenessState {
+    /// 长度 = register_count + 1
+    bit_vector: BitVector,
+}
+
+impl BytecodeLivenessState {
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::BytecodeLivenessState(register_count, zone)
+    pub fn new(register_count: i32, zone: &Zone) -> Self;
+
+    /// 读
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::RegisterIsLive
+    pub fn RegisterIsLive(&self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::AccumulatorIsLive
+    pub fn AccumulatorIsLive(&self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::Equals
+    pub fn Equals(&self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::UnionIsChanged
+    pub fn UnionIsChanged(&self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::register_count
+    pub fn register_count(&self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::live_value_count
+    pub fn live_value_count(&self);
+
+    /// 写 (Mark 家族 7: Live/Dead × 单寄存器/范围 + accumulator + All)
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkRegisterLive
+    pub fn MarkRegisterLive(&mut self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkRegistersLive
+    pub fn MarkRegistersLive(&mut self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkRegisterDead
+    pub fn MarkRegisterDead(&mut self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkRegistersDead
+    pub fn MarkRegistersDead(&mut self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkAccumulatorLive
+    pub fn MarkAccumulatorLive(&mut self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkAccumulatorDead
+    pub fn MarkAccumulatorDead(&mut self);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::MarkAllLive
+    pub fn MarkAllLive(&mut self);
+
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::Union
+    pub fn union_(&mut self, other: &BytecodeLivenessState);
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::CopyFrom
+    pub fn copy_from(&mut self, other: &BytecodeLivenessState);
+
+    /// 迭代: 跳过 accumulator, 值 = 迭代位 - 1
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessState::Iterator::operator*
+    pub fn iter_live_registers(&self) -> impl Iterator<Item = i32> + '_;
+}
+
+/// 单字节码偏移的 in/out 活性对
+/// v8: src/compiler/bytecode-liveness-map.h BytecodeLiveness
+pub struct BytecodeLiveness {
+    pub in_: *mut BytecodeLivenessState,
+    pub out: *mut BytecodeLivenessState,
+}
+
+/// 偏移 → BytecodeLiveness 数组 (索引即字节码偏移)
+/// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessMap
+pub struct BytecodeLivenessMap {
+    liveness: *mut BytecodeLiveness,
+    size: usize, // 仅 DEBUG
+}
+
+impl BytecodeLivenessMap {
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessMap::InsertNewLiveness
+    /// DEBUG 下先 in/out 置 null 供后续 DCHECK 判初始化
+    pub fn insert_new_liveness(&mut self, offset: i32) -> &mut BytecodeLiveness;
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessMap::GetLiveness
+    pub fn get_liveness(&self, offset: i32) -> &BytecodeLiveness;
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessMap::GetInLiveness
+    pub fn get_in_liveness(&self, offset: i32) -> &BytecodeLivenessState;
+    /// v8: src/compiler/bytecode-liveness-map.h BytecodeLivenessMap::GetOutLiveness
+    pub fn get_out_liveness(&self, offset: i32) -> &BytecodeLivenessState;
+}
+
+/// 调试打印: 活性位图字符串
+/// v8: src/compiler/bytecode-liveness-map.cc ToString
+pub fn to_string(liveness: &BytecodeLivenessState) -> String;
+
+// —— 对数基准 ——
+// BytecodeLivenessState 方法面: 17 个 (Mark* 7)

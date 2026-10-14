@@ -1,0 +1,44 @@
+// 由 tool/src/base/enum-set.h.js 从 v8/src/base/enum-set.h 生成; 修订就地改, 复跑覆盖
+// 枚举位集 (bitset of enum, 无显式值枚举按序数占位)
+
+//! v8: src/base/enum-set.h
+
+/// v8: src/base/enum-set.h EnumSet<E, T = int>
+/// Mask(e) = T{1} << e (DCHECK e < sizeof(T)*8); bits_ 默认 0
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct EnumSet<E, T = i32> {
+    bits: T,
+    _marker: std::marker::PhantomData<E>,
+}
+
+impl<E: Into<usize>, T: Bits> EnumSet<E, T> {
+    /// v8: EnumSet(std::initializer_list<E>) — 逐个 |= Mask(e)
+    pub const fn from_iter(init: impl Iterator<Item = E>) -> Self;
+    /// v8: empty — bits_ == 0
+    pub const fn is_empty(&self) -> bool;
+    /// v8: contains(E)
+    pub fn contains(&self, element: E) -> bool;
+    /// v8: contains_all — (bits & set.bits) == set.bits
+    pub fn contains_all(&self, set: Self) -> bool;
+    /// v8: contains_any — (bits & set.bits) != 0
+    pub fn contains_any(&self, set: Self) -> bool;
+    /// v8: contains_only — bits == Mask(element)
+    pub fn contains_only(&self, element: E) -> bool;
+    /// v8: is_subset_of — (bits & set.bits) == bits
+    pub fn is_subset_of(&self, set: Self) -> bool;
+    /// v8: Add(E) / Add(EnumSet)
+    pub fn add(&mut self, element: E);
+    pub fn add_set(&mut self, set: Self);
+    /// v8: Remove(E) / Remove(EnumSet) / RemoveAll
+    pub fn remove(&mut self, element: E);
+    pub fn remove_set(&mut self, set: Self);
+    pub fn remove_all(&mut self);
+    /// v8: Intersect — bits &= set.bits
+    pub fn intersect(&mut self, set: Self);
+    /// v8: ToIntegral
+    pub const fn to_integral(self) -> T;
+    /// v8: FromIntegral
+    pub const fn from_integral(bits: T) -> Self;
+}
+// v8: 运算符面: | & - 与 ~ 及对应赋值 (EnumSet 与 E 两套操作数), Rust 侧由 BitOr/BitAnd/Not trait 实现, 登记跳过
+// v8: operator<< — "{e1, e2}" 逐元素 (CTZNonZero 逐位摘除), Rust 侧 Debug/Display 补

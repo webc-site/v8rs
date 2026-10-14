@@ -1,0 +1,66 @@
+// 由 tool/src/wasm/compilation-hints-generation.h.js 从 v8/src/wasm/compilation-hints-generation.{h,cc} 生成; 修订就地改, 复跑覆盖
+// compilation hints 三 section 输出格式常量
+
+//! 三个自定义 section 的输出格式 (供 wasm-module-builder ZoneBuffer 写出)。
+/// v8: src/wasm/compilation-hints-generation.cc EmitCompilationHintsToBuffer
+
+/// section 名 (原版 wasm-constants.h kXxxString)
+pub mod section_name {
+    /// v8: src/wasm/wasm-constants.h kCompilationPriorityString
+    pub const COMPILATION_PRIORITY: &str = "metadata.code.compilation_priority";
+    /// v8: src/wasm/wasm-constants.h kInstructionFrequenciesString
+    pub const INSTRUCTION_FREQUENCIES: &str = "metadata.code.instr_freq";
+    /// v8: src/wasm/wasm-constants.h kCallTargetsString
+    pub const CALL_TARGETS: &str = "metadata.code.call_targets";
+}
+
+/// 函数级 hint 的 offset 字段固定 0
+/// v8: src/wasm/compilation-hints-generation.cc "Offset 0 for function-level hint"
+pub const FUNCTION_LEVEL_HINT_OFFSET: u8 = 0;
+
+/// 未标记 tier-up: hint size = 1 (仅 compilation priority)
+/// v8: src/wasm/compilation-hints-generation.cc buffer.write_u8(1)
+pub const HINT_SIZE_PLAIN: u8 = 1;
+
+/// 标记 tier-up: hint size = 2 (compilation + optimization priority)
+/// v8: src/wasm/compilation-hints-generation.cc buffer.write_u8(2)
+pub const HINT_SIZE_TIERUP: u8 = 2;
+
+/// instruction-frequency 槽位 hint 长度恒 1
+/// v8: src/wasm/compilation-hints-generation.cc "Hint length"
+pub const FREQ_HINT_LENGTH: u32 = 1;
+
+/// log 相对调用计数钳位域
+/// v8: src/wasm/compilation-hints-generation.cc log_relative_call_count
+pub mod log_call_count {
+    pub const MIN: u8 = 1;
+    pub const MAX: u8 = 64;
+    /// 编码: clamp(min, max, log2(relative) + 32)
+    pub fn encode(relative_call_count: f64) -> u8 {
+        let raw = (relative_call_count.log2() + 32.0) as u8;
+        raw.clamp(MIN, MAX)
+    }
+}
+
+/// call-target 百分比: floor(count * 100 / total)
+/// v8: src/wasm/compilation-hints-generation.cc call_targets 分支
+pub fn call_target_percentage(call_count: u32, total_at_slot: u32) -> u32 {
+    ((call_count as f64 * 100.0) / total_at_slot as f64).floor() as u32
+}
+
+/// 输出文件名模板: compilation-hints-wasm-<hash:08x>.wasm-no-header
+/// v8: src/wasm/compilation-hints-generation.cc WriteCompilationHintsToFile
+pub const HINTS_FILENAME_TEMPLATE: &str = "src/wasm/compilation-hints-generation.h";
+
+/// 文件名缓冲尺寸 (std::array<char, N>)
+pub const HINTS_FILENAME_BUF_SIZE: usize = 48;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(HINT_SIZE_PLAIN, 1);
+    assert_eq!(HINT_SIZE_TIERUP, 2);
+    assert_eq!(log_call_count::MIN, 1);
+    assert_eq!(log_call_count::MAX, 64);
+    assert_eq!(HINTS_FILENAME_BUF_SIZE, 48);
+    assert!(HINTS_FILENAME_TEMPLATE.starts_with("compilation-hints-wasm-"));
+};

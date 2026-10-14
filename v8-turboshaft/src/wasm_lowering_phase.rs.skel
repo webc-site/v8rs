@@ -1,0 +1,14 @@
+// 由 tool/src/compiler/turboshaft/wasm-lowering-phase.h.js 从 v8/src/compiler/turboshaft/wasm-lowering-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 降低期: GC 操作到机器操作
+
+/// 原版 WasmLoweringPhase — wasm GC 操作降为机器级。
+/// v8: src/compiler/turboshaft/wasm-lowering-phase.{h,cc}
+pub struct WasmLoweringPhase;
+
+impl WasmLoweringPhase {
+  /// v8: cc Run — UnparkedScopeIfNeeded(broker, trace_reduction) 后
+  /// CopyingPhase<WasmLoweringReducer, MachineOptimizationReducer>::Run
+  /// MachineOptimization 同跑 (cc 注释): 助后续 late load
+  /// elimination 消更多载入。
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

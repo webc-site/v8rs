@@ -1,0 +1,22 @@
+// 由 tool/src/compiler/turboshaft/loop-peeling-reducer.h.js 从 v8/src/compiler/turboshaft/loop-peeling-reducer.h 生成; 修订就地改, 复跑覆盖
+// 循环剥离 reducer
+
+/// v8: src/compiler/turboshaft/loop-peeling-reducer.h PeelingStatus — 类内 enum class
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PeelingStatus {
+  /// 原版 kNotPeeling
+  notPeeling,
+  /// 原版 kEmittingPeeledLoop
+  emittingPeeledLoop,
+  /// 原版 kEmittingUnpeeledBody
+  emittingUnpeeledBody,
+}
+
+/// v8: src/compiler/turboshaft/loop-peeling-reducer.h LoopPeelingReducer
+/// 首轮克隆 + PeelingStatus 状态机
+pub struct LoopPeelingReducer {
+  pub placeholder: (),
+}
+
+impl LoopPeelingReducer {
+}

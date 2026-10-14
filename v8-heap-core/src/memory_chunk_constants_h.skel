@@ -1,0 +1,38 @@
+// 由 tool/src/heap/memory-chunk-constants.h.js 从 v8/src/heap/memory-chunk-constants.h 生成; 修订就地改, 复跑覆盖
+// MemoryChunkConstants 9 常量台账 (目标配置 sandbox 开, 全量落地)
+
+// ══ MemoryChunkConstants (原版 memory-chunk-constants.h:15-38) → v8-heap-core/src/memory_chunk.rs ══
+// 逐项: 名 + 原版行号 + 展开实测式 (Rust 侧以 v8-common K_REGULAR_PAGE_SIZE 等重算)
+// [0] kPagesInMainCage                h:18
+// [1] kPagesInCodeCage                h:20
+// [2] kPagesInTrustedCage             h:22
+// [3] kMainCageMetadataOffset         h:25
+// [4] kTrustedSpaceMetadataOffset     h:26
+// [5] kCodeRangeMetadataOffset        h:28
+// [6] kMetadataPointerTableSizeLog2   h:31
+// [7] kMetadataPointerTableSize       h:33
+// [8] kMetadataPointerTableSizeMask   h:35
+// 实测锚: kPagesInMainCage = 2^32 / 2^18 = 16384; kTrustedSpaceMetadataOffset = 16384;
+// kPagesInTrustedCage = 2^30 / 2^18 = 4096; kPagesInCodeCage = K_MAXIMAL_CODE_RANGE_SIZE / 2^18 (x64 与 arm64 值异,
+//   Rust 侧按 v8-common K_MAXIMAL_CODE_RANGE_SIZE const 式随架构取, 与原版 globals 同源);
+// kMetadataPointerTableSizeLog2 = BitWidth(主+码+信) ; kMetadataPointerTableSize = 1<<log2 ; Mask = size-1
+// ── rs 侧落地锚 (HC-1R2a 实测台账) ──
+// Landed @ v8-heap-core/src/memory_chunk.rs (MemoryChunkConstants 区): 9 常量全量 pub const 落地
+//   (constants.h:17-37 沙箱守护目标配置开 → 无剥除臂); 测试面 chunk_constants_gold 金标准 16384/4096/32768。
+
+// ══ rs 落地锚 (v8-heap-core/src/memory_chunk.rs, HC-1R) ══
+// 9 常量逐名 (SCREAMING_SNAKE, 均 usize, 无 cfg 门 = 目标配置 sandbox 恒开):
+// [0] kPagesInMainCage                → pub const K_PAGES_IN_MAIN_CAGE
+// [1] kPagesInCodeCage                → pub const K_PAGES_IN_CODE_CAGE
+// [2] kPagesInTrustedCage             → pub const K_PAGES_IN_TRUSTED_CAGE
+// [3] kMainCageMetadataOffset         → pub const K_MAIN_CAGE_METADATA_OFFSET
+// [4] kTrustedSpaceMetadataOffset     → pub const K_TRUSTED_SPACE_METADATA_OFFSET
+// [5] kCodeRangeMetadataOffset        → pub const K_CODE_RANGE_METADATA_OFFSET
+// [6] kMetadataPointerTableSizeLog2   → pub const K_METADATA_POINTER_TABLE_SIZE_LOG2
+// [7] kMetadataPointerTableSize       → pub const K_METADATA_POINTER_TABLE_SIZE
+// [8] kMetadataPointerTableSizeMask   → pub const K_METADATA_POINTER_TABLE_SIZE_MASK
+// 双行号 doc 面: constants.h:NN 共 10 处 (9 项逐项 + 节头 15-38)
+// 值式同源: 主 cage = K_PTR_COMPR_CAGE_RESERVATION_SIZE / K_REGULAR_PAGE_SIZE;
+//   trusted = v8_common::K_MAXIMAL_TRUSTED_RANGE_SIZE / K_REGULAR_PAGE_SIZE;
+//   表位宽 = bit_width64(主+码+信); 表容量 = 1<<位宽; 掩码 = 容量-1
+// 码 cage 页数随架构 (x64 2048 / arm64 1024) — Rust 侧 const 式与原版 globals 同源, 不写死。

@@ -1,0 +1,54 @@
+// 由 tool/src/wasm/std-object-sizes.h.js 从 v8/src/wasm/std-object-sizes.h 生成; 修订就地改, 复跑覆盖
+// 标准容器堆外内存 ContentSize 估算公式
+
+//! 容器自身尺寸不计 (由持有方计入), 只算内容占用。
+/// v8: src/wasm/std-object-sizes.h ContentSize
+
+/// 每条目的内部指针开销近似 (std::map / unordered_map / unordered_set)
+/// v8: src/wasm/std-object-sizes.h "two internal pointers per entry"
+pub const INTERNAL_POINTERS_PER_ENTRY: usize = 2;
+
+/// 哈希容器假定填充率 75%, 估算值放大 4/3
+/// v8: src/wasm/std-object-sizes.h raw * 4 / 3
+pub const HASH_FILL_NUMERATOR: usize = 4;
+pub const HASH_FILL_DENOMINATOR: usize = 3;
+
+/// Vec: capacity * elem_size (用容量而非长度, 算真实占用)
+/// v8: src/wasm/std-object-sizes.h ContentSize(std::vector<T>&)
+pub fn content_size_vec(capacity: usize, elem_size: usize) -> usize {
+    capacity * elem_size
+}
+
+/// 定长数组 (相当于 UniqueArray): len * elem_size
+/// v8: src/wasm/std-object-sizes.h ContentSize(base::UniqueArray<T>&)
+pub fn content_size_array(len: usize, elem_size: usize) -> usize {
+    len * elem_size
+}
+
+/// BTreeMap (对应 std::map): len * (key + val + 2 ptr)
+/// v8: src/wasm/std-object-sizes.h ContentSize(std::map<Key, T>&)
+pub fn content_size_map(len: usize, key_size: usize, val_size: usize) -> usize {
+    len * (key_size + val_size + INTERNAL_POINTERS_PER_ENTRY * size_of::<usize>())
+}
+
+/// HashMap (对应 unordered_map): 粗估下界 * 4/3
+/// v8: src/wasm/std-object-sizes.h ContentSize(std::unordered_map<...>&)
+pub fn content_size_hash_map(len: usize, key_size: usize, val_size: usize) -> usize {
+    let raw = content_size_map(len, key_size, val_size);
+    raw * HASH_FILL_NUMERATOR / HASH_FILL_DENOMINATOR
+}
+
+/// HashSet (对应 unordered_set): len * (val + 2 ptr), 再 * 4/3
+/// v8: src/wasm/std-object-sizes.h ContentSize(std::unordered_set<T, Hash>&)
+pub fn content_size_hash_set(len: usize, elem_size: usize) -> usize {
+    let raw = len * (elem_size + INTERNAL_POINTERS_PER_ENTRY * size_of::<usize>());
+    raw * HASH_FILL_NUMERATOR / HASH_FILL_DENOMINATOR
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(INTERNAL_POINTERS_PER_ENTRY, 2);
+    assert_eq!(HASH_FILL_NUMERATOR, 4);
+    assert_eq!(HASH_FILL_DENOMINATOR, 3);
+    assert_eq!(content_size_hash_set(3, 8), 3 * (8 + 16) * 4 / 3);
+};

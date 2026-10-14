@@ -1,0 +1,15 @@
+// 由 tool/src/bigint/bitwise-and.js 从 v8/src/bigint/bigint.h + src/builtins/builtins-bigint.tq 生成; 修订就地改, 复跑覆盖
+// BigInt::BitwiseAnd 签名表与处置; 落地以 bitwise.rs / bigint.rs 就地修订为准
+
+//! BitwiseAnd 落地处置 (台账 [bigint] 缺新算法: BigInt::BitwiseAnd):
+//! - digit 内核 (bigint-inl.h:1146-1187, 已 1:1 在 bigint.rs):
+//!   BitwiseAnd_PosPos → bitwise_and_pos_pos(&mut [Digit], &[Digit], &[Digit])
+//!   BitwiseAnd_NegNeg → bitwise_and_neg_neg  (补码: -(((x-1)|(y-1))+1), Add(Z,1) 回补)
+//!   BitwiseAnd_PosNeg → bitwise_and_pos_neg  (x & ~(y-1), 调用方负责换参)
+//! - 顶层编排 (builtins-bigint.tq:454 BigIntBitwiseAndImpl → src/bitwise.rs, 本轮落地):
+//!   bitwise_and_result_length(x, x_neg, y, y_neg) -> (负?, 预算 digit 数)  [min / max+1 / 正侧长度]
+//!   bitwise_and(z, x, x_neg, y, y_neg) -> (负?, 规格化视图)                 [符号派发 + Canonicalize→norm]
+//!   bitwise_and_owned(x, x_neg, y, y_neg) -> (负?, Vec<Digit>)              [tq 分配面由 Vec 承担]
+//! - 推迟 (heap/objects 硬耦合, 本 crate 边界外, 显式不实现):
+//!   MutableBigInt_BitwiseAnd*AndCanonicalize 三壳 (objects/bigint.cc:1723-1757, Tagged<BigInt>/Factory)
+//!   AllocateEmptyBigIntNoThrow / BigIntTooBig RangeError 抛错面 (tq 壳层, 归 L4 builtins)

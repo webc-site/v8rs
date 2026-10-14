@@ -1,0 +1,64 @@
+// 由 tool/src/compiler/turboshaft/register-allocation-phase.h.js 从 v8/src/compiler/turboshaft/register-allocation-phase.h 生成; 修订就地改, 复跑覆盖
+// 寄存器分配: 后端 phase 包装层
+
+/// 原版寄存器分配 phase 族 — 每个 phase 都是后端 builder 的薄包装
+/// (kOutputIsTraceableGraph = false, 全部带 legacy 名)。
+/// v8: src/compiler/turboshaft/register-allocation-phase.h
+pub trait RegAllocPhase {
+  /// 原版 kPhaseName ("V8.TF"+CallStatsName) / kLegacyPhaseName
+  const PHASE_NAME: &'static str;
+  const LEGACY_PHASE_NAME: &'static str;
+  /// v8: register-allocation-phase.h 各 Run(PipelineData*, Zone*)
+  fn run(data: &mut PipelineData, temp_zone: &mut Zone);
+}
+
+/// phase → 后端动作登记 (19 个):
+/// - MeetRegisterConstraintsPhase (legacy MeetRegisterConstraints): ConstraintBuilder builder(; builder.MeetRegisterConstraints(
+/// - ResolvePhisPhase (legacy ResolvePhis): ConstraintBuilder builder(; builder.ResolvePhis(
+/// - BuildLiveRangesPhase (legacy BuildLiveRanges): LiveRangeBuilder builder(; builder.BuildLiveRanges(
+/// - BuildLiveRangeBundlesPhase (legacy BuildLiveRangeBundles): BundleBuilder builder(; builder.BuildBundles(
+/// - AllocateGeneralRegistersPhase (legacy AllocateGeneralRegisters): RegAllocator allocator(; allocator.AllocateRegisters(
+/// - AllocateFPRegistersPhase (legacy AllocateFPRegisters): RegAllocator allocator(; allocator.AllocateRegisters(
+/// - AllocateSimd128RegistersPhase (legacy AllocateSimd128Registers): RegAllocator allocator(; allocator.AllocateRegisters(
+/// - DecideSpillingModePhase (legacy DecideSpillingMode): OperandAssigner assigner(; assigner.DecideSpillingMode(
+/// - AssignSpillSlotsPhase (legacy AssignSpillSlots): OperandAssigner assigner(; assigner.AssignSpillSlots(
+/// - CommitAssignmentPhase (legacy CommitAssignment): OperandAssigner assigner(; assigner.CommitAssignment(
+/// - PopulateReferenceMapsPhase (legacy PopulateReferenceMaps): ReferenceMapPopulator populator(; populator.PopulateReferenceMaps(
+/// - ConnectRangesPhase (legacy ConnectRanges): LiveRangeConnector connector(; connector.ConnectRanges(
+/// - ResolveControlFlowPhase (legacy ResolveControlFlow): LiveRangeConnector connector(; connector.ResolveControlFlow(
+/// - OptimizeMovesPhase (legacy OptimizeMoves): MoveOptimizer move_optimizer(; move_optimizer.Run(
+/// - BlockPositioningPhase (legacy BlockPositioning): BlockPositionNumberer block_position_numberer(
+/// - FrameElisionPhase (legacy FrameElision): 直接调用
+/// - JumpThreadingPhase (legacy JumpThreading): 直接调用
+/// - AssembleCodePhase (legacy AssembleCode): 直接调用
+/// - FinalizeCodePhase (legacy FinalizeCode): 直接调用
+///
+/// 模板三联: AllocateGeneralRegistersPhase / AllocateFPRegistersPhase / AllocateSimd128RegistersPhase — 按 RegisterKind 泛化
+/// (kGeneral / kDouble / kSimd128)。
+macro_rules! reg_alloc_phases {
+  ($($name:ident => $action:expr),* $(,)?) => { /* ... */ };
+}
+
+pub mod phases {
+  pub struct MeetRegisterConstraintsPhase;
+  pub struct ResolvePhisPhase;
+  pub struct BuildLiveRangesPhase;
+  pub struct BuildLiveRangeBundlesPhase;
+  pub struct AllocateGeneralRegistersPhase<R>(pub R);
+  pub struct AllocateFPRegistersPhase<R>(pub R);
+  pub struct AllocateSimd128RegistersPhase<R>(pub R);
+  pub struct DecideSpillingModePhase;
+  pub struct AssignSpillSlotsPhase;
+  pub struct CommitAssignmentPhase;
+  pub struct PopulateReferenceMapsPhase;
+  pub struct ConnectRangesPhase;
+  pub struct ResolveControlFlowPhase;
+  pub struct OptimizeMovesPhase;
+  /// BUILTIN_BLOCK_POSITION 条件编译
+  pub struct BlockPositioningPhase;
+  pub struct FrameElisionPhase;
+  pub struct JumpThreadingPhase;
+  pub struct AssembleCodePhase;
+  /// 主线程限定 (DECL_TURBOSHAFT_MAIN_THREAD_PIPELINE_...)
+  pub struct FinalizeCodePhase;
+}

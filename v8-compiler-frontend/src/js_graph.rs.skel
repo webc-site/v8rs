@@ -1,0 +1,114 @@
+// 由 tool/src/compiler/js-graph.js 从 v8/src/compiler/js-graph.h + js-graph.cc 生成; 修订就地改, 复跑覆盖
+// JSGraph 门面: 规范化全局常量缓存 + CEntryStub 协议 + Constant 分派
+
+//! JSGraph — TFGraph 的 JS 门面: 算子构建器 + 规范化全局常量 + helper。
+
+/// JS 图门面
+/// v8: src/compiler/js-graph.h JSGraph
+pub struct JSGraph { /* MachineGraph + isolate/javascript/simplified 三构建器 */ }
+
+impl JSGraph {
+    /// CEntryStub 常量 — 按 (result_size ∈ [1,3], argv_mode, builtin_exit_frame) 缓存
+    /// kStack 模式 + 非 builtin_exit_frame: 1/2/3 三档缓存
+    /// builtin_exit_frame: CEntryStub1WithBuiltinExitFrame 单独缓存
+    /// 非 kStack (argv on heap): 不缓存, 每次新建
+    /// v8: src/compiler/js-graph.cc JSGraph::CEntryStubConstant
+    pub fn centry_stub_constant(&mut self, result_size: i32, argv_mode: ArgvMode, builtin_exit_frame: bool) -> NodeRef;
+
+    /// 别名两枚 (原版内联):
+    /// v8: src/compiler/js-graph.h JSGraph::PaddingConstant (= TheHoleConstant)
+    /// v8: src/compiler/js-graph.h JSGraph::NoContextConstant (= ZeroConstant)
+
+    // HeapConstant 三档纪律:
+    /// 默认用; 禁止发射 hole
+    /// v8: src/compiler/js-graph.h JSGraph::HeapConstantNoHole
+    pub fn heap_constant_no_hole(&mut self, value: Handle<HeapObject>) -> NodeRef;
+    /// 可能发 hole 时用
+    /// v8: src/compiler/js-graph.h JSGraph::HeapConstantMaybeHole
+    pub fn heap_constant_maybe_hole(&mut self, value: Handle<HeapObject>) -> NodeRef;
+    /// 只发 hole 时用
+    /// v8: src/compiler/js-graph.h JSGraph::HeapConstantHole
+    pub fn heap_constant_hole(&mut self, value: Handle<HeapObject>) -> NodeRef;
+
+    // Constant 两档纪律:
+    /// CHECK 非 hole (安全关键, crbug.com/1486789); 字符串先 UnpackIfThin
+    /// v8: src/compiler/js-graph.cc JSGraph::ConstantNoHole
+    pub fn constant_no_hole(&mut self, r: ObjectRef, broker: &JSHeapBroker) -> NodeRef;
+    /// v8: src/compiler/js-graph.cc JSGraph::ConstantMaybeHole
+    pub fn constant_maybe_hole(&mut self, r: ObjectRef, broker: &JSHeapBroker) -> NodeRef;
+    /// Smi → ConstantMaybeHole(immediate)
+    /// v8: src/compiler/js-graph.h JSGraph::SmiConstant
+    pub fn smi_constant(&mut self, immediate: i32) -> NodeRef;
+    /// 可变 HeapNumber 常量 (不同于读 double 值)
+    /// v8: src/compiler/js-graph.h JSGraph::ConstantMutableHeapNumber
+    pub fn constant_mutable_heap_number(&mut self, r: HeapNumberRef, broker: &JSHeapBroker) -> NodeRef;
+    /// v8: src/compiler/js-graph.h JSGraph::BooleanConstant
+    pub fn boolean_constant(&mut self, is_true: bool) -> NodeRef;
+}
+
+// —— HoleType → 规范化常量分派 (js-graph.cc JSGraph::Constant 内嵌 switch) ——
+// 命中 8 路, 其余 UNREACHABLE:
+// kGeneric => the_hole_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kGeneric
+// kPropertyCellHole => property_cell_hole_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kPropertyCellHole
+// kHashTableHole => hash_table_hole_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kHashTableHole
+// kPromiseHole => promise_hole_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kPromiseHole
+// kTdzHole => tdz_hole_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kTdzHole
+// kOptimizedOut => optimized_out_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kOptimizedOut
+// kStaleRegister => stale_register_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kStaleRegister
+// kUninitializedHole => uninitialized_constant() /// v8: src/compiler/js-graph.cc JSGraph::Constant case HoleType::kUninitializedHole
+// UNREACHABLE: None / DisabledTdzHole / ExceptionHole / TerminationException / ArgumentsMarker / SelfReferenceMarker / BasicBlockCountersMarker
+// 之后按 OddballType (Undefined/Null/...) 走 roots 常量
+
+// —— CACHED_GLOBAL_LIST: 35 项 + IF_WASM 2 项 ——
+// AllocateInYoungGenerationStubConstant: Code /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// AllocateInOldGenerationStubConstant: Code /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// ArrayConstructorStubConstant: Code /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// BigIntMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// BooleanMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// ToNumberBuiltinConstant: Code /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// PlainPrimitiveToNumberBuiltinConstant: Code /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// EmptyFixedArrayConstant: FixedArray /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// EmptyStringConstant: String /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// FixedArrayMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// PropertyArrayMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// FixedDoubleArrayMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// WeakFixedArrayMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// HeapNumberMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// UndefinedConstant: Undefined /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// TheHoleConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// PropertyCellHoleConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// HashTableHoleConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// PromiseHoleConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// TdzHoleConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// UninitializedConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// OptimizedOutConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// StaleRegisterConstant: Hole /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// TrueConstant: True /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// FalseConstant: False /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// NullConstant: Null /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// ZeroConstant: Number /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// MinusZeroConstant: Number /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// OneConstant: Number /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// MinusOneConstant: Number /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// NaNConstant: Number /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// EmptyStateValues: UntaggedT /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// SingleDeadTypedStateValues: UntaggedT /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// ExternalObjectMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// ContextCellMapConstant: Map /// v8: src/compiler/js-graph.h CACHED_GLOBAL_LIST
+// wasm-only:
+// WasmAllocateInYoungGenerationStubConstant: Code
+// WasmAllocateInOldGenerationStubConstant: Code
+
+// —— CACHED_CENTRY_LIST: 4 项 ——
+// CEntryStub1Constant /// v8: src/compiler/js-graph.h CACHED_CENTRY_LIST
+// CEntryStub2Constant /// v8: src/compiler/js-graph.h CACHED_CENTRY_LIST
+// CEntryStub3Constant /// v8: src/compiler/js-graph.h CACHED_CENTRY_LIST
+// CEntryStub1WithBuiltinExitFrameConstant /// v8: src/compiler/js-graph.h CACHED_CENTRY_LIST
+
+// GetCachedNodes: 把全部已缓存节点加进 list
+/// v8: src/compiler/js-graph.h JSGraph::GetCachedNodes
+
+// —— 对数基准 ——
+// CACHED_GLOBAL 35+2(wasm) / CENTRY 4
+// HoleType case 15 (映射 8)
+// cc 显式定义 15 + GET_CACHED_FIELD 宏展开访问器模板 1 处

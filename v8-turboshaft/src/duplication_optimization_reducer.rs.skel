@@ -1,0 +1,21 @@
+// 由 tool/src/compiler/turboshaft/duplication-optimization-reducer.h.js 从 v8/src/compiler/turboshaft/duplication-optimization-reducer.h 生成; 修订就地改, 复跑覆盖
+// 重复操作优化 reducer
+
+/// v8: src/compiler/turboshaft/duplication-optimization-reducer.h DuplicationOptimizationReducer
+/// Load/Store 输入替换 (跳过中间投影)
+pub struct DuplicationOptimizationReducer {
+  pub placeholder: (),
+}
+
+impl DuplicationOptimizationReducer {
+  /// 原版 OpIndex REDUCE(Load)(OpIndex base, OptionalOpIndex index, LoadOp::Kind kind, MemoryRepresentation loaded_rep, RegisterRepresentation result_rep, int32_t offset, uint8_t element_size_log2)
+  /// v8: src/compiler/turboshaft/duplication-optimization-reducer.h DuplicationOptimizationReducer::REDUCE(Load)
+  pub fn reduce_load(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Store)(OpIndex base, OptionalOpIndex index, OpIndex value, StoreOp::Kind kind, MemoryRepresentation stored_rep, WriteBarrierKind write_barrier, std::optional<AtomicMemoryOrder> memory_order, int32_t offset, uint8_t element_size_log2, bool maybe_initializing_or_transitioning, IndirectPointerTag maybe_indirect_pointer_tag)
+  /// v8: src/compiler/turboshaft/duplication-optimization-reducer.h DuplicationOptimizationReducer::REDUCE(Store)
+  pub fn reduce_store(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

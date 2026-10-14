@@ -1,0 +1,259 @@
+// 由 tool/src/heap/cppgc-internal/stats-collector.h.js 从 v8/src/heap/cppgc-internal/stats-collector.h 生成; 修订就地改, 复跑覆盖
+// StatsCollector — 4 X-macro 域展开 + Event 双缓冲 + AllocationObserver + Notify 生命周期 (cc 实现一并落地)
+
+// ══ ScopeId (原版 stats-collector.h:91-97, X-macro 展开: 直方图 7 + 普通 34) ══
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ScopeId {
+    ATOMIC_MARK,
+    ATOMIC_WEAK,
+    ATOMIC_COMPACT,
+    ATOMIC_SWEEP,
+    INCREMENTAL_MARK,
+    INCREMENTAL_SWEEP,
+    /// kNumHistogramScopeIds — 直方图域计数 (夹在两组之间)
+    NumHistogramScopeIds,
+    UNMARK,
+    MARK_INCREMENTAL_START,
+    MARK_INCREMENTAL_FINALIZE,
+    MARK_ATOMIC_PROLOGUE,
+    MARK_ATOMIC_EPILOGUE,
+    MARK_TRANSITIVE_CLOSURE,
+    MARK_TRANSITIVE_CLOSURE_WITH_DEADLINE,
+    MARK_FLUSH_EPHEMERONS,
+    MARK_ON_ALLOCATION,
+    MARK_PROCESS_BAIL_OUT_OBJECTS,
+    MARK_PROCESS_MARKING_WORKLIST,
+    MARK_PROCESS_RETRACE_WORKLIST,
+    MARK_PROCESS_WRITE_BARRIER_WORKLIST,
+    MARK_PROCESS_NOT_FULLYCONSTRUCTED_WORKLIST,
+    MARK_PROCESS_EPHEMERONS,
+    MARK_VISIT_ROOTS,
+    MARK_VISIT_NOT_FULLY_CONSTRUCTED_OBJECTS,
+    MARK_VISIT_PERSISTENTS,
+    MARK_VISIT_CROSS_THREAD_PERSISTENTS,
+    MARK_VISIT_STACK,
+    MARK_VISIT_REMEMBERED_SETS,
+    WEAK_CONTAINER_CALLBACKS_PROCESSING,
+    CUSTOM_CALLBACKS_PROCESSING,
+    SWEEP_EMPTY_PAGES,
+    SWEEP_FINISH,
+    SWEEP_FINALIZE_EMPTY_PAGES,
+    SWEEP_FINALIZE_SWEPT_PAGES,
+    SWEEP_FINISH_IF_OUT_OF_WORK,
+    SWEEP_INVOKE_PRE_FINALIZERS,
+    SWEEP_IN_LOW_PRIORITY_TASK,
+    SWEEP_IN_TASK,
+    SWEEP_IN_TASK_FOR_STATISTICS,
+    SWEEP_ON_ALLOCATION,
+    SWEEP_PAGES,
+    /// kNumScopeIds
+    NumScopeIds,
+}
+pub const K_NUM_HISTOGRAM_SCOPE_IDS: usize = 6;
+pub const K_NUM_SCOPE_IDS: usize = 40;
+
+// ══ ConcurrentScopeId (原版 :99-106, 直方图并发 3 + 并发 4) ══
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ConcurrentScopeId {
+    CONCURRENT_MARK,
+    CONCURRENT_SWEEP,
+    CONCURRENT_WEAK_CALLBACK,
+    /// kNumHistogramConcurrentScopeIds
+    NumHistogramConcurrentScopeIds,
+    CONCURRENT_MARK_PROCESS_EPHEMERON_WORKLIST,
+    CONCURRENT_MARK_PROCESS_MARKING_WORKLIST,
+    CONCURRENT_MARK_PROCESS_NOT_FULLYCONSTRUCTED_WORKLIST,
+    CONCURRENT_MARK_PROCESS_WRITE_BARRIER_WORKLIST,
+    /// kNumConcurrentScopeIds
+    NumConcurrentScopeIds,
+}
+pub const K_NUM_HISTOGRAM_CONCURRENT_SCOPE_IDS: usize = 3;
+pub const K_NUM_CONCURRENT_SCOPE_IDS: usize = 7;
+
+// ══ GarbageCollectionState (原版 :345-350) ══
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[repr(u8)]
+pub enum GarbageCollectionState {
+    #[default]
+    NotRunning,
+    Unmarking,
+    Marking,
+    Sweeping,
+}
+
+// ══ TraceCategory / ScopeContext (原版 :170-171) ══
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TraceCategory { Enabled, Disabled }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScopeContext { MutatorThread, ConcurrentThread }
+
+// ══ Event (原版 :116-137) ══
+/// 单轮 GC 事件 POD; 历史事件全量, 当前事件可部分填充。
+#[derive(Clone)]
+pub struct Event {
+    pub scope_data: [v8_base::TimeDelta; K_NUM_HISTOGRAM_SCOPE_IDS],
+    pub concurrent_scope_data: [v8_base::AtomicWord; K_NUM_HISTOGRAM_CONCURRENT_SCOPE_IDS], // {0}
+    pub epoch: usize,                    // = -1 哨兵
+    pub collection_type: CollectionType, // = kMajor
+    pub marking_type: MarkingType,       // = kAtomic
+    pub sweeping_type: SweepingType,     // = kAtomic
+    pub is_forced_gc: IsForcedGc,        // = kNotForced
+    pub marked_bytes: usize,             // = 0
+    pub object_size_before_sweep_bytes: usize,  // = -1 哨兵
+    pub memory_size_before_sweep_bytes: usize,  // = -1 哨兵
+}
+
+// ══ GetScopeName (原版 :139-167, constexpr 双态) ══
+impl ScopeId {
+    /// Major → "CppGC.<name>" / Minor → "CppGC.<name>.Minor"
+    pub const fn get_scope_name(id: Self, type_: CollectionType) -> &'static str {
+        match id {
+            Self::ATOMIC_MARK => if type_ == CollectionType::Major { "CppGC.AtomicMark" } else { "CppGC.AtomicMark.Minor" },
+            Self::ATOMIC_WEAK => if type_ == CollectionType::Major { "CppGC.AtomicWeak" } else { "CppGC.AtomicWeak.Minor" },
+            Self::ATOMIC_COMPACT => if type_ == CollectionType::Major { "CppGC.AtomicCompact" } else { "CppGC.AtomicCompact.Minor" },
+            Self::ATOMIC_SWEEP => if type_ == CollectionType::Major { "CppGC.AtomicSweep" } else { "CppGC.AtomicSweep.Minor" },
+            Self::INCREMENTAL_MARK => if type_ == CollectionType::Major { "CppGC.IncrementalMark" } else { "CppGC.IncrementalMark.Minor" },
+            Self::INCREMENTAL_SWEEP => if type_ == CollectionType::Major { "CppGC.IncrementalSweep" } else { "CppGC.IncrementalSweep.Minor" },
+            Self::UNMARK => if type_ == CollectionType::Major { "CppGC.Unmark" } else { "CppGC.Unmark.Minor" },
+            Self::MARK_INCREMENTAL_START => if type_ == CollectionType::Major { "CppGC.MarkIncrementalStart" } else { "CppGC.MarkIncrementalStart.Minor" },
+            Self::MARK_INCREMENTAL_FINALIZE => if type_ == CollectionType::Major { "CppGC.MarkIncrementalFinalize" } else { "CppGC.MarkIncrementalFinalize.Minor" },
+            Self::MARK_ATOMIC_PROLOGUE => if type_ == CollectionType::Major { "CppGC.MarkAtomicPrologue" } else { "CppGC.MarkAtomicPrologue.Minor" },
+            Self::MARK_ATOMIC_EPILOGUE => if type_ == CollectionType::Major { "CppGC.MarkAtomicEpilogue" } else { "CppGC.MarkAtomicEpilogue.Minor" },
+            Self::MARK_TRANSITIVE_CLOSURE => if type_ == CollectionType::Major { "CppGC.MarkTransitiveClosure" } else { "CppGC.MarkTransitiveClosure.Minor" },
+            Self::MARK_TRANSITIVE_CLOSURE_WITH_DEADLINE => if type_ == CollectionType::Major { "CppGC.MarkTransitiveClosureWithDeadline" } else { "CppGC.MarkTransitiveClosureWithDeadline.Minor" },
+            Self::MARK_FLUSH_EPHEMERONS => if type_ == CollectionType::Major { "CppGC.MarkFlushEphemerons" } else { "CppGC.MarkFlushEphemerons.Minor" },
+            Self::MARK_ON_ALLOCATION => if type_ == CollectionType::Major { "CppGC.MarkOnAllocation" } else { "CppGC.MarkOnAllocation.Minor" },
+            Self::MARK_PROCESS_BAIL_OUT_OBJECTS => if type_ == CollectionType::Major { "CppGC.MarkProcessBailOutObjects" } else { "CppGC.MarkProcessBailOutObjects.Minor" },
+            Self::MARK_PROCESS_MARKING_WORKLIST => if type_ == CollectionType::Major { "CppGC.MarkProcessMarkingWorklist" } else { "CppGC.MarkProcessMarkingWorklist.Minor" },
+            Self::MARK_PROCESS_RETRACE_WORKLIST => if type_ == CollectionType::Major { "CppGC.MarkProcessRetraceWorklist" } else { "CppGC.MarkProcessRetraceWorklist.Minor" },
+            Self::MARK_PROCESS_WRITE_BARRIER_WORKLIST => if type_ == CollectionType::Major { "CppGC.MarkProcessWriteBarrierWorklist" } else { "CppGC.MarkProcessWriteBarrierWorklist.Minor" },
+            Self::MARK_PROCESS_NOT_FULLYCONSTRUCTED_WORKLIST => if type_ == CollectionType::Major { "CppGC.MarkProcessNotFullyconstructedWorklist" } else { "CppGC.MarkProcessNotFullyconstructedWorklist.Minor" },
+            Self::MARK_PROCESS_EPHEMERONS => if type_ == CollectionType::Major { "CppGC.MarkProcessEphemerons" } else { "CppGC.MarkProcessEphemerons.Minor" },
+            Self::MARK_VISIT_ROOTS => if type_ == CollectionType::Major { "CppGC.MarkVisitRoots" } else { "CppGC.MarkVisitRoots.Minor" },
+            Self::MARK_VISIT_NOT_FULLY_CONSTRUCTED_OBJECTS => if type_ == CollectionType::Major { "CppGC.MarkVisitNotFullyConstructedObjects" } else { "CppGC.MarkVisitNotFullyConstructedObjects.Minor" },
+            Self::MARK_VISIT_PERSISTENTS => if type_ == CollectionType::Major { "CppGC.MarkVisitPersistents" } else { "CppGC.MarkVisitPersistents.Minor" },
+            Self::MARK_VISIT_CROSS_THREAD_PERSISTENTS => if type_ == CollectionType::Major { "CppGC.MarkVisitCrossThreadPersistents" } else { "CppGC.MarkVisitCrossThreadPersistents.Minor" },
+            Self::MARK_VISIT_STACK => if type_ == CollectionType::Major { "CppGC.MarkVisitStack" } else { "CppGC.MarkVisitStack.Minor" },
+            Self::MARK_VISIT_REMEMBERED_SETS => if type_ == CollectionType::Major { "CppGC.MarkVisitRememberedSets" } else { "CppGC.MarkVisitRememberedSets.Minor" },
+            Self::WEAK_CONTAINER_CALLBACKS_PROCESSING => if type_ == CollectionType::Major { "CppGC.WeakContainerCallbacksProcessing" } else { "CppGC.WeakContainerCallbacksProcessing.Minor" },
+            Self::CUSTOM_CALLBACKS_PROCESSING => if type_ == CollectionType::Major { "CppGC.CustomCallbacksProcessing" } else { "CppGC.CustomCallbacksProcessing.Minor" },
+            Self::SWEEP_EMPTY_PAGES => if type_ == CollectionType::Major { "CppGC.SweepEmptyPages" } else { "CppGC.SweepEmptyPages.Minor" },
+            Self::SWEEP_FINISH => if type_ == CollectionType::Major { "CppGC.SweepFinish" } else { "CppGC.SweepFinish.Minor" },
+            Self::SWEEP_FINALIZE_EMPTY_PAGES => if type_ == CollectionType::Major { "CppGC.SweepFinalizeEmptyPages" } else { "CppGC.SweepFinalizeEmptyPages.Minor" },
+            Self::SWEEP_FINALIZE_SWEPT_PAGES => if type_ == CollectionType::Major { "CppGC.SweepFinalizeSweptPages" } else { "CppGC.SweepFinalizeSweptPages.Minor" },
+            Self::SWEEP_FINISH_IF_OUT_OF_WORK => if type_ == CollectionType::Major { "CppGC.SweepFinishIfOutOfWork" } else { "CppGC.SweepFinishIfOutOfWork.Minor" },
+            Self::SWEEP_INVOKE_PRE_FINALIZERS => if type_ == CollectionType::Major { "CppGC.SweepInvokePreFinalizers" } else { "CppGC.SweepInvokePreFinalizers.Minor" },
+            Self::SWEEP_IN_LOW_PRIORITY_TASK => if type_ == CollectionType::Major { "CppGC.SweepInLowPriorityTask" } else { "CppGC.SweepInLowPriorityTask.Minor" },
+            Self::SWEEP_IN_TASK => if type_ == CollectionType::Major { "CppGC.SweepInTask" } else { "CppGC.SweepInTask.Minor" },
+            Self::SWEEP_IN_TASK_FOR_STATISTICS => if type_ == CollectionType::Major { "CppGC.SweepInTaskForStatistics" } else { "CppGC.SweepInTaskForStatistics.Minor" },
+            Self::SWEEP_ON_ALLOCATION => if type_ == CollectionType::Major { "CppGC.SweepOnAllocation" } else { "CppGC.SweepOnAllocation.Minor" },
+            Self::SWEEP_PAGES => if type_ == CollectionType::Major { "CppGC.SweepPages" } else { "CppGC.SweepPages.Minor" },
+            _ => "",
+        }
+    }
+}
+
+impl ConcurrentScopeId {
+    /// 同上双态 (并发域)
+    pub const fn get_scope_name(id: Self, type_: CollectionType) -> &'static str {
+        match id {
+            Self::CONCURRENT_MARK => if type_ == CollectionType::Major { "CppGC.ConcurrentMark" } else { "CppGC.ConcurrentMark.Minor" },
+            Self::CONCURRENT_SWEEP => if type_ == CollectionType::Major { "CppGC.ConcurrentSweep" } else { "CppGC.ConcurrentSweep.Minor" },
+            Self::CONCURRENT_WEAK_CALLBACK => if type_ == CollectionType::Major { "CppGC.ConcurrentWeakCallback" } else { "CppGC.ConcurrentWeakCallback.Minor" },
+            Self::CONCURRENT_MARK_PROCESS_EPHEMERON_WORKLIST => if type_ == CollectionType::Major { "CppGC.ConcurrentMarkProcessEphemeronWorklist" } else { "CppGC.ConcurrentMarkProcessEphemeronWorklist.Minor" },
+            Self::CONCURRENT_MARK_PROCESS_MARKING_WORKLIST => if type_ == CollectionType::Major { "CppGC.ConcurrentMarkProcessMarkingWorklist" } else { "CppGC.ConcurrentMarkProcessMarkingWorklist.Minor" },
+            Self::CONCURRENT_MARK_PROCESS_NOT_FULLYCONSTRUCTED_WORKLIST => if type_ == CollectionType::Major { "CppGC.ConcurrentMarkProcessNotFullyconstructedWorklist" } else { "CppGC.ConcurrentMarkProcessNotFullyconstructedWorklist.Minor" },
+            Self::CONCURRENT_MARK_PROCESS_WRITE_BARRIER_WORKLIST => if type_ == CollectionType::Major { "CppGC.ConcurrentMarkProcessWriteBarrierWorklist" } else { "CppGC.ConcurrentMarkProcessWriteBarrierWorklist.Minor" },
+            _ => "",
+        }
+    }
+}
+
+// ══ AllocationObserver (原版 :243-262) ══
+pub trait AllocationObserver {
+    /// 可触发 GC; 增减双向报告 (观察者自选绝对值或增量视角)
+    fn allocated_object_size_increased(&mut self, _bytes: usize) {}
+    fn allocated_object_size_decreased(&mut self, _bytes: usize) {}
+    /// 精确尺寸已知时 (标记毕 marked==allocated); 禁同步触发 GC
+    fn reset_allocated_object_size(&mut self, _bytes: usize) {}
+    /// 页级内存增减; 禁触发 GC
+    fn allocated_size_increased(&mut self, _bytes: usize) {}
+    fn allocated_size_decreased(&mut self, _bytes: usize) {}
+}
+
+// ══ StatsCollector (原版 :84-423) ══
+pub struct StatsCollector {
+    /// 通知阈值 — 观察者走虚调用, 低于该尺寸不值得通知
+    pub allocation_observers: Vec<*mut dyn AllocationObserver>,
+    allocation_observer_deleted: bool,
+    gc_state: GarbageCollectionState, // = kNotRunning
+    current: Event,                   // 本轮填充中
+    previous: Event,                  // 上轮 (NotifySweepingCompleted 时落)
+    metric_recorder: Option<Box<dyn MetricRecorder>>,
+    // 原版 :371-394 私有标量区 (标记后分配/时间戳/safepoint 计数等)
+    allocated_bytes_since_end_of_marking: i64,   // = 0, 可为负 (显式释放已标对象)
+    time_of_last_end_of_marking: v8_base::TimeTicks,
+    allocated_bytes_since_safepoint: i64,
+    explicitly_freed_bytes_since_safepoint: i64,
+    marked_bytes_so_far: usize,
+    memory_allocated_bytes: i64,
+    memory_freed_bytes_since_end_of_marking: i64,
+    discarded_bytes: std::sync::atomic::AtomicUsize, // {0}
+    platform: *mut Platform,
+}
+
+/// kAllocationThresholdBytes = 1024 — 观察者通知阈值
+pub const K_ALLOCATION_THRESHOLD_BYTES: usize = 1024;
+
+impl StatsCollector {
+    /// 原版 h:279-280 + cc 构造 — 平台指针注入 (TRACE_EVENT_* 用)
+    pub fn new(platform: *mut Platform) -> Self { unimplemented!() }
+
+    /// 原版 h:282-283 — 注册/反注册 (仅启动/关停期)
+    pub fn register_observer(&mut self, _o: *mut dyn AllocationObserver) { unimplemented!() }
+    pub fn unregister_observer(&mut self, _o: *mut dyn AllocationObserver) { unimplemented!() }
+
+    // ── Notify 生命周期 (声明 h:285-306, 实现 cc) ──
+    /// 新 GC 周期 (分代 major 专用, 可选)
+    pub fn notify_unmarking_started(&mut self, _t: CollectionType) { unimplemented!() }
+    /// minor 周期 (或无分代时的 major)
+    pub fn notify_marking_started(&mut self, _t: CollectionType, _m: MarkingType, _f: IsForcedGc) { unimplemented!() }
+    /// 标记毕
+    pub fn notify_marking_completed(&mut self, _marked_bytes: usize) { unimplemented!() }
+    /// 清扫毕 = 周期毕
+    pub fn notify_sweeping_completed(&mut self, _t: SweepingType) { unimplemented!() }
+    /// 分配通知 (可能触发 GC)
+    pub fn notify_allocation(&mut self, _bytes: usize) { unimplemented!() }
+    /// 显式释放通知
+    pub fn notify_explicit_free(&mut self, _bytes: usize) { unimplemented!() }
+    /// 保守收集 safepoint (GC 可能时才可调)
+    pub fn notify_safe_point_for_conservative_collection(&mut self) { unimplemented!() }
+    pub fn notify_safe_point_for_testing(&mut self) { unimplemented!() }
+
+    // ── 查询 (h:308-322) ──
+    pub fn allocated_memory_size(&self) -> usize { unimplemented!() }
+    pub fn allocated_object_size(&self) -> usize { unimplemented!() }
+    /// 累计标记字节 (分代跨轮累计); 禁标记中调
+    pub fn marked_bytes(&self) -> usize { unimplemented!() }
+    /// 本轮标记字节; 仅 GC 周期内调
+    pub fn marked_bytes_on_current_cycle(&self) -> usize { unimplemented!() }
+    pub fn marking_time(&self) -> v8_base::TimeDelta { unimplemented!() }
+    pub fn get_recent_allocation_speed_in_bytes_per_ms(&self) -> f64 { unimplemented!() }
+    pub fn get_previous_event_for_testing(&self) -> &Event { &self.previous }
+
+    // ── 内存与 discard (h:325-333) ──
+    pub fn notify_allocated_memory(&mut self, _b: i64) { unimplemented!() }
+    pub fn notify_freed_memory(&mut self, _b: i64) { unimplemented!() }
+    pub fn increment_discarded_memory(&mut self, _b: usize) { unimplemented!() }
+    pub fn decrement_discarded_memory(&mut self, _b: usize) { unimplemented!() }
+    pub fn reset_discarded_memory(&mut self) { unimplemented!() }
+    pub fn discarded_memory_size(&self) -> usize { unimplemented!() }
+    pub fn resident_memory_size(&self) -> usize { unimplemented!() }
+
+    /// 原版 :415-422 — 下标迭代 (允许回调内 push_back), 有删除标记则尾部压缩
+    pub fn for_all_allocation_observers(&mut self, _cb: impl FnMut(&mut dyn AllocationObserver)) { unimplemented!() }
+}

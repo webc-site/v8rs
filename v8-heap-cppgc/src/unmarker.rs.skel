@@ -1,0 +1,35 @@
+// 由 tool/src/heap/cppgc-internal/unmarker.h.js 从 v8/src/heap/cppgc-internal/unmarker.h 生成; 修订就地改, 复跑覆盖
+// SequentialUnmarker 全堆顺序清标访问者
+
+// ══ SequentialUnmarker (原版 unmarker.h:14-37) ══
+// CRTP: private HeapVisitor<SequentialUnmarker>, 构造即 Traverse(RawHeap&) — 一步副作用型访问者。
+
+pub struct SequentialUnmarker;
+
+impl SequentialUnmarker {
+    /// 原版 unmarker.h:18 — 构造即遍历全堆
+    pub fn new(heap: &mut RawHeap) -> Self {
+        heap.traverse_with(Self);
+        Self
+    }
+
+    /// 原版 unmarker.h:20-23 — 普通页: 清页标字节账, false = 不深入页内 (页级即达)
+    pub fn visit_normal_page(page: &mut NormalPage) -> bool {
+        page.reset_marked_bytes();
+        false
+    }
+
+    /// 原版 unmarker.h:25-28 — 大页: 同普通页
+    pub fn visit_large_page(page: &mut LargePage) -> bool {
+        page.reset_marked_bytes();
+        false
+    }
+
+    /// 原版 unmarker.h:31-36 — 对象头: 已标才清, 恒续遍历
+    fn visit_heap_object_header(header: &mut HeapObjectHeader) -> bool {
+        if header.is_marked() {
+            header.unmark();
+        }
+        true
+    }
+}

@@ -1,0 +1,145 @@
+// 由 tool/src/compiler/code-assembler.js 从 v8/src/compiler/code-assembler.h + src/compiler/code-assembler.cc + src/compiler/code-assembler-compilation-job.h 生成; 修订就地改, 复跑覆盖
+// CodeAssembler — CSA (Code Stub Assembler) 图构建层 + 编译作业封装
+
+//! CodeAssembler: Torque/内置生成器的中层 IR 构建 API。
+//!
+//! 规则面: 3 枚举 + Label Type + OBJECT_TYPE 特化 X-macro 组
+//! (6 组) + 主类方法面 251 (骨架化)。
+//! 语义面 (推迟): TNode 类型系统 (模板层), 状态机 (Label/Variable 栈),
+//! raw machine 调用 (js-graph / raw-machine-assembler)。
+
+#![allow(dead_code, non_camel_case_types)]
+
+/// v8: src/compiler/code-assembler.h CheckBounds
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CheckBounds {
+  /// kAlways
+  Always,
+  /// kDebugOnly
+  DebugOnly,
+}
+
+/// v8: src/compiler/code-assembler.h NeedsBoundsCheck
+/// 原文: kAlways→true; kDebugOnly→DEBUG_BOOL
+pub const fn needs_bounds_check(check_bounds: CheckBounds) -> bool {
+  match check_bounds {
+    CheckBounds::Always => true,
+    CheckBounds::DebugOnly => cfg!(debug_assertions),
+  }
+}
+
+/// v8: src/compiler/code-assembler.h StoreToObjectWriteBarrier
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StoreToObjectWriteBarrier {
+  /// kNone
+  None,
+  /// kMap
+  Map,
+  /// kFull
+  Full,
+}
+
+/// v8: src/compiler/code-assembler.h CodeAssemblerLabel::Type
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LabelType {
+  /// kDeferred
+  Deferred,
+  /// kNonDeferred
+  NonDeferred,
+}
+
+/// v8: src/compiler/code-assembler.h ObjectTypeOf (X-macro 特化组)
+/// 特化来源: OBJECT_TYPE_LIST / HEAP_OBJECT_ORDINARY_TYPE_LIST /
+/// VIRTUAL_OBJECT_TYPE_LIST / HEAP_OBJECT_TRUSTED_TYPE_LIST / STRUCT_LIST /
+/// HEAP_OBJECT_TEMPLATE_TYPE_LIST; ODDBALL 四值折叠为 kOddball;
+/// HOLE 折叠为 kHole; Weak<T> → kHeapObjectReference;
+/// Union: 含 Smi/Object → kObject, 含 Weak → kHeapObjectReference, 否则 kHeapObject。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ObjectType {
+  /// kObject — 任意 tagged (含 Smi 可能)
+  Object,
+  /// kSmi
+  Smi,
+  /// kHeapObject
+  HeapObject,
+  /// kHeapObjectReference — Weak
+  HeapObjectReference,
+  /// kOddball — Null/Undefined/True/False 折叠
+  Oddball,
+  /// kHole — HOLE_LIST 折叠
+  Hole,
+}
+
+/// v8: src/compiler/code-assembler.h CodeAssemblerLabel
+pub struct CodeAssemblerLabel {
+  /// 原 type_ (默认 kNonDeferred)
+  pub label_type: LabelType,
+  /// 原 state_ 绑定点推迟
+  pub _semantic: (),
+}
+
+/// v8: src/compiler/code-assembler.h CodeAssemblerState
+/// 状态机: 变量栈/label 栈/错误处理器 (PushErrorHandler/PopErrorHandler)
+pub struct CodeAssemblerState {
+  /// 原 macro_assembler_ 推迟 (codegen 层)
+  pub _semantic: (),
+}
+
+impl CodeAssemblerState {
+  /// v8: src/compiler/code-assembler.h CodeAssemblerState::PushExceptionHandler
+  /// 注: 声明在 .h, 成员 exception_handler_labels_ 为 vector 栈
+  pub fn push_exception_handler(&mut self, label: *mut crate::CodeAssemblerExceptionHandlerLabel) {
+    todo!("exception_handler_labels_ 压入")
+  }
+  /// v8: src/compiler/code-assembler.h CodeAssemblerState::PopExceptionHandler
+  pub fn pop_exception_handler(&mut self) {
+    todo!("exception_handler_labels_ 弹出")
+  }
+}
+
+/// v8: src/compiler/code-assembler.h CodeAssembler
+/// 方法面 251 个 (Goto/Branch/Select/Call/Load/Store/…),
+/// TNode 模板层语义推迟; 本骨架保留类位。
+pub struct CodeAssembler {
+  /// 原 state_
+  pub state: *mut CodeAssemblerState,
+}
+
+impl CodeAssembler {
+  /// v8: src/compiler/code-assembler.h CodeAssembler::CodeAssembler
+  pub fn new(state: *mut CodeAssemblerState) -> Self {
+    Self { state }
+  }
+  /// v8: src/compiler/code-assembler.h CodeAssembler::label_count 等查询面
+  /// 完整方法面 251 项在 .h:407-1763, 语义迁移随 TNode 层。
+  pub fn placeholder_method_count(&self) -> usize {
+    251
+  }
+}
+
+/// v8: src/compiler/code-assembler-compilation-job.h CodeAssemblerCompilationJob::kNoFinalizeOrder
+pub const K_NO_FINALIZE_ORDER: i32 = -1;
+
+/// v8: src/compiler/code-assembler-compilation-job.h CodeAssemblerCompilationJob
+/// 生成器/安装器回调 + finalize_order; 语义面 (Pipeline 执行) 推迟。
+pub struct CodeAssemblerCompilationJob {
+  /// 原 generator_ (CodeAssemblerGenerator)
+  pub generator: crate::CodeAssemblerGenerator,
+  /// 原 installer_ (CodeAssemblerInstaller)
+  pub installer: crate::CodeAssemblerInstaller,
+  /// 原 finalize_order_ (kNoFinalizeOrder = -1)
+  pub finalize_order: i32,
+}
+
+impl CodeAssemblerCompilationJob {
+  /// v8: src/compiler/code-assembler-compilation-job.h FinalizeOrder
+  /// 原文: DCHECK_NE(kNoFinalizeOrder, finalize_order_); return finalize_order_;
+  pub fn finalize_order(&self) -> i32 {
+    debug_assert_ne!(K_NO_FINALIZE_ORDER, self.finalize_order);
+    self.finalize_order
+  }
+  /// v8: src/compiler/code-assembler-compilation-job.h ShouldOptimizeJumps
+  pub fn should_optimize_jumps(isolate: &crate::Isolate) -> bool {
+    todo!("flags 查询")
+  }
+}

@@ -1,0 +1,86 @@
+// 由 tool/src/base/numerics/clamped_math.h.js 从 v8/src/base/numerics/clamped_math.h + clamped_math_impl.h 生成; 修订就地改, 复跑覆盖
+// 饱和 (钳位) 算术: ClampedNumeric 类型面
+
+//! v8 侧: Clamped*Op 12 个; 算子 X-macro 12; 比较 X-macro 6; using 14 条
+//! Rust 策略: 语义对应 i*.saturating_add 等; ClampedNumeric<T> 保留 newtype 包装
+
+/// v8: src/base/numerics/clamped_math.h class ClampedNumeric<T>
+/// Rust: 透明 newtype, 运算后钳位到 T 域
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ClampedNumeric<T>(pub T);
+
+impl<T> ClampedNumeric<T> {
+    /// v8: RawValue() / Clamp* 系列; 语义面就地修订
+    pub fn raw_value(&self) -> T where T: Copy { self.0 }
+}
+
+// ---- 12 个 Clamped*Op (impl 侧规则结构) ----
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedAddOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedSubOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedMulOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedDivOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedModOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedLshOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedRshOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedAndOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedOrOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedXorOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedMaxOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+/// v8: src/base/numerics/clamped_math_impl.h struct ClampedMinOp
+/// SaturationOp 分派 — Rust 用 saturating_* / clamp 原生替换
+// 语义: Add/Sub/Mul → saturating_add/sub/mul; Div 除零与 MIN/-1 钳位;
+// Mod/Lsh/Rsh/And/Or/Xor 溢出时钳到域端点; Max/Min 比较取值
+
+// ---- 算子展开 ----
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Add, +, +=)
+pub fn clamp_add<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Sub, -, -=)
+pub fn clamp_sub<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Mul, *, *=)
+pub fn clamp_mul<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Div, /, /=)
+pub fn clamp_div<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Mod, %, %=)
+pub fn clamp_mod<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Lsh, <<, <<=)
+pub fn clamp_lsh<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Rsh, >>, >>=)
+pub fn clamp_rsh<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, And, &, &=)
+pub fn clamp_and<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Or, |, |=)
+pub fn clamp_or<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Clamped, Clamp, Xor, ^, ^=)
+pub fn clamp_xor<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_VARIADIC(Clamped, Clamp, Max)
+pub fn clamp_max<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_VARIADIC(Clamped, Clamp, Min)
+pub fn clamp_min<T>(lhs: T, rhs: T) -> ClampedNumeric<T> { todo!() }
+
+// ---- 比较算子展开 (返回 ClampedNumeric<bool>, 非裸 bool) ----
+/// v8: BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsLess, <)
+impl PartialOrd for ClampedNumeric<T> { /* 语义: IsLess — 就地修订, 保留 ClampedNumeric<bool> 返回形 */ }
+/// v8: BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsLessOrEqual, <=)
+impl PartialOrd for ClampedNumeric<T> { /* 语义: IsLessOrEqual — 就地修订, 保留 ClampedNumeric<bool> 返回形 */ }
+/// v8: BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsGreater, >)
+impl PartialOrd for ClampedNumeric<T> { /* 语义: IsGreater — 就地修订, 保留 ClampedNumeric<bool> 返回形 */ }
+/// v8: BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsGreaterOrEqual, >=)
+impl PartialOrd for ClampedNumeric<T> { /* 语义: IsGreaterOrEqual — 就地修订, 保留 ClampedNumeric<bool> 返回形 */ }
+/// v8: BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsEqual, ==)
+impl PartialOrd for ClampedNumeric<T> { /* 语义: IsEqual — 就地修订, 保留 ClampedNumeric<bool> 返回形 */ }
+/// v8: BASE_NUMERIC_COMPARISON_OPERATORS(Clamped, IsNotEqual, !=)
+impl PartialOrd for ClampedNumeric<T> { /* 语义: IsNotEqual — 就地修订, 保留 ClampedNumeric<bool> 返回形 */ }
+
+// ---- using 导出对账表 (v8 侧 14 条) ----
+// ClampAdd, ClampAnd, ClampDiv, ClampedNumeric, ClampLsh, ClampMax, ClampMin, ClampMod, ClampMul, ClampOr, ClampRsh, ClampSub, ClampXor, MakeClampedNum

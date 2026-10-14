@@ -1,0 +1,57 @@
+// 由 tool/src/heap/memory-pool.h.js 从 v8/src/heap/memory-pool.h 生成; 修订就地改, 复跑覆盖
+// MemoryPool 头台账: PooledPage 21 锚 + MemoryPool 外壳 26 + PoolImpl 17 + Large 8 + PVM 4 + 字段/断言族; 展开侧 DCHECK/EXPORT/NOEXCEPT 0 残留
+
+// ══ MemoryPool/PooledPage (原版 memory-pool.h:1-259) → v8-heap-core/src/memory_pool.rs ══
+// 前向声明 (h:15-20 ×6): CancelableTaskManager 直用 v8-tasks 落地面; Isolate 落 opaque enum
+//   (台账 10); LargePage/BasePage/MutablePage/NormalPage 由 Create 族台账 1 覆盖。
+// PooledPage (h:28-67): size/epoch/ToResult 全落; Create ×2 (h:57-58) 与 placement 析构面推迟 (台账 1);
+//   VirtualMemory reservation_ → Reservation 窄 trait 承接 (台账 6, 5 面全消费)。
+// MemoryPool (h:74-255): Config 5 默认值逐项; PoolImpl<E> 模板 → 泛型 + PooledEntry 约束;
+//   absl::flat_hash_map → HashMap (台账 9); LargePagePoolImpl best-fit 单一堆;
+//   PooledVirtualMemory zone 条目; ReleaseStats/PoolReleaseStats 账目 struct。
+// h:254 static_assert(atomic<TimeTicks>::is_always_lock_free) → Rust 无 atomic<TimeTicks> 形态,
+//   posted_time_ 以 AtomicI64 承载 µs 位值 + cfg!(target_has_atomic="64") const 断言代入 (台账 11)。
+// h:138 GarbageCollectionPrologue — 悬空声明 (v8/src+v8/test 全树 grep 无定义无调用) → 不落地 (台账 7)。
+// ── 双行号台账 (h 行号 ↔ rs 行号, 实测查行) ──
+//   h: 31 ↔ rs:  40  Epoch 别名
+//   h: 16 ↔ rs:  45  Isolate 前向声明承接
+//   h: 60 ↔ rs: 107  PooledPage ctor/承接位
+//   h: 63 ↔ rs:  94  字段 uninitialized_metadata
+//   h: 65 ↔ rs:  96  字段 reservation (VirtualMemory→trait)
+//   h: 66 ↔ rs:  97  字段 epoch
+//   h: 45 ↔ rs: 115  PooledPage::size
+//   h: 46 ↔ rs: 120  PooledPage::epoch
+//   h: 50 ↔ rs: 129  PooledPage::ToResult
+//   h: 34 ↔ rs:  75  Result.uninitialized_metadata
+//   h: 35 ↔ rs:  77  Result.uninitialized_chunk
+//   h: 81 ↔ rs: 212  Config 结构
+//   h: 82 ↔ rs: 214  Config.single_threaded
+//   h: 83 ↔ rs: 216  Config.share_memory_on_teardown
+//   h: 84 ↔ rs: 218  Config.trace_gc_nvp
+//   h: 85 ↔ rs: 220  Config.max_large_page_pool_size
+//   h: 86 ↔ rs: 222  Config.timeout_in_sec
+//   h:156 ↔ rs: 240  PoolReleaseStats
+//   h:228 ↔ rs: 250  ReleaseStats
+//   h:162 ↔ rs: 277  PoolImpl 结构
+//   h:187 ↔ rs: 281  local_pools 承接 absl map
+//   h:188 ↔ rs: 283  shared_pool
+//   h:192 ↔ rs: 467  LargePagePoolImpl 结构
+//   h:210 ↔ rs: 471  pages_
+//   h:211 ↔ rs: 473  total_size_
+//   h:214 ↔ rs: 167  PooledVirtualMemory 结构
+//   h:219 ↔ rs: 181  virtual_memory()
+//   h:221 ↔ rs: 190  PooledVirtualMemory::size
+//   h:154 ↔ rs: 651  ReleasePooledChunksTask 类型
+//   h: 74 ↔ rs: 714  MemoryPool 结构
+//   h:239 ↔ rs: 718  task_disabled
+//   h:241 ↔ rs: 720  page_pool
+//   h:242 ↔ rs: 722  zone_pool
+//   h:244 ↔ rs: 724  large_pool
+//   h:250 ↔ rs: 726  current_epoch
+//   h:251 ↔ rs: 728  posted_time (AtomicI64 承载 µs)
+//   h:252 ↔ rs: 730  cancellable_task_manager
+//   h:254 ↔ rs: 704  static_assert→const 断言
+// ── 原版关键面行号自证 (查行实测) ──
+// PooledPage 类体 h:28 / MemoryPool 类体 h:74
+// Config h:81 / PoolImpl h:162
+// LargePagePoolImpl h:192 / PooledVirtualMemory h:214

@@ -1,0 +1,322 @@
+// 由 tool/src/compiler/turboshaft/machine-lowering-reducer-inl.h.js 从 v8/src/compiler/turboshaft/machine-lowering-reducer-inl.h 生成; 修订就地改, 复跑覆盖
+// 机器级降级 reducer (simplified→machine)
+
+/// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h StringEncoding — 类内 enum class
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StringEncoding {
+  /// 原版 kOneByte
+  oneByte,
+  /// 原版 kTwoByte
+  twoByte,
+  /// 原版 kUnknown
+  unknown,
+}
+
+/// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer
+/// 60 个 REDUCE 覆盖 JS 语义操作降级
+pub struct MachineLoweringReducer {
+  pub placeholder: (),
+}
+
+impl MachineLoweringReducer {
+  /// 原版 V<Untagged> REDUCE(ChangeOrDeopt)(V<Untagged> input, V<EagerFrameState> frame_state, ChangeOrDeoptOp::Kind kind, CheckForMinusZeroMode minus_zero_mode, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ChangeOrDeopt)
+  pub fn reduce_change_or_deopt(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(DeoptimizeIf)(V<Word32> condition, V<EagerFrameState> frame_state, bool negated, const DeoptimizeParameters* parameters)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(DeoptimizeIf)
+  pub fn reduce_deoptimize_if(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(ObjectIs)(V<Object> input, ObjectIsOp::Kind kind, ObjectIsOp::InputAssumptions input_assumptions)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ObjectIs)
+  pub fn reduce_object_is(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(FloatIs)(V<Float> value, NumericKind kind, FloatRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(FloatIs)
+  pub fn reduce_float_is(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(ObjectIsNumericValue)(V<Object> input, NumericKind kind, FloatRepresentation input_rep)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ObjectIsNumericValue)
+  pub fn reduce_object_is_numeric_value(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(Convert)(V<Object> input, ConvertOp::Kind from, ConvertOp::Kind to)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(Convert)
+  pub fn reduce_convert(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<JSPrimitive> REDUCE(ConvertUntaggedToJSPrimitive)(V<Untagged> input, ConvertUntaggedToJSPrimitiveOp::JSPrimitiveKind kind, RegisterRepresentation input_rep, ConvertUntaggedToJSPrimitiveOp::InputInterpretation input_interpretation, CheckForMinusZeroMode minus_zero_mode)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ConvertUntaggedToJSPrimitive)
+  pub fn reduce_convert_untagged_to_js_primitive(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<JSPrimitive> REDUCE(ConvertWordToSmiOrDeopt)(V<Untagged> input, V<EagerFrameState> frame_state, RegisterRepresentation input_rep, ConvertWordToSmiOrDeoptOp::InputInterpretation input_interpretation, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ConvertWordToSmiOrDeopt)
+  pub fn reduce_convert_word_to_smi_or_deopt(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Untagged> REDUCE(ConvertJSPrimitiveToUntagged)(V<JSPrimitive> object, ConvertJSPrimitiveToUntaggedOp::UntaggedKind kind, ConvertJSPrimitiveToUntaggedOp::InputAssumptions input_assumptions)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ConvertJSPrimitiveToUntagged)
+  pub fn reduce_convert_js_primitive_to_untagged(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Untagged> REDUCE(ConvertJSPrimitiveToUntaggedOrDeopt)(V<Object> object, V<EagerFrameState> frame_state, ConvertJSPrimitiveToUntaggedOrDeoptOp::JSPrimitiveKind from_kind, ConvertJSPrimitiveToUntaggedOrDeoptOp::UntaggedKind to_kind, CheckForMinusZeroMode minus_zero_mode, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ConvertJSPrimitiveToUntaggedOrDeopt)
+  pub fn reduce_convert_js_primitive_to_untagged_or_deopt(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word> REDUCE(TruncateJSPrimitiveToUntagged)(V<JSPrimitive> object, TruncateJSPrimitiveToUntaggedOp::UntaggedKind kind, TruncateJSPrimitiveToUntaggedOp::InputAssumptions input_assumptions)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(TruncateJSPrimitiveToUntagged)
+  pub fn reduce_truncate_js_primitive_to_untagged(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word> REDUCE(TruncateJSPrimitiveToWord32OrDeopt)(V<JSPrimitive> input, V<EagerFrameState> frame_state, TruncateJSPrimitiveToWord32OrDeoptOp::InputRequirement input_requirement, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(TruncateJSPrimitiveToWord32OrDeopt)
+  pub fn reduce_truncate_js_primitive_to_word32_or_deopt(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(ConvertJSPrimitiveToObject)(V<JSPrimitive> value, V<Context> native_context, V<JSGlobalProxy> global_proxy, ConvertReceiverMode mode)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ConvertJSPrimitiveToObject)
+  pub fn reduce_convert_js_primitive_to_object(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<ConsString> REDUCE(NewConsString)(V<Word32> length, V<String> first, V<String> second)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(NewConsString)
+  pub fn reduce_new_cons_string(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<AnyFixedArray> REDUCE(NewArray)(V<WordPtr> length, NewArrayOp::Kind kind, AllocationType allocation_type)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(NewArray)
+  pub fn reduce_new_array(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Number> REDUCE(DoubleArrayMinMax)(V<JSArray> array, DoubleArrayMinMaxOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(DoubleArrayMinMax)
+  pub fn reduce_double_array_min_max(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(LoadFieldByIndex)(V<Object> object, V<Word32> field_index)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(LoadFieldByIndex)
+  pub fn reduce_load_field_by_index(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(LoadDictionaryField)(V<JSReceiver> object, V<Object> receiver, V<Context> context, V<LazyFrameState> frame_state, size_t raw_index, compiler::NameRef name, const FeedbackSource& feedback, bool is_super, LazyDeoptOnThrow lazy_deopt_on_throw)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(LoadDictionaryField)
+  pub fn reduce_load_dictionary_field(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word> REDUCE(WordBinopDeoptOnOverflow)(V<Word> left, V<Word> right, V<EagerFrameState> frame_state, WordBinopDeoptOnOverflowOp::Kind kind, WordRepresentation rep, FeedbackSource feedback, CheckForMinusZeroMode mode)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(WordBinopDeoptOnOverflow)
+  pub fn reduce_word_binop_deopt_on_overflow(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<BigInt> REDUCE(BigIntBinop)(V<BigInt> left, V<BigInt> right, V<EagerFrameState> frame_state, BigIntBinopOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(BigIntBinop)
+  pub fn reduce_big_int_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Boolean> REDUCE(BigIntComparison)(V<BigInt> left, V<BigInt> right, BigIntComparisonOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(BigIntComparison)
+  pub fn reduce_big_int_comparison(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<BigInt> REDUCE(BigIntUnary)(V<BigInt> input, BigIntUnaryOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(BigIntUnary)
+  pub fn reduce_big_int_unary(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(StringAt)(V<String> string, V<WordPtr> pos, StringAtOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringAt)
+  pub fn reduce_string_at(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(StringLength)(V<String> string)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringLength)
+  pub fn reduce_string_length(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<WordPtr> REDUCE(TypedArrayLength)(V<JSTypedArray> typed_array, ElementsKind elements_kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(TypedArrayLength)
+  pub fn reduce_typed_array_length(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Smi> REDUCE(StringIndexOf)(V<String> string, V<String> search, V<Smi> position)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringIndexOf)
+  pub fn reduce_string_index_of(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<String> REDUCE(StringFromCodePointAt)(V<String> string, V<WordPtr> index)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringFromCodePointAt)
+  pub fn reduce_string_from_code_point_at(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<String> REDUCE(StringToCaseIntl)(V<String> string, V<LazyFrameState> frame_state, V<Context> context, StringToCaseIntlOp::Kind kind, LazyDeoptOnThrow lazy_deopt_on_throw)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringToCaseIntl)
+  pub fn reduce_string_to_case_intl(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<String> REDUCE(StringSubstring)(V<String> string, V<Word32> start, V<Word32> end)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringSubstring)
+  pub fn reduce_string_substring(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<String> REDUCE(StringSlice)(V<String> string, V<Word32> start, V<Word32> end)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringSlice)
+  pub fn reduce_string_slice(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<String> REDUCE(StringConcat)(V<Smi> length, V<String> left, V<String> right)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringConcat)
+  pub fn reduce_string_concat(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Boolean> REDUCE(StringComparison)(V<String> left, V<String> right, StringComparisonOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringComparison)
+  pub fn reduce_string_comparison(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Boolean> REDUCE(StringOrOddballStrictEqual)(V<HeapObject> left, V<HeapObject> right)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringOrOddballStrictEqual)
+  pub fn reduce_string_or_oddball_strict_equal(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Smi> REDUCE(StringLocaleCompareIntl)(V<JSFunction> locale_compare_fn, V<Object> receiver, V<Object> compare_str, V<StringOrUndefined> locales, V<LazyFrameState> frame_state, V<Context> context, LazyDeoptOnThrow lazy_deopt_on_throw)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StringLocaleCompareIntl)
+  pub fn reduce_string_locale_compare_intl(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Smi> REDUCE(ArgumentsLength)(ArgumentsLengthOp::Kind kind, int formal_parameter_count)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(ArgumentsLength)
+  pub fn reduce_arguments_length(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(NewArgumentsElements)(V<Smi> arguments_count, CreateArgumentsType type, int formal_parameter_count)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(NewArgumentsElements)
+  pub fn reduce_new_arguments_elements(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(LoadTypedElement)(OpIndex buffer, V<Object> base, V<WordPtr> external, V<WordPtr> index, ExternalArrayType array_type)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(LoadTypedElement)
+  pub fn reduce_load_typed_element(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(LoadStackArgument)(V<WordPtr> base, V<WordPtr> index)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(LoadStackArgument)
+  pub fn reduce_load_stack_argument(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(StoreTypedElement)(OpIndex buffer, V<Object> base, V<WordPtr> external, V<WordPtr> index, V<Any> value, ExternalArrayType array_type)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StoreTypedElement)
+  pub fn reduce_store_typed_element(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(TransitionAndStoreArrayElement)(V<JSArray> array, V<WordPtr> index, OpIndex value, TransitionAndStoreArrayElementOp::Kind kind, MaybeHandle<Map> fast_map, MaybeHandle<Map> double_map)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(TransitionAndStoreArrayElement)
+  pub fn reduce_transition_and_store_array_element(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(CompareMaps)(V<HeapObject> heap_object, OptionalV<Map> map, const ZoneRefSet<Map>& maps)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(CompareMaps)
+  pub fn reduce_compare_maps(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(CheckMaps)(V<HeapObject> heap_object, V<EagerFrameState> frame_state, OptionalV<Map> map, const ZoneRefSet<Map>& maps, CheckMapsFlags flags, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(CheckMaps)
+  pub fn reduce_check_maps(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(CheckHomomorphic)(V<Object> heap_object, V<EagerFrameState> frame_state, NameRef name, WeakHomomorphicFixedArrayRef homomorphic_array, int handler_value, bool check_heap_object, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(CheckHomomorphic)
+  pub fn reduce_check_homomorphic(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Float> REDUCE(FloatUnary)(V<Float> input, FloatUnaryOp::Kind kind, FloatRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(FloatUnary)
+  pub fn reduce_float_unary(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(CheckedClosure)(V<Object> input, V<EagerFrameState> frame_state, Handle<FeedbackCell> feedback_cell)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(CheckedClosure)
+  pub fn reduce_checked_closure(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(CheckEqualsInternalizedString)(V<Object> expected, V<Object> value, V<EagerFrameState> frame_state)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(CheckEqualsInternalizedString)
+  pub fn reduce_check_equals_internalized_string(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(LoadMessage)(V<WordPtr> addr)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(LoadMessage)
+  pub fn reduce_load_message(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(StoreMessage)(V<WordPtr> offset, V<Object> object)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(StoreMessage)
+  pub fn reduce_store_message(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Boolean> REDUCE(SameValue)(V<Object> left, V<Object> right, SameValueOp::Mode mode)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(SameValue)
+  pub fn reduce_same_value(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(Float64SameValue)(V<Float64> left, V<Float64> right)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(Float64SameValue)
+  pub fn reduce_float64_same_value(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(RuntimeAbort)(AbortReason reason)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(RuntimeAbort)
+  pub fn reduce_runtime_abort(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(EnsureWritableFastElements)(V<Object> object, V<Object> elements)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(EnsureWritableFastElements)
+  pub fn reduce_ensure_writable_fast_elements(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(MaybeGrowFastElements)(V<Object> object, V<Object> elements, V<Word32> index, V<Word32> elements_length, V<EagerFrameState> frame_state, GrowFastElementsMode mode, const FeedbackSource& feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(MaybeGrowFastElements)
+  pub fn reduce_maybe_grow_fast_elements(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(TransitionElementsKind)(V<HeapObject> object, const ElementsTransition& transition)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(TransitionElementsKind)
+  pub fn reduce_transition_elements_kind(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(TransitionElementsKindOrCheckMap)(V<HeapObject> object, V<Map> map, V<EagerFrameState> frame_state, const ElementsTransitionWithMultipleSources& transition)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(TransitionElementsKindOrCheckMap)
+  pub fn reduce_transition_elements_kind_or_check_map(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(FindOrderedHashEntry)(V<Object> data_structure, OpIndex key, FindOrderedHashEntryOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(FindOrderedHashEntry)
+  pub fn reduce_find_ordered_hash_entry(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(WeakCollectionGet)(V<JSWeakCollection> receiver, V<Object> key)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(WeakCollectionGet)
+  pub fn reduce_weak_collection_get(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(GetContinuationPreservedEmbedderData)()
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(GetContinuationPreservedEmbedderData)
+  pub fn reduce_get_continuation_preserved_embedder_data(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(SetContinuationPreservedEmbedderData)(V<Object> data)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(SetContinuationPreservedEmbedderData)
+  pub fn reduce_set_continuation_preserved_embedder_data(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(PrepareForLoop)(V<EagerFrameState> frame_state, FeedbackSource feedback)
+  /// v8: src/compiler/turboshaft/machine-lowering-reducer-inl.h MachineLoweringReducer::REDUCE(PrepareForLoop)
+  pub fn reduce_prepare_for_loop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

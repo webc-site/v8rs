@@ -1,0 +1,30 @@
+[package]
+name = "v8-base-platform"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-base-platform"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+coarsetime = "0.1.38"
+libc = "0.2.190"
+memmap2 = "0.9.11"
+parking_lot = "0.12.5"
+thiserror = "2.0.21"
+v8-base = { version = "0.1.0", path = "../v8-base" }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"

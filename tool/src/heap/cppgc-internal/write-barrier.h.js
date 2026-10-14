@@ -1,0 +1,252 @@
+#!/usr/bin/env bun
+// tool/src/heap/cppgc-internal/write-barrier.h.js — v8/src/heap/cppgc-internal/{write-barrier.h,write-barrier.cc} → v8-heap-cppgc/src/write_barrier.rs.skel
+// 职责: WriteBarrier 慢路族 — Dijkstra/Steele 标记屏障 + 3 分代屏障 + CheckParams + YoungGenerationEnabler 引用计数开关 + SLIM 组合屏障
+// 规则:
+//   ① Dijkstra/Steele 镜像结构: SentinelCheck 前置 → 页回溯 → 三 DCHECK (marker 非空/非 atomic pause/增量标记中) → WriteBarrierForObject<kType>
+//   ② 分代 3 慢路 (CPPGC_YOUNG_GENERATION 门): 原子暂停快退 + value_offset>0 且 old 快退 → AddSlot/AddUncompressedSlot/AddSourceObject
+//   ③ YoungGenerationEnabler: Leaky 单例 + mutex 引用计数, 1 时 FlagUpdater::Enter, 0 时 Exit
+//   ④ CombinedWriteBarrierSlow (CPPGC_SLIM_WRITE_BARRIER 门): 解引 slot → GetWriteBarrierType 精判 → 三分支 (kNone 为虚假触发)
+import { banner, readV8, writeSrc } from "../../../lib.js";
+
+const REL_H = "src/heap/cppgc-internal/write-barrier.h";
+const REL_CC = "src/heap/cppgc-internal/write-barrier.cc";
+const src = readV8(REL_H);
+const cc = readV8(REL_CC);
+let n = 0;
+const need = (s, needle, label) => {
+  if (!s.includes(needle)) throw new Error(`锚缺失 ${label}: ${needle}`);
+  n++;
+};
+
+need(src, "class WriteBarrier::FlagUpdater final {", "旗标更新器");
+need(src, "static void Enter() { write_barrier_enabled_.Enter(); }", "Enter 转发");
+need(src, "static void Exit() { write_barrier_enabled_.Exit(); }", "Exit 转发");
+need(src, "class V8_EXPORT_PRIVATE YoungGenerationEnabler final {", "分代启用器");
+need(src, "static void Enable();", "Enable 声明");
+need(src, "static void Disable();", "Disable 声明");
+need(src, "static bool IsEnabled();", "IsEnabled 声明");
+need(src, "size_t is_enabled_;", "计数成员");
+need(src, "v8::base::Mutex mutex_;", "互斥成员");
+need(cc, "AtomicEntryFlag WriteBarrier::write_barrier_enabled_;", "旗标 ODR");
+need(cc, "void WriteBarrier::DijkstraMarkingBarrierSlowWithSentinelCheck(", "Dijkstra 哨兵版");
+need(cc, "if (!value || value == kSentinelPointer) return;", "哨兵空跳过");
+need(cc, "DCHECK(!heap.in_atomic_pause());", "非原子暂停断言");
+need(cc, "DCHECK(heap.is_incremental_marking_in_progress());", "增量标记中断言");
+need(cc, "WriteBarrierForObject<MarkerBase::WriteBarrierType::kDijkstra>", "Dijkstra 分发");
+need(cc, "void WriteBarrier::SteeleMarkingBarrierSlowWithSentinelCheck(", "Steele 哨兵版");
+need(cc, "WriteBarrierForObject<MarkerBase::WriteBarrierType::kSteele>", "Steele 分发");
+need(cc, "cppgc::subtle::DisallowGarbageCollectionScope disallow_gc_scope(heap_base);", "范围屏障禁 GC 域");
+need(cc, "if (heap.in_atomic_pause()) return;", "原子暂停快退");
+need(cc, "age_table.GetAge(value_offset) == AgeTable::Age::kOld", "老年代快退判定");
+need(cc, "heap.remembered_set().AddSlot((const_cast<void*>(slot)));", "记槽");
+need(cc, "heap.remembered_set().AddUncompressedSlot((const_cast<void*>(slot)));", "记非压缩槽");
+need(cc, "heap.remembered_set().AddSourceObject(", "记源对象");
+need(cc, "if (++instance.is_enabled_ == 1) {", "计数增到 1 开旗");
+need(cc, "if (--instance.is_enabled_ == 0) {", "计数减到 0 关旗");
+need(cc, "WriteBarrier::GetWriteBarrierType(slot, value, params)", "SLIM 精判");
+need(cc, "#endif  // CPPGC_SLIM_WRITE_BARRIER", "SLIM 门关");
+
+// WriteBarrier:: 慢路定义全序
+const defs = [...cc.matchAll(/^void WriteBarrier::(\w+)\(/gm)].map((m) => m[1]);
+if (defs.join(",") !== "DijkstraMarkingBarrierSlowWithSentinelCheck,DijkstraMarkingBarrierSlow,DijkstraMarkingBarrierRangeSlow,SteeleMarkingBarrierSlowWithSentinelCheck,SteeleMarkingBarrierSlow,GenerationalBarrierSlow,GenerationalBarrierForUncompressedSlotSlow,GenerationalBarrierForSourceObjectSlow,CheckParams,CombinedWriteBarrierSlow")
+  throw new Error(`慢路定义序: got=${defs.join(",")}`);
+n++;
+// 非原子暂停断言计数: Dijkstra/Steele/DijkstraRange = 3
+if ((cc.match(/DCHECK\(!\w+\.in_atomic_pause\(\)\);/g) || []).length !== 3)
+  throw new Error(`非原子暂停断言计数: got=${(cc.match(/DCHECK\(!\w+\.in_atomic_pause\(\)\);/g) || []).length} want=3`);
+n++;
+
+const body = `${banner("src/heap/cppgc-internal/write-barrier.h.js", REL_H, "WriteBarrier 慢路族 + FlagUpdater/YoungGenerationEnabler (cc 实现一并落地; 声明面在 include/cppgc/internal/write-barrier.h)")}
+// ══ FlagUpdater (原版 write-barrier.h:15-22) ══
+
+pub struct WriteBarrierFlagUpdater;
+impl WriteBarrierFlagUpdater {
+    /// 原版 :17 — write_barrier_enabled_.Enter()
+    pub fn enter() { WRITE_BARRIER_ENABLED.enter(); }
+    /// 原版 :18 — Exit()
+    pub fn exit() { WRITE_BARRIER_ENABLED.exit(); }
+}
+// v8: 原版 write-barrier.cc:25 — AtomicEntryFlag WriteBarrier::write_barrier_enabled_ ODR
+
+// ══ Dijkstra / Steele 标记屏障慢路 (原版 cc:27-95) ══
+
+impl WriteBarrier {
+    /// 原版 cc:28-32 — 哨兵/空前置检查
+    pub fn dijkstra_marking_barrier_slow_with_sentinel_check(value: *const u8) {
+        if value.is_null() || value as usize == K_SENTINEL_POINTER {
+            return;
+        }
+        Self::dijkstra_marking_barrier_slow(value);
+    }
+
+    /// 原版 cc:36-50 — 页回溯 → 三 DCHECK → Dijkstra 分发
+    pub fn dijkstra_marking_barrier_slow(value: *const u8) {
+        let page = BasePage::from_payload(value);
+        let heap = &page.heap();
+        debug_assert!(heap.marker().is_some());          // GetWriteBarrierType 已查标记态
+        debug_assert!(!heap.in_atomic_pause());          // 原子暂停标记期禁屏障
+        debug_assert!(heap.is_incremental_marking_in_progress());
+        let header = &mut page.object_header_from_inner_address(value);
+        heap.marker().unwrap().write_barrier_object_dijkstra(header);
+    }
+
+    /// 原版 cc:53-69 — 范围版: 逐元素 trace 回调, 禁 GC 域
+    pub fn dijkstra_marking_barrier_range_slow(
+        heap_handle: &mut HeapHandle, first_element: *const u8, element_size: usize,
+        number_of_elements: usize, trace_callback: TraceCallback,
+    ) {
+        let heap_base = HeapBase::from(heap_handle);
+        debug_assert!(heap_base.marker().is_some());
+        debug_assert!(!heap_base.in_atomic_pause());
+        let _disallow_gc = DisallowGarbageCollectionScope::new(heap_base);
+        let mut array = first_element as *const u8;
+        let mut n = number_of_elements;
+        while n > 0 {
+            n -= 1;
+            trace_callback(&mut heap_base.marker().unwrap().visitor(), array);
+            array = unsafe { array.add(element_size) };
+        }
+    }
+
+    /// 原版 cc:72-78
+    pub fn steele_marking_barrier_slow_with_sentinel_check(value: *const u8) {
+        if value.is_null() || value as usize == K_SENTINEL_POINTER {
+            return;
+        }
+        Self::steele_marking_barrier_slow(value);
+    }
+
+    /// 原版 cc:80-95 — 与 Dijkstra 镜像, 分发 kSteele
+    pub fn steele_marking_barrier_slow(value: *const u8) {
+        let page = BasePage::from_payload(value);
+        let heap = &page.heap();
+        debug_assert!(heap.marker().is_some());
+        debug_assert!(!heap.in_atomic_pause());
+        debug_assert!(heap.is_incremental_marking_in_progress());
+        let header = &mut page.object_header_from_inner_address(value);
+        heap.marker().unwrap().write_barrier_object_steele(header);
+    }
+
+    // ══ 分代屏障 3 慢路 (原版 cc:98-162, CPPGC_YOUNG_GENERATION 门) ══
+
+    /// 原版 cc:98-119 — 原子暂停快退; value_offset>0 且 old 快退; 否则记压缩槽
+    #[cfg(feature = "cppgc-young-generation")]
+    pub fn generational_barrier_slow(
+        local_data: &CagedHeapLocalData, age_table: &AgeTable, slot: *const u8,
+        value_offset: usize, heap_handle: *mut HeapHandle,
+    ) {
+        debug_assert!(!slot.is_null());
+        debug_assert!(!heap_handle.is_null());
+        debug_assert!(K_CAGED_HEAP_MAX_RESERVATION_SIZE > value_offset);
+        // 原子暂停期写 (如 prefinalizer) 可触发慢路 — bailout 序所致
+        let heap = HeapBase::from(unsafe { &mut *heap_handle });
+        if heap.in_atomic_pause() {
+            return;
+        }
+        if value_offset > 0 && age_table.get_age(value_offset) == Age::Old {
+            return;
+        }
+        heap.remembered_set().add_slot(slot as *mut u8);
+    }
+
+    /// 原版 cc:122-141 — 同上, 记非压缩槽
+    #[cfg(feature = "cppgc-young-generation")]
+    pub fn generational_barrier_for_uncompressed_slot_slow(
+        local_data: &CagedHeapLocalData, age_table: &AgeTable, slot: *const u8,
+        value_offset: usize, heap_handle: *mut HeapHandle,
+    ) {
+        debug_assert!(!slot.is_null());
+        debug_assert!(!heap_handle.is_null());
+        debug_assert!(K_CAGED_HEAP_MAX_RESERVATION_SIZE > value_offset);
+        let heap = HeapBase::from(unsafe { &mut *heap_handle });
+        if heap.in_atomic_pause() {
+            return;
+        }
+        if value_offset > 0 && age_table.get_age(value_offset) == Age::Old {
+            return;
+        }
+        heap.remembered_set().add_uncompressed_slot(slot as *mut u8);
+    }
+
+    /// 原版 cc:144-162 — 内指针 → kAtomic 取头 → 记源对象
+    #[cfg(feature = "cppgc-young-generation")]
+    pub fn generational_barrier_for_source_object_slow(
+        local_data: &CagedHeapLocalData, inner_pointer: *const u8, heap_handle: *mut HeapHandle,
+    ) {
+        debug_assert!(!inner_pointer.is_null());
+        debug_assert!(!heap_handle.is_null());
+        let heap = HeapBase::from(unsafe { &mut *heap_handle });
+        let object_header = &mut BasePage::from_inner_address(heap, inner_pointer as *mut u8)
+            .object_header_from_inner_address::<AccessMode::Atomic>(inner_pointer);
+        heap.remembered_set().add_source_object(object_header);
+    }
+
+    /// 原版 cc:164-169 — V8_ENABLE_CHECKS 门: type 恒等 CHECK
+    pub fn check_params(expected_type: WriteBarrierType, params: &WriteBarrierParams) {
+        v8_check_eq!(expected_type, params.type_);
+    }
+
+    // ══ CombinedWriteBarrierSlow (原版 cc:208-244, CPPGC_SLIM_WRITE_BARRIER 门) ══
+    /// 解引 slot (压缩/非压缩) → GetWriteBarrierType 精判 → 三分支; kNone 为快检虚假触发
+    #[cfg(feature = "cppgc-slim-write-barrier")]
+    pub fn combined_write_barrier_slow(slot_type: WriteBarrierSlotType, slot: *const u8) {
+        debug_assert!(!slot.is_null());
+        // v8: CPPGC_POINTER_COMPRESSION — 压缩臂 Decompress, 否则 static_assert 仅非压缩
+        let value: *const u8 = match slot_type {
+            WriteBarrierSlotType::Compressed => compressed_pointer_decompress(unsafe { *(slot as *const u32) }),
+            WriteBarrierSlotType::Uncompressed => unsafe { *(slot as *const *const u8) },
+        };
+        let mut params = WriteBarrierParams::default();
+        let type_ = Self::get_write_barrier_type(slot, value, &mut params);
+        match type_ {
+            WriteBarrierType::Generational => Self::generational_barrier_precise_slot(&params, slot),
+            WriteBarrierType::Marking => Self::dijkstra_marking_barrier(&params, value),
+            // kNone: 快检近似, 任一堆标记中即可虚假触发; GetWriteBarrierType 精判后仍可退出
+            WriteBarrierType::None => {}
+        }
+    }
+}
+
+// ══ YoungGenerationEnabler (原版 write-barrier.h:25-42, 实现 cc:171-204) ══
+#![cfg(feature = "cppgc-young-generation")]
+
+pub struct YoungGenerationEnabler {
+    is_enabled: usize, // 引用计数
+    mutex: v8_base::Mutex,
+}
+
+impl YoungGenerationEnabler {
+    /// Leaky 静态单例 (原版 cc:171-174)
+    fn instance() -> &'static mut Self { unimplemented!() }
+
+    /// 原版 cc:176-185 — ++==1 时 Enter (写屏障检查恒触发)
+    pub fn enable() {
+        let i = Self::instance();
+        let _g = i.mutex.guard();
+        i.is_enabled += 1;
+        if i.is_enabled == 1 {
+            WriteBarrierFlagUpdater::enter();
+        }
+    }
+
+    /// 原版 cc:187-195 — DCHECK>0; --==0 时 Exit
+    pub fn disable() {
+        let i = Self::instance();
+        let _g = i.mutex.guard();
+        debug_assert!(i.is_enabled > 0);
+        i.is_enabled -= 1;
+        if i.is_enabled == 0 {
+            WriteBarrierFlagUpdater::exit();
+        }
+    }
+
+    /// 原版 cc:197-203
+    pub fn is_enabled() -> bool {
+        let i = Self::instance();
+        let _g = i.mutex.guard();
+        i.is_enabled != 0
+    }
+}
+`;
+const out = writeSrc("v8-heap-cppgc", "write_barrier.rs.skel", body);
+console.log(`OK write-barrier.h.js: 锚 ${n} 条 (h9+cc17+定义序1+断言计数1); 10 慢路定义; 产物 ${out}`);

@@ -1,0 +1,140 @@
+// 由 tool/src/wasm/module-compiler.cc.js 从 v8/src/wasm/module-compiler.cc 生成; 修订就地改, 复跑覆盖
+// 编译事件名表 + kMainTaskId + 按类方法台账
+
+//! 编译编排层的方法台账与追踪事件名。
+
+/// 编译事件名表 (4 条)
+/// v8: src/wasm/module-compiler.cc GetCompilationEventName
+#[rustfmt::skip]
+pub static COMPILATION_EVENT_NAMES: &[(&str, &str)] = &[
+  ("kLiftoff", "wasm.BaselineCompilation"),
+  ("kTurbofan", "wasm.TopTierCompilation"),
+  ("func_index < num_imported_functions", "wasm.WasmToJSWrapperCompilation"),
+  ("其它", "wasm.OtherCompilation"),
+];
+
+/// 主任务 id (前台同步编译单元使用)
+/// v8: src/wasm/module-compiler.cc kMainTaskId
+pub const MAIN_TASK_ID: u8 = 0;
+
+/// 后台编译入口: ExecuteCompilationUnits (JobDelegate 驱动, jitless 下 CHECK 失败)
+/// v8: src/wasm/module-compiler.cc ExecuteCompilationUnits
+pub const BACKGROUND_COMPILE_REQUIRES_JIT: bool = true;
+
+/// CompilationState → CompilationStateImpl 转发 (Impl 辅助)
+/// v8: src/wasm/module-compiler.cc Impl
+pub const STATE_FORWARDS_TO_IMPL: bool = true;
+
+/// 方法定义台账 (按类分组, 85 条 + 显式实例化 0 条)
+/// v8: src/wasm/module-compiler.cc
+#[rustfmt::skip]
+pub static METHODS_BY_CLASS: &[(&str, &[(&str, u32)])] = &[
+  ("CompilationUnitQueues", &[
+    ("EstimateCurrentMemoryConsumption", 527),
+  ]),
+  ("BackgroundCompileScope", &[
+    ("compilation_state", 834),
+    ("cancelled", 872),
+  ]),
+  ("CompilationStateImpl", &[
+    ("EstimateCurrentMemoryConsumption", 839),
+    ("CompilationStateImpl", 3421),
+    ("InitCompileJob", 3430),
+    ("CancelCompilation", 3447),
+    ("cancelled", 3466),
+    ("ApplyEagerTierUpToInitialProgress", 3470),
+    ("ApplyCompilationPriorityToInitialProgress", 3488),
+    ("ApplyPgoInfoToInitialProgress", 3518),
+    ("ApplyPgoInfoLate", 3558),
+    ("InitializeCompilationProgress", 3615),
+    ("InitializeCompilationUnitForSingleFunction", 3679),
+    ("InitializeCompilationUnits", 3720),
+    ("InitializeCompilationProgressAfterDeserialization", 3738),
+    ("AddCallback", 3810),
+    ("CommitCompilationUnits", 3827),
+    ("CommitTopTierCompilationUnit", 3845),
+    ("AddTopTierPriorityCompilationUnit", 3850),
+    ("GetQueueForCompileTask", 3859),
+    ("GetNextCompilationUnit", 3864),
+    ("OnFinishedUnits", 3869),
+    ("TriggerOutstandingCallbacks", 3990),
+    ("TriggerCallbacks", 4041),
+    ("TriggerCachingAfterTimeout", 4075),
+    ("OnCompilationStopped", 4107),
+    ("UpdateDetectedFeatures", 4121),
+    ("PublishCompilationResults", 4133),
+    ("PublishCode", 4148),
+    ("SchedulePublishCompilationResults", 4162),
+    ("NumOutstandingCompilations", 4193),
+    ("SetError", 4198),
+    ("WaitForBaselineCompileJob", 4209),
+    ("TierUpAllFunctions", 4220),
+  ]),
+  ("CompilationState", &[
+    ("CompilationState", 882),
+    ("InitCompileJob", 884),
+    ("CancelCompilation", 886),
+    ("CancelInitialCompilation", 890),
+    ("SetError", 895),
+    ("SetWireBytesStorage", 897),
+    ("GetWireBytesStorage", 902),
+    ("AddCallback", 907),
+    ("TierUpAllFunctions", 912),
+    ("AllowAnotherTopTierJob", 916),
+    ("AllowAnotherTopTierJobForAllFunctions", 920),
+    ("InitializeAfterDeserialization", 924),
+    ("failed", 931),
+    ("set_compilation_id", 933),
+    ("EstimateCurrentMemoryConsumption", 937),
+    ("PublishCode", 941),
+    ("New", 947),
+    ("detected_features", 954),
+    ("UpdateDetectedFeatures", 958),
+  ]),
+  ("TransitiveTypeFeedbackProcessor", &[
+    ("TransitiveTypeFeedbackProcessor", 1340),
+    ("ProcessAll", 1348),
+    ("ProcessFunction", 1359),
+  ]),
+  ("AsyncCompileJob", &[
+    ("AsyncCompileJob", 2241),
+    ("InitializeIsolateSpecificInfo", 2259),
+    ("StartAsyncDecoding", 2275),
+    ("Abort", 2277),
+    ("PrepareForRemoval", 2283),
+    ("CreateStreamingDecoder", 2492),
+    ("AsyncCompileJob", 2499),
+    ("CreateNativeModule", 2512),
+    ("FinishCompile", 2536),
+    ("Failed", 2683),
+    ("StartForegroundTask", 2795),
+    ("CancelPendingForegroundTask", 2806),
+    ("StartBackgroundTask", 2812),
+    ("DoSync", 2828),
+    ("DoAsync", 2835),
+    ("NextStep", 2841),
+  ]),
+  ("AsyncStreamingProcessor", &[
+    ("AsyncStreamingProcessor", 3005),
+    ("AsyncStreamingProcessor", 3010),
+    ("ProcessModuleHeader", 3025),
+    ("ProcessSection", 3036),
+    ("ProcessCodeSectionHeader", 3067),
+    ("ProcessFunctionBody", 3123),
+    ("CommitCompilationUnits", 3171),
+    ("OnFinishedChunk", 3176),
+    ("SetCrashKey", 3181),
+    ("OnFinishedStream", 3196),
+    ("OnAbort", 3368),
+    ("Deserialize", 3384),
+  ]),
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(COMPILATION_EVENT_NAMES.len() == 4);
+    assert!(COMPILATION_EVENT_NAMES[0].1 == "wasm.BaselineCompilation");
+    assert!(MAIN_TASK_ID == 0);
+    assert!(METHODS_BY_CLASS.iter().map(|(_, ms)| ms.len()).sum::<usize>() >= 85);
+    assert!(!METHODS_BY_CLASS.is_empty());
+};

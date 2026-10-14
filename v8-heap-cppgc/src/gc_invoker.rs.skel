@@ -1,0 +1,85 @@
+// 由 tool/src/heap/cppgc-internal/gc-invoker.js 从 v8/src/heap/cppgc-internal/gc-invoker.h + src/heap/cppgc-internal/gc-invoker.cc 生成; 修订就地改, 复跑覆盖
+// 按栈支持度分派的 GC 入口
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/gc-invoker.h GCInvoker
+pub struct GcInvoker {
+    /// v8: impl_ (GCInvokerImpl)
+    impl_: GcInvokerImpl,
+}
+
+/// v8: src/heap/cppgc-internal/gc-invoker.cc GCInvoker::GCInvokerImpl
+pub struct GcInvokerImpl {
+    /// v8: collector_
+    collector: *mut dyn GarbageCollector,
+    /// v8: platform_
+    platform: *mut Platform,
+    /// v8: stack_support_
+    stack_support: StackSupport,
+    /// v8: gc_task_handle_ (GCTask::Handle)
+    gc_task_handle: SingleThreadedHandle,
+}
+
+/// v8: src/heap/cppgc-internal/gc-invoker.cc GCInvoker::GCInvokerImpl::GCTask
+/// Run: handle 已取消或 epoch 已变 → 丢弃; 否则强制 kNoHeapPointers 执行 GC。
+pub struct GcTask {
+    /// v8: collector_
+    collector: *mut dyn GarbageCollector,
+    /// v8: config_
+    config: GcConfig,
+    /// v8: handle_
+    handle: SingleThreadedHandle,
+    /// v8: saved_epoch_
+    saved_epoch: usize,
+}
+
+impl GcInvokerImpl {
+    /// v8: src/heap/cppgc-internal/gc-invoker.cc GCInvokerImpl::CollectGarbage
+    /// ① 精确栈或支持保守扫描 → 同步执行;
+    /// ② 否则前台 runner 支持非嵌套任务 → 发 GCTask (栈态改精确);
+    /// ③ 否则 no-op (允许超限)。
+    pub fn collect_garbage(&mut self, config: GcConfig) {
+        debug_assert_eq!(config.marking_type, MarkingType::Atomic);
+        if config.stack_state == StackState::NoHeapPointers
+            || self.stack_support == StackSupport::SupportsConservativeStackScan
+        {
+            self.collector_mut().collect_garbage(config);
+        } else if self.foreground_non_nestable() && self.gc_task_handle.is_empty() {
+            let mut precise = config;
+            precise.stack_state = StackState::NoHeapPointers;
+            self.gc_task_handle = GcTask::post(self.collector, self.foreground_runner(), precise);
+        }
+    }
+
+    /// v8: src/heap/cppgc-internal/gc-invoker.cc GCInvokerImpl::StartIncrementalGarbageCollection
+    /// 不支持保守扫描且无非嵌套任务 → 拒绝 (增量 GC 无法收尾); 否则直发。
+    pub fn start_incremental_garbage_collection(&mut self, config: GcConfig) {
+        debug_assert_ne!(config.marking_type, MarkingType::Atomic);
+        if self.stack_support != StackSupport::SupportsConservativeStackScan && !self.foreground_non_nestable() {
+            return;
+        }
+        self.collector_mut().start_incremental_garbage_collection(config);
+    }
+
+    /// v8: src/heap/cppgc-internal/gc-invoker.cc GCInvokerImpl::RetryAllocate
+    /// 至多两轮: 保守原子 GC (kReleaseMemory) → 重试 allocate。
+    pub fn retry_allocate(&mut self, allocate: &mut dyn FnMut() -> bool) -> bool {
+        for _ in 0..2 {
+            self.collect_garbage(GcConfig {
+                collection_type: CollectionType::Major,
+                stack_state: StackState::MayContainHeapPointers,
+                marking_type: MarkingType::Atomic,
+                sweeping_type: SweepingType::IncrementalAndConcurrent,
+                free_memory_handling: FreeMemoryHandling::ReleaseMemory,
+                ..GcConfig::DEFAULT
+            });
+            if allocate() { return true; }
+        }
+        false
+    }
+
+    /// v8: src/heap/cppgc-internal/gc-invoker.cc GCInvokerImpl 析构 — 取消未跑 GCTask
+    fn foreground_non_nestable(&self) -> bool { todo!("platform_->GetForegroundTaskRunner()->NonNestableTasksEnabled()") }
+    fn collector_mut(&mut self) -> &mut dyn GarbageCollector { todo!("裸指针可变重借") }
+}

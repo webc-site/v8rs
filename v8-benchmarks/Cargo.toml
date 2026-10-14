@@ -1,0 +1,14 @@
+[package]
+name = "v8-benchmarks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8rs fine-grained function regression and performance benchmark suite"
+
+[dependencies]
+rusty_alloc-api = { workspace = true }
+rs8 = { path = "../rs8" }
+
+[dev-dependencies]
+aok = "0.1.18"

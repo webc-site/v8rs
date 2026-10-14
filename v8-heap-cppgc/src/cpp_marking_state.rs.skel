@@ -1,0 +1,40 @@
+// 由 tool/src/heap/cppgc-js/cpp-marking-state.h.js 从 v8/src/heap/cppgc-js/cpp-marking-state.h 生成; 修订就地改, 复跑覆盖
+// CppMarkingState — 主线程借用/并发独占双源标记状态包装
+
+// ══ CppMarkingState (原版 cpp-marking-state.h:21-49) ══
+// 双构造一成员对: 借用 (主线程, owned 空) / 独占 (并发, owned 持有后借用)。
+
+pub struct CppMarkingState {
+    /// 并发标记态独占所有权; 主线程构造时为 None
+    owned_marking_state: Option<Box<cppgc_internal::MarkingStateBase>>,
+    /// 恒有值 — 借用 owned 或外部主线程态
+    marking_state: *mut cppgc_internal::MarkingStateBase,
+}
+
+impl CppMarkingState {
+    /// 原版 :23-26 — 借用主线程态
+    pub fn new_borrowed(main_thread_marking_state: &mut cppgc_internal::MarkingStateBase) -> Self {
+        Self { owned_marking_state: None, marking_state: main_thread_marking_state }
+    }
+
+    /// 原版 :28-31 — 接管并发态, 借自 owned
+    pub fn new_owned(concurrent_marking_state: Box<cppgc_internal::MarkingStateBase>) -> Self {
+        Self { marking_state: concurrent_marking_state.as_ref() as *const _ as *mut _, owned_marking_state: Some(concurrent_marking_state) }
+    }
+
+    /// 原版 :35 — 发布本地工作表
+    pub fn publish(&mut self) {
+        unsafe { &mut *self.marking_state }.publish();
+    }
+
+    /// 原版 :37-40 — 对象指针 → 头 → MarkAndPush
+    pub fn mark_and_push(&mut self, instance: *mut u8) {
+        unsafe { &mut *self.marking_state }
+            .mark_and_push(cppgc_internal::HeapObjectHeader::from_object(instance));
+    }
+
+    /// 原版 :42-44 — 本地工作表空判定
+    pub fn is_local_empty(&self) -> bool {
+        unsafe { &*self.marking_state }.marking_worklist().is_local_empty()
+    }
+}

@@ -1,0 +1,11 @@
+// 由 tool/src/regexp/experimental/experimental-bytecode.h.js 从 v8/src/regexp/experimental/experimental-bytecode.h 生成; 修订就地改, 复跑覆盖
+// 映射骨架基线 (审计专用): 枚举/位域/工厂/union 逐项 1:1; 落地以 bytecode.rs 就地修订为准
+
+//! Opcode 19 值序 0..18 逐一对账 (枚举块机械解析, 非肉眼)
+//! LookaroundPayload 位域: bit0 IsPositive(bool,0,1) / bit1 Type(LookaroundType,1,1) /
+//!   bit2..31 LookaroundIndex(uint32,2,30) — Rust 侧 BitField32<T,shift,size> 直译
+//! 工厂 21 + IsFilter 1; Payload 枚举 = union 9 成员 + None (无载荷 4 opcode 的
+//!   未初始化 union 字节从不被读, tagged 化)
+//! static_assert: sizeof(payload)==4 → const assert size_of::<LookaroundPayload>()==4;
+//!   sizeof(Instruction)==8 → Rust tagged 枚举不承诺等长, 裸编码序列化面推迟登记
+//!   (VectorToByteArray 属 experimental.cc:108, 非本文件)

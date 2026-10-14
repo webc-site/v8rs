@@ -1,0 +1,35 @@
+// 由 tool/src/heap/cppgc-internal/heap-state.js 从 v8/src/heap/cppgc-internal/heap-state.cc 生成; 修订就地改, 复跑覆盖
+// 嵌入方堆状态只读查询
+
+#![allow(dead_code)]
+
+/// v8: include/cppgc/heap-state.h HeapState — 实现于 src/heap/cppgc-internal/heap-state.cc
+pub struct HeapState;
+
+impl HeapState {
+    /// v8: src/heap/cppgc-internal/heap-state.cc HeapState::IsMarking
+    pub fn is_marking(heap_handle: &HeapHandle) -> bool {
+        HeapBase::from(heap_handle).marker().map_or(false, |m| m.is_marking())
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-state.cc HeapState::IsSweeping
+    pub fn is_sweeping(heap_handle: &HeapHandle) -> bool {
+        HeapBase::from(heap_handle).sweeper().is_sweeping_in_progress()
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-state.cc HeapState::IsSweepingOnOwningThread
+    pub fn is_sweeping_on_owning_thread(heap_handle: &HeapHandle) -> bool {
+        HeapBase::from(heap_handle).sweeper().is_sweeping_on_mutator_thread()
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-state.cc HeapState::IsInAtomicPause
+    pub fn is_in_atomic_pause(heap_handle: &HeapHandle) -> bool {
+        HeapBase::from(heap_handle).in_atomic_pause()
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-state.cc HeapState::PreviousGCWasConservative
+    pub fn previous_gc_was_conservative(heap_handle: &HeapHandle) -> bool {
+        HeapBase::from(heap_handle).stack_state_of_prev_gc()
+            == EmbedderStackState::MayContainHeapPointers
+    }
+}

@@ -1,0 +1,98 @@
+// 由 tool/src/compiler/turboshaft/instruction-selection-phase.h.js 从 v8/src/compiler/turboshaft/instruction-selection-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 指令选择 phase 组: 特殊 RPO 编号常量与三 phase 骨架
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h TurboshaftSpecialRPONumberer
+///
+/// 特殊 RPO: 支配序 + 环体连续 (loop bodies contiguous)。
+/// BasicBlock::rpo_number 编号哨兵常量 (原版 static const int):
+pub const BLOCK_ON_STACK: i32 = -2;
+pub const BLOCK_VISITED1: i32 = -3;
+pub const BLOCK_VISITED2: i32 = -4;
+pub const BLOCK_UNVISITED: i32 = -1;
+/// BlockData::kNoLoopNumber = size_t::MAX
+pub const NO_LOOP_NUMBER: usize = usize::MAX;
+
+pub struct TurboshaftSpecialRpoNumberer {
+  /// block_data_: FixedBlockSidetable<BlockData> (rpo_number / loop_number / rpo_next)
+  pub block_data: Vec<BlockData>,
+  /// loops_: ZoneVector<LoopInfo>
+  pub loops: Vec<LoopInfo>,
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h SpecialRPOStackFrame
+pub struct SpecialRpoStackFrame {
+  pub block: Option<crate::graph::BlockRef>,
+  pub index: usize,
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h LoopInfo
+/// 字段面: header / outgoing / members: SparseBitVector / prev / end / start
+pub struct LoopInfo {
+  pub header: crate::graph::BlockRef,
+  pub members: (),
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h BlockData
+pub struct BlockData {
+  pub rpo_number: i32,
+  pub loop_number: usize,
+}
+
+impl TurboshaftSpecialRpoNumberer {
+  /// 原版 ZoneVector<uint32_t> ComputeSpecialRPO()
+  /// v8: src/compiler/turboshaft/instruction-selection-phase.cc
+  pub fn compute_special_rpo(&mut self) -> Vec<u32> {
+    unimplemented!("Developer 修订: ComputeLoopInfo → ComputeBlockPermutation")
+  }
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h PropagateDeferred
+pub fn propagate_deferred(graph: &mut crate::graph::Graph) {
+  unimplemented!("签名骨架, Developer 修订")
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h ProfileApplicationPhase
+pub struct ProfileApplicationPhase;
+
+impl ProfileApplicationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "ProfileApplication"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftProfileApplication";
+  /// 原版 void Run(PipelineData*, Zone*, const ProfileDataFromFile*)
+  /// PGO: BranchOp hint 就地更新 (BUILTIN_BLOCK_POSITION 分支另计数)
+  pub fn run(&self) {
+    unimplemented!("Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h SpecialRPOSchedulingPhase
+pub struct SpecialRposSchedulingPhase;
+
+impl SpecialRposSchedulingPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "SpecialRPOScheduling"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftSpecialRPOScheduling";
+  /// 原版 void Run(PipelineData*, Zone*): ComputeSpecialRPO → ReorderBlocks → PropagateDeferred
+  pub fn run(&self) {
+    unimplemented!("Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/instruction-selection-phase.h InstructionSelectionPhase
+pub struct InstructionSelectionPhase;
+
+impl InstructionSelectionPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "InstructionSelection"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftInstructionSelection";
+  /// 原版 std::optional<BailoutReason> Run(PipelineData*, Zone*, const CallDescriptor*, Linkage*, CodeTracer*)
+  /// 流程: InitializeInstructionComponent → InstructionSelector::ForTurboshaft → SelectInstructions
+  pub fn run(&self) -> Option<crate::phase::BailoutReason> {
+    unimplemented!("Developer 修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(BLOCK_ON_STACK == -2);
+  assert!(BLOCK_VISITED1 == -3);
+  assert!(BLOCK_VISITED2 == -4);
+  assert!(BLOCK_UNVISITED == -1);
+};

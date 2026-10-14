@@ -1,0 +1,59 @@
+// 由 tool/src/wasm/baseline/liftoff-compiler.h.js 从 v8/src/wasm/baseline/liftoff-compiler.{h,cc} 生成; 修订就地改, 复跑覆盖
+// Liftoff 编译器 tier-up 预算与解码接口契约
+
+//! Liftoff 基线编译器: 已验证代码的 NoValidation 重解码 + 直接产码。
+/// v8: src/wasm/baseline/liftoff-compiler.cc LiftoffCompiler
+
+/// 解码契约
+/// v8: src/wasm/baseline/liftoff-compiler.cc LiftoffCompiler 类型别名
+pub const USES_NO_VALIDATION_TAG: bool = true;
+pub const USES_POPPED_ARGS: bool = false;
+
+/// tier-up 预算成本 (以执行机器码字节数估计耗时)
+/// v8: src/wasm/baseline/liftoff-compiler.cc kTierUpCostForCheck
+pub const TIER_UP_COST_FOR_CHECK: i32 = 20;
+/// v8: 函数序言 frame setup stub 的成本
+pub const TIER_UP_COST_FOR_FUNCTION_ENTRY: i32 = 40;
+
+/// 单次 tier-up 检查最多消耗总预算的 1/4 (至少 1)
+/// v8: src/wasm/baseline/liftoff-compiler.cc TierupCheck
+pub fn clamp_budget_use(budget_used: i32, wasm_tiering_budget: i32) -> i32 {
+    let with_check = budget_used + TIER_UP_COST_FOR_CHECK;
+    let max_budget_use = (wasm_tiering_budget / 4).max(1);
+    with_check.min(max_budget_use)
+}
+
+/// load/store 快路径记录的常量槽数
+/// v8: src/wasm/baseline/liftoff-compiler.cc kNumRecordedConstants
+pub const NUM_RECORDED_CONSTANTS: usize = 9;
+
+/// 签名 kinds 内联存储 (超出走 zone 分配)
+/// v8: src/wasm/baseline/liftoff-compiler.cc MostlySmallValueKindSig::kInlineStorage
+pub const SIG_INLINE_STORAGE: usize = 8;
+
+/// 调用描述符第一输入索引 (target+instance 之后)
+/// v8: src/wasm/baseline/liftoff-compiler.cc kFirstInputIdx
+pub const FIRST_INPUT_IDX: u32 = 2;
+
+/// OOL trap: 带破坏性语义的指令先跳 OOL 标签
+/// v8: src/wasm/baseline/liftoff-compiler.cc OolTrapLabel / AddOutOfLineTrap
+pub const OOL_TRAP_MECHANISM: bool = true;
+
+/// debug 编译不做 tier-up 检查
+/// v8: src/wasm/baseline/liftoff-compiler.cc TierupCheck 首行
+pub const DEBUGGING_SKIPS_TIERUP: bool = true;
+
+/// 接口方法实现数 (WasmFullDecoder 接口面)
+/// v8: src/wasm/baseline/liftoff-compiler.cc LiftoffCompiler::*
+pub const IMPLEMENTED_METHODS_COUNT: usize = 218;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(TIER_UP_COST_FOR_CHECK, 20);
+    assert_eq!(TIER_UP_COST_FOR_FUNCTION_ENTRY, 40);
+    assert_eq!(clamp_budget_use(0, 1000), 20);
+    assert_eq!(clamp_budget_use(5000, 1000), 250);
+    assert_eq!(NUM_RECORDED_CONSTANTS, 9);
+    assert_eq!(SIG_INLINE_STORAGE, 8);
+    assert!(IMPLEMENTED_METHODS_COUNT >= 100);
+};

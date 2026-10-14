@@ -1,0 +1,28 @@
+// 由 tool/src/heap/read-only-heap.js 从 v8/src/heap/read-only-heap.cc, src/heap/read-only-heap-inl.h (族 .h: src/heap/read-only-heap.h) 生成; 修订就地改, 复跑覆盖
+// 只读堆: artifacts 共享与早取根
+/// v8: src/heap/read-only-heap.h ReadOnlyHeap
+pub struct ReadOnlyHeap {
+  /// v8: read_only_space_ / read_only_artifacts_ / read_only_roots_ (cached)
+  pub fields_todo: (),
+}
+
+impl ReadOnlyHeap {
+  /// v8: kEntriesCount = RootIndex::kReadOnlyRootsCount (缓存根表长)
+  pub const K_ENTRIES_COUNT: usize = ROOT_INDEX_K_READ_ONLY_ROOTS_COUNT;
+
+  /// v8: ReadOnlyHeap::SetUp — 首个 isolate 创建 artifacts, 后续共享
+  pub fn set_up(isolate: &mut Isolate, can_share_heap: bool) { todo!() }
+  /// v8: ReadOnlyHeap::TearDown — 引用计数, 末持有者释放
+  pub fn tear_down(&mut self, isolate: &mut Isolate) { todo!() }
+  /// v8: DeserializeIntoIsolate — 从快照反序列化
+  /// v8: DecommitGuardRegions — 释放 guard 页
+  /// v8: OnCreateHeapObjectsComplete / OnCreateRootsComplete — 快照切换点
+  /// v8: CreateInitialHeapForBootstrapping / InitFromIsolate
+  /// v8: InitializeIsolateRoots / InitializeFromIsolateRoots
+  /// v8: PopulateReadOnlySpaceStatistics / Contains
+
+  /// v8: src/heap/read-only-heap-inl.h EarlyGetReadOnlyRoots(object)
+  /// 共享堆 roots 就绪 → 直接取 shared_ro_heap->read_only_roots_;
+  /// 否则回退 Isolate::Current()。
+  pub fn early_get_read_only_roots(object: TaggedHeapObject) -> EarlyReadOnlyRoots { todo!() }
+}

@@ -1,0 +1,103 @@
+// 由 tool/src/compiler/js-native-context-specialization.js 从 v8/src/compiler/js-native-context-specialization.h + js-native-context-specialization.cc 生成; 修订就地改, 复跑覆盖
+// 原生上下文特化: 全局/命名/键控属性访问按反馈特化
+
+//! 最大特化 pass: LoadGlobal/StoreGlobal 折叠, LoadNamed/键控访问按类型反馈特化,
+//! 元素访问子图构建 (含 TypedArray/RAB-GSAB), 访问器内联, MegaDOM。
+
+bitflags! {
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::Flag
+    pub struct Flags: u32 {
+        const NO_FLAGS = 0;
+        const BAILOUTONUNINITIALIZED = 1 << 1;
+    }
+}
+
+/// 原型链包含性判定三态
+/// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::InferHasInPrototypeChainResult
+pub enum InferHasInPrototypeChainResult {
+    IsInPrototypeChain,
+    IsNotInPrototypeChain,
+    MayBeInPrototypeChain,
+}
+
+/// 续接三元组
+/// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ValueEffectControl
+pub struct ValueEffectControl {
+    pub value: NodeRef,
+    pub effect: NodeRef,
+    pub control: NodeRef,
+}
+
+pub struct JSNativeContextSpecialization { /* jsgraph/broker/flags/global_object/global_proxy/zone/shared_zone/type_cache/created_strings */ }
+
+impl JSNativeContextSpecialization {
+    /// 字符串常量拼接折叠上限 (公用, 单测可达)
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::GetMaxStringLength
+    pub fn get_max_string_length(broker: &JSHeapBroker, node: &Node) -> Option<usize>;
+
+    // —— Reduce 面 27 个 (cc 实现 34) ——
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSAdd
+    fn reduce_jsadd(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSAsyncFunctionEnter
+    fn reduce_jsasync_function_enter(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSAsyncFunctionReject
+    fn reduce_jsasync_function_reject(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSAsyncFunctionResolve
+    fn reduce_jsasync_function_resolve(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSGetSuperConstructor
+    fn reduce_jsget_super_constructor(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSFindNonDefaultConstructorOrConstruct
+    fn reduce_jsfind_non_default_constructor_or_construct(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSInstanceOf
+    fn reduce_jsinstance_of(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSHasInPrototypeChain
+    fn reduce_jshas_in_prototype_chain(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSOrdinaryHasInstance
+    fn reduce_jsordinary_has_instance(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSPromiseResolve
+    fn reduce_jspromise_resolve(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSResolvePromise
+    fn reduce_jsresolve_promise(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSLoadGlobal
+    fn reduce_jsload_global(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSStoreGlobal
+    fn reduce_jsstore_global(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::ReduceJSLoadNamed
+    fn reduce_jsload_named(&mut self, node: &Node) -> Reduction;
+    // ... 其余 13 个同面 (含 ReduceElementAccess/ReducePropertyAccess/ReduceNamedAccess/ReduceGlobalAccess)
+
+    // —— Build 面 7 个 (cc 实现 6) ——
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildPropertyAccess
+    fn build_property_access(&mut self /*, args */) -> Option<ValueEffectControl>;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildPropertyLoad
+    fn build_property_load(&mut self /*, args */) -> Option<ValueEffectControl>;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildPropertyStore
+    fn build_property_store(&mut self /*, args */) -> Option<ValueEffectControl>;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildPropertyTest
+    fn build_property_test(&mut self /*, args */) -> Option<ValueEffectControl>;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildElementAccess
+    fn build_element_access(&mut self /*, args */) -> Option<ValueEffectControl>;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildElementAccessForTypedArrayOrRabGsabTypedArray
+    fn build_element_access_for_typed_array_or_rab_gsab_typed_array(&mut self /*, args */) -> Option<ValueEffectControl>;
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::BuildPrototypeProxyElementAccess
+    fn build_prototype_proxy_element_access(&mut self /*, args */) -> Option<ValueEffectControl>;
+
+    // —— 访问器内联 (3) ——
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::InlinePropertyGetterCall
+    fn inline_property_getter_call(&mut self /*, args */);
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::InlinePropertySetterCall
+    fn inline_property_setter_call(&mut self /*, args */);
+    /// v8: src/compiler/js-native-context-specialization.h JSNativeContextSpecialization::InlineApiCall
+    fn inline_api_call(&mut self /*, args */);
+
+    /// 原型链三态判定
+    /// v8: src/compiler/js-native-context-specialization.cc JSNativeContextSpecialization::InferHasInPrototypeChain
+    fn infer_has_in_prototype_chain(&mut self, receiver: NodeRef, effect: Effect, prototype: HeapObjectRef) -> InferHasInPrototypeChainResult;
+    /// hole→undefined 转换许可 (数组 protector 依赖)
+    /// v8: src/compiler/js-native-context-specialization.cc JSNativeContextSpecialization::CanTreatHoleAsUndefined
+    fn can_treat_hole_as_undefined(&mut self, receiver_maps: &[MapRef]) -> bool;
+}
+
+// —— 对数基准 ——
+// Flag 2 / 原型三态 3 (kIsInPrototypeChain,kIsNotInPrototypeChain,kMayBeInPrototypeChain)
+// Reduce 27(实现 34) / Build 7(实现 6) / Inline 3

@@ -1,0 +1,148 @@
+// 由 tool/src/compiler/operation-typer.js 从 v8/src/compiler/operation-typer.h + operation-typer.cc 生成; 修订就地改, 复跑覆盖
+// 算子级类型推演内核
+
+//! operation-typer — Typer 的纯函数核 (无图依赖, 输入类型→输出类型)
+//!
+//! 公有 Type 方法 21 个 (cc 定义 83);
+//! TYPER_SUPPORTED_MACHINE_BINOP_LIST 20 项
+//! (Int32Add, Int32LessThanOrEqual, Int64Add, Int32Sub, Int64Sub, Load, Uint32Div, Uint64Div, Uint32LessThan, Uint32LessThanOrEqual, Uint64LessThan, Uint64LessThanOrEqual, ...);
+//! singleton 工厂: (zone 缓存)。
+
+/// 原版 OperationTyper — 运算定型器
+pub struct OperationTyper<'z> {
+  /// broker_
+  pub broker: *mut JSHeapBroker,
+  /// cache_ (TypeCache 引用)
+  pub cache: *const TypeCache,
+  /// true_/false_/falsish_/truish_ 等 singleton 缓存
+  pub true_type: Type,
+  pub false_type: Type,
+  pub falsish: Type,
+  pub truish: Type,
+  /// zone
+  pub zone: &'z Zone<'z>,
+}
+
+impl OperationTyper<'_> {
+  /// 原版 singleton 工厂面 (Type::HeapConstant 缓存)
+  /// v8: src/compiler/operation-typer.cc OperationTyper::singleton_true 等
+  pub fn singleton_true(&self) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::singleton_true")
+  }
+
+  /// 原版 Merge — Phi 汇聚 (区间并 + 常量并)
+  /// v8: src/compiler/operation-typer.cc OperationTyper::Merge
+  pub fn merge(&mut self, left: Type, right: Type) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::Merge")
+  }
+
+  /// 原版 ToNumber 族 — 转换定型
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToNumber
+  pub fn to_number(&mut self, type_: Type) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToNumber")
+  }
+
+  /// 原版 TypeTypeGuard
+  /// v8: src/compiler/operation-typer.cc OperationTyper::TypeTypeGuard
+  pub fn type_type_guard(&mut self, op: &Operator, input: Type) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::TypeTypeGuard")
+  }
+
+  /// 原版 CheckBounds — 越界即 None
+  /// v8: src/compiler/operation-typer.cc OperationTyper::CheckBounds
+  pub fn check_bounds(&mut self, index: Type, length: Type) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::CheckBounds")
+  }
+
+  // —— Number* / Speculative* / Compare 族 (21 个, 全 1:1 锚) ——
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToPrimitive
+  pub fn to_primitive(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToPrimitive")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToNumberConvertBigInt
+  pub fn to_number_convert_big_int(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToNumberConvertBigInt")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToBigInt
+  pub fn to_big_int(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToBigInt")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToBigIntConvertNumber
+  pub fn to_big_int_convert_number(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToBigIntConvertNumber")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToNumeric
+  pub fn to_numeric(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToNumeric")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ToBoolean
+  pub fn to_boolean(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ToBoolean")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::WeakenRange
+  pub fn weaken_range(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::WeakenRange")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ChangeUint32ToUint64
+  pub fn change_uint32_to_uint64(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ChangeUint32ToUint64")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::SameValue
+  pub fn same_value(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::SameValue")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::SameValueNumbersOnly
+  pub fn same_value_numbers_only(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::SameValueNumbersOnly")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::StrictEqual
+  pub fn strict_equal(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::StrictEqual")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::CheckFloat64Hole
+  pub fn check_float64_hole(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::CheckFloat64Hole")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::CheckNumber
+  pub fn check_number(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::CheckNumber")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::CheckNumberOrUndefined
+  pub fn check_number_or_undefined(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::CheckNumberOrUndefined")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::CheckNumberFitsInt32
+  pub fn check_number_fits_int32(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::CheckNumberFitsInt32")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ConvertTaggedHoleToUndefined
+  pub fn convert_tagged_hole_to_undefined(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ConvertTaggedHoleToUndefined")
+  }
+
+  /// v8: src/compiler/operation-typer.cc OperationTyper::ConvertReceiver
+  pub fn convert_receiver(&mut self, /* 按签名 */) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper::ConvertReceiver")
+  }
+
+  // —— 机器算子二元定型 (20 项, 谓词化分发) ——
+  /// v8: src/compiler/operation-typer.cc OperationTyper::Int32Add (代表项; 全表 Int32Add/Int32LessThanOrEqual/Int64Add/Int32Sub/Int64Sub/Load/Uint32Div/Uint64Div/Uint32LessThan/Uint32LessThanOrEqual/Uint64LessThan/Uint64LessThanOrEqual/Word32And/Word32Equal/Word32Or/Word32Shl/Word32Shr/Word64And/Word64Shl/Word64Shr)
+  pub fn machine_binop(&mut self, op: IrOpcode, left: Type, right: Type) -> Type {
+    todo!("v8: src/compiler/operation-typer.cc OperationTyper machine 二元面 (20 项)")
+  }
+}

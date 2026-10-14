@@ -1,0 +1,35 @@
+// 由 tool/src/heap/memory-allocator.js 从 v8/src/heap/memory-allocator.cc (族 .h: src/heap/memory-allocator.h) 生成; 修订就地改, 复跑覆盖
+// 内存分配器: 页/池的底层申请释放
+/// v8: src/heap/memory-allocator.cc MemoryAllocator 静态字段 (进程级)
+pub static COMMIT_PAGE_SIZE: AtomicUsize = AtomicUsize::new(0);
+/// v8: commit_page_size_bits_ = 0
+pub static COMMIT_PAGE_SIZE_BITS: AtomicUsize = AtomicUsize::new(0);
+
+/// v8: src/heap/memory-allocator.h MemoryAllocator
+/// 本脚本覆盖 cc 实现面 (30 方法), h 声明面归他席。
+pub mod memory_allocator_cc {
+  /// v8: AllocateAlignedMemory — 对齐申请 + 失败回退 optional
+  /// v8: ComputeChunkSize(area_size, chunk_metadata) — 页头 + area 对齐
+  /// v8: AllocateUninitializedChunkAt — 三分支 (pooled/常规/共享)
+  /// v8: PartialFreeMemory — 部分释放 (commit 缩减)
+  /// v8: UnregisterMemoryChunk — 分派 Mutable/ReadOnly 注销
+  /// v8: UnregisterMutableMemoryChunk / UnregisterSharedMemoryChunk / UnregisterReadOnlyPage
+  /// v8: FreeReadOnlyPage / FreeMemoryRegion / PreFreeMemory / PerformFreeMemory
+  /// v8: GetPooledChunksCount / GetSharedPooledChunksCount / GetTotalPooledChunksCount
+  /// v8: ReleasePooledChunksImmediately / TearDown / MemoryAllocator(构造)
+  /// 共 30 个: TearDown, GetPooledChunksCount, GetSharedPooledChunksCount, GetTotalPooledChunksCount, ReleasePooledChunksImmediately, FreeMemoryRegion, AllocateAlignedMemory, ComputeChunkSize, PartialFreeMemory, UnregisterSharedMemoryChunk, UnregisterMemoryChunk, UnregisterMutableMemoryChunk ...
+}
+
+impl MemoryAllocator {
+  /// v8: src/heap/memory-allocator.cc MemoryAllocator::AllocateAlignedMemory
+  pub fn allocate_aligned_memory(&mut self, size: usize, alignment: usize, executable: Executability, tag: PageTag) -> Option<Address> { todo!() }
+  /// v8: MemoryAllocator::AllocateUninitializedChunkAt
+  pub fn allocate_uninitialized_chunk_at(&mut self, space: &mut BaseSpace, chunk_size: usize, address_hint: Address, executable: Executability, heap: Heap) -> Option<MemoryChunkAllocationResult> { todo!() }
+  /// v8: MemoryAllocator::PartialFreeMemory
+  pub fn partial_free_memory(&mut self, chunk: &mut BasePage, start_free: Address, bytes_to_free: usize, new_area_end: Address) { todo!() }
+  /// v8: MemoryAllocator::UnregisterMemoryChunk / UnregisterMutableMemoryChunk / UnregisterReadOnlyPage
+  /// v8: MemoryAllocator::PreFreeMemory / FreeReadOnlyPage / FreeMemoryRegion
+  /// v8: MemoryAllocator::TearDown / ReleasePooledChunksImmediately
+}
+
+// cc 方法对数: 30

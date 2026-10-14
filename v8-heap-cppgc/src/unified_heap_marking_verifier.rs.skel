@@ -1,0 +1,80 @@
+// 由 tool/src/heap/cppgc-js/unified-heap-marking-verifier.h.js 从 v8/src/heap/cppgc-js/unified-heap-marking-verifier.h 生成; 修订就地改, 复跑覆盖
+// 统一堆标记验证 — TracedReference 在用校验 + 4 钩子验证访问者 (cc 实现一并落地)
+
+// ══ UnifiedHeapVerificationState (原版 unified-heap-marking-verifier.h:14-17, 实现 cc:60-89) ══
+
+pub struct UnifiedHeapVerificationState {
+    /// VerificationState 基: parent_ 指针等
+    pub parent: *const HeapObjectHeader,
+}
+
+impl UnifiedHeapVerificationState {
+    /// 原版 cc:60-89 — 空槽早退; 节点须仍标记在用, 否则 FATAL (含父对象名或 Stack 提示)
+    pub fn verify_marked_traced_reference(&self, ref: &TracedReferenceBase) {
+        // 分离模式下遇非空 TracedReferenceBase 空指针解引崩溃 (原版注释)
+        let traced_handle_location = BasicTracedReferenceExtractor::get_object_slot_for_marking(ref);
+        // ephemeron 追踪可达此处, 无早退口 — 槽可空
+        if traced_handle_location.is_null() {
+            return;
+        }
+        // 验证跑在未标节点释放后 — 该 TracedReference 节点应仍标记在用
+        if !TracedHandles::is_valid_in_use_node(traced_handle_location) {
+            let parent_name: &str = if !self.parent.is_null() {
+                unsafe { &*self.parent }.get_name(HeapObjectNameForUnnamedObject::UseClassNameIfSupported).value
+            } else {
+                "Stack"
+            };
+            v8_fatal!(
+                "MarkingVerifier: Encountered unmarked TracedReference.\n#\n# Hint:\n#   {} ({:?})\n#     \\-> TracedReference ({:?})",
+                parent_name, self.parent, ref
+            );
+        }
+    }
+}
+
+// ══ UnifiedHeapVerificationVisitor (原版 cc:20-56, 匿名 ns) ══
+/// 4 final 钩子, 全走 VerifyMarked (强/弱/弱容器/引用)
+
+pub struct UnifiedHeapVerificationVisitor {
+    /// JSVisitor 基 (VisitorFactory 钥匙构造)
+    pub state: UnifiedHeapVerificationState,
+}
+
+impl UnifiedHeapVerificationVisitor {
+    /// 原版 cc:26-28 — 强引用: 载体须已标
+    pub fn visit(&self, _object: *const u8, desc: TraceDescriptor) {
+        self.state.verify_marked(desc.base_object_payload);
+    }
+    /// 原版 cc:30-36 — 弱引用此时应已清空 → 经弱引用可达的对象必活
+    pub fn visit_weak(&self, _object: *const u8, desc: TraceDescriptor, _cb: WeakCallback, _p: *const u8) {
+        self.state.verify_marked(desc.base_object_payload);
+    }
+    /// 原版 cc:38-48 — 弱容器: 内容由页迭代强处理, 此处只验容器自身已标; 空容器退
+    pub fn visit_weak_container(&self, object: *const u8, _desc: TraceDescriptor, weak_desc: TraceDescriptor, _cb: WeakCallback, _p: *const u8) {
+        if object.is_null() {
+            return;
+        }
+        self.state.verify_marked(weak_desc.base_object_payload);
+    }
+    /// 原版 cc:50-52 — TracedReference 专项
+    pub fn visit_traced_reference(&self, ref: &TracedReferenceBase) {
+        self.state.verify_marked_traced_reference(ref);
+    }
+}
+
+// ══ UnifiedHeapMarkingVerifier (原版 .h:19-28, 构造 cc:91-96) ══
+
+pub struct UnifiedHeapMarkingVerifier {
+    /// MarkingVerifierBase(heap_base, collection_type, state_, visitor)
+    pub base: cppgc_internal::MarkingVerifierBase,
+    pub state: UnifiedHeapVerificationState,
+}
+
+impl UnifiedHeapMarkingVerifier {
+    /// 原版 cc:91-96 — 注入共享 state 与独占 visitor
+    pub fn new(heap_base: &mut cppgc_internal::HeapBase, collection_type: CollectionType) -> Self {
+        let state = UnifiedHeapVerificationState { parent: std::ptr::null() };
+        let visitor = Box::new(UnifiedHeapVerificationVisitor { state: /* 共享 */ unsafe { std::ptr::read(&state) } });
+        Self { base: cppgc_internal::MarkingVerifierBase::new(heap_base, collection_type, &state, visitor), state }
+    }
+}

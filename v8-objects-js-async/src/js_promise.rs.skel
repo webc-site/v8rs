@@ -1,0 +1,25 @@
+// 由 tool/src/objects/js-promise.tq.js 从 v8/src/objects/js-promise.tq + js-promise.h 生成; 修订就地改, 复跑覆盖
+// JSPromise tq 差集: flags 位域与槽位锚
+
+//! 差集骨架: js-promise.tq 视角 (bitfield struct + extern class + macro);
+//! .h/-inl.h 布局常量归 tool/src/objects/js-promise.h.js, 语义以落地版 js_promise.rs 为准。
+
+// JSPromiseFlags (uint31, tq js-promise.tq:6-12; 与 h BitField 链 1:1)
+pub const K_STATUS_SHIFT: u32 = 0; pub const K_STATUS_BITS: u32 = 2;
+pub const K_IS_NATIVE_RESOLVER_INVOKED_SHIFT: u32 = 2; pub const K_IS_NATIVE_RESOLVER_INVOKED_BITS: u32 = 1;
+pub const K_HAS_HANDLER_SHIFT: u32 = 3; pub const K_HAS_HANDLER_BITS: u32 = 1;
+pub const K_IS_SILENT_SHIFT: u32 = 4; pub const K_IS_SILENT_BITS: u32 = 1;
+pub const K_ASYNC_TASK_ID_SHIFT: u32 = 5; pub const K_ASYNC_TASK_ID_BITS: u32 = 26;
+pub const K_MAX_ASYNC_TASK_ID: u32 = (1 << K_ASYNC_TASK_ID_BITS) - 1; // 0x3FF_FFFF
+
+// 槽位 (非压缩 8B): JSObject 头 3 槽后 2 槽
+/// v8: src/objects/js-promise.tq JSPromise.reactions_or_result
+pub const K_REACTIONS_OR_RESULT_OFFSET: usize = 24;
+/// v8: src/objects/js-promise.tq JSPromise.flags
+pub const K_FLAGS_OFFSET: usize = 32;
+/// v8: src/objects/js-promise.h JSPromise::kHeaderSize (sizeof, 5 words)
+pub const K_HEADER_SIZE: usize = 40;
+
+// tq macro (语义在 Torque/builtins 层, Rust 侧为 Tagged 访问器):
+//   Status() / SetStatus(kPending→kFulfilled|kRejected) / HasHandler() / SetHasHandler()
+//   dcheck 约束: SetStatus 仅可自 kPending 迁出且目标不可为 kPending

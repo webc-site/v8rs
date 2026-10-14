@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/turbofan.h.js 从 v8/src/compiler/turbofan.h 生成; 修订就地改, 复跑覆盖
+// TurboFan 对外最小接口 (不含 compiler 内部头)
+
+//! turbofan — 编排入口的稳定契约
+//!
+//! NewCompilationJob(isolate, function, has_script, osr_offset =
+//! BytecodeOffset::None()); 实现按构建开关二选一:
+//! turbofan-enabled.cc → Pipeline::NewCompilationJob;
+//! turbofan-disabled.cc → FATAL 桩 (见 turbofan_disabled.rs.skel /
+//! turbofan_enabled.rs.skel)。
+
+/// 原版 IsScriptAvailable — JSFunction 是否带 Script
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IsScriptAvailable {
+  /// kNo
+  No,
+  /// kYes
+  Yes,
+}
+
+/// 原版 NewCompilationJob — TurbofanCompilationJob 工厂
+/// v8: src/compiler/turbofan-enabled.cc NewCompilationJob (TF 开)
+/// v8: src/compiler/turbofan-disabled.cc NewCompilationJob (TF 关 → FATAL)
+pub fn new_compilation_job(isolate: &Isolate, function: &JSFunction, has_script: IsScriptAvailable, osr_offset: BytecodeOffset) -> Box<dyn TurbofanCompilationJob> {
+  todo!("v8: src/compiler/turbofan-enabled.cc NewCompilationJob (cfg(feature = "turbofan") 二选一)")
+}

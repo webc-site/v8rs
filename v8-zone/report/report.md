@@ -1,0 +1,38 @@
+# v8-zone Zone 分配器评测
+
+本报告对比 v8rs `Zone` bump 分配器与各对照库在本 crate 核心操作上的表现。
+数据来自 criterion (`cargo bench -p v8-zone --features bench`)，
+倍率越大表示吞吐高于基线 v8rs-zone。
+
+参与评测的实现：`v8rs-zone`（本 crate）、`bumpalo`（仅作 bump 内核对照，Zone 语义 API 保持自研）、`std-vec`（std Vec 批量分配，经全局 jemalloc 的通用分配器基线）。
+
+### aligned: 过量分配后取整对齐指针
+
+| 参数 | v8rs-zone (allocs/秒 / 相对基线) | bumpalo (allocs/秒 / 相对基线) | std-vec (allocs/秒 / 相对基线) |
+| :--- | ---: | ---: | ---: |
+| align32_size32_n100 | 506M ×1.00 | 495M ×0.98 | 100.0M ×0.20 |
+| align8_size32_n100 | 508M ×1.00 | 640M ×1.26 | 98.9M ×0.19 |
+
+### alloc: 批量分配 + 整体回收
+
+| 参数 | v8rs-zone (allocs/秒 / 相对基线) | bumpalo (allocs/秒 / 相对基线) | std-vec (allocs/秒 / 相对基线) |
+| :--- | ---: | ---: | ---: |
+| size16_n200 | 460M ×1.00 | 550M ×1.20 | 93.7M ×0.20 |
+| size64_n200 | 443M ×1.00 | 556M ×1.25 | 60.5M ×0.14 |
+| size256_n200 | 366M ×1.00 | 555M ×1.52 | 63.6M ×0.17 |
+| size1024_n200 | 213M ×1.00 | 545M ×2.55 | 41.6M ×0.19 |
+| size16384_n200 | 3.9M ×1.00 | 537M ×138.15 | 8.1M ×2.08 |
+
+### reset: 多段负载后 DeleteAll/Reset 复位
+
+| 参数 | v8rs-zone (allocs/秒 / 相对基线) | bumpalo (allocs/秒 / 相对基线) | std-vec (allocs/秒 / 相对基线) |
+| :--- | ---: | ---: | ---: |
+| size64_n1600 | 450M ×1.00 | 531M ×1.18 | 52.7M ×0.12 |
+
+### scoped: 作用域嵌套分配与回滚
+
+| 参数 | v8rs-zone (allocs/秒 / 相对基线) | bumpalo (allocs/秒 / 相对基线) | std-vec (allocs/秒 / 相对基线) |
+| :--- | ---: | ---: | ---: |
+| depth1_size32_n32 | 538M ×1.00 | 747M ×1.39 | 94.7M ×0.18 |
+| depth4_size32_n32 | 489M ×1.00 | 500M ×1.02 | 96.8M ×0.20 |
+| depth16_size32_n32 | 484M ×1.00 | 468M ×0.97 | 50.9M ×0.11 |

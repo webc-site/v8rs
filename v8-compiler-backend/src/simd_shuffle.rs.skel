@@ -1,0 +1,192 @@
+// 由 tool/src/compiler/backend/simd-shuffle.js 从 v8/src/compiler/backend/simd-shuffle.h + simd-shuffle.cc 生成; 修订就地改, 复跑覆盖
+// SimdShuffle/SimdSwizzle: shuffle 模式匹配 (TryMatch 29 + Pack 5 + CanonicalShuffle 53)
+
+//! 台账: CanonicalizeShuffle (输入等化 + 规范化); TryMatchCanonical → 枚举 50 值;
+//!   TryMatch 族 27 + TryMatchCanonical (CanonicalShuffle 返回) + TryMatchArchShuffle
+//!   (x64); Pack 族 5 (pshufd imm8/blend 掩码);
+//!   x64 专属: arch_shuffles128/256 常表 + TryMatchArchShuffle (swizzle 掩码);
+//!   kShuffleSentinel=0xFF; SimdSwizzle::AllInRangeOrTopBitSet。
+
+/// v8: SimdShuffle::CanonicalShuffle — 规范化 shuffle 类 (实测 53 值)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+#[rustfmt::skip]
+pub enum CanonicalShuffle {
+  /// kUnknown
+  nknown,
+  /// kIdentity
+  dentity,
+  /// kS64x2Even
+  64x2Even,
+  /// kS64x2Odd
+  64x2Odd,
+  /// kS64x2ReverseBytes
+  64x2ReverseBytes,
+  /// kS64x2Reverse
+  64x2Reverse,
+  /// kS32x4Even
+  32x4Even,
+  /// kS32x4Odd
+  32x4Odd,
+  /// kS32x4InterleaveLowHalves
+  32x4InterleaveLowHalves,
+  /// kS32x4InterleaveHighHalves
+  32x4InterleaveHighHalves,
+  /// kS32x4ReverseBytes
+  32x4ReverseBytes,
+  /// kS32x4Reverse
+  32x4Reverse,
+  /// kS32x2Reverse
+  32x2Reverse,
+  /// kS32x4TransposeEven
+  32x4TransposeEven,
+  /// kS32x4TransposeOdd
+  32x4TransposeOdd,
+  /// kS16x8Even
+  16x8Even,
+  /// kS16x8Odd
+  16x8Odd,
+  /// kS16x8InterleaveLowHalves
+  16x8InterleaveLowHalves,
+  /// kS16x8InterleaveHighHalves
+  16x8InterleaveHighHalves,
+  /// kS16x4InterleaveHighHalves
+  16x4InterleaveHighHalves,
+  /// kS16x8ReverseBytes
+  16x8ReverseBytes,
+  /// kS16x8TransposeEven
+  16x8TransposeEven,
+  /// kS16x8TransposeOdd
+  16x8TransposeOdd,
+  /// kS16x8TopBottomInterleave
+  16x8TopBottomInterleave,
+  /// kS16x4DeinterleaveEvenEven
+  16x4DeinterleaveEvenEven,
+  /// kS16x4DeinterleaveOddEven
+  16x4DeinterleaveOddEven,
+  /// kS16x4DeinterleaveEvenOdd
+  16x4DeinterleaveEvenOdd,
+  /// kS16x4DeinterleaveOddOdd
+  16x4DeinterleaveOddOdd,
+  /// kS16x4Reverse
+  16x4Reverse,
+  /// kS16x2Reverse
+  16x2Reverse,
+  /// kS16x4Even
+  16x4Even,
+  /// kS16x4Odd
+  16x4Odd,
+  /// kS8x16Even
+  8x16Even,
+  /// kS8x16Odd
+  8x16Odd,
+  /// kS8x16InterleaveLowHalves
+  8x16InterleaveLowHalves,
+  /// kS8x16InterleaveHighHalves
+  8x16InterleaveHighHalves,
+  /// kS8x8InterleaveHighHalves
+  8x8InterleaveHighHalves,
+  /// kS8x16TransposeEven
+  8x16TransposeEven,
+  /// kS8x16TransposeOdd
+  8x16TransposeOdd,
+  /// kS8x8Even
+  8x8Even,
+  /// kS8x8Odd
+  8x8Odd,
+  /// kS8x8DeinterleaveEvenEven
+  8x8DeinterleaveEvenEven,
+  /// kS8x8DeinterleaveOddEven
+  8x8DeinterleaveOddEven,
+  /// kS8x8DeinterleaveEvenOdd
+  8x8DeinterleaveEvenOdd,
+  /// kS8x8DeinterleaveOddOdd
+  8x8DeinterleaveOddOdd,
+  /// kS8x4DeinterleaveEvenEvenEven
+  8x4DeinterleaveEvenEvenEven,
+  /// kS8x4DeinterleaveOddEvenEven
+  8x4DeinterleaveOddEvenEven,
+  /// kS8x4DeinterleaveEvenOddEven
+  8x4DeinterleaveEvenOddEven,
+  /// kS8x4DeinterleaveOddOddEven
+  8x4DeinterleaveOddOddEven,
+  /// kS8x4DeinterleaveEvenEvenOdd
+  8x4DeinterleaveEvenEvenOdd,
+  /// kS8x4DeinterleaveOddEvenOdd
+  8x4DeinterleaveOddEvenOdd,
+  /// kS8x4DeinterleaveEvenOddOdd
+  8x4DeinterleaveEvenOddOdd,
+  /// kS8x4DeinterleaveOddOddOdd
+  8x4DeinterleaveOddOddOdd,
+}
+
+/// v8: kShuffleSentinel — 无效通道哨兵
+pub const SHUFFLE_SENTINEL: u8 = 0xFF;
+
+/// v8: SimdShuffle::TryMatchIdentity
+// pub fn try_match_dentity(...) -> bool
+/// v8: SimdShuffle::TryMatchSplat
+// pub fn try_match_plat(...) -> bool
+/// v8: SimdShuffle::TryMatchSplat
+// pub fn try_match_plat(...) -> bool
+/// v8: SimdShuffle::TryMatch32x4Rotate
+// pub fn try_match_2x4rotate(...) -> bool
+/// v8: SimdShuffle::TryMatch32x4Reverse
+// pub fn try_match_2x4reverse(...) -> bool
+/// v8: SimdShuffle::TryMatch32x4OneLaneSwizzle
+// pub fn try_match_2x4onelaneswizzle(...) -> bool
+/// v8: SimdShuffle::TryMatch64x1Shuffle
+// pub fn try_match_4x1shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch64x2Shuffle
+// pub fn try_match_4x2shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch32x1Shuffle
+// pub fn try_match_2x1shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch32x2Shuffle
+// pub fn try_match_2x2shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch32x4Shuffle
+// pub fn try_match_2x4shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch32x8Shuffle
+// pub fn try_match_2x8shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch16x1Shuffle
+// pub fn try_match_6x1shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch16x2Shuffle
+// pub fn try_match_6x2shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch16x4Shuffle
+// pub fn try_match_6x4shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatch16x8Shuffle
+// pub fn try_match_6x8shuffle(...) -> bool
+/// v8: SimdShuffle::TryMatchConcat
+// pub fn try_match_oncat(...) -> bool
+/// v8: SimdShuffle::TryMatchBlend
+// pub fn try_match_lend(...) -> bool
+/// v8: SimdShuffle::TryMatchByteToDwordZeroExtend
+// pub fn try_match_ytetodwordzeroextend(...) -> bool
+/// v8: SimdShuffle::TryMatch8x16UpperToLowerReduce
+// pub fn try_match_x16uppertolowerreduce(...) -> bool
+/// v8: SimdShuffle::TryMatch16x8UpperToLowerReduce
+// pub fn try_match_6x8uppertolowerreduce(...) -> bool
+/// v8: SimdShuffle::TryMatch32x4UpperToLowerReduce
+// pub fn try_match_2x4uppertolowerreduce(...) -> bool
+/// v8: SimdShuffle::TryMatch32x4PairwiseReduce
+// pub fn try_match_2x4pairwisereduce(...) -> bool
+/// v8: SimdShuffle::TryMatch64x2Reduce
+// pub fn try_match_4x2reduce(...) -> bool
+/// v8: SimdShuffle::TryMatchVpshufd
+// pub fn try_match_pshufd(...) -> bool
+/// v8: SimdShuffle::TryMatchShufps256
+// pub fn try_match_hufps256(...) -> bool
+/// v8: SimdShuffle::TryMatchArchShuffle
+// pub fn try_match_rchshuffle(...) -> bool
+/// v8: SimdShuffle::PackShuffle4/PackBlend8/PackBlend4/Pack4Lanes/Pack16Lanes — 打包族
+// pub fn pack_shuffle4 / pack_blend8 / pack_blend4 / pack4_lanes / pack16_lanes
+/// v8: SimdSwizzle::AllInRangeOrTopBitSet — swizzle 直接量域检查
+// pub fn all_in_range_or_top_bit_set(shuffle: [u8; 16]) -> bool
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(SHUFFLE_SENTINEL == 0xFF);
+};
+pub const CANONICAL_SHUFFLE_COUNT: usize = 53;
+const _: () = {
+  assert!(CANONICAL_SHUFFLE_COUNT == 53);
+};

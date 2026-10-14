@@ -1,0 +1,21 @@
+// 由 tool/src/compiler/backend/arm/code-generator-arm.js 从 v8/src/compiler/backend/arm/code-generator-arm.cc 生成; 修订就地改, 复跑覆盖
+// arm 代码生成: 32 位分发 + 软除法/双寄存器长乘 + VFP/Neon
+
+//! 台账: AssembleArchInstruction case kArm ×352 (+ 公共 kArch ×40);
+//!   AssembleArchBranch/DeoptBranch/Boolean/TailCallAfterGap;
+//!   32 位特色: 64 位值双寄存器 (umull 软除法), VFP/Neon 加载存储。
+
+/// v8: CodeGenerator::AssembleArchInstruction (arm) — 352 case + 公共 40
+// fn assemble_arch_instruction(instr: &Instruction) -> CodeGenResult
+/// v8: CodeGenerator::AssembleArchBranch / ArchBoolean — 条件分支/materialize
+// fn assemble_arch_branch / assemble_arch_boolean
+/// v8: 32 位双寄存器长乘除序列
+// fn 软除法/umull 序列锚
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(ARCH_CASE_COUNT == 352);
+  assert!(COMMON_CASE_COUNT == 40);
+};
+pub const ARCH_CASE_COUNT: usize = 352;
+pub const COMMON_CASE_COUNT: usize = 40;

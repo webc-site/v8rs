@@ -1,0 +1,26 @@
+// 由 tool/src/objects/js-list-format.h.js 从 v8/src/objects/js-list-format.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSListFormat 枚举/位标志/布局骨架
+
+//! 差集骨架: JSListFormat (icu::ListFormatter 包装)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。ICU 语义面留 Developer。
+
+/// v8: src/objects/js-list-format.h JSListFormat::Style
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Style { Long = 0, Short = 1, Narrow = 2 }
+
+/// v8: src/objects/js-list-format.h JSListFormat::Type
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Type { Conjunction = 0, Disjunction = 1, Unit = 2 }
+
+/// v8: src/objects/js-list-format.h JSListFormat::StyleBits (bit 0..2)
+pub const K_STYLE_MASK: u32 = 0x3;
+/// v8: src/objects/js-list-format.h JSListFormat::TypeBits (bit 2..4; tq 字段名 Type)
+pub const K_TYPE_MASK: u32 = 0x3 << 2;
+pub const K_TYPE_SHIFT: u32 = 2;
+
+/// v8: src/objects/js-list-format.h JSListFormat: locale_ offset=24, icu_formatter_ offset=32,
+///   flags_ offset=40 (Smi)
+pub const K_JS_LIST_FORMAT_HEADER_SIZE: usize = 48;
+
+/// v8: src/objects/js-list-format-inl.h flags accessor (Smi 编码) + set_style/style/set_type/type
+pub struct JSListFormat { /* locale_, icu_formatter_, flags_ */ }

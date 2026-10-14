@@ -1,0 +1,49 @@
+// 由 tool/src/objects/js-regexp.h.js 从 v8/src/objects/js-regexp.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSRegExp/RegExpData 族 flags 位链与 shape 常量差集骨架
+
+//! JSRegExp: data_ 可信指针 → RegExpData (ATOM/IRREGEXP/EXPERIMENTAL);
+//! flags_ SmiTagged<JSRegExpFlags>|Undefined; lastIndex 为唯一 in-object 字段。
+
+// JSRegExp::Flag 位链 (bit i = 声明序; kNone = 0)
+pub const K_GLOBAL_SHIFT: u32 = 0;
+pub const K_IGNORECASE_SHIFT: u32 = 1;
+pub const K_MULTILINE_SHIFT: u32 = 2;
+pub const K_STICKY_SHIFT: u32 = 3;
+pub const K_UNICODE_SHIFT: u32 = 4;
+pub const K_DOTALL_SHIFT: u32 = 5;
+pub const K_LINEAR_SHIFT: u32 = 6;
+pub const K_HASINDICES_SHIFT: u32 = 7;
+pub const K_UNICODESETS_SHIFT: u32 = 8;
+pub const K_NONE: u32 = 0;
+pub const K_FLAG_COUNT: usize = 9;
+
+// JSRegExp 关键常量
+pub const K_IN_OBJECT_FIELD_COUNT: usize = 1; // lastIndex
+pub const K_INITIAL_LAST_INDEX_VALUE: i32 = 0;
+pub const K_EXEC_FUNCTION_DESCRIPTOR_INDEX: i32 = 1;
+pub const K_SYMBOL_MATCH_FUNCTION_DESCRIPTOR_INDEX: i32 = 15;
+pub const K_SYMBOL_MATCH_ALL_FUNCTION_DESCRIPTOR_INDEX: i32 = 16;
+pub const K_SYMBOL_REPLACE_FUNCTION_DESCRIPTOR_INDEX: i32 = 17;
+pub const K_SYMBOL_SEARCH_FUNCTION_DESCRIPTOR_INDEX: i32 = 18;
+pub const K_SYMBOL_SPLIT_FUNCTION_DESCRIPTOR_INDEX: i32 = 19;
+pub const K_UNINITIALIZED_VALUE: i32 = -1;
+pub const K_NO_BACKTRACK_LIMIT: u32 = 0;
+pub const K_TIER_UP_FOR_SUBJECT_LENGTH_VALUE: i32 = 1000;
+pub const K_MAX_CAPTURES: i32 = 1 << 16;
+pub const K_ATOM_CAPTURE_COUNT: i32 = 0;
+pub const K_ATOM_REGISTER_COUNT: i32 = 2;
+// RegistersForCaptureCount(n) = (n + 1) * 2;  CaptureCountForRegisters(r) = (r - 2) / 2
+
+// RegExpData::Type { ATOM, IRREGEXP, EXPERIMENTAL }; TypeSupportsCaptures: 仅 IRREGEXP|EXPERIMENTAL
+pub const K_QUICK_CHECK_BITSET_CHARS: usize = 256;
+pub const K_QUICK_CHECK_BITSET_BITS_PER_WORD: usize = 32;
+pub const K_QUICK_CHECK_BITSET_WORDS: usize = 8; // 256 / 32
+// QuickCheckBitsetBit(c) → (word = c/32, bit = 1 << (c%32)); 'a'(97) → word 3, bit 1
+pub const K_INTERNAL_FLAG_HAS_QUICK_CHECK: u32 = 1 << 0;
+// IrRegExpData::Bits: CanBeZeroLength bit0 (1b) + IsLinearExecutable bit1 (1b)
+
+// JSRegExpResult shape (JSArray in-object 槽, 相对 JSArray::kHeaderSize=32 非压缩):
+//   index@32 input@40 groups@48 regexp_input@56 regexp_last_index@64 → kSize 72 (5 槽)
+// JSRegExpResultWithIndices: +indices@72 → 6 槽; JSRegExpResultIndices: groups@32 → 1 槽
+// 方法映射 (语义推迟): New/Initialize/FlagsFromString/StringFromFlags/QuickCheckRejects/HasCompiledCode/
+//   tier-up 族 (CanTierUp/MarkedForTierUp/TierUpTick/MarkTierUpForNextExec/ShouldProduceBytecode)

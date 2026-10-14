@@ -1,0 +1,42 @@
+// 由 tool/src/wasm/baseline/parallel-move-inl.js 从 v8/src/wasm/baseline/parallel-move-inl.h 生成; 修订就地改, 复跑覆盖
+// ParallelMove 构造初始化规则 (结构在 parallel_move.rs)
+
+//! ParallelMove 的内联构造: 绑定 LiftoffAssembler, 初始 spill 偏移取当前栈顶。
+
+/// 初始 spill 偏移 = 构造时刻 assembler 的 TopSpillOffset (不归零, 接续当前帧)
+/// v8: src/wasm/baseline/parallel-move-inl.h ParallelMove::ParallelMove
+pub const INITIAL_SPILL_OFFSET_FROM_TOP: bool = true;
+
+/// ParallelMove 构造骨架 (对应唯一一条内联定义)
+/// v8: src/wasm/baseline/parallel-move-inl.h ParallelMove::ParallelMove
+pub fn parallel_move_new<TopSpillOffsetFn>(
+    _wasm_asm: (),
+    _top_spill_offset: TopSpillOffsetFn,
+) -> ParallelMoveCtor<TopSpillOffsetFn>
+where
+    TopSpillOffsetFn: Fn() -> u32,
+{
+    ParallelMoveCtor {
+        asm_bound: true,
+        last_spill_offset_source: SpillOffsetSource::TopSpillOffset,
+        _top_spill_offset,
+    }
+}
+
+/// 构造产物台账 (骨架; 真实实现待 Developer 参照原版修订)
+pub struct ParallelMoveCtor<F> {
+    pub asm_bound: bool,
+    pub last_spill_offset_source: SpillOffsetSource,
+    _top_spill_offset: F,
+}
+
+/// last_spill_offset_ 的初值来源
+pub enum SpillOffsetSource {
+    /// asm_->TopSpillOffset()
+    TopSpillOffset,
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(INITIAL_SPILL_OFFSET_FROM_TOP);
+};

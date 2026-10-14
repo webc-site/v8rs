@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1070" height="624" font-family="system-ui, sans-serif">
+<style>
+.title { font-size: 18px; font-weight: 600; }
+.sub { font-size: 12px; fill: #555; }
+.label { font-size: 13px; fill: #333; text-anchor: end; }
+.val { font-size: 12px; fill: #333; }
+</style>
+<text x="16" y="26" class="title">v8-ast criterion 评测 (越低越好)</text>
+<text x="16" y="44" class="sub">enum_dispatch 相对 Box<dyn> 的收益: 各对比组平均而言, v8-ast 路径比 Box<dyn> 对比实现快 13.59× </text>
+<text x="240" y="72" class="label">alloc_nodes</text>
+<text x="240" y="148" class="label">build_tree · 6x2</text>
+<text x="240" y="224" class="label">build_tree · 8x3</text>
+<text x="240" y="300" class="label">layout_check · 6x2</text>
+<text x="240" y="376" class="label">layout_check · 8x3</text>
+<text x="240" y="452" class="label">visit_tree · 6x2</text>
+<text x="240" y="528" class="label">visit_tree · 8x3</text>
+<rect x="250" y="56" width="532.3" height="22" fill="#2e8b57" rx="3"/>
+<text x="792.3" y="72" class="val">dyn-box — 40.27 µs</text>
+<rect x="250" y="84" width="560.0" height="22" fill="#9aa5b1" rx="3"/>
+<text x="820.0" y="100" class="val">v8-ast — 42.36 µs · 1.05×</text>
+<rect x="250" y="132" width="560.0" height="22" fill="#2e8b57" rx="3"/>
+<text x="820.0" y="148" class="val">dyn-box — 1.87 µs · 1.05×</text>
+<rect x="250" y="160" width="532.4" height="22" fill="#9aa5b1" rx="3"/>
+<text x="792.4" y="176" class="val">v8-ast — 1.78 µs</text>
+<rect x="250" y="208" width="560.0" height="22" fill="#2e8b57" rx="3"/>
+<text x="820.0" y="224" class="val">dyn-box — 137.94 µs · 21.55×</text>
+<rect x="250" y="236" width="26.0" height="22" fill="#9aa5b1" rx="3"/>
+<text x="286.0" y="252" class="val">v8-ast — 6.40 µs</text>
+<rect x="250" y="284" width="560.0" height="22" fill="#2e8b57" rx="3"/>
+<text x="820.0" y="300" class="val">dyn-box — 665.85 ns · 1.68×</text>
+<rect x="250" y="312" width="333.8" height="22" fill="#9aa5b1" rx="3"/>
+<text x="593.8" y="328" class="val">v8-ast — 396.87 ns</text>
+<rect x="250" y="360" width="560.0" height="22" fill="#2e8b57" rx="3"/>
+<text x="820.0" y="376" class="val">dyn-box — 63.04 µs · 43.21×</text>
+<rect x="250" y="388" width="13.0" height="22" fill="#9aa5b1" rx="3"/>
+<text x="273.0" y="404" class="val">v8-ast — 1.46 µs</text>
+<rect x="250" y="436" width="560.0" height="22" fill="#2e8b57" rx="3"/>
+<text x="820.0" y="452" class="val">dyn-box — 301.02 ns · 1.26×</text>
+<rect x="250" y="464" width="445.4" height="22" fill="#9aa5b1" rx="3"/>
+<text x="705.4" y="480" class="val">v8-ast — 239.45 ns</text>
+<rect x="250" y="512" width="560.0" height="22" fill="#2e8b57" rx="3"/>
+<text x="820.0" y="528" class="val">dyn-box — 26.19 µs · 25.42×</text>
+<rect x="250" y="540" width="22.0" height="22" fill="#9aa5b1" rx="3"/>
+<text x="282.0" y="556" class="val">v8-ast — 1.03 µs</text>
+<text x="16" y="614" class="sub">数值越低越好, 时间取 criterion 均值 (纳秒制, 已人性化单位)。</text>
+</svg>

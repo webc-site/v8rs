@@ -1,0 +1,57 @@
+// 由 tool/src/heap/pending-allocations.js 从 v8/src/heap/pending-allocations.h, src/heap/pending-allocations.cc 生成; 修订就地改, 复跑覆盖
+// 新生代待定分配快照 (版本号失效机制)
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+/// v8: src/heap/pending-allocations.h YoungPendingAllocations::Snapshot
+pub struct Snapshot {
+  /// v8: top / limit / large_object (均 kNullAddress 起始)
+  pub top: Address,
+  pub limit: Address,
+  pub large_object: Address,
+  /// v8: version = 0
+  pub version: usize,
+}
+
+impl Snapshot {
+  /// v8: Snapshot::Contains
+  /// (top <= addr < limit) || large_object == addr
+  pub fn contains(&self, addr: Address) -> bool {
+    if self.top <= addr && addr < self.limit { return true; }
+    if self.large_object == addr { return true; }
+    false
+  }
+}
+
+/// v8: src/heap/pending-allocations.h YoungPendingAllocations
+pub struct YoungPendingAllocations {
+  /// v8: heap_ (const)
+  pub heap: *mut Heap,
+  /// v8: top_ / limit_ / large_object_ = kNullAddress (mutable, mutex 保护)
+  pub top: Address,
+  pub limit: Address,
+  pub large_object: Address,
+  /// v8: version_{1} — acquire 读, 写侧 bump
+  pub version: AtomicUsize,
+}
+
+impl YoungPendingAllocations {
+  /// v8: ContainsSynchronized — 互斥锁下 Contains
+  pub fn contains_synchronized(&self, addr: Address) -> bool { todo!() }
+  /// v8: UpdateLab(top, limit) / RemoveLab
+  pub fn update_lab(&mut self, top: Address, limit: Address) { todo!() }
+  pub fn remove_lab(&mut self) { todo!() }
+  /// v8: UpdateLargeObject(addr) / RemoveLargeObject
+  pub fn update_large_object(&mut self, addr: Address) { todo!() }
+  pub fn remove_large_object(&mut self) { todo!() }
+  /// v8: UpdateSnapshot — 锁内重填快照并同步 version
+  pub fn update_snapshot(&self, snapshot: &mut Snapshot) { todo!() }
+  /// v8: UpdateSnapshotIfOutdated — acquire 读 version 不同才刷新
+  pub fn update_snapshot_if_outdated(&self, snapshot: &mut Snapshot) {
+    if self.version.load(Ordering::Acquire) != snapshot->version {
+      self.update_snapshot(snapshot);
+    }
+  }
+  /// v8: ResetVersion — 重置为 1 (起始值)
+  pub fn reset_version(&mut self) { todo!() }
+  /// v8: BumpVersion / is_marking (private, cc)
+}

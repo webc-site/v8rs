@@ -1,0 +1,65 @@
+// 由 tool/src/regexp/experimental/experimental-interpreter.cc.js 从 v8/src/regexp/experimental/experimental-interpreter.cc 生成; 修订就地改, 复跑覆盖
+// 全集台账快照 (审计专用, 区间无缝覆盖 cc:1-1607): 落地以 interpreter.rs 就地修订为准
+
+//! 本仓库实况 = 新版时钟广度优先 NFA 引擎 (任务书旧引擎描述 BitVector/CharRanges/
+//!   PositionRanges/PendingBitsets/ThreadState/Bytecode::Execute 在本文件不存在;
+//!   主循环类比映射 RunActiveThread cc:886-1115, 数据结构族映射下方 FilterGroups/
+//!   InterpreterThread/LastInputIndex/LookaroundInfo/常量, 按实况登记)
+//! Execute 主循环 (RunActiveThread) 批段切分 (实况):
+//!   批段 1 线程调度+状态机转移 EXP-3b 已落地 (preamble + 10 实现臂 + FILTER_* 加固
+//!   防御臂 + 调度外围 run_active_threads/run_active_threads_to_end/find_next_match;
+//!   FORK→CheckMemoryConsumption cc:977-980 与 kTicks=64→HandleInterrupts cc:733-737
+//!   为接线探针, 本体各归 EXP-3d/EXP-4) / 批段 2 字符消费+谓词绑定 EXP-3c 已落地
+//!   (原推迟臂转实现臂) / 批段 3 环视表+捕获过滤+内存治理 EXP-3d 主循环 2 臂已落地
+//!   (WRITE/READ_LOOKAROUND_TABLE; FillLookaroundTable/CheckMemoryConsumption 本体仍推迟)
+//! 常量实测核对: kUndefinedRegisterValue=-1(int) kUndefinedMatchIndexValue=-1(int)
+//!   kUndefinedClockValue=-1(uint64→回绕 u64::MAX) kTicksBetweenInterruptHandling=64
+//! cc:   1-15   [登记不落地 (样板区)] license + include 块
+//! cc:  16-20   [登记不落地 (样板区)] namespace v8/internal/regexp + 匿名 namespace 开块
+//! cc:  21-23   [EXP-3a 骨架票落地] 常量 ×3 (kUndefinedRegister/MatchIndex/ClockValue)
+//! cc:  24-61   [EXP-3a 骨架票落地] SatisfiesAssertion<Character> 自由函数 (7 断言臂)
+//! cc:  62-71   [EXP-4 入口面] ToInstructionVector (裸字节→Vector<Instruction>)
+//! cc:  72-96   [EXP-4 入口面] ToCharacterVector 模板 + uint8_t/uc16 特化 ×2
+//! cc:  97-122  [EXP-3a 骨架票落地] FilterGroups 类头 + 静态 Filter 入口
+//! cc: 123-141  [EXP-3a 骨架票落地] FilterGroups 私有构造 + Up()
+//! cc: 142-156  [EXP-3a 骨架票落地] IncrementPC() + IsAtNodeEnd()
+//! cc: 157-238  [EXP-3a 骨架票落地] FilterGroups::Run 显式栈遍历主体
+//! cc: 239-251  [EXP-3a 骨架票落地] FilterGroups 字段区 (pc_/max_clock_/双 ZoneStack/bytecode_)
+//! cc: 252-347  [EXP-3a 骨架票落地] NfaInterpreter 类头 + 架构注释 (时钟 BFS/优先级/双轨)
+//! cc: 348-479  [EXP-3a 骨架票落地+EXP-4 入口面+EXP-3d 环视表+捕获过滤+内存治理] NfaInterpreter 构造器 (扫描段 A / Isolate·ToXxxVector 前段 E / 分配器 D)
+//! cc: 480-539  [EXP-4 入口面] FindMatches 成员 (主驱动, 驱动 find_next_match 面 EXP-3b 已落地)
+//! cc: 540-589  [EXP-3a 骨架票落地] InterpreterThread 嵌套类 + ConsumedCharacter 枚举
+//! cc: 590-635  [EXP-3d 环视表+捕获过滤+内存治理] FillLookaroundTable (反向逐位置预构建环视表)
+//! cc: 636-695  [EXP-3d 环视表+捕获过滤+内存治理] FillLookaroundCaptures (环视捕获回填)
+//! cc: 696-756  [EXP-3b 已落地(线程调度+状态机转移)] RunActiveThreadsToEnd (时钟推进主驱动, kTicks=64 接线 HandleInterrupts 探针)
+//! cc: 757-817  [EXP-4 入口面] HandleInterrupts (StackLimitCheck/Isolate 栈守护; 本票接线探针)
+//! cc: 818-830  [EXP-3a 骨架票落地] SetInputIndex
+//! cc: 831-885  [EXP-3b 已落地(线程调度+状态机转移)] FindNextMatch (逐起始位重启动机, 含环视线程挂起)
+//! cc: 886-907  [EXP-3b 已落地(线程调度+状态机转移)] 主循环 preamble: SBXCHECK 边界/++clock/去重短路/取指 (Execute 批段 1/3)
+//! cc: 908-920  [EXP-3c 字符消费+谓词绑定] 主循环臂: CONSUME_RANGE·RANGE_COUNT 挂起 + ASSERTION 求值 (Execute 批段 2/3, EXP-3c 已落地)
+//! cc: 921-1019 [EXP-3b 已落地(线程调度+状态机转移)] 主循环臂: FORK·JMP·ACCEPT·SET_QUANTIFIER·CLEAR_REGISTER·SET_REGISTER_TO_CP (Execute 批段 3/3a)
+//! cc:1020-1024 [EXP-3b 已落地(线程调度+状态机转移)] 主循环臂: FILTER_* ×4 UNREACHABLE 防御 (原版四 case 折叠, Rust 加固 BadBytecode)
+//! cc:1025-1055 [EXP-3b 已落地(线程调度+状态机转移)] 主循环臂: BEGIN_LOOP·END_LOOP·START_LOOKAROUND·END_LOOKAROUND
+//! cc:1056-1119 [EXP-3d 环视表+捕获过滤+内存治理] 主循环臂: WRITE/READ_LOOKAROUND_TABLE (双轨表读写+命中登记, EXP-3d 已落地)
+//! cc:1120-1131 [EXP-3b 已落地(线程调度+状态机转移)] RunActiveThreads (弹出-驱动循环)
+//! cc:1132-1173 [EXP-3a 骨架票落地] FlushBlockedThreads (逆序唤醒/范围比对/销毁)
+//! cc:1174-1175 [EXP-3a 骨架票落地] FoundMatch (best_match_thread 在场)
+//! cc:1176-1182 [EXP-3a 骨架票落地] ApproximateTotalMemoryUsage (预算×线程数)
+//! cc:1183-1209 [EXP-3d 环视表+捕获过滤+内存治理] CheckMemoryConsumption (64MB 治理阈值面; 本票 FORK 接线探针)
+//! cc:1210-1242 [EXP-3a 骨架票落地 (Vec 字段直读折叠)] Get*Array getter ×5 (指针→Vector 包装)
+//! cc:1243-1336 [EXP-3d 环视表+捕获过滤+内存治理] New/Free 数组族 ×15 (RecyclingZoneAllocator 分配回收)
+//! cc:1337-1356 [EXP-3a 骨架票落地] NewEmptyThread (哨兵/0 填充工厂)
+//! cc:1357-1379 [EXP-3a 骨架票落地] NewUninitializedThread (FORK 专用工厂)
+//! cc:1380-1412 [EXP-3d 环视表+捕获过滤+内存治理] GetFilteredRegisters (FilterGroups 调用接线)
+//! cc:1413-1426 [EXP-3a 骨架票落地 (Rust=drop)+EXP-3d 环视表+捕获过滤+内存治理 (回收链)] DestroyThread (五数组回收)
+//! cc:1427-1452 [EXP-3a 骨架票落地] IsPcProcessed (去重查询, 含冗余性论证注释)
+//! cc:1453-1466 [EXP-3a 骨架票落地] MarkPcProcessed (去重登记)
+//! cc:1467-1491 [EXP-3a 骨架票落地+EXP-4 入口面 (句柄面)] Nfa 字段组 1 (isolate_/call_origin_/no_gc_/句柄/bytecode_/input_/clock)
+//! cc:1492-1509 [EXP-3a 骨架票落地] LastInputIndex 嵌套类 + pc_last_input_index_ 字段
+//! cc:1510-1531 [EXP-3a 骨架票落地+EXP-3d 环视表+捕获过滤+内存治理 (分配器)] 线程列表字段 + 分配器 ×5 + best_match_thread_
+//! cc:1532-1546 [EXP-3a 骨架票落地] LookaroundInfo 结构 + lookarounds_ 字段
+//! cc:1547-1562 [EXP-3a 骨架票落地] 环视真值表字段 ×2 + only_captureless_lookbehinds_
+//! cc:1563-1578 [EXP-3a 骨架票落地+EXP-4 入口面 (zone_)] reverse_/current_lookaround_/filter_groups_pc_/memory 预算/zone_
+//! cc:1579-1582 [登记不落地 (样板区)] NfaInterpreter 类闭 + 匿名 namespace 闭
+//! cc:1583-1604 [EXP-4 入口面] ExperimentalRegExpInterpreter::FindMatches 入口 (one/two-byte 分派)
+//! cc:1605-1607 [登记不落地 (样板区)] namespace regexp/internal/v8 闭块

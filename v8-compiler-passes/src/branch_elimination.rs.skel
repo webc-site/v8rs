@@ -1,0 +1,130 @@
+// 由 tool/src/compiler/branch-elimination.js 从 v8/src/compiler/branch-elimination.h + src/compiler/branch-elimination.cc 生成; 修订就地改, 复跑覆盖
+// BranchElimination — 控制路径条件传播, 分支/条件去重
+
+//! BranchElimination: 记录控制路径上已知条件的取值, 消解冗余 Branch /
+//! DeoptimizeIf / TrapIf。
+//!
+//! 规则面: Phase 枚举, Reduce 分派表 11 case + default,
+//! BranchCondition 相等语义。语义面 (推迟): ControlPathState 泛型基类
+//! (control-path-state.h) 的状态合并/回滚。
+
+#![allow(dead_code, non_camel_case_types)]
+
+/// v8: src/compiler/branch-elimination.h BranchElimination::Phase
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Phase {
+  /// kEARLY
+  Early,
+  /// kLATE
+  Late,
+}
+
+/// v8: src/compiler/branch-elimination.h BranchCondition
+/// 条件节点 + 分支节点 + 真假值 三元组
+#[derive(Clone, Copy)]
+pub struct BranchCondition {
+  /// 原 node — 条件
+  pub node: crate::node::Node,
+  /// 原 branch — 分支
+  pub branch: crate::node::Node,
+  /// 原 is_true
+  pub is_true: bool,
+}
+
+impl BranchCondition {
+  /// v8: src/compiler/branch-elimination.h BranchCondition::IsSet
+  pub fn is_set(&self) -> bool {
+    !self.node.is_null()
+  }
+}
+
+impl PartialEq for BranchCondition {
+  /// v8: src/compiler/branch-elimination.h BranchCondition::operator==
+  fn eq(&self, other: &Self) -> bool {
+    self.node == other.node && self.branch == other.branch && self.is_true == other.is_true
+  }
+}
+
+/// v8: src/compiler/branch-elimination.h BranchElimination
+pub struct BranchElimination {
+  /// 原 js_graph_
+  js_graph: *mut crate::js_graph::JSGraph,
+  /// 原 dead_
+  dead: crate::node::Node,
+  /// 原 phase_
+  phase: Phase,
+}
+
+impl BranchElimination {
+  /// v8: src/compiler/branch-elimination.h BranchElimination::BranchElimination
+  /// 原默认参: phase = kLATE
+  pub fn new(editor: &mut dyn crate::graph_reducer::Editor, js_graph: *mut crate::js_graph::JSGraph, zone: &mut crate::zone::Zone, phase: Phase) -> Self {
+    let _ = (editor, zone);
+    todo!("ControlPathState 基类构造")
+  }
+
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::reducer_name
+  pub const REDUCER_NAME: &'static str = "BranchElimination";
+
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::Reduce
+  /// 分派表 (原文顺序): Dead, DeoptimizeIf, DeoptimizeUnless, Merge, Loop, Branch, IfFalse, IfTrue, TrapIf, TrapUnless, Start; default: 控制输出>0 → ReduceOtherControl
+  pub fn reduce(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    match node.opcode() {
+      crate::IrOpcode::Dead => todo!("case kDead"),
+      crate::IrOpcode::DeoptimizeIf => todo!("case kDeoptimizeIf"),
+      crate::IrOpcode::DeoptimizeUnless => todo!("case kDeoptimizeUnless"),
+      crate::IrOpcode::Merge => todo!("case kMerge"),
+      crate::IrOpcode::Loop => todo!("case kLoop"),
+      crate::IrOpcode::Branch => todo!("case kBranch"),
+      crate::IrOpcode::IfFalse => todo!("case kIfFalse"),
+      crate::IrOpcode::IfTrue => todo!("case kIfTrue"),
+      crate::IrOpcode::TrapIf => todo!("case kTrapIf"),
+      crate::IrOpcode::TrapUnless => todo!("case kTrapUnless"),
+      crate::IrOpcode::Start => todo!("case kStart")
+      _ if node.op().control_output_count() > 0 => self.reduce_other_control(node),
+      _ => crate::graph_reducer::Reduction::NoChange,
+    }
+  }
+
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceBranch
+  pub fn reduce_branch(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("条件已知真/假 → 消解分支; 相反条件 → DeoptimizeIf 改写")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceDeoptimizeConditional
+  pub fn reduce_deoptimize_conditional(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("DeoptimizeIf/Unless 条件已知 → 无条件 Deoptimize 或消除")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceIf
+  /// 原文: is_true_branch 区分 IfTrue/IfFalse
+  pub fn reduce_if(&mut self, node: &crate::node::Node, is_true_branch: bool) -> crate::graph_reducer::Reduction {
+    todo!("记录 BranchCondition 到路径状态")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceTrapConditional
+  pub fn reduce_trap_conditional(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("TrapIf/Unless 对称处理")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceLoop
+  pub fn reduce_loop(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("循环头状态重置 (沿回边不可用条件丢弃)")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceMerge
+  pub fn reduce_merge(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("多前驱条件交集合并")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceStart
+  pub fn reduce_start(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("Start 状态初始化")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::ReduceOtherControl
+  pub fn reduce_other_control(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("其余控制节点状态继承")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::SimplifyBranchCondition
+  pub fn simplify_branch_condition(&mut self, branch: &crate::node::Node) {
+    todo!("条件规范化 (如 Word32Equal 反转)")
+  }
+  /// v8: src/compiler/branch-elimination.cc BranchElimination::TryEliminateBranchWithPhiCondition
+  pub fn try_eliminate_branch_with_phi_condition(&mut self, branch: &crate::node::Node, phi: &crate::node::Node, merge: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("Phi 条件各输入一致性 → 常量化分支")
+  }
+}

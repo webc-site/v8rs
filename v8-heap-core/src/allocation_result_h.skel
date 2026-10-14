@@ -1,0 +1,23 @@
+// 由 tool/src/heap/allocation-result.h.js 从 v8/src/heap/allocation-result.h 生成; 修订就地改, 复跑覆盖
+// AllocationOrigin 6 项逐值 + AllocationResult 10 方法台账 (全落地, 无 Isolate 耦合)
+
+// ══ AllocationOrigin (原版 h:15-22) → v8-heap-core/src/allocation.rs ══
+// [0] kGeneratedCode             = 0                         h:16
+// [1] kRuntime                   = 1                         h:17
+// [2] kGC                        = 2                         h:18
+// [3] kFirstAllocationOrigin     = kGeneratedCode            h:19
+// [4] kLastAllocationOrigin      = kGC                       h:20
+// [5] kNumberOfAllocationOrigins = kLastAllocationOrigin + 1 h:21
+// ══ AllocationResult (原版 h:26-69) → v8-heap-core/src/allocation.rs ══
+// Failure h:28 / FromObject h:30 / 默认 ctor(=失败) h:36 / IsFailure h:38 / To<T> h:40-45 /
+// ToObjectChecked h:47 / ToObject h:52 / ToAddress h:57 / operator bool h:62 / 私有 ctor h:65
+// 字段: Tagged<HeapObject> object_ h:68; 布局断言 sizeof==kSystemPointerSize h:71
+// 处置: 全部落地; To<T> 的 Cast<T> 以 v8-objects-core Tagged::cast + Cast trait 承接
+
+// ── rs 侧落地锚 (HC-1R 实测台账) ──
+// Landed @ v8-heap-core/src/allocation.rs (AllocationOrigin + AllocationResult 区, 26 锚 + 双行号 6 + 禁面 3):
+//   AllocationOrigin: #[repr(i32)] 3 真值 (h:16/17/18) + 3 关联常量别名 (h:19/20/21, Rust 枚举禁重复判别式);
+//   AllocationResult: 字段 object_ (h:68) + Failure/FromObject/null ctor/Default/is_failure/to<T>/
+//     to_object_checked (check_with_msg = 原版 CHECK abort 面)/to_object/to_address (debug_assert = DCHECK 面)/ok;
+//   sizeof==kSystemPointerSize 以 const _: () 恒检 (h:71);
+//   禁面 0 检: 本仓 76 行旧版无 origin/value/success 成员 (票面差异申报, 见模块头注释)。

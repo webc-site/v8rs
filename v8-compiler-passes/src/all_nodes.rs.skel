@@ -1,0 +1,68 @@
+// 由 tool/src/compiler/all-nodes.js 从 v8/src/compiler/all-nodes.h + src/compiler/all-nodes.cc 生成; 修订就地改, 复跑覆盖
+// AllNodes — 从 End 可达节点集 (inputs 或 uses 方向)
+
+//! AllNodes: 从 End 出发标记可达节点。
+//!
+//! 规则面: IsReachable/IsLive 语义 + 字段布局。
+//! 语义面 (推迟): Mark 遍历 (only_inputs ? inputs : uses) — cc:16-50。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/all-nodes.h AllNodes
+pub struct AllNodes {
+  /// 原 reachable — 从 end 可达节点 (输出序)
+  pub reachable: crate::node::NodeVector,
+  /// 原 is_reachable_ — 按 node id 的位向量
+  is_reachable: crate::bit_vector::BitVector,
+  /// 原 only_inputs_
+  only_inputs: bool,
+}
+
+impl AllNodes {
+  /// v8: src/compiler/all-nodes.cc AllNodes::AllNodes (end 显式版)
+  pub fn new(
+    local_zone: &mut crate::zone::Zone,
+    end: &crate::node::Node,
+    graph: &crate::graph::TFGraph,
+    only_inputs: bool, // 原默认 true
+  ) -> Self {
+    let mut s = Self {
+      reachable: Default::default(),
+      is_reachable: Default::default(),
+      only_inputs,
+    };
+    s.mark(local_zone, end, graph);
+    s
+  }
+
+  /// v8: src/compiler/all-nodes.cc AllNodes::AllNodes (End 节点版)
+  /// 原实现: 取 graph->end() 后委托显式版
+  pub fn from_graph_end(
+    local_zone: &mut crate::zone::Zone,
+    graph: &crate::graph::TFGraph,
+    only_inputs: bool, // 原默认 true
+  ) -> Self {
+    todo!("取 graph.end() 后委托 new")
+  }
+
+  /// v8: src/compiler/all-nodes.h AllNodes::IsLive
+  /// 原文: CHECK(only_inputs_); return IsReachable(node);
+  pub fn is_live(&self, node: &crate::node::Node) -> bool {
+    assert!(self.only_inputs);
+    self.is_reachable(node)
+  }
+
+  /// v8: src/compiler/all-nodes.h AllNodes::IsReachable
+  /// 原文: if (!node) return false; id < len && Contains(id)
+  pub fn is_reachable(&self, node: Option<&crate::node::Node>) -> bool {
+    let Some(node) = node else { return false };
+    let id = node.id();
+    id < self.is_reachable.length() && self.is_reachable.contains(id)
+  }
+
+  /// v8: src/compiler/all-nodes.cc AllNodes::Mark
+  /// 语义面: 预留队列遍历; only_inputs=false 时走 uses 边 (End 的 use 特判)
+  fn mark(&mut self, local_zone: &mut crate::zone::Zone, end: &crate::node::Node, graph: &crate::graph::TFGraph) {
+    todo!("Mark: std::vector 指针队列 + inputs/uses 二选一遍历")
+  }
+}

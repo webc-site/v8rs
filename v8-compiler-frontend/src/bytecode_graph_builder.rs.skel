@@ -1,0 +1,1590 @@
+// 由 tool/src/compiler/bytecode-graph-builder.cc.js 从 v8/src/compiler/bytecode-graph-builder.h + bytecode-graph-builder.cc 生成; 修订就地改, 复跑覆盖
+// 字节码→SeaOf 图构建器: 派发表 + 环境绑定 + 框架构建
+
+
+//! BytecodeGraphBuilder — 遍历 BytecodeArray, 经 Environment 寄存器绑定建 SeaOf 图。
+
+bitflags::bitflags! {
+  /// BGB 行为旗标
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilderFlag
+  #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+  pub struct BytecodeGraphBuilderFlags: u8 {
+    /// 跳过首个 stack/tierup 检查 (OSR)
+    const SKIP_FIRST_STACK_AND_TIERUP_CHECK = 1 << 0;
+    /// 分析环境活性
+    const ANALYZE_ENVIRONMENT_LIVENESS = 1 << 1;
+    /// 未初始化变量触发 bailout
+    const BAILOUT_ON_UNINITIALIZED = 1 << 2;
+  }
+}
+
+/// v8: src/compiler/bytecode-graph-builder.cc kInputBufferSizeIncrement
+pub const K_INPUT_BUFFER_SIZE_INCREMENT: i32 = 64;
+/// v8: src/compiler/bytecode-graph-builder.cc kBinaryOperationHintIndex
+pub const K_BINARY_OPERATION_HINT_INDEX: i32 = 1;
+/// v8: src/compiler/bytecode-graph-builder.cc kCompareOperationHintIndex
+pub const K_COMPARE_OPERATION_HINT_INDEX: i32 = 1;
+/// v8: src/compiler/bytecode-graph-builder.cc kCountOperationHintIndex
+pub const K_COUNT_OPERATION_HINT_INDEX: i32 = 0;
+
+/// Environment — 字节码偏移处的 SSA 环境 (累加器/寄存器 → Node 绑定 + FrameState)
+/// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::Environment
+pub struct Environment {
+  /// bytecode_offset
+  pub bytecode_offset: i32,
+  /// 累加器绑定
+  pub accumulator: Option<NodeRef>,
+}
+
+/// BytecodeGraphBuilder — 主构建器
+/// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder
+pub struct BytecodeGraphBuilder {
+  /// 旗标位集
+  pub flags: BytecodeGraphBuilderFlags,
+}
+
+impl BytecodeGraphBuilder {
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::GetFunctionClosure
+  pub fn get_function_closure(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::GetParameter
+  pub fn get_parameter(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::CreateFeedbackVectorNode
+  pub fn create_feedback_vector_node(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoadFeedbackCell
+  pub fn build_load_feedback_cell(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::CreateNativeContextNode
+  pub fn create_native_context_node(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoadNativeContextField
+  pub fn build_load_native_context_field(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::CreateFeedbackSource
+  pub fn create_feedback_source(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::CreateFeedbackSourceForOperand
+  pub fn create_feedback_source_for_operand(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::CreateGraph
+  pub fn create_graph(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::PrepareEagerCheckpoint
+  pub fn prepare_eager_checkpoint(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::PrepareFrameState
+  pub fn prepare_frame_state(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::AdvanceIteratorsTo
+  pub fn advance_iterators_to(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::RemoveMergeEnvironmentsBeforeOffset
+  pub fn remove_merge_environments_before_offset(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildFunctionEntryStackCheck
+  pub fn build_function_entry_stack_check(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildIterationBodyStackCheck
+  pub fn build_iteration_body_stack_check(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildOSREntryStackCheck
+  pub fn build_osrentry_stack_check(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::AdvanceToOsrEntryAndPeelLoops
+  pub fn advance_to_osr_entry_and_peel_loops(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::AddBytecodePositionDecorator
+  pub fn add_bytecode_position_decorator(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::RemoveBytecodePositionDecorator
+  pub fn remove_bytecode_position_decorator(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoadGlobal
+  pub fn build_load_global(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLdaLookupSlot
+  pub fn build_lda_lookup_slot(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::TryGetScopeInfo
+  pub fn try_get_scope_info(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::CheckContextExtensions
+  pub fn check_context_extensions(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLdaLookupContextSlot
+  pub fn build_lda_lookup_context_slot(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLdaLookupGlobalSlot
+  pub fn build_lda_lookup_global_slot(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildNamedStore
+  pub fn build_named_store(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildCreateArguments
+  pub fn build_create_arguments(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::GetCallArgumentsFromRegisters
+  pub fn get_call_arguments_from_registers(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildCall
+  pub fn build_call(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::ProcessCallVarArgs
+  pub fn process_call_var_args(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildCallVarArgs
+  pub fn build_call_var_args(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::ProcessCallRuntimeArguments
+  pub fn process_call_runtime_arguments(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::GetConstructArgumentsFromRegister
+  pub fn get_construct_arguments_from_register(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildHoleCheckAndThrow
+  pub fn build_hole_check_and_throw(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildUnaryOpWithEmbeddedFeedback
+  pub fn build_unary_op_with_embedded_feedback(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildBinaryOpWithEmbeddedFeedback
+  pub fn build_binary_op_with_embedded_feedback(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::GetForInMode
+  pub fn get_for_in_mode(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::ComputeCallFrequency
+  pub fn compute_call_frequency(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::GetSpeculationMode
+  pub fn get_speculation_mode(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::ComputeCallFeedbackRelation
+  pub fn compute_call_feedback_relation(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildBinarySmiOpWithEmbeddedFeedback
+  pub fn build_binary_smi_op_with_embedded_feedback(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildDelete
+  pub fn build_delete(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildCompareOp
+  pub fn build_compare_op(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildCompareOpWithEmbeddedFeedback
+  pub fn build_compare_op_with_embedded_feedback(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildCastOperator
+  pub fn build_cast_operator(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildSwitchOnSmi
+  pub fn build_switch_on_smi(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildReturn
+  pub fn build_return(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildSwitchOnGeneratorState
+  pub fn build_switch_on_generator_state(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::SwitchToMergeEnvironment
+  pub fn switch_to_merge_environment(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoopHeaderEnvironment
+  pub fn build_loop_header_environment(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::MergeIntoSuccessorEnvironment
+  pub fn merge_into_successor_environment(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::MergeControlToLeaveFunction
+  pub fn merge_control_to_leave_function(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoopExitsForBranch
+  pub fn build_loop_exits_for_branch(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoopExitsUntilLoop
+  pub fn build_loop_exits_until_loop(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildLoopExitsForFunctionExit
+  pub fn build_loop_exits_for_function_exit(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJump
+  pub fn build_jump(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIf
+  pub fn build_jump_if(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfNot
+  pub fn build_jump_if_not(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfEqual
+  pub fn build_jump_if_equal(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfNotEqual
+  pub fn build_jump_if_not_equal(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfFalse
+  pub fn build_jump_if_false(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfTrue
+  pub fn build_jump_if_true(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfToBooleanTrue
+  pub fn build_jump_if_to_boolean_true(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfToBooleanFalse
+  pub fn build_jump_if_to_boolean_false(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfNotHole
+  pub fn build_jump_if_not_hole(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfJSReceiver
+  pub fn build_jump_if_jsreceiver(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::BuildJumpIfForInDone
+  pub fn build_jump_if_for_in_done(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::ApplyEarlyReduction
+  pub fn apply_early_reduction(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::EnsureInputBufferSize
+  pub fn ensure_input_buffer_size(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::ExitThenEnterExceptionHandlers
+  pub fn exit_then_enter_exception_handlers(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::MakeNode
+  pub fn make_node(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::NewPhi
+  pub fn new_phi(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::NewEffectPhi
+  pub fn new_effect_phi(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::MergeControl
+  pub fn merge_control(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::MergeEffect
+  pub fn merge_effect(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::MergeValue
+  pub fn merge_value(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::UpdateSourceAndBytecodePosition
+  pub fn update_source_and_bytecode_position(&mut self) -> crate::Result<()> {
+    todo!() // 推迟台账: BGB 执行面
+  }
+
+  // —— BYTECODE_CASE 派发表 (VisitSingleBytecode 内 switch, 宏展开) ——
+  /// 派发目标清单 (192 个 Visit<Name>, 宏先展开产物)
+    // Bytecode::kldaZero → VisitLdaZero
+    // Bytecode::kldaSmi → VisitLdaSmi
+    // Bytecode::kldaConstant → VisitLdaConstant
+    // Bytecode::kldaUndefined → VisitLdaUndefined
+    // Bytecode::kldaNull → VisitLdaNull
+    // Bytecode::kldaTheHole → VisitLdaTheHole
+    // Bytecode::kldaTdzHole → VisitLdaTdzHole
+    // Bytecode::kldaTrue → VisitLdaTrue
+    // Bytecode::kldaFalse → VisitLdaFalse
+    // Bytecode::kldar → VisitLdar
+    // Bytecode::kstar → VisitStar
+    // Bytecode::kmov → VisitMov
+    // Bytecode::kldaGlobal → VisitLdaGlobal
+    // Bytecode::kldaGlobalInsideTypeof → VisitLdaGlobalInsideTypeof
+    // Bytecode::kstaGlobal → VisitStaGlobal
+    // Bytecode::kstaInArrayLiteral → VisitStaInArrayLiteral
+    // Bytecode::kdefineKeyedOwnPropertyInLiteral → VisitDefineKeyedOwnPropertyInLiteral
+    // Bytecode::kldaContextSlotNoCell → VisitLdaContextSlotNoCell
+    // Bytecode::kldaContextSlot → VisitLdaContextSlot
+    // Bytecode::kldaImmutableContextSlot → VisitLdaImmutableContextSlot
+    // Bytecode::kldaCurrentContextSlotNoCell → VisitLdaCurrentContextSlotNoCell
+    // Bytecode::kldaCurrentContextSlot → VisitLdaCurrentContextSlot
+    // Bytecode::kldaImmutableCurrentContextSlot → VisitLdaImmutableCurrentContextSlot
+    // Bytecode::kstaContextSlotNoCell → VisitStaContextSlotNoCell
+    // Bytecode::kstaCurrentContextSlotNoCell → VisitStaCurrentContextSlotNoCell
+    // Bytecode::kstaContextSlot → VisitStaContextSlot
+    // Bytecode::kstaCurrentContextSlot → VisitStaCurrentContextSlot
+    // Bytecode::kldaLookupSlot → VisitLdaLookupSlot
+    // Bytecode::kldaLookupSlotInsideTypeof → VisitLdaLookupSlotInsideTypeof
+    // Bytecode::kldaLookupContextSlotNoCell → VisitLdaLookupContextSlotNoCell
+    // Bytecode::kldaLookupContextSlot → VisitLdaLookupContextSlot
+    // Bytecode::kldaLookupContextSlotNoCellInsideTypeof → VisitLdaLookupContextSlotNoCellInsideTypeof
+    // Bytecode::kldaLookupContextSlotInsideTypeof → VisitLdaLookupContextSlotInsideTypeof
+    // Bytecode::kldaLookupGlobalSlot → VisitLdaLookupGlobalSlot
+    // Bytecode::kldaLookupGlobalSlotInsideTypeof → VisitLdaLookupGlobalSlotInsideTypeof
+    // Bytecode::kstaLookupSlot → VisitStaLookupSlot
+    // Bytecode::kgetNamedProperty → VisitGetNamedProperty
+    // Bytecode::kgetNamedPropertyFromSuper → VisitGetNamedPropertyFromSuper
+    // Bytecode::kgetKeyedProperty → VisitGetKeyedProperty
+    // Bytecode::kgetEnumeratedKeyedProperty → VisitGetEnumeratedKeyedProperty
+    // Bytecode::kgetPrivateField → VisitGetPrivateField
+    // Bytecode::ksetPrivateField → VisitSetPrivateField
+    // Bytecode::ksetPrototypeProperties → VisitSetPrototypeProperties
+    // Bytecode::ksetNamedProperty → VisitSetNamedProperty
+    // Bytecode::kdefineNamedOwnProperty → VisitDefineNamedOwnProperty
+    // Bytecode::kdefineNamedOwnPropertyInLiteral → VisitDefineNamedOwnPropertyInLiteral
+    // Bytecode::ksetKeyedProperty → VisitSetKeyedProperty
+    // Bytecode::kdefineKeyedOwnProperty → VisitDefineKeyedOwnProperty
+    // Bytecode::kldaModuleVariable → VisitLdaModuleVariable
+    // Bytecode::kstaModuleVariable → VisitStaModuleVariable
+    // Bytecode::kpushContext → VisitPushContext
+    // Bytecode::kpopContext → VisitPopContext
+    // Bytecode::kcreateClosure → VisitCreateClosure
+    // Bytecode::kcreateBlockContext → VisitCreateBlockContext
+    // Bytecode::kcreateFunctionContext → VisitCreateFunctionContext
+    // Bytecode::kcreateFunctionContextWithCells → VisitCreateFunctionContextWithCells
+    // Bytecode::kcreateEvalContext → VisitCreateEvalContext
+    // Bytecode::kcreateCatchContext → VisitCreateCatchContext
+    // Bytecode::kcreateWithContext → VisitCreateWithContext
+    // Bytecode::kcreateMappedArguments → VisitCreateMappedArguments
+    // Bytecode::kcreateUnmappedArguments → VisitCreateUnmappedArguments
+    // Bytecode::kcreateRestParameter → VisitCreateRestParameter
+    // Bytecode::kcreateRegExpLiteral → VisitCreateRegExpLiteral
+    // Bytecode::kcreateArrayLiteral → VisitCreateArrayLiteral
+    // Bytecode::kcreateEmptyArrayLiteral → VisitCreateEmptyArrayLiteral
+    // Bytecode::kcreateArrayFromIterable → VisitCreateArrayFromIterable
+    // Bytecode::karrayDestructure → VisitArrayDestructure
+    // Bytecode::kcreateObjectLiteral → VisitCreateObjectLiteral
+    // Bytecode::kcreateEmptyObjectLiteral → VisitCreateEmptyObjectLiteral
+    // Bytecode::kcloneObject → VisitCloneObject
+    // Bytecode::kgetTemplateObject → VisitGetTemplateObject
+    // Bytecode::kcallAnyReceiver → VisitCallAnyReceiver
+    // Bytecode::kcallProperty → VisitCallProperty
+    // Bytecode::kcallProperty0 → VisitCallProperty0
+    // Bytecode::kcallProperty1 → VisitCallProperty1
+    // Bytecode::kcallProperty2 → VisitCallProperty2
+    // Bytecode::kcallUndefinedReceiver → VisitCallUndefinedReceiver
+    // Bytecode::kcallUndefinedReceiver0 → VisitCallUndefinedReceiver0
+    // Bytecode::kcallUndefinedReceiver1 → VisitCallUndefinedReceiver1
+    // Bytecode::kcallUndefinedReceiver2 → VisitCallUndefinedReceiver2
+    // Bytecode::kcallWithSpread → VisitCallWithSpread
+    // Bytecode::kcallJSRuntime → VisitCallJSRuntime
+    // Bytecode::kcallRuntime → VisitCallRuntime
+    // Bytecode::kcallRuntimeForPair → VisitCallRuntimeForPair
+    // Bytecode::kconstruct → VisitConstruct
+    // Bytecode::kconstructWithSpread → VisitConstructWithSpread
+    // Bytecode::kconstructForwardAllArgs → VisitConstructForwardAllArgs
+    // Bytecode::kinvokeIntrinsic → VisitInvokeIntrinsic
+    // Bytecode::kthrow → VisitThrow
+    // Bytecode::kabort → VisitAbort
+    // Bytecode::kreThrow → VisitReThrow
+    // Bytecode::kthrowReferenceErrorIfTdzHole → VisitThrowReferenceErrorIfTdzHole
+    // Bytecode::kthrowSuperNotCalledIfTdzHole → VisitThrowSuperNotCalledIfTdzHole
+    // Bytecode::kthrowSuperAlreadyCalledIfNotTdzHole → VisitThrowSuperAlreadyCalledIfNotTdzHole
+    // Bytecode::kthrowIfNotSuperConstructor → VisitThrowIfNotSuperConstructor
+    // Bytecode::kbitwiseNot → VisitBitwiseNot
+    // Bytecode::kdec → VisitDec
+    // Bytecode::kinc → VisitInc
+    // Bytecode::knegate → VisitNegate
+    // Bytecode::kadd → VisitAdd
+    // Bytecode::kadd_StringConstant_Internalize → VisitAdd_StringConstant_Internalize
+    // Bytecode::ksub → VisitSub
+    // Bytecode::kmul → VisitMul
+    // Bytecode::kdiv → VisitDiv
+    // Bytecode::kmod → VisitMod
+    // Bytecode::kexp → VisitExp
+    // Bytecode::kbitwiseOr → VisitBitwiseOr
+    // Bytecode::kbitwiseXor → VisitBitwiseXor
+    // Bytecode::kbitwiseAnd → VisitBitwiseAnd
+    // Bytecode::kshiftLeft → VisitShiftLeft
+    // Bytecode::kshiftRight → VisitShiftRight
+    // Bytecode::kshiftRightLogical → VisitShiftRightLogical
+    // Bytecode::kaddSmi → VisitAddSmi
+    // Bytecode::ksubSmi → VisitSubSmi
+    // Bytecode::kmulSmi → VisitMulSmi
+    // Bytecode::kdivSmi → VisitDivSmi
+    // Bytecode::kmodSmi → VisitModSmi
+    // Bytecode::kexpSmi → VisitExpSmi
+    // Bytecode::kbitwiseOrSmi → VisitBitwiseOrSmi
+    // Bytecode::kbitwiseXorSmi → VisitBitwiseXorSmi
+    // Bytecode::kbitwiseAndSmi → VisitBitwiseAndSmi
+    // Bytecode::kshiftLeftSmi → VisitShiftLeftSmi
+    // Bytecode::kshiftRightSmi → VisitShiftRightSmi
+    // Bytecode::kshiftRightLogicalSmi → VisitShiftRightLogicalSmi
+    // Bytecode::klogicalNot → VisitLogicalNot
+    // Bytecode::ktoBooleanLogicalNot → VisitToBooleanLogicalNot
+    // Bytecode::ktypeOf → VisitTypeOf
+    // Bytecode::kdeletePropertyStrict → VisitDeletePropertyStrict
+    // Bytecode::kdeletePropertySloppy → VisitDeletePropertySloppy
+    // Bytecode::kgetSuperConstructor → VisitGetSuperConstructor
+    // Bytecode::kfindNonDefaultConstructorOrConstruct → VisitFindNonDefaultConstructorOrConstruct
+    // Bytecode::ktestEqual → VisitTestEqual
+    // Bytecode::ktestEqualStrict → VisitTestEqualStrict
+    // Bytecode::ktestLessThan → VisitTestLessThan
+    // Bytecode::ktestGreaterThan → VisitTestGreaterThan
+    // Bytecode::ktestLessThanOrEqual → VisitTestLessThanOrEqual
+    // Bytecode::ktestGreaterThanOrEqual → VisitTestGreaterThanOrEqual
+    // Bytecode::ktestReferenceEqual → VisitTestReferenceEqual
+    // Bytecode::ktestIn → VisitTestIn
+    // Bytecode::ktestInstanceOf → VisitTestInstanceOf
+    // Bytecode::ktestUndetectable → VisitTestUndetectable
+    // Bytecode::ktestNull → VisitTestNull
+    // Bytecode::ktestUndefined → VisitTestUndefined
+    // Bytecode::ktestTypeOf → VisitTestTypeOf
+    // Bytecode::ktoName → VisitToName
+    // Bytecode::ktoObject → VisitToObject
+    // Bytecode::ktoString → VisitToString
+    // Bytecode::ktoBoolean → VisitToBoolean
+    // Bytecode::ktoNumber → VisitToNumber
+    // Bytecode::ktoNumeric → VisitToNumeric
+    // Bytecode::kjump → VisitJump
+    // Bytecode::kjumpConstant → VisitJumpConstant
+    // Bytecode::kjumpIfTrue → VisitJumpIfTrue
+    // Bytecode::kjumpIfTrueConstant → VisitJumpIfTrueConstant
+    // Bytecode::kjumpIfFalse → VisitJumpIfFalse
+    // Bytecode::kjumpIfFalseConstant → VisitJumpIfFalseConstant
+    // Bytecode::kjumpIfToBooleanTrue → VisitJumpIfToBooleanTrue
+    // Bytecode::kjumpIfToBooleanTrueConstant → VisitJumpIfToBooleanTrueConstant
+    // Bytecode::kjumpIfToBooleanFalse → VisitJumpIfToBooleanFalse
+    // Bytecode::kjumpIfToBooleanFalseConstant → VisitJumpIfToBooleanFalseConstant
+    // Bytecode::kjumpIfJSReceiver → VisitJumpIfJSReceiver
+    // Bytecode::kjumpIfJSReceiverConstant → VisitJumpIfJSReceiverConstant
+    // Bytecode::kjumpIfForInDone → VisitJumpIfForInDone
+    // Bytecode::kjumpIfForInDoneConstant → VisitJumpIfForInDoneConstant
+    // Bytecode::kjumpIfNull → VisitJumpIfNull
+    // Bytecode::kjumpIfNullConstant → VisitJumpIfNullConstant
+    // Bytecode::kjumpIfNotNull → VisitJumpIfNotNull
+    // Bytecode::kjumpIfNotNullConstant → VisitJumpIfNotNullConstant
+    // Bytecode::kjumpIfUndefined → VisitJumpIfUndefined
+    // Bytecode::kjumpIfUndefinedConstant → VisitJumpIfUndefinedConstant
+    // Bytecode::kjumpIfNotUndefined → VisitJumpIfNotUndefined
+    // Bytecode::kjumpIfNotUndefinedConstant → VisitJumpIfNotUndefinedConstant
+    // Bytecode::kjumpIfUndefinedOrNull → VisitJumpIfUndefinedOrNull
+    // Bytecode::kjumpIfUndefinedOrNullConstant → VisitJumpIfUndefinedOrNullConstant
+    // Bytecode::kjumpLoop → VisitJumpLoop
+    // Bytecode::kswitchOnSmiNoFeedback → VisitSwitchOnSmiNoFeedback
+    // Bytecode::ksetPendingMessage → VisitSetPendingMessage
+    // Bytecode::kreturn → VisitReturn
+    // Bytecode::kdebugger → VisitDebugger
+    // Bytecode::kincBlockCounter → VisitIncBlockCounter
+    // Bytecode::kforInEnumerate → VisitForInEnumerate
+    // Bytecode::kforInPrepare → VisitForInPrepare
+    // Bytecode::kforInNext → VisitForInNext
+    // Bytecode::kforInStep → VisitForInStep
+    // Bytecode::kforOfNext → VisitForOfNext
+    // Bytecode::kgetIterator → VisitGetIterator
+    // Bytecode::ksuspendGenerator → VisitSuspendGenerator
+    // Bytecode::kswitchOnGeneratorState → VisitSwitchOnGeneratorState
+    // Bytecode::kresumeGenerator → VisitResumeGenerator
+    // Bytecode::kwide → VisitWide
+    // Bytecode::kextraWide → VisitExtraWide
+    // Bytecode::killegal → VisitIllegal
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaZero (BYTECODE_CASE 展开)
+  fn visit_lda_zero(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaSmi (BYTECODE_CASE 展开)
+  fn visit_lda_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaConstant (BYTECODE_CASE 展开)
+  fn visit_lda_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaUndefined (BYTECODE_CASE 展开)
+  fn visit_lda_undefined(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaNull (BYTECODE_CASE 展开)
+  fn visit_lda_null(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaTheHole (BYTECODE_CASE 展开)
+  fn visit_lda_the_hole(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaTdzHole (BYTECODE_CASE 展开)
+  fn visit_lda_tdz_hole(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaTrue (BYTECODE_CASE 展开)
+  fn visit_lda_true(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaFalse (BYTECODE_CASE 展开)
+  fn visit_lda_false(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdar (BYTECODE_CASE 展开)
+  fn visit_ldar(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStar (BYTECODE_CASE 展开)
+  fn visit_star(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitMov (BYTECODE_CASE 展开)
+  fn visit_mov(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaGlobal (BYTECODE_CASE 展开)
+  fn visit_lda_global(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaGlobalInsideTypeof (BYTECODE_CASE 展开)
+  fn visit_lda_global_inside_typeof(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaGlobal (BYTECODE_CASE 展开)
+  fn visit_sta_global(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaInArrayLiteral (BYTECODE_CASE 展开)
+  fn visit_sta_in_array_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDefineKeyedOwnPropertyInLiteral (BYTECODE_CASE 展开)
+  fn visit_define_keyed_own_property_in_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaContextSlotNoCell (BYTECODE_CASE 展开)
+  fn visit_lda_context_slot_no_cell(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaContextSlot (BYTECODE_CASE 展开)
+  fn visit_lda_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaImmutableContextSlot (BYTECODE_CASE 展开)
+  fn visit_lda_immutable_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaCurrentContextSlotNoCell (BYTECODE_CASE 展开)
+  fn visit_lda_current_context_slot_no_cell(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaCurrentContextSlot (BYTECODE_CASE 展开)
+  fn visit_lda_current_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaImmutableCurrentContextSlot (BYTECODE_CASE 展开)
+  fn visit_lda_immutable_current_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaContextSlotNoCell (BYTECODE_CASE 展开)
+  fn visit_sta_context_slot_no_cell(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaCurrentContextSlotNoCell (BYTECODE_CASE 展开)
+  fn visit_sta_current_context_slot_no_cell(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaContextSlot (BYTECODE_CASE 展开)
+  fn visit_sta_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaCurrentContextSlot (BYTECODE_CASE 展开)
+  fn visit_sta_current_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupSlot (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupSlotInsideTypeof (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_slot_inside_typeof(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupContextSlotNoCell (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_context_slot_no_cell(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupContextSlot (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_context_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupContextSlotNoCellInsideTypeof (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_context_slot_no_cell_inside_typeof(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupContextSlotInsideTypeof (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_context_slot_inside_typeof(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupGlobalSlot (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_global_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaLookupGlobalSlotInsideTypeof (BYTECODE_CASE 展开)
+  fn visit_lda_lookup_global_slot_inside_typeof(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaLookupSlot (BYTECODE_CASE 展开)
+  fn visit_sta_lookup_slot(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetNamedProperty (BYTECODE_CASE 展开)
+  fn visit_get_named_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetNamedPropertyFromSuper (BYTECODE_CASE 展开)
+  fn visit_get_named_property_from_super(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetKeyedProperty (BYTECODE_CASE 展开)
+  fn visit_get_keyed_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetEnumeratedKeyedProperty (BYTECODE_CASE 展开)
+  fn visit_get_enumerated_keyed_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetPrivateField (BYTECODE_CASE 展开)
+  fn visit_get_private_field(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSetPrivateField (BYTECODE_CASE 展开)
+  fn visit_set_private_field(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSetPrototypeProperties (BYTECODE_CASE 展开)
+  fn visit_set_prototype_properties(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSetNamedProperty (BYTECODE_CASE 展开)
+  fn visit_set_named_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDefineNamedOwnProperty (BYTECODE_CASE 展开)
+  fn visit_define_named_own_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDefineNamedOwnPropertyInLiteral (BYTECODE_CASE 展开)
+  fn visit_define_named_own_property_in_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSetKeyedProperty (BYTECODE_CASE 展开)
+  fn visit_set_keyed_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDefineKeyedOwnProperty (BYTECODE_CASE 展开)
+  fn visit_define_keyed_own_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLdaModuleVariable (BYTECODE_CASE 展开)
+  fn visit_lda_module_variable(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitStaModuleVariable (BYTECODE_CASE 展开)
+  fn visit_sta_module_variable(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitPushContext (BYTECODE_CASE 展开)
+  fn visit_push_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitPopContext (BYTECODE_CASE 展开)
+  fn visit_pop_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateClosure (BYTECODE_CASE 展开)
+  fn visit_create_closure(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateBlockContext (BYTECODE_CASE 展开)
+  fn visit_create_block_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateFunctionContext (BYTECODE_CASE 展开)
+  fn visit_create_function_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateFunctionContextWithCells (BYTECODE_CASE 展开)
+  fn visit_create_function_context_with_cells(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateEvalContext (BYTECODE_CASE 展开)
+  fn visit_create_eval_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateCatchContext (BYTECODE_CASE 展开)
+  fn visit_create_catch_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateWithContext (BYTECODE_CASE 展开)
+  fn visit_create_with_context(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateMappedArguments (BYTECODE_CASE 展开)
+  fn visit_create_mapped_arguments(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateUnmappedArguments (BYTECODE_CASE 展开)
+  fn visit_create_unmapped_arguments(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateRestParameter (BYTECODE_CASE 展开)
+  fn visit_create_rest_parameter(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateRegExpLiteral (BYTECODE_CASE 展开)
+  fn visit_create_reg_exp_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateArrayLiteral (BYTECODE_CASE 展开)
+  fn visit_create_array_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateEmptyArrayLiteral (BYTECODE_CASE 展开)
+  fn visit_create_empty_array_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateArrayFromIterable (BYTECODE_CASE 展开)
+  fn visit_create_array_from_iterable(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitArrayDestructure (BYTECODE_CASE 展开)
+  fn visit_array_destructure(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateObjectLiteral (BYTECODE_CASE 展开)
+  fn visit_create_object_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCreateEmptyObjectLiteral (BYTECODE_CASE 展开)
+  fn visit_create_empty_object_literal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCloneObject (BYTECODE_CASE 展开)
+  fn visit_clone_object(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetTemplateObject (BYTECODE_CASE 展开)
+  fn visit_get_template_object(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallAnyReceiver (BYTECODE_CASE 展开)
+  fn visit_call_any_receiver(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallProperty (BYTECODE_CASE 展开)
+  fn visit_call_property(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallProperty0 (BYTECODE_CASE 展开)
+  fn visit_call_property0(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallProperty1 (BYTECODE_CASE 展开)
+  fn visit_call_property1(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallProperty2 (BYTECODE_CASE 展开)
+  fn visit_call_property2(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallUndefinedReceiver (BYTECODE_CASE 展开)
+  fn visit_call_undefined_receiver(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallUndefinedReceiver0 (BYTECODE_CASE 展开)
+  fn visit_call_undefined_receiver0(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallUndefinedReceiver1 (BYTECODE_CASE 展开)
+  fn visit_call_undefined_receiver1(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallUndefinedReceiver2 (BYTECODE_CASE 展开)
+  fn visit_call_undefined_receiver2(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallWithSpread (BYTECODE_CASE 展开)
+  fn visit_call_with_spread(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallJSRuntime (BYTECODE_CASE 展开)
+  fn visit_call_jsruntime(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallRuntime (BYTECODE_CASE 展开)
+  fn visit_call_runtime(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitCallRuntimeForPair (BYTECODE_CASE 展开)
+  fn visit_call_runtime_for_pair(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitConstruct (BYTECODE_CASE 展开)
+  fn visit_construct(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitConstructWithSpread (BYTECODE_CASE 展开)
+  fn visit_construct_with_spread(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitConstructForwardAllArgs (BYTECODE_CASE 展开)
+  fn visit_construct_forward_all_args(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitInvokeIntrinsic (BYTECODE_CASE 展开)
+  fn visit_invoke_intrinsic(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitThrow (BYTECODE_CASE 展开)
+  fn visit_throw(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitAbort (BYTECODE_CASE 展开)
+  fn visit_abort(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitReThrow (BYTECODE_CASE 展开)
+  fn visit_re_throw(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitThrowReferenceErrorIfTdzHole (BYTECODE_CASE 展开)
+  fn visit_throw_reference_error_if_tdz_hole(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitThrowSuperNotCalledIfTdzHole (BYTECODE_CASE 展开)
+  fn visit_throw_super_not_called_if_tdz_hole(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitThrowSuperAlreadyCalledIfNotTdzHole (BYTECODE_CASE 展开)
+  fn visit_throw_super_already_called_if_not_tdz_hole(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitThrowIfNotSuperConstructor (BYTECODE_CASE 展开)
+  fn visit_throw_if_not_super_constructor(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseNot (BYTECODE_CASE 展开)
+  fn visit_bitwise_not(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDec (BYTECODE_CASE 展开)
+  fn visit_dec(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitInc (BYTECODE_CASE 展开)
+  fn visit_inc(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitNegate (BYTECODE_CASE 展开)
+  fn visit_negate(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitAdd (BYTECODE_CASE 展开)
+  fn visit_add(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitAdd_StringConstant_Internalize (BYTECODE_CASE 展开)
+  fn visit_add_string_constant_internalize(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSub (BYTECODE_CASE 展开)
+  fn visit_sub(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitMul (BYTECODE_CASE 展开)
+  fn visit_mul(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDiv (BYTECODE_CASE 展开)
+  fn visit_div(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitMod (BYTECODE_CASE 展开)
+  fn visit_mod(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitExp (BYTECODE_CASE 展开)
+  fn visit_exp(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseOr (BYTECODE_CASE 展开)
+  fn visit_bitwise_or(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseXor (BYTECODE_CASE 展开)
+  fn visit_bitwise_xor(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseAnd (BYTECODE_CASE 展开)
+  fn visit_bitwise_and(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitShiftLeft (BYTECODE_CASE 展开)
+  fn visit_shift_left(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitShiftRight (BYTECODE_CASE 展开)
+  fn visit_shift_right(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitShiftRightLogical (BYTECODE_CASE 展开)
+  fn visit_shift_right_logical(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitAddSmi (BYTECODE_CASE 展开)
+  fn visit_add_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSubSmi (BYTECODE_CASE 展开)
+  fn visit_sub_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitMulSmi (BYTECODE_CASE 展开)
+  fn visit_mul_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDivSmi (BYTECODE_CASE 展开)
+  fn visit_div_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitModSmi (BYTECODE_CASE 展开)
+  fn visit_mod_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitExpSmi (BYTECODE_CASE 展开)
+  fn visit_exp_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseOrSmi (BYTECODE_CASE 展开)
+  fn visit_bitwise_or_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseXorSmi (BYTECODE_CASE 展开)
+  fn visit_bitwise_xor_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitBitwiseAndSmi (BYTECODE_CASE 展开)
+  fn visit_bitwise_and_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitShiftLeftSmi (BYTECODE_CASE 展开)
+  fn visit_shift_left_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitShiftRightSmi (BYTECODE_CASE 展开)
+  fn visit_shift_right_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitShiftRightLogicalSmi (BYTECODE_CASE 展开)
+  fn visit_shift_right_logical_smi(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitLogicalNot (BYTECODE_CASE 展开)
+  fn visit_logical_not(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToBooleanLogicalNot (BYTECODE_CASE 展开)
+  fn visit_to_boolean_logical_not(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTypeOf (BYTECODE_CASE 展开)
+  fn visit_type_of(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDeletePropertyStrict (BYTECODE_CASE 展开)
+  fn visit_delete_property_strict(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDeletePropertySloppy (BYTECODE_CASE 展开)
+  fn visit_delete_property_sloppy(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetSuperConstructor (BYTECODE_CASE 展开)
+  fn visit_get_super_constructor(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitFindNonDefaultConstructorOrConstruct (BYTECODE_CASE 展开)
+  fn visit_find_non_default_constructor_or_construct(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestEqual (BYTECODE_CASE 展开)
+  fn visit_test_equal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestEqualStrict (BYTECODE_CASE 展开)
+  fn visit_test_equal_strict(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestLessThan (BYTECODE_CASE 展开)
+  fn visit_test_less_than(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestGreaterThan (BYTECODE_CASE 展开)
+  fn visit_test_greater_than(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestLessThanOrEqual (BYTECODE_CASE 展开)
+  fn visit_test_less_than_or_equal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestGreaterThanOrEqual (BYTECODE_CASE 展开)
+  fn visit_test_greater_than_or_equal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestReferenceEqual (BYTECODE_CASE 展开)
+  fn visit_test_reference_equal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestIn (BYTECODE_CASE 展开)
+  fn visit_test_in(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestInstanceOf (BYTECODE_CASE 展开)
+  fn visit_test_instance_of(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestUndetectable (BYTECODE_CASE 展开)
+  fn visit_test_undetectable(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestNull (BYTECODE_CASE 展开)
+  fn visit_test_null(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestUndefined (BYTECODE_CASE 展开)
+  fn visit_test_undefined(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitTestTypeOf (BYTECODE_CASE 展开)
+  fn visit_test_type_of(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToName (BYTECODE_CASE 展开)
+  fn visit_to_name(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToObject (BYTECODE_CASE 展开)
+  fn visit_to_object(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToString (BYTECODE_CASE 展开)
+  fn visit_to_string(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToBoolean (BYTECODE_CASE 展开)
+  fn visit_to_boolean(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToNumber (BYTECODE_CASE 展开)
+  fn visit_to_number(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitToNumeric (BYTECODE_CASE 展开)
+  fn visit_to_numeric(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJump (BYTECODE_CASE 展开)
+  fn visit_jump(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpConstant (BYTECODE_CASE 展开)
+  fn visit_jump_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfTrue (BYTECODE_CASE 展开)
+  fn visit_jump_if_true(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfTrueConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_true_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfFalse (BYTECODE_CASE 展开)
+  fn visit_jump_if_false(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfFalseConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_false_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfToBooleanTrue (BYTECODE_CASE 展开)
+  fn visit_jump_if_to_boolean_true(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfToBooleanTrueConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_to_boolean_true_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfToBooleanFalse (BYTECODE_CASE 展开)
+  fn visit_jump_if_to_boolean_false(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfToBooleanFalseConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_to_boolean_false_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfJSReceiver (BYTECODE_CASE 展开)
+  fn visit_jump_if_jsreceiver(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfJSReceiverConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_jsreceiver_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfForInDone (BYTECODE_CASE 展开)
+  fn visit_jump_if_for_in_done(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfForInDoneConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_for_in_done_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfNull (BYTECODE_CASE 展开)
+  fn visit_jump_if_null(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfNullConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_null_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfNotNull (BYTECODE_CASE 展开)
+  fn visit_jump_if_not_null(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfNotNullConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_not_null_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfUndefined (BYTECODE_CASE 展开)
+  fn visit_jump_if_undefined(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfUndefinedConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_undefined_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfNotUndefined (BYTECODE_CASE 展开)
+  fn visit_jump_if_not_undefined(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfNotUndefinedConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_not_undefined_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfUndefinedOrNull (BYTECODE_CASE 展开)
+  fn visit_jump_if_undefined_or_null(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpIfUndefinedOrNullConstant (BYTECODE_CASE 展开)
+  fn visit_jump_if_undefined_or_null_constant(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitJumpLoop (BYTECODE_CASE 展开)
+  fn visit_jump_loop(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSwitchOnSmiNoFeedback (BYTECODE_CASE 展开)
+  fn visit_switch_on_smi_no_feedback(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSetPendingMessage (BYTECODE_CASE 展开)
+  fn visit_set_pending_message(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitReturn (BYTECODE_CASE 展开)
+  fn visit_return(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitDebugger (BYTECODE_CASE 展开)
+  fn visit_debugger(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitIncBlockCounter (BYTECODE_CASE 展开)
+  fn visit_inc_block_counter(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitForInEnumerate (BYTECODE_CASE 展开)
+  fn visit_for_in_enumerate(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitForInPrepare (BYTECODE_CASE 展开)
+  fn visit_for_in_prepare(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitForInNext (BYTECODE_CASE 展开)
+  fn visit_for_in_next(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitForInStep (BYTECODE_CASE 展开)
+  fn visit_for_in_step(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitForOfNext (BYTECODE_CASE 展开)
+  fn visit_for_of_next(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitGetIterator (BYTECODE_CASE 展开)
+  fn visit_get_iterator(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSuspendGenerator (BYTECODE_CASE 展开)
+  fn visit_suspend_generator(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitSwitchOnGeneratorState (BYTECODE_CASE 展开)
+  fn visit_switch_on_generator_state(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitResumeGenerator (BYTECODE_CASE 展开)
+  fn visit_resume_generator(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitWide (BYTECODE_CASE 展开)
+  fn visit_wide(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitExtraWide (BYTECODE_CASE 展开)
+  fn visit_extra_wide(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+
+  /// v8: src/compiler/bytecode-graph-builder.cc BytecodeGraphBuilder::VisitIllegal (BYTECODE_CASE 展开)
+  fn visit_illegal(&mut self) {
+    todo!() // 推迟台账: BGB 字节码访问器
+  }
+}
+
+// —— 对数基准 ——
+// 旗标 3 / 派发 Visit 192 / cc 定义面 271
+// 派发表双槽 BYTECODE_LIST(name, ...) → Visit##name; SHORT_STAR_BYTECODE_LIST 经 FromShortStar 同构

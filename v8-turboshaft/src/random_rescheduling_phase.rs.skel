@@ -1,0 +1,43 @@
+// 由 tool/src/compiler/turboshaft/random-rescheduling-phase.h.js 从 v8/src/compiler/turboshaft/random-rescheduling-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 随机重排: 调试用操作调度重排
+
+/// 原版 ReschedulingReducer::OpState — 操作调度状态机
+/// v8: src/compiler/turboshaft/random-rescheduling-phase.cc ReschedulingReducer::OpState
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum OpState {
+  /// kPending: 未发出且依赖未满足
+  Pending = 0,
+  /// kReady: 未发出但依赖已满足
+  Ready = 1,
+  /// kFixed: 位置固定 (块终结符 / Phi)
+  Fixed = 2,
+  /// kScheduled: 已发出
+  Scheduled = 3,
+}
+
+/// 原版 ReschedulingReducer — op_states_ 侧表驱动
+/// (GrowingOpIndexSidetable<OpState>, 初值 kPending)
+/// v8: src/compiler/turboshaft/random-rescheduling-phase.cc ReschedulingReducer
+pub struct ReschedulingReducer {
+  pub op_states: Vec<OpState>,
+}
+
+/// 原版 RandomRescheduler — Assembler<ReschedulingReducer, GraphVisitor>
+/// 方法面:
+/// - Run
+/// - VisitAllBlocks
+/// - VisitBlock
+/// - VisitBlockBody
+/// - ComputeReadyOperations
+/// - Run: 输入图 -> companion 图, 随机就绪序发出
+/// - ComputeReadyOperations: 扫块内依赖, kPending -> kReady
+/// v8: src/compiler/turboshaft/random-rescheduling-phase.cc RandomRescheduler
+pub struct RandomRescheduler {
+  pub ready_ops: Vec<OpIndex>,
+  pub rng: RandomNumberGenerator,
+}
+
+/// 原版 RandomReschedulingPhase — 由 v8_flags.turboshaft_random_schedule 控制
+/// v8: src/compiler/turboshaft/random-rescheduling-phase.{h,cc} RandomReschedulingPhase
+pub struct RandomReschedulingPhase;

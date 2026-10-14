@@ -1,0 +1,25 @@
+// 由 tool/src/compiler/turboshaft/wasm-js-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/wasm-js-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// wasm JS 降低: trap 节点到延迟块调用
+
+/// 原版 WasmJSLoweringReducer — JS 管线侧 (内联 wasm 后),
+/// 把所有 TrapIf 换成条件跳转到含 trap builtin 调用的延迟代码。
+/// v8: src/compiler/turboshaft/wasm-js-lowering-reducer.h
+pub struct WasmJSLoweringReducer;
+
+impl WasmJSLoweringReducer {
+  /// v8: REDUCE(WasmTrap)(frame_state, trap_id)
+  /// (frame_state 必须有效: JS 中 wasm trap 全带 FrameState)
+  pub fn reduce_wasm_trap(&mut self, frame_state: OptionalV<EagerFrameState>, trap_id: TrapId) -> V<None> { todo!() }
+
+  /// v8: REDUCE(TrapIf)(condition, frame_state, negated, trap_id)
+  /// - negated 时取反: Word32Equal(condition, 0)
+  /// - IF (UNLIKELY(should_trap)) { LowerWasmTrap(...) }
+  pub fn reduce_trap_if(&mut self, condition: V<Word32>, frame_state: OptionalV<EagerFrameState>, negated: bool, trap_id: TrapId) -> V<None> { todo!() }
+
+  /// v8: LowerWasmTrap —
+  /// 1. GetBuiltinCallDescriptor(trap, kCallBuiltinPointer, needs_frame_state=true)
+  /// 2. CreateFrameStateForStackTrace: 原状态换 trap 位 ScriptOffset 的 LazyFrameState
+  /// 3. Call(NumberConstant(trap), new_frame_state, {}, ts_descriptor)
+  /// 4. Unreachable (trap builtin 不返回)
+  fn lower_wasm_trap(&mut self, frame_state: OptionalV<EagerFrameState>, trap_id: TrapId) { todo!() }
+}

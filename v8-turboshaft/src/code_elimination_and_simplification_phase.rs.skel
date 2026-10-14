@@ -1,0 +1,44 @@
+// 由 tool/src/compiler/turboshaft/code-elimination-and-simplification-phase.h.js 从 v8/src/compiler/turboshaft/code-elimination-and-simplification-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 收尾清理 phase: 死代码/存储消除/规范化 reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/code-elimination-and-simplification-phase.h CodeEliminationAndSimplificationPhase
+pub struct CodeEliminationAndSimplificationPhase;
+
+impl CodeEliminationAndSimplificationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "CodeEliminationAndSimplification"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftCodeEliminationAndSimplification";
+
+  /// CopyingPhase 无条件 reducer 链 (保序; 原版 8 项)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "MaglevAssertTypesReducer",
+    "DeadCodeEliminationReducer",
+    "StackCheckLoweringReducer",
+    "StoreStoreEliminationReducer",
+    "LoadStoreSimplificationReducer",
+    "DuplicationOptimizationReducer",
+    "InstructionSelectionNormalizationReducer",
+    "ValueNumberingReducer",
+  ];
+
+  /// 条件编译成员 (原版 #ifdef DEBUG): StoreLoadVerificationReducer
+  /// 条件编译成员 (原版 #if V8_ENABLE_WEBASSEMBLY): WasmJSLoweringReducer
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/code-elimination-and-simplification-phase.cc CodeEliminationAndSimplificationPhase::Run
+  ///
+  /// 原版序约束注释 (保留语义):
+  /// - DuplicationOptimizationReducer 必须在 LoadStoreSimplificationReducer 之后
+  ///   (优化其产出的 Load/Store)
+  /// - StoreStoreElimination 需要非驻留 scope 以合并只读对象的连续存储
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链 (含 DEBUG/WASM 条件成员)")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(CodeEliminationAndSimplificationPhase::PHASE_NAME == "V8.TFTurboshaftCodeEliminationAndSimplification");
+  assert!(CodeEliminationAndSimplificationPhase::REDUCERS.len() == 8);
+  assert!(CodeEliminationAndSimplificationPhase::REDUCERS[0] == "MaglevAssertTypesReducer");
+  assert!(CodeEliminationAndSimplificationPhase::REDUCERS[7] == "ValueNumberingReducer");
+};

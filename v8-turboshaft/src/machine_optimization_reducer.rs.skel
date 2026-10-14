@@ -1,0 +1,126 @@
+// 由 tool/src/compiler/turboshaft/machine-optimization-reducer.h.js 从 v8/src/compiler/turboshaft/machine-optimization-reducer.h 生成; 修订就地改, 复跑覆盖
+// 机器优化 reducer
+
+/// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer
+/// 代数化简/强度削减/常量折叠
+pub struct MachineOptimizationReducer {
+  pub placeholder: (),
+}
+
+impl MachineOptimizationReducer {
+  /// 原版 V<Untagged> REDUCE(Change)(V<Untagged> input, ChangeOp::Kind kind, ChangeOp::Assumption assumption, RegisterRepresentation from, RegisterRepresentation to)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Change)
+  pub fn reduce_change(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Float64> REDUCE(BitcastWord32PairToFloat64)(V<Word32> hi_word32, V<Word32> lo_word32)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(BitcastWord32PairToFloat64)
+  pub fn reduce_bitcast_word32_pair_to_float64(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(TaggedBitcast)(V<Any> input, RegisterRepresentation from, RegisterRepresentation to, TaggedBitcastOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(TaggedBitcast)
+  pub fn reduce_tagged_bitcast(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Float> REDUCE(FloatUnary)(V<Float> input, FloatUnaryOp::Kind kind, FloatRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(FloatUnary)
+  pub fn reduce_float_unary(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word> REDUCE(WordUnary)(V<Word> input, WordUnaryOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(WordUnary)
+  pub fn reduce_word_unary(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Float> REDUCE(FloatBinop)(V<Float> lhs, V<Float> rhs, FloatBinopOp::Kind kind, FloatRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(FloatBinop)
+  pub fn reduce_float_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word> REDUCE(WordBinop)(V<Word> left, V<Word> right, WordBinopOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(WordBinop)
+  pub fn reduce_word_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 Word32>> REDUCE(OverflowCheckedBinop)(V<Word> left, V<Word> right, OverflowCheckedBinopOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(OverflowCheckedBinop)
+  pub fn reduce_overflow_checked_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word64Pair> REDUCE(Word64AddSub128Binop)(V<Word64> al, V<Word64> ah, V<Word64> bl, V<Word64> bh, Word64AddSub128BinopOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Word64AddSub128Binop)
+  pub fn reduce_word64_add_sub128_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(Comparison)(V<Any> left, V<Any> right, ComparisonOp::Kind kind, RegisterRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Comparison)
+  pub fn reduce_comparison(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word> REDUCE(Shift)(V<Word> left, V<Word32> right, ShiftOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Shift)
+  pub fn reduce_shift(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Branch)(OpIndex condition, Block* if_true, Block* if_false, BranchHint hint)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Branch)
+  pub fn reduce_branch(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(DeoptimizeIf)(V<Word32> condition, V<EagerFrameState> frame_state, bool negated, const DeoptimizeParameters* parameters)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(DeoptimizeIf)
+  pub fn reduce_deoptimize_if(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(TrapIf)(V<Word32> condition, OptionalV<EagerFrameState> frame_state, bool negated, TrapId trap_id)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(TrapIf)
+  pub fn reduce_trap_if(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(Select)(V<Word32> cond, V<Any> vtrue, V<Any> vfalse, RegisterRepresentation rep, BranchHint hint, SelectOp::Implementation implem)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Select)
+  pub fn reduce_select(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(StaticAssert)(V<Word32> condition, const char* source)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(StaticAssert)
+  pub fn reduce_static_assert(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Switch)(V<Word32> input, base::Vector<SwitchOp::Case> cases, Block* default_case, BranchHint default_hint)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Switch)
+  pub fn reduce_switch(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Store)(OpIndex base_idx, OptionalOpIndex index, OpIndex value, StoreOp::Kind kind, MemoryRepresentation stored_rep, WriteBarrierKind write_barrier, std::optional<AtomicMemoryOrder> memory_order, int32_t offset, uint8_t element_scale, bool maybe_initializing_or_transitioning, IndirectPointerTag maybe_indirect_pointer_tag)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Store)
+  pub fn reduce_store(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Load)(OpIndex base_idx, OptionalOpIndex index, LoadOp::Kind kind, MemoryRepresentation loaded_rep, RegisterRepresentation result_rep, int32_t offset, uint8_t element_scale)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Load)
+  pub fn reduce_load(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(Simd128Binop)(V<Simd128> left, V<Simd128> right, Simd128BinopOp::Kind kind)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Simd128Binop)
+  pub fn reduce_simd128_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Simd128> REDUCE(Simd128ReplaceLane)(V<Simd128> into, V<Any> new_lane, Simd128ReplaceLaneOp::Kind kind, uint8_t lane)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Simd128ReplaceLane)
+  pub fn reduce_simd128_replace_lane(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(Simd128ExtractLane)(V<Simd128> input, Simd128ExtractLaneOp::Kind kind, uint8_t lane)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Simd128ExtractLane)
+  pub fn reduce_simd128_extract_lane(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Simd128> REDUCE(Simd256Extract128Lane)(V<Simd256> input, uint8_t lane)
+  /// v8: src/compiler/turboshaft/machine-optimization-reducer.h MachineOptimizationReducer::REDUCE(Simd256Extract128Lane)
+  pub fn reduce_simd256_extract128_lane(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

@@ -1,0 +1,58 @@
+// 由 tool/src/heap/heap-verifier.h.js 从 v8/src/heap/heap-verifier.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 堆校验 (VERIFY_HEAP): 空间校验访问者 trait 与开关门面
+
+/// 空间校验访问者 (对应 class SpaceVerificationVisitor)。
+/// v8: src/heap/heap-verifier.h SpaceVerificationVisitor
+pub trait SpaceVerificationVisitor {
+  /// 对应 VerifyObject: 空间内每个对象调用一次
+  fn verify_object(&mut self, object: u64);
+  /// 对应 VerifyPage: 每页首对象前调用
+  fn verify_page(&mut self, chunk: u64);
+  /// 对应 VerifyPageDone: 页内全部对象校验完调用
+  fn verify_page_done(&mut self, chunk: u64);
+}
+
+/// 堆校验器 (对应 class HeapVerifier final, AllStatic)。
+/// 非 VERIFY_HEAP 构建下全部方法为空 (对应 #else 空臂)。
+/// v8: src/heap/heap-verifier.h HeapVerifier
+pub struct HeapVerifier;
+
+impl HeapVerifier {
+  /// 对应 VerifyHeapIfEnabled: v8_flags.verify_heap 时才真校验
+  /// v8: src/heap/heap-verifier.h HeapVerifier::VerifyHeapIfEnabled
+  pub fn verify_heap_if_enabled(verify_heap_flag: bool) -> Option<()> {
+    if verify_heap_flag {
+      Some(Self::verify_heap())
+    } else {
+      None
+    }
+  }
+
+  /// 对应 VerifyHeap: 全堆扫描 (VERIFY_HEAP 构建)
+  /// v8: src/heap/heap-verifier.cc HeapVerifier::VerifyHeap
+  pub fn verify_heap() {
+    unimplemented!("骨架: VerifySmis/VerifyPointers 双访问者待对象族就位");
+  }
+
+  /// 对应 VerifyReadOnlyHeap: 只读堆对象建完后校验
+  /// v8: src/heap/heap-verifier.cc HeapVerifier::VerifyReadOnlyHeap
+  pub fn verify_read_only_heap() {
+    unimplemented!("骨架: 只读堆迭代待 read-only 族就位");
+  }
+
+  /// 对应 VerifyObjectLayoutChangeIsAllowed:
+  /// 共享空间对象只允许 string 改布局
+  /// v8: src/heap/heap-verifier.cc HeapVerifier::VerifyObjectLayoutChangeIsAllowed
+  #[must_use]
+  pub fn layout_change_allowed(in_shared_space: bool, is_string: bool) -> bool {
+    !in_shared_space || is_string
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(HeapVerifier::layout_change_allowed(false, false));
+  assert!(HeapVerifier::layout_change_allowed(true, true));
+  assert!(!HeapVerifier::layout_change_allowed(true, false));
+  assert_eq!(HeapVerifier::verify_heap_if_enabled(false), None);
+};

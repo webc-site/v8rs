@@ -1,0 +1,76 @@
+// 由 tool/src/wasm/constant-expression-interface.h.js 从 v8/src/wasm/constant-expression-interface.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 常量表达式解码接口的指令白名单与双模式契约
+
+//! WasmFullDecoder 接口: 仅校验 (isolate==null) 或产码 (isolate!=null) 两模式合一。
+/// v8: src/wasm/constant-expression-interface.h ConstantExpressionInterface
+
+/// 解码模式与校验档
+/// v8: src/wasm/constant-expression-interface.h ValidationTag / decoding_mode
+pub const DECODING_MODE_CONSTANT_EXPRESSION: bool = true;
+pub const USES_POPPED_ARGS: bool = true;
+pub const FULL_VALIDATION: bool = true;
+
+/// cc 侧实际实现的接口函数 (INTERFACE_CONSTANT_FUNCTIONS 展开的子集)
+/// v8: src/wasm/constant-expression-interface.cc ConstantExpressionInterface::*
+pub const IMPLEMENTED_INTERFACE_FUNCTIONS: &[&str] = &[
+    "I32Const",
+    "I64Const",
+    "F32Const",
+    "F64Const",
+    "S128Const",
+    "UnOp",
+    "BinOp",
+    "RefNull",
+    "RefFunc",
+    "GlobalGet",
+    "StructNew",
+    "StringConst",
+    "StructNewDefault",
+    "ArrayNew",
+    "ArrayNewDefault",
+    "ArrayNewImpl",
+    "ArrayNewFixed",
+    "ArrayNewSegment",
+    "RefI31",
+    "WaitqueueNew",
+    "DoReturn",
+];
+
+/// BinOp 白名单: i32/i64 的 add/sub/mul 共 6 个
+/// v8: src/wasm/constant-expression-interface.cc BinOp
+pub fn constant_binop_allowed(op: Opcode) -> bool {
+    matches!(
+        op,
+        Opcode::i32_add
+            | Opcode::i32_sub
+            | Opcode::i32_mul
+            | Opcode::i64_add
+            | Opcode::i64_sub
+            | Opcode::i64_mul
+    )
+}
+
+/// UnOp 白名单: any↔extern 互转共 2 个
+/// v8: src/wasm/constant-expression-interface.cc UnOp
+pub fn constant_unop_allowed(op: Opcode) -> bool {
+    matches!(op, Opcode::extern_convert_any | Opcode::any_convert_extern)
+}
+
+/// 双模式判定: 产码要求 isolate 存在且无错
+/// v8: src/wasm/constant-expression-interface.h generate_value()
+pub fn generate_value(isolate_present: bool, has_error: bool) -> bool {
+    isolate_present && !has_error
+}
+
+/// struct.new 结尾标记 (供外部识别结构体常量)
+/// v8: src/wasm/constant-expression-interface.h ends_with_struct_new_
+pub const TRACKS_ENDS_WITH_STRUCT_NEW: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(IMPLEMENTED_INTERFACE_FUNCTIONS.len(), 21);
+    assert!(USES_POPPED_ARGS);
+    assert!(!generate_value(false, false));
+    assert!(!generate_value(true, true));
+    assert!(generate_value(true, false));
+};

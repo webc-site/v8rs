@@ -1,0 +1,17 @@
+// 由 tool/src/objects/js-collection-iterator.h.js 从 v8/src/objects/js-collection-iterator.{h,-inl.h,tq} 生成; 修订就地改, 复跑覆盖
+// JSCollectionIterator 布局与 OrderedHashTableIterator 模板骨架
+
+//! 差集骨架: JSCollectionIterator (collection 迭代器公共基类)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。
+
+/// v8: src/objects/js-collection-iterator.h JSCollectionIterator: table_ offset=24, index_ offset=32
+pub const K_JS_COLLECTION_ITERATOR_HEADER_SIZE: usize = 40;
+
+/// v8: src/objects/js-collection-iterator-inl.h table/index accessor 族
+pub struct JSCollectionIterator { /* table_: Tagged<Object>, index_: Tagged<Object> */ }
+
+/// v8: src/objects/js-collection-iterator.h OrderedHashTableIterator<Derived, TableType>
+///   trait OrderedHashTableIterator { fn has_more(); fn move_next(); fn current_key(); }
+///   MoveNext 规则: index = Smi(Smi::ToInt(index) + 1)
+///   Transition 规则: 迭代器跳到非 obsolete 后备表 (语义面留 Developer)
+pub trait OrderedHashTableIterator { /* HasMore / MoveNext / CurrentKey / Transition */ }

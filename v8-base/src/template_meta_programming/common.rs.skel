@@ -1,0 +1,19 @@
+// 由 tool/src/base/template-meta-programming/common.h.js 从 v8/src/base/template-meta-programming/common.h 生成; 修订就地改, 复跑覆盖
+// TMP 公共元函数: 类型等值/实例化判定
+
+//! v8 侧: 谓词元函数 3 组 (主 false + 特化 true 各 2); instantiate 1
+//! Rust: 类型级等值用 PhantomData + trait; 判定面在 Developer 落地
+
+/// v8: src/base/template-meta-programming/common.h struct equals
+/// 主模板 false; 特化 (同型/实例匹配) true
+/// v8: src/base/template-meta-programming/common.h struct equals1
+/// 主模板 false; 特化 (同型/实例匹配) true
+/// v8: src/base/template-meta-programming/common.h struct is_instantiation_of
+/// 主模板 false; 特化 (同型/实例匹配) true
+/// v8: struct instantiate { using type = T<U>; } — 一元模板施用
+pub mod common {
+    /// v8: equals<T, U> / equals1<T, U> (TYPENAME1 版)
+    pub trait Equals<U> { const VALUE: bool; }
+    /// v8: is_instantiation_of<I, T> — I 为 T<...> 实例时 true
+    pub trait IsInstantiationOf<T> { const VALUE: bool; }
+}

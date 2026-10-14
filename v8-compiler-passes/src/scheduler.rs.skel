@@ -1,0 +1,124 @@
+// 由 tool/src/compiler/scheduler.js 从 v8/src/compiler/scheduler.h + scheduler.cc 生成; 修订就地改, 复跑覆盖
+// 图调度器: CFG 构建→特殊 RPO→支配树→早/晚调度→封版
+
+//! scheduler — 从图计算调度
+//!
+//! Placement 状态机: Unknown→(Coupled|Schedulable|Fixed)→(Fixed|Scheduled);
+//! 六阶段: 1: Build control-flow graph.; 2: Compute special RPO and dominator tree.; 3: Prepare use counts for nodes.; 4: Schedule nodes early.; 5: Schedule nodes late.; 6: Seal the final schedule.。
+
+/// 原版 Scheduler::Flag 位标志
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct SchedulerFlags(u8);
+
+impl SchedulerFlags {
+  /// kNoFlags
+  pub const NONE: Self = Self(0);
+  /// kSplitNodes = 1u << 1
+  pub const SPLIT_NODES: Self = Self(2);
+  /// kTempSchedule = 1u << 2
+  pub const TEMP_SCHEDULE: Self = Self(4);
+}
+
+/// 原版 Scheduler::Placement — 节点放置状态
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Placement {
+  /// kUnknown (默认, 从 End 不可达)
+  #[default]
+  Unknown,
+  /// kSchedulable — 可自由放置
+  Schedulable,
+  /// kFixed — 固定于某块
+  Fixed,
+  /// kCoupled — 与耦合控制边绑定
+  Coupled,
+  /// kScheduled — 已放置
+  Scheduled,
+}
+
+/// 原版 Scheduler::SchedulerData — 每节点跟踪数据
+pub struct SchedulerData {
+  /// minimum_block_ — 最小合法 RPO 块
+  pub minimum_block: *mut BasicBlock<'static>,
+  /// unscheduled_count_ — 未调度使用数
+  pub unscheduled_count: i32,
+  /// placement_
+  pub placement: Placement,
+}
+
+/// 原版 Scheduler — AllStatic 门面 + 私有实例面
+pub struct Scheduler<'z> {
+  /// zone_
+  pub zone: &'z Zone<'z>,
+  /// graph_
+  pub graph: *mut TFGraph,
+  /// schedule_
+  pub schedule: *mut Schedule<'z>,
+  /// flags_
+  pub flags: SchedulerFlags,
+  /// scheduled_nodes_ — 每块倒序列表
+  pub scheduled_nodes: Vec<Vec<NodeVector>>,
+  /// schedule_root_nodes_ — 固定根工作列表
+  pub schedule_root_nodes: NodeVector,
+  /// schedule_queue_ — 可调度工作队列
+  pub schedule_queue: ZoneQueue<Node>,
+  /// node_data_
+  pub node_data: Vec<SchedulerData>,
+  /// control_flow_builder_ (CFGBuilder)
+  pub control_flow_builder: *mut CFGBuilder<'z>,
+  /// special_rpo_ (SpecialRPONumberer)
+  pub special_rpo: *mut SpecialRPONumberer<'z>,
+  /// equivalence_ (ControlEquivalence)
+  pub equivalence: *mut ControlEquivalence<'z>,
+  /// common_dominator_cache_ — (int,int)→block 二维缓存
+  pub common_dominator_cache: ZoneMap<i32, ZoneMap<i32, *mut BasicBlock<'z>>>,
+}
+
+impl Scheduler<'_, '_> {
+  /// 原版 ComputeSchedule — 全流程入口 (静态)
+  /// v8: src/compiler/scheduler.cc Scheduler::ComputeSchedule
+  pub fn compute_schedule(temp_zone: &Zone<'_>, graph: &TFGraph, flags: SchedulerFlags, tick_counter: &mut TickCounter, profile_data: Option<&ProfileDataFromFile>) -> &Schedule<'_> {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::ComputeSchedule (六阶段: 6 相位注释核对)")
+  }
+
+  /// 原版 ComputeSpecialRPO — 特殊 RPO (环尽量早出)
+  /// v8: src/compiler/scheduler.cc Scheduler::ComputeSpecialRPO
+  pub fn compute_special_rpo(zone: &Zone<'_>, schedule: &mut Schedule<'_>) -> &mut [BasicBlock<'_>] {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::ComputeSpecialRPO")
+  }
+
+  /// 原版 GenerateDominatorTree — 支配树 (按 RPO 两遍)
+  /// v8: src/compiler/scheduler.cc Scheduler::GenerateDominatorTree
+  pub fn generate_dominator_tree(schedule: &mut Schedule<'_>) {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::GenerateDominatorTree")
+  }
+
+  /// 原版 GetPlacement / InitializePlacement / UpdatePlacement — 状态机迁移
+  /// v8: src/compiler/scheduler.cc Scheduler::InitializePlacement
+  pub fn initialize_placement(&mut self, node: &Node) -> Placement {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::InitializePlacement")
+  }
+
+  /// 原版 BuildCFG — 阶段 1
+  /// v8: src/compiler/scheduler.cc Scheduler::BuildCFG
+  pub fn build_cfg(&mut self) {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::BuildCFG")
+  }
+
+  /// 原版 ScheduleEarly — 阶段 4
+  /// v8: src/compiler/scheduler.cc Scheduler::ScheduleEarly
+  pub fn schedule_early(&mut self) {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::ScheduleEarly")
+  }
+
+  /// 原版 ScheduleLate — 阶段 5
+  /// v8: src/compiler/scheduler.cc Scheduler::ScheduleLate
+  pub fn schedule_late(&mut self) {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::ScheduleLate")
+  }
+
+  /// 原版 SealFinalSchedule — 阶段 6
+  /// v8: src/compiler/scheduler.cc Scheduler::SealFinalSchedule
+  pub fn seal_final_schedule(&mut self) {
+    todo!("v8: src/compiler/scheduler.cc Scheduler::SealFinalSchedule")
+  }
+}

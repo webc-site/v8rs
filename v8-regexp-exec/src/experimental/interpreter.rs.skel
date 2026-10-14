@@ -1,0 +1,16 @@
+// 由 tool/src/regexp/experimental/experimental-interpreter.h.js 从 v8/src/regexp/experimental/experimental-interpreter.h 生成; 修订就地改, 复跑覆盖
+// 映射骨架基线 (审计专用): h 面全集 1 类 1 方法; 落地以 interpreter.rs 就地修订为准
+
+//! ExperimentalRegExpInterpreter (h:20-33, AllStatic) → 入口面整体推迟 EXP-4
+//!   (Isolate/Tagged<TrustedByteArray>/Tagged<String>/CallOrigin/Zone 依赖面,
+//!    本席禁触 experimental.h/cc 入口 Rust 落点)
+//! 承接核 (EXP-3a 已落, interpreter.rs): NfaInterpreter — h:22-27 语义逐句对应:
+//!   广度优先 NFA 无回溯 (cc:252-346 架构注释) / max_match_num×start_index 对应
+//!   input_index 注入 / output_registers 对应 best_match_thread 寄存器面
+//! 参数注入映射 (h:28-32 → Rust NfaInterpreter::new + find_matches 面):
+//!   Tagged<TrustedByteArray> bytecode → &[Instruction] (bytecode.rs IR, 裸解码 EXP-4)
+//!   Tagged<String> input → &[u16] (one-byte 入口方展宽, 单点适配)
+//!   int start_index → input_index: i32
+//!   Isolate/CallOrigin/Zone → 本票不建模 (EXP-4 入口 + HandleInterrupts 面)
+//!   int capture_count(h)/register_count_per_match(cc:1585) → register_count_per_match:
+//!     usize (h/cc 命名差异登记, 取 cc 实况语义)

@@ -1,0 +1,40 @@
+// 由 tool/src/heap/safepoint.js 从 v8/src/heap/safepoint.cc (族 .h: src/heap/safepoint.h) 生成; 修订就地改, 复跑覆盖
+// 安全点: isolate 级与全局栅栏
+/// v8: src/heap/safepoint.h IsolateSafepoint::IncludeMainThread
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum IncludeMainThread {
+  /// kYes
+  YES = 0,
+  /// kNo
+  NO = 1,
+}
+
+/// v8: src/heap/safepoint.h IsolateSafepoint
+/// 字段: heap_ / barrier_(Barrier) / active_safepoint_scopes_ /
+///       active_global_safepoint_scopes_ / is_local_ / is_global_ (atomic)
+pub struct IsolateSafepoint {
+  pub heap: *mut Heap,
+}
+
+impl IsolateSafepoint {
+  /// v8: EnterLocalSafepointScope — 主线程起本地安全点 (嵌套计数)
+  ///     barrier_.Arm() → SetSafepointRequestedFlags(kNo) → WaitUntilRunningThreadsInSafepoint
+  pub fn enter_local_safepoint_scope(&mut self) { todo!() }
+  /// v8: LeaveLocalSafepointScope — ClearSafepointRequestedFlags → Disarm → 解锁
+  pub fn leave_local_safepoint_scope(&mut self) { todo!() }
+  /// v8: InitiateGlobalSafepointScope / LeaveGlobalSafepointScope
+  /// v8: SetSafepointRequestedFlags / ClearSafepointRequestedFlags
+  /// v8: LockMutex / WaitInSafepoint / WaitInUnpark / NotifyPark
+  /// v8: WaitUntilRunningThreadsInSafepoint / TryInitiateNewSafepoint
+}
+
+/// v8: src/heap/safepoint.cc GlobalSafepointInterruptTask — 投递到各 client isolate
+/// v8: src/heap/safepoint.cc PerClientSafepointData — client 级请求记账
+/// v8: src/heap/safepoint.h GlobalSafepoint — 跨 isolate 全局安全点
+/// v8: src/heap/safepoint.cc GlobalSafepoint 各实现 (7 方法)
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(IncludeMainThread::No == 1);
+};

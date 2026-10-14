@@ -1,0 +1,214 @@
+#!/usr/bin/env bun
+// tool/src/heap/list.h.js
+// 机械提取 v8/src/heap/list.h: heap::List<T>/ListNode<T> 侵入式双链表。
+// 规则: 方法全集逐锚断言 (List 12 + ListNode 4 + 私有辅助 3); 产出裸指针骨架实现。
+
+import { readV8, writeSrc, banner } from "../../lib.js";
+
+const src = readV8("src/heap/list.h");
+
+// —— 锚点断言: 方法清单 ——
+for (const fn of [
+  "List() = default;",
+  "List(List&& other) V8_NOEXCEPT",
+  "List& operator=(List&& other) V8_NOEXCEPT",
+  "void PushBack(T* element) {",
+  "void PushFront(T* element) {",
+  "void Remove(T* element) {",
+  "bool Contains(const T* element) const {",
+  "bool Empty() const {",
+  "T* front() { return front_; }",
+  "T* back() { return back_; }",
+  "size_t size() const { return size_; }",
+  "void AddFirstElement(T* element) {",
+  "void InsertAfter(T* element, T* other) {",
+  "void InsertBefore(T* element, T* other) {",
+]) {
+  if (!src.includes(fn)) throw new Error(`list.h List 锚点缺失: ${fn}`);
+}
+for (const fn of [
+  "ListNode() { Initialize(); }",
+  "T* next() { return next_; }",
+  "T* prev() { return prev_; }",
+  "void Initialize() {",
+  "void set_next(T* next) { next_ = next; }",
+  "void set_prev(T* prev) { prev_ = prev; }",
+  "friend class List<T>;",
+]) {
+  if (!src.includes(fn)) throw new Error(`list.h ListNode 锚点缺失: ${fn}`);
+}
+// 字段
+if (!src.includes("T* front_{nullptr};") || !src.includes("T* back_{nullptr};")) {
+  throw new Error("List 字段漂移");
+}
+if (!src.includes("T* next_;") || !src.includes("T* prev_;")) throw new Error("ListNode 字段漂移");
+console.log("List 方法 14 + ListNode 方法 7");
+
+let rust = banner(
+  "src/heap/list.h.js",
+  "src/heap/list.h",
+  "heap::List/ListNode 侵入式双链表骨架",
+);
+
+rust += `
+/// 侵入式链表节点 (对应 template <class T> class ListNode)。
+/// 宿主 T 通过 list_node() 暴露本节点; next_/prev_ 指向宿主 T。
+/// v8: src/heap/list.h heap::ListNode
+pub struct ListNode<T> {
+  next: *mut T,
+  prev: *mut T,
+}
+
+impl<T> ListNode<T> {
+  /// 对应 ListNode() { Initialize(); }
+  pub const fn new() -> Self {
+    Self { next: core::ptr::null_mut(), prev: core::ptr::null_mut() }
+  }
+
+  /// 对应 Initialize()
+  pub fn initialize(&mut self) {
+    self.next = core::ptr::null_mut();
+    self.prev = core::ptr::null_mut();
+  }
+}
+
+/// 侵入式双链表 (对应 template <class T> class List)。
+/// v8: src/heap/list.h heap::List
+pub struct List<T> {
+  front: *mut T,
+  back: *mut T,
+  size: usize,
+}
+
+impl<T> Default for List<T> {
+  /// 对应 List() = default;
+  fn default() -> Self {
+    Self { front: core::ptr::null_mut(), back: core::ptr::null_mut(), size: 0 }
+  }
+}
+
+/// list_node() 访问协议: 宿主实现本 trait 后可用 List。
+/// v8: src/heap/list.h (element->list_node() 约定)
+pub trait HasListNode<T> {
+  fn list_node(&self) -> &ListNode<T>;
+  fn list_node_mut(&mut self) -> &mut ListNode<T>;
+}
+
+impl<T: HasListNode<T>> List<T> {
+  /// 对应 PushBack: back_ 非空走 InsertAfter(back_), 否则 AddFirstElement
+  /// v8: src/heap/list.h heap::List::PushBack
+  pub unsafe fn push_back(&mut self, element: *mut T) {
+    if !self.back.is_null() {
+      self.insert_after(element, self.back);
+    } else {
+      self.add_first_element(element);
+    }
+    self.size += 1;
+  }
+
+  /// 对应 PushFront: front_ 非空走 InsertBefore(front_), 否则 AddFirstElement
+  /// v8: src/heap/list.h heap::List::PushFront
+  pub unsafe fn push_front(&mut self, element: *mut T) {
+    if !self.front.is_null() {
+      self.insert_before(element, self.front);
+    } else {
+      self.add_first_element(element);
+    }
+    self.size += 1;
+  }
+
+  /// 对应 Remove: 摘链 + 清 next/prev, size_--
+  /// v8: src/heap/list.h heap::List::Remove
+  pub unsafe fn remove(&mut self, element: *mut T) {
+    if self.back == element {
+      self.back = (*element).list_node().prev;
+    }
+    if self.front == element {
+      self.front = (*element).list_node().next;
+    }
+    let next = (*element).list_node().next;
+    let prev = (*element).list_node().prev;
+    if !next.is_null() {
+      (*next).list_node_mut().prev = prev;
+    }
+    if !prev.is_null() {
+      (*prev).list_node_mut().next = next;
+    }
+    (*element).list_node_mut().prev = core::ptr::null_mut();
+    (*element).list_node_mut().next = core::ptr::null_mut();
+    self.size -= 1;
+  }
+
+  /// 对应 Contains: 沿 next 线性扫描
+  /// v8: src/heap/list.h heap::List::Contains
+  pub unsafe fn contains(&self, element: *const T) -> bool {
+    let mut it = self.front as *const T;
+    while !it.is_null() {
+      if it == element {
+        return true;
+      }
+      it = (*it).list_node().next;
+    }
+    false
+  }
+
+  /// 对应 Empty() const { return size_ == 0; }
+  pub fn empty(&self) -> bool {
+    self.size == 0
+  }
+
+  /// 对应 front()
+  pub fn front(&self) -> *mut T {
+    self.front
+  }
+
+  /// 对应 back()
+  pub fn back(&self) -> *mut T {
+    self.back
+  }
+
+  /// 对应 size()
+  pub fn size(&self) -> usize {
+    self.size
+  }
+
+  // —— 私有辅助 (private:) ——
+
+  /// 对应 AddFirstElement: 首元素即 front_ 亦 back_
+  unsafe fn add_first_element(&mut self, element: *mut T) {
+    (*element).list_node_mut().prev = core::ptr::null_mut();
+    (*element).list_node_mut().next = core::ptr::null_mut();
+    self.front = element;
+    self.back = element;
+  }
+
+  /// 对应 InsertAfter: 挂到 other 之后; other 无后继则 back_ = element
+  unsafe fn insert_after(&mut self, element: *mut T, other: *mut T) {
+    let other_next = (*other).list_node().next;
+    (*element).list_node_mut().next = other_next;
+    (*element).list_node_mut().prev = other;
+    (*other).list_node_mut().next = element;
+    if !other_next.is_null() {
+      (*other_next).list_node_mut().prev = element;
+    } else {
+      self.back = element;
+    }
+  }
+
+  /// 对应 InsertBefore: 挂到 other 之前; other 无前驱则 front_ = element
+  unsafe fn insert_before(&mut self, element: *mut T, other: *mut T) {
+    let other_prev = (*other).list_node().prev;
+    (*element).list_node_mut().next = other;
+    (*element).list_node_mut().prev = other_prev;
+    (*other).list_node_mut().prev = element;
+    if !other_prev.is_null() {
+      (*other_prev).list_node_mut().next = element;
+    } else {
+      self.front = element;
+    }
+  }
+}
+`;
+
+const p = writeSrc("v8-heap-core", "list.rs.skel", rust);
+console.log(`written ${p}`);

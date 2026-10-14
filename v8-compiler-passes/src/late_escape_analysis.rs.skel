@@ -1,0 +1,102 @@
+// 由 tool/src/compiler/late-escape-analysis.js 从 v8/src/compiler/late-escape-analysis.h + src/compiler/late-escape-analysis.cc 生成; 修订就地改, 复跑覆盖
+// LateEscapeAnalysis — 无逃逸分配消除 (witness 计数)
+
+//! LateEscapeAnalysis: 分配对象除初始化 store 外无使用者则消除;
+//! 以 witness 计数 (输入边为 value 边且非初始化 store 即 witness) 推迟判定。
+//!
+//! 规则面: IsStore 表 5 + witness 判据链 + Reduce/Finalize 结构。
+
+#![allow(dead_code, unused_variables)]
+
+/// v8: src/compiler/late-escape-analysis.cc IsStore (自由函数)
+/// 初始化 store 表: InitializeImmutableInObject/Store/StoreElement/StoreField/StoreToObject
+/// 且 edge.index() == 0 (首输入即被分配对象)
+fn is_store(edge: crate::node::Edge) -> bool {
+  todo!("表 + index==0")
+}
+
+/// v8: src/compiler/late-escape-analysis.cc IsEscapingAllocationWitness (自由函数)
+/// 原文: to 为 kAllocateRaw 且 IsValueEdge 且 !IsStore
+fn is_escaping_allocation_witness(edge: crate::node::Edge) -> bool {
+  todo!("三重判据")
+}
+
+/// v8: src/compiler/late-escape-analysis.h LateEscapeAnalysis
+pub struct LateEscapeAnalysis {
+  /// 原 dead_
+  pub dead: crate::node::Node,
+  /// 原 all_allocations_ — 全部 Allocate 记录
+  pub all_allocations: std::collections::HashSet<crate::node::Node>,
+  /// 原 escaping_allocations_ — 分配 → witness 数 (>0 即逃逸)
+  pub escaping_allocations: std::collections::HashMap<crate::node::Node, i32>,
+  /// 原 revisit_ — 去见证后的回访队列
+  pub revisit: std::collections::VecDeque<crate::node::Node>,
+}
+
+impl LateEscapeAnalysis {
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::reducer_name
+  pub const REDUCER_NAME: &'static str = "LateEscapeAnalysis";
+
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::Reduce
+  /// 原文: kAllocateRaw → all_allocations_.insert; 其后对每条输入边:
+  /// IsEscapingAllocationWitness (value 边 + to 为 AllocateRaw + !IsStore)
+  /// → RecordEscapingAllocation(edge.to())
+  pub fn reduce(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    if node.opcode() == crate::IrOpcode::AllocateRaw {
+      self.all_allocations.insert(*node);
+      return crate::graph_reducer::Reduction::NoChange;
+    }
+    for edge in node.input_edges() {
+      if is_escaping_allocation_witness(edge) {
+        self.record_escaping_allocation(edge.to());
+      }
+    }
+    crate::graph_reducer::Reduction::NoChange
+  }
+
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::Finalize
+  /// 原文: 全量 !IsEscaping → RemoveAllocation; 再 drain revisit_ 队列
+  /// (!IsEscaping && !IsDead → RemoveAllocation)
+  pub fn finalize(&mut self) {
+    let all: Vec<_> = self.all_allocations.iter().copied().collect();
+    for alloc in all {
+      if !self.is_escaping(&alloc) {
+        self.remove_allocation(alloc);
+      }
+    }
+    while let Some(alloc) = self.revisit.pop_front() {
+      if !self.is_escaping(&alloc) && !alloc.is_dead() {
+        self.remove_allocation(alloc);
+      }
+    }
+  }
+
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::IsEscaping
+  /// 原文: DCHECK_EQ(kAllocateRaw); map 查无 → false; 值 != 0 → 逃逸
+  pub fn is_escaping(&self, node: &crate::node::Node) -> bool {
+    debug_assert_eq!(node.opcode(), crate::IrOpcode::AllocateRaw);
+    self.escaping_allocations.get(node).copied().unwrap_or(0) != 0
+  }
+
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::RemoveAllocation
+  pub fn remove_allocation(&mut self, node: crate::node::Node) {
+    let _ = node;
+    todo!("DeadValue 替换 + store 清除 + RemoveWitness 传递")
+  }
+
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::RecordEscapingAllocation
+  pub fn record_escaping_allocation(&mut self, allocation: crate::node::Node) {
+    *self.escaping_allocations.entry(allocation).or_insert(0) += 1;
+  }
+
+  /// v8: src/compiler/late-escape-analysis.cc LateEscapeAnalysis::RemoveWitness
+  /// 原文: 计数减至 0 时, 相关分配入 revisit_ 供 Finalize 复查
+  pub fn remove_witness(&mut self, allocation: crate::node::Node) {
+    if let Some(c) = self.escaping_allocations.get_mut(&allocation) {
+      *c -= 1;
+      if *c <= 0 {
+        self.revisit.push_back(allocation);
+      }
+    }
+  }
+}

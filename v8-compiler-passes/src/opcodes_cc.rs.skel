@@ -1,0 +1,476 @@
+// 由 tool/src/compiler/opcodes.cc.js 从 v8/src/compiler/opcodes.cc + opcodes.h (X-macro 树) 生成; 修订就地改, 复跑覆盖
+// IrOpcode 全表 + 助记符表 (kMnemonics); 正典谓词面在 v8-compiler-graph/src/opcodes.rs
+
+//! IrOpcode 助记符面 — opcodes.cc 的 kMnemonics 全表基线。
+//!
+//! - kMnemonics = ALL_OP_LIST(DECLARE_MNEMONIC) 展开 + 尾槽 "UnknownOpcode"
+//! - Mnemonic(value): n = min(value, 表长-1) 钳制后取表 (越界 → 尾槽)
+//! - 目标构建: wasm 开 / SIMD128 开 / SIMD256 关 / 硬件沙箱关 / CPED 开
+//! - 枚举判别值与 v8-compiler-graph/src/opcodes.rs 同源 (同一 X-macro 展开侧),
+//!   挂接时由 Developer 收敛为跨 crate 依赖, 不长期双表
+//!
+//! 展开计数 (对数): 总 1036 = CONTROL 22 + COMMON 47 + SIMPLIFIED 322 + MACHINE 234 + SIMD128 287 + JS 124
+
+/// IrOpcode — 原版 `enum Value { k##x }`; 变体名去 k 前缀, 判别值 = 展开序
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u16)]
+pub enum IrOpcode {
+  // CONTROL_OP_LIST
+  Start = 0, Loop, Branch, Switch, IfTrue, IfFalse, IfSuccess, IfException, IfValue, IfDefault,
+  Merge, Deoptimize, DeoptimizeIf, DeoptimizeUnless, Assert, TrapIf, TrapUnless, Return, TailCall,
+  Terminate, Throw, End,
+  // COMMON_OP_LIST
+  ExternalConstant, NumberConstant, PointerConstant, HeapConstant, TrustedHeapConstant,
+  Int32Constant, Int64Constant, TaggedIndexConstant, Float32Constant, Float64Constant,
+  CompressedHeapConstant, RelocatableInt32Constant, RelocatableInt64Constant, Select, Phi,
+  EffectPhi, InductionVariablePhi, Checkpoint, BeginRegion, FinishRegion, FrameState, StateValues,
+  TypedStateValues, ArgumentsElementsState, ArgumentsLengthState, ObjectState, ObjectId,
+  TypedObjectState, Call, Parameter, OsrValue, LoopExit, LoopExitValue, LoopExitEffect, Projection,
+  Retain, MapGuard, TypeGuard, EnterMachineGraph, ExitMachineGraph, Unreachable, DeadValue, Dead,
+  Plug, SLVerifierHint, MajorGCForCompilerTesting, StaticAssert,
+  // SIMPLIFIED_OP_LIST
+  ChangeTaggedSignedToInt32, ChangeTaggedSignedToInt64, ChangeTaggedToInt32, ChangeTaggedToInt64,
+  ChangeTaggedToUint32, ChangeTaggedToFloat64, ChangeTaggedToTaggedSigned,
+  ChangeSmiOrHoleToFloat64, ChangeNumberOrHoleToFloat64, ChangeInt31ToTaggedSigned,
+  ChangeInt32ToTagged, ChangeInt64ToTagged, ChangeUint32ToTagged, ChangeUint64ToTagged,
+  ChangeFloat64ToTagged, ChangeFloat64ToTaggedPointer, ChangeFloat64OrUndefinedToTagged,
+  ChangeTaggedToBit, ChangeBitToTagged, ChangeInt64ToBigInt, ChangeUint64ToBigInt,
+  TruncateBigIntToWord64, TruncateNumberOrOddballToWord32, TruncateSmiOrHoleToWord32,
+  TruncateNumberOrOddballOrHoleToWord32, TruncateTaggedToFloat64,
+  TruncateTaggedToFloat64PreserveUndefined, TruncateTaggedToBit, TruncateTaggedPointerToBit,
+  CheckedInt32Add, CheckedInt32Sub, CheckedInt32Div, CheckedInt32Mod, CheckedUint32Div,
+  CheckedUint32Mod, CheckedInt32Mul, CheckedInt64Add, CheckedAdditiveSafeIntegerAdd,
+  CheckedAdditiveSafeIntegerSub, CheckedInt64Sub, CheckedInt64Mul, CheckedInt64Div,
+  CheckedInt64Mod, CheckedInt32ToTaggedSigned, CheckedInt64ToInt32,
+  CheckedInt64ToAdditiveSafeInteger, CheckedInt64ToTaggedSigned, CheckedUint32Bounds,
+  CheckedUint32ToInt32, CheckedUint32ToTaggedSigned, CheckedUint64Bounds, CheckedUint64ToInt32,
+  CheckedUint64ToInt64, CheckedUint64ToTaggedSigned, CheckedFloat64ToInt32, CheckedFloat64ToInt64,
+  CheckedInt32ToUint64, CheckedInt64ToUint64, CheckedFloat64ToUint64,
+  CheckedFloat64ToAdditiveSafeInteger, CheckedTaggedSignedToInt32, CheckedTaggedToInt32,
+  CheckedTaggedToArrayIndex, CheckedTruncateTaggedToWord32, CheckedTaggedToFloat64,
+  CheckedTaggedToAdditiveSafeInteger, CheckedTaggedToInt64, CheckedTaggedToUint64,
+  CheckedTaggedToTaggedSigned, CheckedTaggedToTaggedPointer, NumberEqual, NumberLessThan,
+  NumberLessThanOrEqual, SpeculativeNumberEqual, SpeculativeNumberLessThan,
+  SpeculativeNumberLessThanOrEqual, ReferenceEqual, SameValue, SameValueNumbersOnly,
+  NumberSameValue, StringEqual, StringLessThan, StringLessThanOrEqual, StringOrOddballStrictEqual,
+  BigIntEqual, BigIntLessThan, BigIntLessThanOrEqual, SpeculativeBigIntEqual,
+  SpeculativeBigIntLessThan, SpeculativeBigIntLessThanOrEqual, NumberAdd, NumberSubtract,
+  NumberMultiply, NumberDivide, NumberModulus, NumberBitwiseOr, NumberBitwiseXor, NumberBitwiseAnd,
+  NumberShiftLeft, NumberShiftRight, NumberShiftRightLogical, NumberAtan2, NumberImul, NumberMax,
+  NumberMin, NumberPow, BigIntAdd, BigIntSubtract, BigIntMultiply, BigIntDivide, BigIntModulus,
+  BigIntBitwiseAnd, BigIntBitwiseOr, BigIntBitwiseXor, BigIntShiftLeft, BigIntShiftRight,
+  SpeculativeNumberAdd, SpeculativeNumberSubtract, SpeculativeNumberMultiply, SpeculativeNumberPow,
+  SpeculativeNumberDivide, SpeculativeNumberModulus, SpeculativeNumberBitwiseAnd,
+  SpeculativeNumberBitwiseOr, SpeculativeNumberBitwiseXor, SpeculativeNumberShiftLeft,
+  SpeculativeNumberShiftRight, SpeculativeNumberShiftRightLogical,
+  SpeculativeAdditiveSafeIntegerAdd, SpeculativeAdditiveSafeIntegerSubtract,
+  SpeculativeSmallIntegerAdd, SpeculativeSmallIntegerSubtract, NumberAbs, NumberAcos, NumberAcosh,
+  NumberAsin, NumberAsinh, NumberAtan, NumberAtanh, NumberCbrt, NumberCeil, NumberClz32, NumberCos,
+  NumberCosh, NumberExp, NumberExpm1, NumberFloor, NumberFround, NumberLog, NumberLog1p,
+  NumberLog2, NumberLog10, NumberRound, NumberSign, NumberSin, NumberSinh, NumberSqrt, NumberTan,
+  NumberTanh, NumberTrunc, NumberToBoolean, NumberToInt32, NumberToString, NumberToUint32,
+  NumberToUint8Clamped, Integral32OrMinusZeroToBigInt, NumberSilenceNaN, BigIntNegate, CheckBigInt,
+  CheckedBigIntToBigInt64, SpeculativeToNumber, SpeculativeBigIntAsIntN, SpeculativeBigIntAsUintN,
+  SpeculativeBigIntNegate, SpeculativeToBigInt, SpeculativeBigIntAdd, SpeculativeBigIntSubtract,
+  SpeculativeBigIntMultiply, SpeculativeBigIntDivide, SpeculativeBigIntModulus,
+  SpeculativeBigIntBitwiseAnd, SpeculativeBigIntBitwiseOr, SpeculativeBigIntBitwiseXor,
+  SpeculativeBigIntShiftLeft, SpeculativeBigIntShiftRight, AssertNotNull, IsNull, IsNotNull, Null,
+  RttCanon, WasmTypeCast, WasmTypeCastAbstract, WasmTypeCheck, WasmTypeCheckAbstract,
+  WasmAnyConvertExtern, WasmExternConvertAny, WasmStructGet, WasmStructSet, WasmArrayGet,
+  WasmArraySet, WasmArrayLength, WasmArrayInitializeLength, StringAsWtf16,
+  StringPrepareForGetCodeunit, Allocate, AllocateRaw, ArgumentsLength, AssertType, BooleanNot,
+  ChangeFloat64HoleToTagged, ChangeFloat64OrUndefinedOrHoleToTagged, CheckBounds, CheckClosure,
+  CheckEqualsInternalizedString, CheckEqualsSymbol, CheckFloat64Hole, CheckHeapObject, CheckIf,
+  CheckInternalizedString, CheckMaps, CheckHomomorphic, CheckNotTaggedHole, CheckNumber,
+  CheckNumberOrUndefined, CheckNumberFitsInt32, CheckReceiver, CheckReceiverOrNullOrUndefined,
+  CheckSmi, CheckString, CheckStringOrStringWrapper, CheckStringOrOddball, CheckSymbol,
+  CheckTurboshaftTypeOf, CompareMaps, ConvertReceiver, ConvertTaggedHoleToUndefined, DateNow,
+  DoubleArrayMax, DoubleArrayMin, EnsureWritableFastElements, FastApiCall, FindOrderedHashMapEntry,
+  FindOrderedHashMapEntryForInt32Key, FindOrderedHashSetEntry, WeakCollectionGet,
+  InitializeImmutableInObject, LoadDataViewElement, LoadDictionaryField, LoadElement, LoadField,
+  LoadFieldByIndex, LoadFromObject, LoadImmutableFromObject, LoadMessage, LoadStackArgument,
+  LoadTypedElement, MaybeGrowFastElements, NewArgumentsElements, NewConsString, NewDoubleElements,
+  NewSmiOrObjectElements, NumberIsFinite, NumberIsFloat64Hole, NumberIsInteger, NumberIsMinusZero,
+  NumberIsNaN, NumberIsSafeInteger, ObjectIsArrayBufferView, ObjectIsBigInt, ObjectIsCallable,
+  ObjectIsConstructor, ObjectIsDetectableCallable, ObjectIsFiniteNumber, ObjectIsInteger,
+  ObjectIsMinusZero, ObjectIsNaN, ObjectIsNonCallable, ObjectIsNumber, ObjectIsReceiver,
+  ObjectIsSafeInteger, ObjectIsSmi, ObjectIsString, ObjectIsSymbol, ObjectIsUndetectable,
+  PlainPrimitiveToFloat64, PlainPrimitiveToNumber, PlainPrimitiveToWord32, RestLength,
+  RuntimeAbort, StoreDataViewElement, StoreElement, StoreField, StoreMessage,
+  StoreSignedSmallElement, StoreToObject, StoreTypedElement, StringCharCodeAt, StringCodePointAt,
+  StringConcat, StringFromCodePointAt, StringFromSingleCharCode, StringFromSingleCodePoint,
+  StringIndexOf, StringLength, StringWrapperLength, StringSubstring, StringLocaleCompareIntl,
+  StringToLowerCaseIntl, StringToNumber, StringToUpperCaseIntl, ToBoolean,
+  TransitionAndStoreElement, TransitionAndStoreNonNumberElement, TransitionAndStoreNumberElement,
+  TransitionElementsKind, TransitionElementsKindOrCheckMap, TypedArrayLength, TypeOf,
+  Unsigned32Divide, VerifyType, GetContinuationPreservedEmbedderData,
+  SetContinuationPreservedEmbedderData,
+  // MACHINE_OP_LIST
+  Word32Clz, Word32Ctz, Int32AbsWithOverflow, Word32ReverseBits, Word32ReverseBytes, Word32And,
+  Word32Or, Word32Xor, Word32Shl, Word32Shr, Word32Sar, Word32Rol, Word32Ror, Int32Add,
+  Int32AddWithOverflow, Int32Sub, Int32SubWithOverflow, Int32Mul, Int32MulWithOverflow,
+  Int32MulHigh, Int32Div, Int32Mod, Uint32Div, Uint32Mod, Uint32MulHigh, Word64And, Word64Or,
+  Word64Xor, Word64Shl, Word64Shr, Word64Sar, Word64Rol, Word64Ror, Word64RolLowerable,
+  Word64RorLowerable, Int64Add, Int64AddWithOverflow, Int64Sub, Int64SubWithOverflow, Int64Mul,
+  Int64MulHigh, Int64MulWithOverflow, Int64Div, Int64Mod, Uint64Div, Uint64Mod, Uint64MulHigh,
+  Word32Equal, Word64Equal, Int32LessThan, Int32LessThanOrEqual, Uint32LessThan,
+  Uint32LessThanOrEqual, Int64LessThan, Int64LessThanOrEqual, Uint64LessThan,
+  Uint64LessThanOrEqual, Float32Equal, Float32LessThan, Float32LessThanOrEqual, Float64Equal,
+  Float64LessThan, Float64LessThanOrEqual, Float32Add, Float32Sub, Float32Mul, Float32Div,
+  Float32Max, Float32Min, Float32Abs, Float32Neg, Float32RoundDown, Float32RoundTiesEven,
+  Float32RoundTruncate, Float32RoundUp, Float32Sqrt, Float64Atan2, Float64Max, Float64Min,
+  Float64Add, Float64Sub, Float64Mul, Float64Div, Float64Mod, Float64Pow, Float64Abs, Float64Acos,
+  Float64Acosh, Float64Asin, Float64Asinh, Float64Atan, Float64Atanh, Float64Cbrt, Float64Cos,
+  Float64Cosh, Float64Exp, Float64Expm1, Float64Log, Float64Log1p, Float64Log10, Float64Log2,
+  Float64Neg, Float64RoundDown, Float64RoundTiesAway, Float64RoundTiesEven, Float64RoundTruncate,
+  Float64RoundUp, Float64Sin, Float64Sinh, Float64Sqrt, Float64Tan, Float64Tanh, Word32AtomicLoad,
+  Word32AtomicStore, Word32AtomicExchange, Word32AtomicCompareExchange, Word32AtomicAdd,
+  Word32AtomicSub, Word32AtomicAnd, Word32AtomicOr, Word32AtomicXor, Word32AtomicPairLoad,
+  Word32AtomicPairStore, Word32AtomicPairAdd, Word32AtomicPairSub, Word32AtomicPairAnd,
+  Word32AtomicPairOr, Word32AtomicPairXor, Word32AtomicPairExchange,
+  Word32AtomicPairCompareExchange, Word64AtomicLoad, Word64AtomicStore, Word64AtomicAdd,
+  Word64AtomicSub, Word64AtomicAnd, Word64AtomicOr, Word64AtomicXor, Word64AtomicExchange,
+  Word64AtomicCompareExchange, AbortCSADcheck, DebugBreak, Comment, Load, LoadImmutable, Store,
+  StorePair, StoreIndirectPointer, StackSlot, Word32Popcnt, Word64Popcnt, Word64Clz, Word64Ctz,
+  Word64ClzLowerable, Word64CtzLowerable, Word64ReverseBits, Word64ReverseBytes,
+  Simd128ReverseBytes, Int64AbsWithOverflow, BitcastTaggedToWord,
+  BitcastTaggedToWordForTagAndSmiBits, BitcastWordToTagged, BitcastWordToTaggedSigned,
+  TruncateFloat64ToWord32, ChangeFloat32ToFloat64, ChangeFloat64ToInt32, ChangeFloat64ToInt64,
+  ChangeFloat64ToUint32, ChangeFloat64ToUint64, Float64SilenceNaN, TruncateFloat64ToInt64,
+  TruncateFloat64ToUint32, TruncateFloat32ToInt32, TruncateFloat32ToUint32,
+  TryTruncateFloat32ToInt64, TryTruncateFloat64ToInt64, TryTruncateFloat32ToUint64,
+  TryTruncateFloat64ToUint64, TryTruncateFloat64ToInt32, TryTruncateFloat64ToUint32,
+  ChangeInt32ToFloat64, BitcastWord32ToWord64, ChangeInt32ToInt64, ChangeInt64ToFloat64,
+  ChangeUint32ToFloat64, ChangeUint32ToUint64, ChangeFloat16RawBitsToFloat64,
+  TruncateFloat64ToFloat32, TruncateFloat64ToFloat16RawBits, TruncateInt64ToInt32,
+  RoundFloat64ToInt32, RoundInt32ToFloat32, RoundInt64ToFloat32, RoundInt64ToFloat64,
+  RoundUint32ToFloat32, RoundUint64ToFloat32, RoundUint64ToFloat64, BitcastFloat32ToInt32,
+  BitcastFloat64ToInt64, BitcastInt32ToFloat32, BitcastInt64ToFloat64, Float64ExtractLowWord32,
+  Float64ExtractHighWord32, Float64InsertLowWord32, Float64InsertHighWord32, Word32Select,
+  Word64Select, Float32Select, Float64Select, LoadStackCheckOffset, LoadFramePointer,
+  LoadStackPointer, SetStackPointer, LoadParentFramePointer, LoadRootRegister, UnalignedLoad,
+  UnalignedStore, Int32PairAdd, Int32PairSub, Int32PairMul, Word32PairShl, Word32PairShr,
+  Word32PairSar, TrappingLoad, TrappingStore, LoadTrapOnNull, StoreTrapOnNull, MemoryBarrier,
+  SignExtendWord8ToInt32, SignExtendWord16ToInt32, SignExtendWord8ToInt64, SignExtendWord16ToInt64,
+  SignExtendWord32ToInt64, StackPointerGreaterThan, TraceInstruction,
+  // MACHINE_SIMD128_OP_LIST
+  F64x2Splat, F64x2ExtractLane, F64x2ReplaceLane, F64x2MoveLane, F64x2Abs, F64x2Neg, F64x2Sqrt,
+  F64x2Add, F64x2Sub, F64x2Mul, F64x2Div, F64x2Min, F64x2Max, F64x2Eq, F64x2Ne, F64x2Lt, F64x2Le,
+  F64x2Qfma, F64x2Qfms, F64x2Pmin, F64x2Pmax, F64x2Ceil, F64x2Floor, F64x2Trunc, F64x2NearestInt,
+  F64x2ConvertLowI32x4S, F64x2ConvertLowI32x4U, F64x2PromoteLowF32x4, F32x4Splat, F32x4ExtractLane,
+  F32x4ReplaceLane, F32x4MoveLane, F32x4SConvertI32x4, F32x4UConvertI32x4, F32x4Abs, F32x4Neg,
+  F32x4Sqrt, F32x4Add, F32x4Sub, F32x4Mul, F32x4Div, F32x4Min, F32x4Max, F32x4Eq, F32x4Ne, F32x4Lt,
+  F32x4Le, F32x4Gt, F32x4Ge, F32x4Qfma, F32x4Qfms, F32x4Pmin, F32x4Pmax, F32x4Ceil, F32x4Floor,
+  F32x4Trunc, F32x4NearestInt, F32x4DemoteF64x2Zero, F16x8Splat, F16x8ExtractLane,
+  F16x8ReplaceLane, F16x8MoveLane, F16x8Abs, F16x8Neg, F16x8Sqrt, F16x8Ceil, F16x8Floor,
+  F16x8Trunc, F16x8NearestInt, F16x8Add, F16x8Sub, F16x8Mul, F16x8Div, F16x8Min, F16x8Max,
+  F16x8Pmin, F16x8Pmax, F16x8Eq, F16x8Ne, F16x8Lt, F16x8Le, F16x8Gt, F16x8Ge, I16x8SConvertF16x8,
+  I16x8UConvertF16x8, F16x8SConvertI16x8, F16x8UConvertI16x8, F16x8DemoteF32x4Zero,
+  F16x8DemoteF64x2Zero, F32x4PromoteLowF16x8, F16x8Qfma, F16x8Qfms, I64x2Splat, I64x2SplatI32Pair,
+  I64x2ExtractLane, I64x2ReplaceLane, I64x2MoveLane, I64x2ReplaceLaneI32Pair, I64x2Abs, I64x2Neg,
+  I64x2SConvertI32x4Low, I64x2SConvertI32x4High, I64x2UConvertI32x4Low, I64x2UConvertI32x4High,
+  I64x2BitMask, I64x2Shl, I64x2ShrS, I64x2Add, I64x2Sub, I64x2Mul, I64x2Eq, I64x2Ne, I64x2GtS,
+  I64x2GeS, I64x2ShrU, I64x2ExtMulLowI32x4S, I64x2ExtMulHighI32x4S, I64x2ExtMulLowI32x4U,
+  I64x2ExtMulHighI32x4U, I32x4Splat, I32x4ExtractLane, I32x4ReplaceLane, I32x4MoveLane,
+  I32x4SConvertF32x4, I32x4SConvertI16x8Low, I32x4SConvertI16x8High, I32x4Neg, I32x4Shl, I32x4ShrS,
+  I32x4Add, I32x4Sub, I32x4Mul, I32x4MinS, I32x4MaxS, I32x4Eq, I32x4Ne, I32x4LtS, I32x4LeS,
+  I32x4GtS, I32x4GeS, I32x4UConvertF32x4, I32x4UConvertI16x8Low, I32x4UConvertI16x8High, I32x4ShrU,
+  I32x4MinU, I32x4MaxU, I32x4LtU, I32x4LeU, I32x4GtU, I32x4GeU, I32x4Abs, I32x4BitMask,
+  I32x4DotI16x8S, I32x4DotI8x16S, I32x4AddPairwise, I32x4ExtMulLowI16x8S, I32x4ExtMulHighI16x8S,
+  I32x4ExtMulLowI16x8U, I32x4ExtMulHighI16x8U, I32x4ExtAddPairwiseI16x8S,
+  I32x4ExtAddPairwiseI16x8U, I32x4TruncSatF64x2SZero, I32x4TruncSatF64x2UZero, I16x8Splat,
+  I16x8ExtractLaneU, I16x8ExtractLaneS, I16x8ReplaceLane, I16x8MoveLane, I16x8SConvertI8x16Low,
+  I16x8SConvertI8x16High, I16x8Neg, I16x8Shl, I16x8ShrS, I16x8SConvertI32x4, I16x8Add,
+  I16x8AddSatS, I16x8Sub, I16x8SubSatS, I16x8Mul, I16x8MinS, I16x8MaxS, I16x8Eq, I16x8Ne, I16x8LtS,
+  I16x8LeS, I16x8GtS, I16x8GeS, I16x8UConvertI8x16Low, I16x8UConvertI8x16High, I16x8ShrU,
+  I16x8UConvertI32x4, I16x8AddSatU, I16x8SubSatU, I16x8MinU, I16x8MaxU, I16x8LtU, I16x8LeU,
+  I16x8GtU, I16x8GeU, I16x8RoundingAverageU, I16x8Q15MulRSatS, I16x8Abs, I16x8BitMask,
+  I16x8ExtMulLowI8x16S, I16x8ExtMulHighI8x16S, I16x8ExtMulLowI8x16U, I16x8ExtMulHighI8x16U,
+  I16x8ExtAddPairwiseI8x16S, I16x8ExtAddPairwiseI8x16U, I8x16Splat, I8x16ExtractLaneU,
+  I8x16ExtractLaneS, I8x16ReplaceLane, I8x16MoveLane, I8x16SConvertI16x8, I8x16Neg, I8x16Shl,
+  I8x16ShrS, I8x16Add, I8x16AddSatS, I8x16Sub, I8x16SubSatS, I8x16MinS, I8x16MaxS, I8x16Eq,
+  I8x16Ne, I8x16LtS, I8x16LeS, I8x16GtS, I8x16GeS, I8x16UConvertI16x8, I8x16AddSatU, I8x16SubSatU,
+  I8x16ShrU, I8x16MinU, I8x16MaxU, I8x16LtU, I8x16LeU, I8x16GtU, I8x16GeU, I8x16RoundingAverageU,
+  I8x16Popcnt, I8x16Abs, I8x16BitMask, S128Zero, S128Const, S128Not, S128And, S128Or, S128Xor,
+  S128Select, S128AndNot, I8x16Swizzle, I8x16RelaxedLaneSelect, I16x8RelaxedLaneSelect,
+  I32x4RelaxedLaneSelect, I64x2RelaxedLaneSelect, F32x4RelaxedMin, F32x4RelaxedMax,
+  F64x2RelaxedMin, F64x2RelaxedMax, I32x4RelaxedTruncF32x4S, I32x4RelaxedTruncF32x4U,
+  I32x4RelaxedTruncF64x2SZero, I32x4RelaxedTruncF64x2UZero, I16x8RelaxedQ15MulRS,
+  I16x8DotI8x16I7x16S, I32x4DotI8x16I7x16AddS, I8x16AddReduce, I16x8AddReduce, I32x4AddReduce,
+  I64x2AddReduce, F32x4AddReduce, F64x2AddReduce, I8x16Shuffle, I8x8Shuffle, I8x4Shuffle,
+  I8x2Shuffle, I8x1Shuffle, V128AnyTrue, I64x2AllTrue, I32x4AllTrue, I16x8AllTrue, I8x16AllTrue,
+  LoadTransform, LoadLane, StoreLane,
+  // JS_OP_LIST
+  JSEqual, JSStrictEqual, JSLessThan, JSGreaterThan, JSLessThanOrEqual, JSGreaterThanOrEqual,
+  JSBitwiseOr, JSBitwiseXor, JSBitwiseAnd, JSShiftLeft, JSShiftRight, JSShiftRightLogical, JSAdd,
+  JSSubtract, JSMultiply, JSDivide, JSModulus, JSExponentiate, JSHasInPrototypeChain, JSInstanceOf,
+  JSOrdinaryHasInstance, JSDecrement, JSIncrement, JSBitwiseNot, JSNegate, JSToLength, JSToName,
+  JSToNumber, JSToNumberConvertBigInt, JSToBigInt, JSToBigIntConvertNumber, JSToNumeric,
+  JSToObject, JSToString, JSParseInt, JSCloneObject, JSCreate, JSCreateArguments, JSCreateArray,
+  JSCreateArrayFromIterable, JSCreateArrayIterator, JSCreateAsyncFunctionObject,
+  JSCreateBoundFunction, JSCreateClosure, JSCreateCollectionIterator, JSCreateEmptyLiteralArray,
+  JSCreateEmptyLiteralObject, JSCreateGeneratorObject, JSCreateIterResultObject,
+  JSCreateKeyValueArray, JSCreateLiteralArray, JSCreateLiteralObject, JSCreateLiteralRegExp,
+  JSCreateObject, JSCreateStringWrapper, JSCreatePromise, JSCreateStringIterator,
+  JSCreateTypedArray, JSGetTemplateObject, JSLoadProperty, JSLoadNamed, JSLoadNamedFromSuper,
+  JSLoadGlobal, JSSetKeyedProperty, JSDefineKeyedOwnProperty, JSSetNamedProperty,
+  JSSetPrototypeProperties, JSDefineNamedOwnProperty, JSStoreGlobal,
+  JSDefineKeyedOwnPropertyInLiteral, JSStoreInArrayLiteral, JSDeleteProperty, JSHasProperty,
+  JSGetSuperConstructor, JSFindNonDefaultConstructorOrConstruct, JSHasContextExtension,
+  JSLoadContextNoCell, JSLoadContext, JSStoreContextNoCell, JSStoreContext,
+  JSCreateFunctionContext, JSCreateCatchContext, JSCreateWithContext, JSCreateBlockContext, JSCall,
+  JSCallForwardVarargs, JSCallWithArrayLike, JSCallWithSpread, JSWasmCall,
+  JSConstructForwardVarargs, JSConstructForwardAllArgs, JSConstruct, JSConstructWithArrayLike,
+  JSConstructWithSpread, JSAsyncFunctionAwait, JSAsyncFunctionEnter, JSAsyncFunctionReject,
+  JSAsyncFunctionResolve, JSCallRuntime, JSDetachContextCell, JSForInEnumerate, JSForInNext,
+  JSForInPrepare, JSGetIterator, JSForOfNext, JSLoadMessage, JSStoreMessage, JSLoadModule,
+  JSStoreModule, JSGetImportMeta, JSGeneratorStore, JSGeneratorRestoreContinuation,
+  JSGeneratorRestoreContextNoCell, JSGeneratorRestoreRegister, JSGeneratorRestoreInputOrDebugPos,
+  JSFulfillPromise, JSPerformPromiseThen, JSPromiseResolve, JSRejectPromise, JSResolvePromise,
+  JSStackCheck, JSObjectIsArray, JSRegExpTest, JSDebugger,
+}
+
+/// 助记符表 — kMnemonics (与枚举判别值同序, 索引即 opcode)
+/// v8: src/compiler/opcodes.cc:18 kMnemonics
+pub const MNEMONICS: [&str; IrOpcode::COUNT] = [
+  "Start", "Loop", "Branch", "Switch", "IfTrue", "IfFalse", // Start..IfFalse
+  "IfSuccess", "IfException", "IfValue", "IfDefault", "Merge", "Deoptimize", // IfSuccess..Deoptimize
+  "DeoptimizeIf", "DeoptimizeUnless", "Assert", "TrapIf", "TrapUnless", "Return", // DeoptimizeIf..Return
+  "TailCall", "Terminate", "Throw", "End", "ExternalConstant", "NumberConstant", // TailCall..NumberConstant
+  "PointerConstant", "HeapConstant", "TrustedHeapConstant", "Int32Constant", "Int64Constant", "TaggedIndexConstant", // PointerConstant..TaggedIndexConstant
+  "Float32Constant", "Float64Constant", "CompressedHeapConstant", "RelocatableInt32Constant", "RelocatableInt64Constant", "Select", // Float32Constant..Select
+  "Phi", "EffectPhi", "InductionVariablePhi", "Checkpoint", "BeginRegion", "FinishRegion", // Phi..FinishRegion
+  "FrameState", "StateValues", "TypedStateValues", "ArgumentsElementsState", "ArgumentsLengthState", "ObjectState", // FrameState..ObjectState
+  "ObjectId", "TypedObjectState", "Call", "Parameter", "OsrValue", "LoopExit", // ObjectId..LoopExit
+  "LoopExitValue", "LoopExitEffect", "Projection", "Retain", "MapGuard", "TypeGuard", // LoopExitValue..TypeGuard
+  "EnterMachineGraph", "ExitMachineGraph", "Unreachable", "DeadValue", "Dead", "Plug", // EnterMachineGraph..Plug
+  "SLVerifierHint", "MajorGCForCompilerTesting", "StaticAssert", "ChangeTaggedSignedToInt32", "ChangeTaggedSignedToInt64", "ChangeTaggedToInt32", // SLVerifierHint..ChangeTaggedToInt32
+  "ChangeTaggedToInt64", "ChangeTaggedToUint32", "ChangeTaggedToFloat64", "ChangeTaggedToTaggedSigned", "ChangeSmiOrHoleToFloat64", "ChangeNumberOrHoleToFloat64", // ChangeTaggedToInt64..ChangeNumberOrHoleToFloat64
+  "ChangeInt31ToTaggedSigned", "ChangeInt32ToTagged", "ChangeInt64ToTagged", "ChangeUint32ToTagged", "ChangeUint64ToTagged", "ChangeFloat64ToTagged", // ChangeInt31ToTaggedSigned..ChangeFloat64ToTagged
+  "ChangeFloat64ToTaggedPointer", "ChangeFloat64OrUndefinedToTagged", "ChangeTaggedToBit", "ChangeBitToTagged", "ChangeInt64ToBigInt", "ChangeUint64ToBigInt", // ChangeFloat64ToTaggedPointer..ChangeUint64ToBigInt
+  "TruncateBigIntToWord64", "TruncateNumberOrOddballToWord32", "TruncateSmiOrHoleToWord32", "TruncateNumberOrOddballOrHoleToWord32", "TruncateTaggedToFloat64", "TruncateTaggedToFloat64PreserveUndefined", // TruncateBigIntToWord64..TruncateTaggedToFloat64PreserveUndefined
+  "TruncateTaggedToBit", "TruncateTaggedPointerToBit", "CheckedInt32Add", "CheckedInt32Sub", "CheckedInt32Div", "CheckedInt32Mod", // TruncateTaggedToBit..CheckedInt32Mod
+  "CheckedUint32Div", "CheckedUint32Mod", "CheckedInt32Mul", "CheckedInt64Add", "CheckedAdditiveSafeIntegerAdd", "CheckedAdditiveSafeIntegerSub", // CheckedUint32Div..CheckedAdditiveSafeIntegerSub
+  "CheckedInt64Sub", "CheckedInt64Mul", "CheckedInt64Div", "CheckedInt64Mod", "CheckedInt32ToTaggedSigned", "CheckedInt64ToInt32", // CheckedInt64Sub..CheckedInt64ToInt32
+  "CheckedInt64ToAdditiveSafeInteger", "CheckedInt64ToTaggedSigned", "CheckedUint32Bounds", "CheckedUint32ToInt32", "CheckedUint32ToTaggedSigned", "CheckedUint64Bounds", // CheckedInt64ToAdditiveSafeInteger..CheckedUint64Bounds
+  "CheckedUint64ToInt32", "CheckedUint64ToInt64", "CheckedUint64ToTaggedSigned", "CheckedFloat64ToInt32", "CheckedFloat64ToInt64", "CheckedInt32ToUint64", // CheckedUint64ToInt32..CheckedInt32ToUint64
+  "CheckedInt64ToUint64", "CheckedFloat64ToUint64", "CheckedFloat64ToAdditiveSafeInteger", "CheckedTaggedSignedToInt32", "CheckedTaggedToInt32", "CheckedTaggedToArrayIndex", // CheckedInt64ToUint64..CheckedTaggedToArrayIndex
+  "CheckedTruncateTaggedToWord32", "CheckedTaggedToFloat64", "CheckedTaggedToAdditiveSafeInteger", "CheckedTaggedToInt64", "CheckedTaggedToUint64", "CheckedTaggedToTaggedSigned", // CheckedTruncateTaggedToWord32..CheckedTaggedToTaggedSigned
+  "CheckedTaggedToTaggedPointer", "NumberEqual", "NumberLessThan", "NumberLessThanOrEqual", "SpeculativeNumberEqual", "SpeculativeNumberLessThan", // CheckedTaggedToTaggedPointer..SpeculativeNumberLessThan
+  "SpeculativeNumberLessThanOrEqual", "ReferenceEqual", "SameValue", "SameValueNumbersOnly", "NumberSameValue", "StringEqual", // SpeculativeNumberLessThanOrEqual..StringEqual
+  "StringLessThan", "StringLessThanOrEqual", "StringOrOddballStrictEqual", "BigIntEqual", "BigIntLessThan", "BigIntLessThanOrEqual", // StringLessThan..BigIntLessThanOrEqual
+  "SpeculativeBigIntEqual", "SpeculativeBigIntLessThan", "SpeculativeBigIntLessThanOrEqual", "NumberAdd", "NumberSubtract", "NumberMultiply", // SpeculativeBigIntEqual..NumberMultiply
+  "NumberDivide", "NumberModulus", "NumberBitwiseOr", "NumberBitwiseXor", "NumberBitwiseAnd", "NumberShiftLeft", // NumberDivide..NumberShiftLeft
+  "NumberShiftRight", "NumberShiftRightLogical", "NumberAtan2", "NumberImul", "NumberMax", "NumberMin", // NumberShiftRight..NumberMin
+  "NumberPow", "BigIntAdd", "BigIntSubtract", "BigIntMultiply", "BigIntDivide", "BigIntModulus", // NumberPow..BigIntModulus
+  "BigIntBitwiseAnd", "BigIntBitwiseOr", "BigIntBitwiseXor", "BigIntShiftLeft", "BigIntShiftRight", "SpeculativeNumberAdd", // BigIntBitwiseAnd..SpeculativeNumberAdd
+  "SpeculativeNumberSubtract", "SpeculativeNumberMultiply", "SpeculativeNumberPow", "SpeculativeNumberDivide", "SpeculativeNumberModulus", "SpeculativeNumberBitwiseAnd", // SpeculativeNumberSubtract..SpeculativeNumberBitwiseAnd
+  "SpeculativeNumberBitwiseOr", "SpeculativeNumberBitwiseXor", "SpeculativeNumberShiftLeft", "SpeculativeNumberShiftRight", "SpeculativeNumberShiftRightLogical", "SpeculativeAdditiveSafeIntegerAdd", // SpeculativeNumberBitwiseOr..SpeculativeAdditiveSafeIntegerAdd
+  "SpeculativeAdditiveSafeIntegerSubtract", "SpeculativeSmallIntegerAdd", "SpeculativeSmallIntegerSubtract", "NumberAbs", "NumberAcos", "NumberAcosh", // SpeculativeAdditiveSafeIntegerSubtract..NumberAcosh
+  "NumberAsin", "NumberAsinh", "NumberAtan", "NumberAtanh", "NumberCbrt", "NumberCeil", // NumberAsin..NumberCeil
+  "NumberClz32", "NumberCos", "NumberCosh", "NumberExp", "NumberExpm1", "NumberFloor", // NumberClz32..NumberFloor
+  "NumberFround", "NumberLog", "NumberLog1p", "NumberLog2", "NumberLog10", "NumberRound", // NumberFround..NumberRound
+  "NumberSign", "NumberSin", "NumberSinh", "NumberSqrt", "NumberTan", "NumberTanh", // NumberSign..NumberTanh
+  "NumberTrunc", "NumberToBoolean", "NumberToInt32", "NumberToString", "NumberToUint32", "NumberToUint8Clamped", // NumberTrunc..NumberToUint8Clamped
+  "Integral32OrMinusZeroToBigInt", "NumberSilenceNaN", "BigIntNegate", "CheckBigInt", "CheckedBigIntToBigInt64", "SpeculativeToNumber", // Integral32OrMinusZeroToBigInt..SpeculativeToNumber
+  "SpeculativeBigIntAsIntN", "SpeculativeBigIntAsUintN", "SpeculativeBigIntNegate", "SpeculativeToBigInt", "SpeculativeBigIntAdd", "SpeculativeBigIntSubtract", // SpeculativeBigIntAsIntN..SpeculativeBigIntSubtract
+  "SpeculativeBigIntMultiply", "SpeculativeBigIntDivide", "SpeculativeBigIntModulus", "SpeculativeBigIntBitwiseAnd", "SpeculativeBigIntBitwiseOr", "SpeculativeBigIntBitwiseXor", // SpeculativeBigIntMultiply..SpeculativeBigIntBitwiseXor
+  "SpeculativeBigIntShiftLeft", "SpeculativeBigIntShiftRight", "AssertNotNull", "IsNull", "IsNotNull", "Null", // SpeculativeBigIntShiftLeft..Null
+  "RttCanon", "WasmTypeCast", "WasmTypeCastAbstract", "WasmTypeCheck", "WasmTypeCheckAbstract", "WasmAnyConvertExtern", // RttCanon..WasmAnyConvertExtern
+  "WasmExternConvertAny", "WasmStructGet", "WasmStructSet", "WasmArrayGet", "WasmArraySet", "WasmArrayLength", // WasmExternConvertAny..WasmArrayLength
+  "WasmArrayInitializeLength", "StringAsWtf16", "StringPrepareForGetCodeunit", "Allocate", "AllocateRaw", "ArgumentsLength", // WasmArrayInitializeLength..ArgumentsLength
+  "AssertType", "BooleanNot", "ChangeFloat64HoleToTagged", "ChangeFloat64OrUndefinedOrHoleToTagged", "CheckBounds", "CheckClosure", // AssertType..CheckClosure
+  "CheckEqualsInternalizedString", "CheckEqualsSymbol", "CheckFloat64Hole", "CheckHeapObject", "CheckIf", "CheckInternalizedString", // CheckEqualsInternalizedString..CheckInternalizedString
+  "CheckMaps", "CheckHomomorphic", "CheckNotTaggedHole", "CheckNumber", "CheckNumberOrUndefined", "CheckNumberFitsInt32", // CheckMaps..CheckNumberFitsInt32
+  "CheckReceiver", "CheckReceiverOrNullOrUndefined", "CheckSmi", "CheckString", "CheckStringOrStringWrapper", "CheckStringOrOddball", // CheckReceiver..CheckStringOrOddball
+  "CheckSymbol", "CheckTurboshaftTypeOf", "CompareMaps", "ConvertReceiver", "ConvertTaggedHoleToUndefined", "DateNow", // CheckSymbol..DateNow
+  "DoubleArrayMax", "DoubleArrayMin", "EnsureWritableFastElements", "FastApiCall", "FindOrderedHashMapEntry", "FindOrderedHashMapEntryForInt32Key", // DoubleArrayMax..FindOrderedHashMapEntryForInt32Key
+  "FindOrderedHashSetEntry", "WeakCollectionGet", "InitializeImmutableInObject", "LoadDataViewElement", "LoadDictionaryField", "LoadElement", // FindOrderedHashSetEntry..LoadElement
+  "LoadField", "LoadFieldByIndex", "LoadFromObject", "LoadImmutableFromObject", "LoadMessage", "LoadStackArgument", // LoadField..LoadStackArgument
+  "LoadTypedElement", "MaybeGrowFastElements", "NewArgumentsElements", "NewConsString", "NewDoubleElements", "NewSmiOrObjectElements", // LoadTypedElement..NewSmiOrObjectElements
+  "NumberIsFinite", "NumberIsFloat64Hole", "NumberIsInteger", "NumberIsMinusZero", "NumberIsNaN", "NumberIsSafeInteger", // NumberIsFinite..NumberIsSafeInteger
+  "ObjectIsArrayBufferView", "ObjectIsBigInt", "ObjectIsCallable", "ObjectIsConstructor", "ObjectIsDetectableCallable", "ObjectIsFiniteNumber", // ObjectIsArrayBufferView..ObjectIsFiniteNumber
+  "ObjectIsInteger", "ObjectIsMinusZero", "ObjectIsNaN", "ObjectIsNonCallable", "ObjectIsNumber", "ObjectIsReceiver", // ObjectIsInteger..ObjectIsReceiver
+  "ObjectIsSafeInteger", "ObjectIsSmi", "ObjectIsString", "ObjectIsSymbol", "ObjectIsUndetectable", "PlainPrimitiveToFloat64", // ObjectIsSafeInteger..PlainPrimitiveToFloat64
+  "PlainPrimitiveToNumber", "PlainPrimitiveToWord32", "RestLength", "RuntimeAbort", "StoreDataViewElement", "StoreElement", // PlainPrimitiveToNumber..StoreElement
+  "StoreField", "StoreMessage", "StoreSignedSmallElement", "StoreToObject", "StoreTypedElement", "StringCharCodeAt", // StoreField..StringCharCodeAt
+  "StringCodePointAt", "StringConcat", "StringFromCodePointAt", "StringFromSingleCharCode", "StringFromSingleCodePoint", "StringIndexOf", // StringCodePointAt..StringIndexOf
+  "StringLength", "StringWrapperLength", "StringSubstring", "StringLocaleCompareIntl", "StringToLowerCaseIntl", "StringToNumber", // StringLength..StringToNumber
+  "StringToUpperCaseIntl", "ToBoolean", "TransitionAndStoreElement", "TransitionAndStoreNonNumberElement", "TransitionAndStoreNumberElement", "TransitionElementsKind", // StringToUpperCaseIntl..TransitionElementsKind
+  "TransitionElementsKindOrCheckMap", "TypedArrayLength", "TypeOf", "Unsigned32Divide", "VerifyType", "GetContinuationPreservedEmbedderData", // TransitionElementsKindOrCheckMap..GetContinuationPreservedEmbedderData
+  "SetContinuationPreservedEmbedderData", "Word32Clz", "Word32Ctz", "Int32AbsWithOverflow", "Word32ReverseBits", "Word32ReverseBytes", // SetContinuationPreservedEmbedderData..Word32ReverseBytes
+  "Word32And", "Word32Or", "Word32Xor", "Word32Shl", "Word32Shr", "Word32Sar", // Word32And..Word32Sar
+  "Word32Rol", "Word32Ror", "Int32Add", "Int32AddWithOverflow", "Int32Sub", "Int32SubWithOverflow", // Word32Rol..Int32SubWithOverflow
+  "Int32Mul", "Int32MulWithOverflow", "Int32MulHigh", "Int32Div", "Int32Mod", "Uint32Div", // Int32Mul..Uint32Div
+  "Uint32Mod", "Uint32MulHigh", "Word64And", "Word64Or", "Word64Xor", "Word64Shl", // Uint32Mod..Word64Shl
+  "Word64Shr", "Word64Sar", "Word64Rol", "Word64Ror", "Word64RolLowerable", "Word64RorLowerable", // Word64Shr..Word64RorLowerable
+  "Int64Add", "Int64AddWithOverflow", "Int64Sub", "Int64SubWithOverflow", "Int64Mul", "Int64MulHigh", // Int64Add..Int64MulHigh
+  "Int64MulWithOverflow", "Int64Div", "Int64Mod", "Uint64Div", "Uint64Mod", "Uint64MulHigh", // Int64MulWithOverflow..Uint64MulHigh
+  "Word32Equal", "Word64Equal", "Int32LessThan", "Int32LessThanOrEqual", "Uint32LessThan", "Uint32LessThanOrEqual", // Word32Equal..Uint32LessThanOrEqual
+  "Int64LessThan", "Int64LessThanOrEqual", "Uint64LessThan", "Uint64LessThanOrEqual", "Float32Equal", "Float32LessThan", // Int64LessThan..Float32LessThan
+  "Float32LessThanOrEqual", "Float64Equal", "Float64LessThan", "Float64LessThanOrEqual", "Float32Add", "Float32Sub", // Float32LessThanOrEqual..Float32Sub
+  "Float32Mul", "Float32Div", "Float32Max", "Float32Min", "Float32Abs", "Float32Neg", // Float32Mul..Float32Neg
+  "Float32RoundDown", "Float32RoundTiesEven", "Float32RoundTruncate", "Float32RoundUp", "Float32Sqrt", "Float64Atan2", // Float32RoundDown..Float64Atan2
+  "Float64Max", "Float64Min", "Float64Add", "Float64Sub", "Float64Mul", "Float64Div", // Float64Max..Float64Div
+  "Float64Mod", "Float64Pow", "Float64Abs", "Float64Acos", "Float64Acosh", "Float64Asin", // Float64Mod..Float64Asin
+  "Float64Asinh", "Float64Atan", "Float64Atanh", "Float64Cbrt", "Float64Cos", "Float64Cosh", // Float64Asinh..Float64Cosh
+  "Float64Exp", "Float64Expm1", "Float64Log", "Float64Log1p", "Float64Log10", "Float64Log2", // Float64Exp..Float64Log2
+  "Float64Neg", "Float64RoundDown", "Float64RoundTiesAway", "Float64RoundTiesEven", "Float64RoundTruncate", "Float64RoundUp", // Float64Neg..Float64RoundUp
+  "Float64Sin", "Float64Sinh", "Float64Sqrt", "Float64Tan", "Float64Tanh", "Word32AtomicLoad", // Float64Sin..Word32AtomicLoad
+  "Word32AtomicStore", "Word32AtomicExchange", "Word32AtomicCompareExchange", "Word32AtomicAdd", "Word32AtomicSub", "Word32AtomicAnd", // Word32AtomicStore..Word32AtomicAnd
+  "Word32AtomicOr", "Word32AtomicXor", "Word32AtomicPairLoad", "Word32AtomicPairStore", "Word32AtomicPairAdd", "Word32AtomicPairSub", // Word32AtomicOr..Word32AtomicPairSub
+  "Word32AtomicPairAnd", "Word32AtomicPairOr", "Word32AtomicPairXor", "Word32AtomicPairExchange", "Word32AtomicPairCompareExchange", "Word64AtomicLoad", // Word32AtomicPairAnd..Word64AtomicLoad
+  "Word64AtomicStore", "Word64AtomicAdd", "Word64AtomicSub", "Word64AtomicAnd", "Word64AtomicOr", "Word64AtomicXor", // Word64AtomicStore..Word64AtomicXor
+  "Word64AtomicExchange", "Word64AtomicCompareExchange", "AbortCSADcheck", "DebugBreak", "Comment", "Load", // Word64AtomicExchange..Load
+  "LoadImmutable", "Store", "StorePair", "StoreIndirectPointer", "StackSlot", "Word32Popcnt", // LoadImmutable..Word32Popcnt
+  "Word64Popcnt", "Word64Clz", "Word64Ctz", "Word64ClzLowerable", "Word64CtzLowerable", "Word64ReverseBits", // Word64Popcnt..Word64ReverseBits
+  "Word64ReverseBytes", "Simd128ReverseBytes", "Int64AbsWithOverflow", "BitcastTaggedToWord", "BitcastTaggedToWordForTagAndSmiBits", "BitcastWordToTagged", // Word64ReverseBytes..BitcastWordToTagged
+  "BitcastWordToTaggedSigned", "TruncateFloat64ToWord32", "ChangeFloat32ToFloat64", "ChangeFloat64ToInt32", "ChangeFloat64ToInt64", "ChangeFloat64ToUint32", // BitcastWordToTaggedSigned..ChangeFloat64ToUint32
+  "ChangeFloat64ToUint64", "Float64SilenceNaN", "TruncateFloat64ToInt64", "TruncateFloat64ToUint32", "TruncateFloat32ToInt32", "TruncateFloat32ToUint32", // ChangeFloat64ToUint64..TruncateFloat32ToUint32
+  "TryTruncateFloat32ToInt64", "TryTruncateFloat64ToInt64", "TryTruncateFloat32ToUint64", "TryTruncateFloat64ToUint64", "TryTruncateFloat64ToInt32", "TryTruncateFloat64ToUint32", // TryTruncateFloat32ToInt64..TryTruncateFloat64ToUint32
+  "ChangeInt32ToFloat64", "BitcastWord32ToWord64", "ChangeInt32ToInt64", "ChangeInt64ToFloat64", "ChangeUint32ToFloat64", "ChangeUint32ToUint64", // ChangeInt32ToFloat64..ChangeUint32ToUint64
+  "ChangeFloat16RawBitsToFloat64", "TruncateFloat64ToFloat32", "TruncateFloat64ToFloat16RawBits", "TruncateInt64ToInt32", "RoundFloat64ToInt32", "RoundInt32ToFloat32", // ChangeFloat16RawBitsToFloat64..RoundInt32ToFloat32
+  "RoundInt64ToFloat32", "RoundInt64ToFloat64", "RoundUint32ToFloat32", "RoundUint64ToFloat32", "RoundUint64ToFloat64", "BitcastFloat32ToInt32", // RoundInt64ToFloat32..BitcastFloat32ToInt32
+  "BitcastFloat64ToInt64", "BitcastInt32ToFloat32", "BitcastInt64ToFloat64", "Float64ExtractLowWord32", "Float64ExtractHighWord32", "Float64InsertLowWord32", // BitcastFloat64ToInt64..Float64InsertLowWord32
+  "Float64InsertHighWord32", "Word32Select", "Word64Select", "Float32Select", "Float64Select", "LoadStackCheckOffset", // Float64InsertHighWord32..LoadStackCheckOffset
+  "LoadFramePointer", "LoadStackPointer", "SetStackPointer", "LoadParentFramePointer", "LoadRootRegister", "UnalignedLoad", // LoadFramePointer..UnalignedLoad
+  "UnalignedStore", "Int32PairAdd", "Int32PairSub", "Int32PairMul", "Word32PairShl", "Word32PairShr", // UnalignedStore..Word32PairShr
+  "Word32PairSar", "TrappingLoad", "TrappingStore", "LoadTrapOnNull", "StoreTrapOnNull", "MemoryBarrier", // Word32PairSar..MemoryBarrier
+  "SignExtendWord8ToInt32", "SignExtendWord16ToInt32", "SignExtendWord8ToInt64", "SignExtendWord16ToInt64", "SignExtendWord32ToInt64", "StackPointerGreaterThan", // SignExtendWord8ToInt32..StackPointerGreaterThan
+  "TraceInstruction", "F64x2Splat", "F64x2ExtractLane", "F64x2ReplaceLane", "F64x2MoveLane", "F64x2Abs", // TraceInstruction..F64x2Abs
+  "F64x2Neg", "F64x2Sqrt", "F64x2Add", "F64x2Sub", "F64x2Mul", "F64x2Div", // F64x2Neg..F64x2Div
+  "F64x2Min", "F64x2Max", "F64x2Eq", "F64x2Ne", "F64x2Lt", "F64x2Le", // F64x2Min..F64x2Le
+  "F64x2Qfma", "F64x2Qfms", "F64x2Pmin", "F64x2Pmax", "F64x2Ceil", "F64x2Floor", // F64x2Qfma..F64x2Floor
+  "F64x2Trunc", "F64x2NearestInt", "F64x2ConvertLowI32x4S", "F64x2ConvertLowI32x4U", "F64x2PromoteLowF32x4", "F32x4Splat", // F64x2Trunc..F32x4Splat
+  "F32x4ExtractLane", "F32x4ReplaceLane", "F32x4MoveLane", "F32x4SConvertI32x4", "F32x4UConvertI32x4", "F32x4Abs", // F32x4ExtractLane..F32x4Abs
+  "F32x4Neg", "F32x4Sqrt", "F32x4Add", "F32x4Sub", "F32x4Mul", "F32x4Div", // F32x4Neg..F32x4Div
+  "F32x4Min", "F32x4Max", "F32x4Eq", "F32x4Ne", "F32x4Lt", "F32x4Le", // F32x4Min..F32x4Le
+  "F32x4Gt", "F32x4Ge", "F32x4Qfma", "F32x4Qfms", "F32x4Pmin", "F32x4Pmax", // F32x4Gt..F32x4Pmax
+  "F32x4Ceil", "F32x4Floor", "F32x4Trunc", "F32x4NearestInt", "F32x4DemoteF64x2Zero", "F16x8Splat", // F32x4Ceil..F16x8Splat
+  "F16x8ExtractLane", "F16x8ReplaceLane", "F16x8MoveLane", "F16x8Abs", "F16x8Neg", "F16x8Sqrt", // F16x8ExtractLane..F16x8Sqrt
+  "F16x8Ceil", "F16x8Floor", "F16x8Trunc", "F16x8NearestInt", "F16x8Add", "F16x8Sub", // F16x8Ceil..F16x8Sub
+  "F16x8Mul", "F16x8Div", "F16x8Min", "F16x8Max", "F16x8Pmin", "F16x8Pmax", // F16x8Mul..F16x8Pmax
+  "F16x8Eq", "F16x8Ne", "F16x8Lt", "F16x8Le", "F16x8Gt", "F16x8Ge", // F16x8Eq..F16x8Ge
+  "I16x8SConvertF16x8", "I16x8UConvertF16x8", "F16x8SConvertI16x8", "F16x8UConvertI16x8", "F16x8DemoteF32x4Zero", "F16x8DemoteF64x2Zero", // I16x8SConvertF16x8..F16x8DemoteF64x2Zero
+  "F32x4PromoteLowF16x8", "F16x8Qfma", "F16x8Qfms", "I64x2Splat", "I64x2SplatI32Pair", "I64x2ExtractLane", // F32x4PromoteLowF16x8..I64x2ExtractLane
+  "I64x2ReplaceLane", "I64x2MoveLane", "I64x2ReplaceLaneI32Pair", "I64x2Abs", "I64x2Neg", "I64x2SConvertI32x4Low", // I64x2ReplaceLane..I64x2SConvertI32x4Low
+  "I64x2SConvertI32x4High", "I64x2UConvertI32x4Low", "I64x2UConvertI32x4High", "I64x2BitMask", "I64x2Shl", "I64x2ShrS", // I64x2SConvertI32x4High..I64x2ShrS
+  "I64x2Add", "I64x2Sub", "I64x2Mul", "I64x2Eq", "I64x2Ne", "I64x2GtS", // I64x2Add..I64x2GtS
+  "I64x2GeS", "I64x2ShrU", "I64x2ExtMulLowI32x4S", "I64x2ExtMulHighI32x4S", "I64x2ExtMulLowI32x4U", "I64x2ExtMulHighI32x4U", // I64x2GeS..I64x2ExtMulHighI32x4U
+  "I32x4Splat", "I32x4ExtractLane", "I32x4ReplaceLane", "I32x4MoveLane", "I32x4SConvertF32x4", "I32x4SConvertI16x8Low", // I32x4Splat..I32x4SConvertI16x8Low
+  "I32x4SConvertI16x8High", "I32x4Neg", "I32x4Shl", "I32x4ShrS", "I32x4Add", "I32x4Sub", // I32x4SConvertI16x8High..I32x4Sub
+  "I32x4Mul", "I32x4MinS", "I32x4MaxS", "I32x4Eq", "I32x4Ne", "I32x4LtS", // I32x4Mul..I32x4LtS
+  "I32x4LeS", "I32x4GtS", "I32x4GeS", "I32x4UConvertF32x4", "I32x4UConvertI16x8Low", "I32x4UConvertI16x8High", // I32x4LeS..I32x4UConvertI16x8High
+  "I32x4ShrU", "I32x4MinU", "I32x4MaxU", "I32x4LtU", "I32x4LeU", "I32x4GtU", // I32x4ShrU..I32x4GtU
+  "I32x4GeU", "I32x4Abs", "I32x4BitMask", "I32x4DotI16x8S", "I32x4DotI8x16S", "I32x4AddPairwise", // I32x4GeU..I32x4AddPairwise
+  "I32x4ExtMulLowI16x8S", "I32x4ExtMulHighI16x8S", "I32x4ExtMulLowI16x8U", "I32x4ExtMulHighI16x8U", "I32x4ExtAddPairwiseI16x8S", "I32x4ExtAddPairwiseI16x8U", // I32x4ExtMulLowI16x8S..I32x4ExtAddPairwiseI16x8U
+  "I32x4TruncSatF64x2SZero", "I32x4TruncSatF64x2UZero", "I16x8Splat", "I16x8ExtractLaneU", "I16x8ExtractLaneS", "I16x8ReplaceLane", // I32x4TruncSatF64x2SZero..I16x8ReplaceLane
+  "I16x8MoveLane", "I16x8SConvertI8x16Low", "I16x8SConvertI8x16High", "I16x8Neg", "I16x8Shl", "I16x8ShrS", // I16x8MoveLane..I16x8ShrS
+  "I16x8SConvertI32x4", "I16x8Add", "I16x8AddSatS", "I16x8Sub", "I16x8SubSatS", "I16x8Mul", // I16x8SConvertI32x4..I16x8Mul
+  "I16x8MinS", "I16x8MaxS", "I16x8Eq", "I16x8Ne", "I16x8LtS", "I16x8LeS", // I16x8MinS..I16x8LeS
+  "I16x8GtS", "I16x8GeS", "I16x8UConvertI8x16Low", "I16x8UConvertI8x16High", "I16x8ShrU", "I16x8UConvertI32x4", // I16x8GtS..I16x8UConvertI32x4
+  "I16x8AddSatU", "I16x8SubSatU", "I16x8MinU", "I16x8MaxU", "I16x8LtU", "I16x8LeU", // I16x8AddSatU..I16x8LeU
+  "I16x8GtU", "I16x8GeU", "I16x8RoundingAverageU", "I16x8Q15MulRSatS", "I16x8Abs", "I16x8BitMask", // I16x8GtU..I16x8BitMask
+  "I16x8ExtMulLowI8x16S", "I16x8ExtMulHighI8x16S", "I16x8ExtMulLowI8x16U", "I16x8ExtMulHighI8x16U", "I16x8ExtAddPairwiseI8x16S", "I16x8ExtAddPairwiseI8x16U", // I16x8ExtMulLowI8x16S..I16x8ExtAddPairwiseI8x16U
+  "I8x16Splat", "I8x16ExtractLaneU", "I8x16ExtractLaneS", "I8x16ReplaceLane", "I8x16MoveLane", "I8x16SConvertI16x8", // I8x16Splat..I8x16SConvertI16x8
+  "I8x16Neg", "I8x16Shl", "I8x16ShrS", "I8x16Add", "I8x16AddSatS", "I8x16Sub", // I8x16Neg..I8x16Sub
+  "I8x16SubSatS", "I8x16MinS", "I8x16MaxS", "I8x16Eq", "I8x16Ne", "I8x16LtS", // I8x16SubSatS..I8x16LtS
+  "I8x16LeS", "I8x16GtS", "I8x16GeS", "I8x16UConvertI16x8", "I8x16AddSatU", "I8x16SubSatU", // I8x16LeS..I8x16SubSatU
+  "I8x16ShrU", "I8x16MinU", "I8x16MaxU", "I8x16LtU", "I8x16LeU", "I8x16GtU", // I8x16ShrU..I8x16GtU
+  "I8x16GeU", "I8x16RoundingAverageU", "I8x16Popcnt", "I8x16Abs", "I8x16BitMask", "S128Zero", // I8x16GeU..S128Zero
+  "S128Const", "S128Not", "S128And", "S128Or", "S128Xor", "S128Select", // S128Const..S128Select
+  "S128AndNot", "I8x16Swizzle", "I8x16RelaxedLaneSelect", "I16x8RelaxedLaneSelect", "I32x4RelaxedLaneSelect", "I64x2RelaxedLaneSelect", // S128AndNot..I64x2RelaxedLaneSelect
+  "F32x4RelaxedMin", "F32x4RelaxedMax", "F64x2RelaxedMin", "F64x2RelaxedMax", "I32x4RelaxedTruncF32x4S", "I32x4RelaxedTruncF32x4U", // F32x4RelaxedMin..I32x4RelaxedTruncF32x4U
+  "I32x4RelaxedTruncF64x2SZero", "I32x4RelaxedTruncF64x2UZero", "I16x8RelaxedQ15MulRS", "I16x8DotI8x16I7x16S", "I32x4DotI8x16I7x16AddS", "I8x16AddReduce", // I32x4RelaxedTruncF64x2SZero..I8x16AddReduce
+  "I16x8AddReduce", "I32x4AddReduce", "I64x2AddReduce", "F32x4AddReduce", "F64x2AddReduce", "I8x16Shuffle", // I16x8AddReduce..I8x16Shuffle
+  "I8x8Shuffle", "I8x4Shuffle", "I8x2Shuffle", "I8x1Shuffle", "V128AnyTrue", "I64x2AllTrue", // I8x8Shuffle..I64x2AllTrue
+  "I32x4AllTrue", "I16x8AllTrue", "I8x16AllTrue", "LoadTransform", "LoadLane", "StoreLane", // I32x4AllTrue..StoreLane
+  "JSEqual", "JSStrictEqual", "JSLessThan", "JSGreaterThan", "JSLessThanOrEqual", "JSGreaterThanOrEqual", // JSEqual..JSGreaterThanOrEqual
+  "JSBitwiseOr", "JSBitwiseXor", "JSBitwiseAnd", "JSShiftLeft", "JSShiftRight", "JSShiftRightLogical", // JSBitwiseOr..JSShiftRightLogical
+  "JSAdd", "JSSubtract", "JSMultiply", "JSDivide", "JSModulus", "JSExponentiate", // JSAdd..JSExponentiate
+  "JSHasInPrototypeChain", "JSInstanceOf", "JSOrdinaryHasInstance", "JSDecrement", "JSIncrement", "JSBitwiseNot", // JSHasInPrototypeChain..JSBitwiseNot
+  "JSNegate", "JSToLength", "JSToName", "JSToNumber", "JSToNumberConvertBigInt", "JSToBigInt", // JSNegate..JSToBigInt
+  "JSToBigIntConvertNumber", "JSToNumeric", "JSToObject", "JSToString", "JSParseInt", "JSCloneObject", // JSToBigIntConvertNumber..JSCloneObject
+  "JSCreate", "JSCreateArguments", "JSCreateArray", "JSCreateArrayFromIterable", "JSCreateArrayIterator", "JSCreateAsyncFunctionObject", // JSCreate..JSCreateAsyncFunctionObject
+  "JSCreateBoundFunction", "JSCreateClosure", "JSCreateCollectionIterator", "JSCreateEmptyLiteralArray", "JSCreateEmptyLiteralObject", "JSCreateGeneratorObject", // JSCreateBoundFunction..JSCreateGeneratorObject
+  "JSCreateIterResultObject", "JSCreateKeyValueArray", "JSCreateLiteralArray", "JSCreateLiteralObject", "JSCreateLiteralRegExp", "JSCreateObject", // JSCreateIterResultObject..JSCreateObject
+  "JSCreateStringWrapper", "JSCreatePromise", "JSCreateStringIterator", "JSCreateTypedArray", "JSGetTemplateObject", "JSLoadProperty", // JSCreateStringWrapper..JSLoadProperty
+  "JSLoadNamed", "JSLoadNamedFromSuper", "JSLoadGlobal", "JSSetKeyedProperty", "JSDefineKeyedOwnProperty", "JSSetNamedProperty", // JSLoadNamed..JSSetNamedProperty
+  "JSSetPrototypeProperties", "JSDefineNamedOwnProperty", "JSStoreGlobal", "JSDefineKeyedOwnPropertyInLiteral", "JSStoreInArrayLiteral", "JSDeleteProperty", // JSSetPrototypeProperties..JSDeleteProperty
+  "JSHasProperty", "JSGetSuperConstructor", "JSFindNonDefaultConstructorOrConstruct", "JSHasContextExtension", "JSLoadContextNoCell", "JSLoadContext", // JSHasProperty..JSLoadContext
+  "JSStoreContextNoCell", "JSStoreContext", "JSCreateFunctionContext", "JSCreateCatchContext", "JSCreateWithContext", "JSCreateBlockContext", // JSStoreContextNoCell..JSCreateBlockContext
+  "JSCall", "JSCallForwardVarargs", "JSCallWithArrayLike", "JSCallWithSpread", "JSWasmCall", "JSConstructForwardVarargs", // JSCall..JSConstructForwardVarargs
+  "JSConstructForwardAllArgs", "JSConstruct", "JSConstructWithArrayLike", "JSConstructWithSpread", "JSAsyncFunctionAwait", "JSAsyncFunctionEnter", // JSConstructForwardAllArgs..JSAsyncFunctionEnter
+  "JSAsyncFunctionReject", "JSAsyncFunctionResolve", "JSCallRuntime", "JSDetachContextCell", "JSForInEnumerate", "JSForInNext", // JSAsyncFunctionReject..JSForInNext
+  "JSForInPrepare", "JSGetIterator", "JSForOfNext", "JSLoadMessage", "JSStoreMessage", "JSLoadModule", // JSForInPrepare..JSLoadModule
+  "JSStoreModule", "JSGetImportMeta", "JSGeneratorStore", "JSGeneratorRestoreContinuation", "JSGeneratorRestoreContextNoCell", "JSGeneratorRestoreRegister", // JSStoreModule..JSGeneratorRestoreRegister
+  "JSGeneratorRestoreInputOrDebugPos", "JSFulfillPromise", "JSPerformPromiseThen", "JSPromiseResolve", "JSRejectPromise", "JSResolvePromise", // JSGeneratorRestoreInputOrDebugPos..JSResolvePromise
+  "JSStackCheck", "JSObjectIsArray", "JSRegExpTest", "JSDebugger", // JSStackCheck..JSDebugger
+];
+
+impl IrOpcode {
+  /// 展开条目总数 (kMnemonics 有效槽数)
+  pub const COUNT: usize = 1036;
+  /// 原版 kLast = 展开计数 - 1
+  pub const LAST: Self = Self::JSDebugger;
+  /// 原版 kLast 的裸值
+  pub const LAST_U16: u16 = 1035;
+  /// 未知 opcode 的助记符 (kMnemonics 尾槽)
+  pub const UNKNOWN: &'static str = "UnknownOpcode";
+
+  /// 原版 IrOpcode::Mnemonic — 本体的取表式
+  /// v8: src/compiler/opcodes.cc:28
+  #[must_use]
+  pub const fn mnemonic(self) -> &'static str {
+    MNEMONICS[self as usize]
+  }
+
+  /// 原版 IrOpcode::Mnemonic 的裸值形态 — n = min(value, 表长-1) 钳制
+  /// (value 越界 → 尾槽 "UnknownOpcode"; DCHECK 输入域在原版为 debug 断言)
+  /// v8: src/compiler/opcodes.cc:28
+  #[must_use]
+  pub const fn mnemonic_of(value: u16) -> &'static str {
+    if value as usize <= Self::LAST_U16 as usize {
+      MNEMONICS[value as usize]
+    } else {
+      Self::UNKNOWN
+    }
+  }
+}
+
+impl core::fmt::Display for IrOpcode {
+  fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    f.write_str(self.mnemonic())
+  }
+}
+
+// —— 生成不变式断言 (数值面) ——
+const _: () = {
+  assert!(IrOpcode::COUNT == 1036);
+  assert!(MNEMONICS.len() == 1036);
+  assert!(IrOpcode::LAST_U16 == 1035);
+  assert!(IrOpcode::Start as u16 == 0);
+  assert!(IrOpcode::End as u16 == 21);
+  assert!(IrOpcode::StaticAssert as u16 == 68);
+  assert!(IrOpcode::Word32Clz as u16 == 391);
+  assert!(IrOpcode::TraceInstruction as u16 == 624);
+  assert!(IrOpcode::JSEqual as u16 == 912);
+  assert!(IrOpcode::JSDebugger as u16 == 1035);
+  assert!(IrOpcode::LAST as u16 == 1035);
+};
+
+// —— 字符串面对数 (str 相等非 const, 挂接后随 crate 测试跑; 暂以标准 #[test] 占位,
+//    挂接时由 Developer 改写为仓库规范测试样式) ——
+#[cfg(test)]
+mod generated_checks {
+  use super::IrOpcode;
+
+  #[test]
+  fn mnemonic_table_strings() {
+    assert_eq!(IrOpcode::Start.mnemonic(), "Start");
+    assert_eq!(IrOpcode::JSDebugger.mnemonic(), "JSDebugger");
+    assert_eq!(IrOpcode::mnemonic_of(1035), "JSDebugger");
+    assert_eq!(IrOpcode::mnemonic_of(1036), "UnknownOpcode");
+    assert_eq!(IrOpcode::mnemonic_of(u16::MAX), "UnknownOpcode");
+  }
+}

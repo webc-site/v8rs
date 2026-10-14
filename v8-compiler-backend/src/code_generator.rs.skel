@@ -1,0 +1,62 @@
+// 由 tool/src/compiler/backend/code-generator.js 从 v8/src/compiler/backend/code-generator.h + code-generator.cc + code-generator-impl.h 生成; 修订就地改, 复跑覆盖
+// 代码生成器主体: AssembleCode 主循环/safepoint 表/OOL 链/操作数转换器
+
+//! 台账: CodeGenerator 实现 GapResolver::Assembler (架构镜像代码生成器的公共底座);
+//!   AssembleCode = 逐块 AssembleBlock → AssembleInstruction (gap 消解 +
+//!   AssembleArchInstruction 架构分发 + 二分开关 + AssembleArchJump) +
+//!   safepoints()->Emit; 后台编译段 PrepareCodeOnBackground; FinalizeCode;
+//!   BranchInfo (条件/双 label/hinted/fallthru); Turbolizer 偏移 7+3 槽;
+//!   PushTypeFlag 4 (immediate 1/register 2/stackslot 4/scalar 组合);
+//!   MoveType::Type 6 (推演 InferMove/InferSwap); impl.h = 转换器
+//!   (ToConstant/ToImmediate/ToRegister...) + DeoptimizationExit + OOL 单链。
+
+/// v8: CodeGenerator::CodeGenResult — kSuccess/kTooManyDeoptimizationBailouts
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum CodeGenResult { Success = 0, TooManyDeoptimizationBailouts = 1 }
+
+/// v8: CodeGenerator::PushTypeFlag — push 候选类型位标志
+pub const IMMEDIATE_PUSH: u8 = 0x1;
+pub const REGISTER_PUSH: u8 = 0x2;
+pub const STACK_SLOT_PUSH: u8 = 0x4;
+/// v8: kScalarPush = kRegisterPush | kStackSlotPush
+pub const SCALAR_PUSH: u8 = REGISTER_PUSH | STACK_SLOT_PUSH;
+
+/// v8: CodeGenerator::MoveType::Type — 移动/交换类型推演 (实测 6)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum MoveType {
+  /// kRegisterToRegister
+  REgister_to_register,
+  /// kRegisterToStack
+  REgister_to_stack,
+  /// kStackToRegister
+  STack_to_register,
+  /// kStackToStack
+  STack_to_stack,
+  /// kConstantToRegister
+  COnstant_to_register,
+  /// kConstantToStack
+  COnstant_to_stack,
+}
+
+/// v8: CodeGenerator::AssembleCode — 主循环 (可后台线程)
+// pub fn assemble_code(&mut self) -> CodeGenResult
+/// v8: CodeGenerator::AssembleInstruction — 单指令 (gap + arch 分发)
+// fn assemble_instruction(...) -> CodeGenResult
+/// v8: CodeGenerator::RecordSafepoint / RecordSafepointWithoutTaggedSlots
+// fn record_safepoint(&mut self, references: &ReferenceMap, pc_offset: i32)
+/// v8: CodeGenerator::ShouldApplyOffsetToStackCheck / GetStackCheckOffset
+// fn should_apply_offset_to_stack_check(&self, instr, offset: &mut u32) -> bool
+/// v8: InstructionOperandConverter (impl.h) — 操作数→机器值转换族
+// struct InstructionOperandConverter (ToRegister/ToConstant/ToImmediate/...)
+/// v8: OutOfLineCode (impl.h) — 越线代码单链 (next_) + DeoptimizationExit
+// struct OutOfLineCode + DeoptimizationExit
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(SCALAR_PUSH == REGISTER_PUSH | STACK_SLOT_PUSH);
+  assert!(BINARY_SEARCH_SWITCH_MINIMAL_CASES == 4);
+};
+/// v8: kBinarySearchSwitchMinimalCases
+pub const BINARY_SEARCH_SWITCH_MINIMAL_CASES: i32 = 4;

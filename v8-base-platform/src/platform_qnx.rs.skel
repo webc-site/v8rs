@@ -1,0 +1,22 @@
+// 由 tool/src/base/platform/platform-qnx.js 从 v8/src/base/platform/platform-qnx.cc 生成; 修订就地改, 复跑覆盖
+// QNX 平台面 (非目标; /proc/<pid>/as + procfs 枚举)
+
+/// 无线程哨兵 (原版 static const pthread_t kNoThread = (pthread_t) 0)
+/// v8: src/base/platform/platform-qnx.cc kNoThread
+/// 语义: QNX 的 tid 与 pid 共享名字空间, pid 0 保留 (man 2 kill),
+/// 故 0 永不是合法线程号 (本文件内仅作哨兵登记, 不直接比对)
+pub const NO_THREAD: libc::pthread_t = 0;
+
+// —— OS 6 方法登记 ——
+/// v8: src/base/platform/platform-qnx.cc OS::ArmUsingHardFloat
+/// v8: src/base/platform/platform-qnx.cc OS::CreateTimezoneCache — PosixDefaultTimezoneCache
+/// v8: src/base/platform/platform-qnx.cc OS::GetSharedLibraryAddresses
+/// open("/proc/<pid>/as") + devctl(DCMD_PROC_MAPDEBUG) 逐条 procfs_debuginfo
+/// v8: src/base/platform/platform-qnx.cc OS::SignalCodeMovingGC — 空体
+/// v8: src/base/platform/platform-qnx.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-qnx.cc OS::GetFirstFreeMemoryRangeWithin — 恒 nullopt
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(NO_THREAD, 0);
+};

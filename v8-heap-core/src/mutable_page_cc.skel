@@ -1,0 +1,224 @@
+// 由 tool/src/heap/mutable-page.cc.js 从 v8/src/heap/mutable-page.{cc,inl.h} + mutable-page.h (枚举锚) 生成; 修订就地改, 复跑覆盖
+// 记忆集释放序/页旗标规则面; 枚举面在 mutable_page_enums.rs
+
+//! MutablePage 的机械规则面。
+//!
+//! - 释放序: 可写块释放时逐 RememberedSetType 释放 SlotSet (8) 与 TypedSlotSet (3)
+//! - 旗标计算: OldGeneration/YoungGenerationPageFlags 按 MarkingMode × Space 分支
+//! - 快字段 (heap_/slot_set_[0]) 同缓存行断言 (cc:45-54, 目标 x64 干扰行 64)
+
+/// 记忆集种类总数 (NUMBER_OF_REMEMBERED_SET_TYPES)
+pub const K_NUMBER_OF_REMEMBERED_SET_TYPES: usize = 8;
+
+/// 可写块释放时 SlotSet 的释放序 — 值 = RememberedSetType 判别值
+/// v8: src/heap/mutable-page.cc:189-196 ReleaseAllocatedMemoryNeededForWritableChunk
+pub const SLOT_SET_RELEASE_ORDER: [u8; 8] = [0, 1, 2, 4, 3, 5, 6, 7];
+
+/// 可写块释放时 TypedSlotSet 的释放序 — 值 = RememberedSetType 判别值
+/// v8: src/heap/mutable-page.cc:197-199
+pub const TYPED_SLOT_SET_RELEASE_ORDER: [u8; 3] = [0, 2, 3];
+
+// —— 页旗标计算规则面 (token 在位由脚本核对; 位值属 memory-chunk 族, 不在此落值) ——
+// OldGenerationPageFlags (cc:58-88), MarkingMode × AllocationSpace 分支:
+//   kMajorMarking            → TO_HERE | FROM_HERE | INCREMENTAL_MARKING (+ STICKY_IS_MAJOR_GC)
+//   writable shared 空间      → TO_HERE (OLD_TO_SHARED 追踪)
+//   其余                     → FROM_HERE; kMinorMarking 再加 INCREMENTAL_MARKING
+//   sticky 构建非 OLD_SPACE  → STICKY_MARK_BIT_CONTAINS_ONLY_OLD (V8_ENABLE_STICKY_MARK_BITS_BOOL)
+// YoungGenerationPageFlags (cc:91-105):
+//   基线 TO_HERE; marking != kNoMarking → + FROM_HERE + INCREMENTAL_MARKING
+//   (+ kMajorMarking 再加 STICKY_IS_MAJOR_GC)
+// ComputeInitialFlags (cc:107-140):
+//   新生页 → Young 旗标; 老生页 → Old 旗标, black_allocation 且非大对象页时
+//   摘 TO_HERE (可写共享页除外) 并置 BLACK_ALLOCATED; 可写共享页恒置 IN_WRITABLE_SHARED_SPACE
+// SetOldGenerationPageFlags (cc:142-163) / SetYoungGenerationPageFlags (cc:165-176):
+//   先置 set 面再清 clear 面 (SetFlagsNonExecutable + ClearFlagsNonExecutable)
+
+// —— 方法签名骨架 (语义实现由 Developer 就地修订) ——
+/// 原版签名: MutablePage::MutablePage(Heap* heap, BaseSpace* space, size_t chunk_size, Address area_start, Address area_end, VirtualMemory reservation, PageSize page_size, Executability executability)
+/// v8: src/heap/mutable-page.cc:25
+pub fn mutable_page_mutable_page() {
+  todo!("就地修订")
+}
+/// 原版签名: MemoryChunk::MainThreadFlags MutablePage::OldGenerationPageFlags( MarkingMode marking_mode, AllocationSpace space)
+/// v8: src/heap/mutable-page.cc:58
+pub fn mutable_page_old_generation_page_flags() {
+  todo!("就地修订")
+}
+/// 原版签名: MemoryChunk::MainThreadFlags MutablePage::YoungGenerationPageFlags( MarkingMode marking_mode)
+/// v8: src/heap/mutable-page.cc:91
+pub fn mutable_page_young_generation_page_flags() {
+  todo!("就地修订")
+}
+/// 原版签名: MemoryChunk::MainThreadFlags MutablePage::ComputeInitialFlags( Executability executable) const
+/// v8: src/heap/mutable-page.cc:107
+pub fn mutable_page_compute_initial_flags() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetOldGenerationPageFlags(MarkingMode marking_mode)
+/// v8: src/heap/mutable-page.cc:142
+pub fn mutable_page_set_old_generation_page_flags() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetYoungGenerationPageFlags(MarkingMode marking_mode)
+/// v8: src/heap/mutable-page.cc:165
+pub fn mutable_page_set_young_generation_page_flags() {
+  todo!("就地修订")
+}
+/// 原版签名: size_t MutablePage::CommittedPhysicalMemory() const
+/// v8: src/heap/mutable-page.cc:178
+pub fn mutable_page_committed_physical_memory() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ReleaseAllocatedMemoryNeededForWritableChunk()
+/// v8: src/heap/mutable-page.cc:183
+pub fn mutable_page_release_allocated_memory_needed_for_writable_chunk() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ReleaseAllAllocatedMemory()
+/// v8: src/heap/mutable-page.cc:207
+pub fn mutable_page_release_all_allocated_memory() {
+  todo!("就地修订")
+}
+/// 原版签名: SlotSet* MutablePage::AllocateSlotSet(RememberedSetType type)
+/// v8: src/heap/mutable-page.cc:211
+pub fn mutable_page_allocate_slot_set() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ReleaseSlotSet(RememberedSetType type)
+/// v8: src/heap/mutable-page.cc:223
+pub fn mutable_page_release_slot_set() {
+  todo!("就地修订")
+}
+/// 原版签名: TypedSlotSet* MutablePage::AllocateTypedSlotSet(RememberedSetType type)
+/// v8: src/heap/mutable-page.cc:231
+pub fn mutable_page_allocate_typed_slot_set() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ReleaseTypedSlotSet(RememberedSetType type)
+/// v8: src/heap/mutable-page.cc:243
+pub fn mutable_page_release_typed_slot_set() {
+  todo!("就地修订")
+}
+/// 原版签名: bool MutablePage::ContainsAnySlots() const
+/// v8: src/heap/mutable-page.cc:251
+pub fn mutable_page_contains_any_slots() {
+  todo!("就地修订")
+}
+/// 原版签名: int MutablePage::ComputeFreeListsLength()
+/// v8: src/heap/mutable-page.cc:260
+pub fn mutable_page_compute_free_lists_length() {
+  todo!("就地修订")
+}
+/// 原版签名: bool MutablePage::IsLivenessClear() const
+/// v8: src/heap/mutable-page.cc:269
+pub fn mutable_page_is_liveness_clear() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetFlagMaybeExecutable(MemoryChunk::Flag flag)
+/// v8: src/heap/mutable-page.cc:274
+pub fn mutable_page_set_flag_maybe_executable() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ClearFlagMaybeExecutable(MemoryChunk::Flag flag)
+/// v8: src/heap/mutable-page.cc:283
+pub fn mutable_page_clear_flag_maybe_executable() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::MarkNeverEvacuate() { set_never_evacuate(); } } // namespace v8::internal 
+/// v8: src/heap/mutable-page.cc:292
+pub fn mutable_page_mark_never_evacuate() {
+  todo!("就地修订")
+}
+/// 原版签名: MutablePage* MutablePage::FromAddress(Address a)
+/// v8: src/heap/mutable-page.inl.h:16
+pub fn mutable_page_from_address() {
+  todo!("就地修订")
+}
+/// 原版签名: MutablePage* MutablePage::FromAddress(const Isolate* i, Address a)
+/// v8: src/heap/mutable-page.inl.h:21
+pub fn mutable_page_from_address_v2() {
+  todo!("就地修订")
+}
+/// 原版签名: MutablePage* MutablePage::FromHeapObject(const Isolate* i, Tagged<HeapObject> o)
+/// v8: src/heap/mutable-page.inl.h:26
+pub fn mutable_page_from_heap_object() {
+  todo!("就地修订")
+}
+/// 原版签名: template <AccessMode mode> void MutablePage::ClearLiveness()
+/// v8: src/heap/mutable-page.inl.h:32
+pub fn mutable_page_clear_liveness() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetMajorGCInProgress()
+/// v8: src/heap/mutable-page.inl.h:37
+pub fn mutable_page_set_major_gcin_progress() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ResetMajorGCInProgress()
+/// v8: src/heap/mutable-page.inl.h:46
+pub fn mutable_page_reset_major_gcin_progress() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ClearFlagsNonExecutable(MemoryChunk::MainThreadFlags flags)
+/// v8: src/heap/mutable-page.inl.h:55
+pub fn mutable_page_clear_flags_non_executable() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetFlagsNonExecutable(MemoryChunk::MainThreadFlags flags, MemoryChunk::MainThreadFlags mask)
+/// v8: src/heap/mutable-page.inl.h:59
+pub fn mutable_page_set_flags_non_executable() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ClearFlagNonExecutable(MemoryChunk::Flag flag)
+/// v8: src/heap/mutable-page.inl.h:64
+pub fn mutable_page_clear_flag_non_executable() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetFlagNonExecutable(MemoryChunk::Flag flag)
+/// v8: src/heap/mutable-page.inl.h:68
+pub fn mutable_page_set_flag_non_executable() {
+  todo!("就地修订")
+}
+/// 原版签名: V8_INLINE void MutablePage::RawSetTrustedAndUntrustedFlags( MemoryChunk::MainThreadFlags new_flags)
+/// v8: src/heap/mutable-page.inl.h:72
+pub fn mutable_page_raw_set_trusted_and_untrusted_flags() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetFlagsUnlocked(MemoryChunk::MainThreadFlags flags, MemoryChunk::MainThreadFlags mask)
+/// v8: src/heap/mutable-page.inl.h:86
+pub fn mutable_page_set_flags_unlocked() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ClearFlagsUnlocked(MemoryChunk::MainThreadFlags flags)
+/// v8: src/heap/mutable-page.inl.h:92
+pub fn mutable_page_clear_flags_unlocked() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::SetFlagUnlocked(MemoryChunk::Flag flag)
+/// v8: src/heap/mutable-page.inl.h:96
+pub fn mutable_page_set_flag_unlocked() {
+  todo!("就地修订")
+}
+/// 原版签名: void MutablePage::ClearFlagUnlocked(MemoryChunk::Flag flag)
+/// v8: src/heap/mutable-page.inl.h:100
+pub fn mutable_page_clear_flag_unlocked() {
+  todo!("就地修订")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(K_NUMBER_OF_REMEMBERED_SET_TYPES == 8);
+  assert!(SLOT_SET_RELEASE_ORDER.len() == 8);
+  assert!(SLOT_SET_RELEASE_ORDER[0] == 0);
+  assert!(SLOT_SET_RELEASE_ORDER[1] == 1);
+  assert!(SLOT_SET_RELEASE_ORDER[2] == 2);
+  assert!(SLOT_SET_RELEASE_ORDER[3] == 4);
+  assert!(SLOT_SET_RELEASE_ORDER[4] == 3);
+  assert!(SLOT_SET_RELEASE_ORDER[5] == 5);
+  assert!(SLOT_SET_RELEASE_ORDER[6] == 6);
+  assert!(SLOT_SET_RELEASE_ORDER[7] == 7);
+  assert!(TYPED_SLOT_SET_RELEASE_ORDER.len() == 3);
+  assert!(TYPED_SLOT_SET_RELEASE_ORDER[0] == 0);
+  assert!(TYPED_SLOT_SET_RELEASE_ORDER[1] == 2);
+  assert!(TYPED_SLOT_SET_RELEASE_ORDER[2] == 3);
+};

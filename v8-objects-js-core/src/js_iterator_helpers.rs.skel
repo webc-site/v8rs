@@ -1,0 +1,43 @@
+// 由 tool/src/objects/js-iterator-helpers.h.js 从 v8/src/objects/js-iterator-helpers.{h,-inl.h,tq} 生成; 修订就地改, 复跑覆盖
+// JSIteratorHelper 族枚举/类层级/布局骨架
+
+//! 差集骨架: Iterator Helpers (map/filter/take/drop/flatMap/concat/zip/zipKeyed 直接迭代器实现)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。next()/return() builtin 多路分发语义面留 Developer。
+
+/// v8: src/objects/js-iterator-helpers.h JSIteratorHelperState (生成器状态手工跟踪)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JSIteratorHelperState { SuspendedStart = 0, SuspendedYield = 1, Executing = 2, Completed = 3 }
+
+/// v8: src/objects/js-iterator-helpers.h JSIteratorZipHelperMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum JSIteratorZipHelperMode { Shortest = 0, Longest = 1, Strict = 2 }
+
+// ── 64 位布局 (kTaggedSize=8; IteratorRecord = object_+next_ 2 tagged) ──
+/// v8: src/objects/js-iterator-helpers.h JSIteratorHelper::kHeaderSize = 32
+/// v8: src/objects/js-iterator-helpers.h JSIteratorHelperSimple::kHeaderSize = 48
+/// v8: src/objects/js-iterator-helpers.h JSIteratorMapHelper::kHeaderSize = 64
+/// v8: src/objects/js-iterator-helpers.h JSIteratorFilterHelper::kHeaderSize = 64
+/// v8: src/objects/js-iterator-helpers.h JSIteratorTakeHelper::kHeaderSize = 56
+/// v8: src/objects/js-iterator-helpers.h JSIteratorDropHelper::kHeaderSize = 56
+/// v8: src/objects/js-iterator-helpers.h JSIteratorFlatMapHelper::kHeaderSize = 80
+/// v8: src/objects/js-iterator-helpers.h JSIteratorConcatHelper::kHeaderSize = 64
+/// v8: src/objects/js-iterator-helpers.h JSIteratorZipHelper::kHeaderSize = 56
+/// v8: src/objects/js-iterator-helpers.h JSIteratorZipKeyedHelper::kHeaderSize = 64
+pub const K_HEADERS: &[(&str, usize)] = &[
+    ("JSIteratorHelper", 32),
+    ("JSIteratorHelperSimple", 48),
+    ("JSIteratorMapHelper", 64),
+    ("JSIteratorFilterHelper", 64),
+    ("JSIteratorTakeHelper", 56),
+    ("JSIteratorDropHelper", 56),
+    ("JSIteratorFlatMapHelper", 80),
+    ("JSIteratorConcatHelper", 64),
+    ("JSIteratorZipHelper", 56),
+    ("JSIteratorZipKeyedHelper", 64),
+];
+
+/// v8: src/objects/js-iterator-helpers.h JSIteratorHelperSimple::IteratorRecord (object_, next_)
+pub struct IteratorRecord { /* object_: Tagged<JSReceiver>, next_: Tagged<JSAny> */ }
+
+/// v8: src/objects/js-iterator-helpers-inl.h state accessor (Smi::From31BitPattern 编解码)
+/// v8: src/objects/js-iterator-helpers.h JSIteratorHelperStateToString / ZipHelperModeToString (调试)

@@ -1,0 +1,906 @@
+{
+  "crate": "v8-strings",
+  "generated": "2026-10-11T07:54:07.461Z",
+  "results": [
+    {
+      "op": "transcode_encode",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 1622.7050646397474,
+      "ns_median": 1623.594375857339,
+      "ci_low": 1611.9274428883284,
+      "ci_high": 1634.8217805676188
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 72.08862571104869,
+      "ns_median": 71.94478529667535,
+      "ci_low": 71.92622267658393,
+      "ci_high": 72.29564229317461
+    },
+    {
+      "op": "copy_chars",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 626.7901109144905,
+      "ns_median": 624.5954584946237,
+      "ci_low": 624.1053568213006,
+      "ci_high": 629.8860951434714
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 942.2238611295145,
+      "ns_median": 940.5565303002824,
+      "ci_low": 939.9251268493912,
+      "ci_high": 946.1420699232423
+    },
+    {
+      "op": "case_lower",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 83.10936282638605,
+      "ns_median": 83.37664170281059,
+      "ci_low": 80.40340479167348,
+      "ci_high": 85.71316849039871
+    },
+    {
+      "op": "find_byte",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 4.645083880312319,
+      "ns_median": 4.639768016564097,
+      "ci_low": 4.61114150405213,
+      "ci_high": 4.681896487156668
+    },
+    {
+      "op": "find_substring",
+      "impl": "v8rs",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 63.493542516135655,
+      "ns_median": 63.548023436114775,
+      "ci_low": 63.27247979202609,
+      "ci_high": 63.71655331620504
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 2231.7439891195813,
+      "ns_median": 2233.7452596150533,
+      "ci_low": 2218.622662844748,
+      "ci_high": 2248.3936669765517
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 5526.277158657663,
+      "ns_median": 5502.350192173306,
+      "ci_low": 5488.385505281794,
+      "ci_high": 5570.146831636218
+    },
+    {
+      "op": "copy_chars",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 631.3626103236272,
+      "ns_median": 631.8740914673617,
+      "ci_low": 627.2072549864175,
+      "ci_high": 635.6752045817091
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 4684.099754661002,
+      "ns_median": 4681.111415349016,
+      "ci_low": 4677.886931604626,
+      "ci_high": 4691.597267764554
+    },
+    {
+      "op": "case_lower",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 0.7050102963490626,
+      "ns_median": 0.7023208340741147,
+      "ci_low": 0.7024911191598455,
+      "ci_high": 0.7075965535071692
+    },
+    {
+      "op": "find_byte",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 3.555943018839166,
+      "ns_median": 3.557166896453685,
+      "ci_low": 3.55269996836642,
+      "ci_high": 3.5591385499035804
+    },
+    {
+      "op": "find_substring",
+      "impl": "v8rs",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 577.6061354885535,
+      "ns_median": 575.7873207827436,
+      "ci_low": 574.9544579070099,
+      "ci_high": 581.0940581291287
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 2969.0157567841406,
+      "ns_median": 2964.6567518846277,
+      "ci_low": 2962.34350708784,
+      "ci_high": 2978.0965587074948
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 9862.932131209194,
+      "ns_median": 9858.202206877877,
+      "ci_low": 9829.57749571261,
+      "ci_high": 9896.70902331739
+    },
+    {
+      "op": "copy_chars",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 623.0204456024901,
+      "ns_median": 622.8476317324686,
+      "ci_low": 622.43195815947,
+      "ci_high": 623.8018251809174
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 7396.288966234688,
+      "ns_median": 7398.830281726412,
+      "ci_low": 7389.064490282928,
+      "ci_high": 7402.476584546538
+    },
+    {
+      "op": "case_lower",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 0.7038673273678413,
+      "ns_median": 0.7017718004698197,
+      "ci_low": 0.7012583309370356,
+      "ci_high": 0.7074874436558657
+    },
+    {
+      "op": "find_byte",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 3.5848109707944262,
+      "ns_median": 3.5776746939405184,
+      "ci_low": 3.5587427745600992,
+      "ci_high": 3.6156321963301536
+    },
+    {
+      "op": "find_substring",
+      "impl": "v8rs",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 648.3823446763776,
+      "ns_median": 641.6589958034642,
+      "ci_low": 635.6158654017619,
+      "ci_high": 662.2195717255642
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 1233,
+      "ns_mean": 3215.8031252358705,
+      "ns_median": 3219.9167017831796,
+      "ci_low": 3206.858359567744,
+      "ci_high": 3223.5420352280235
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 8116.39662909061,
+      "ns_median": 8063.708425570364,
+      "ci_low": 8020.385111359855,
+      "ci_high": 8223.270713343176
+    },
+    {
+      "op": "copy_chars",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 1233,
+      "ns_mean": 822.6819281884569,
+      "ns_median": 770.8088489805941,
+      "ci_low": 771.3392838023515,
+      "ci_high": 906.7563484982253
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 1024,
+      "ns_mean": 8252.629173582103,
+      "ns_median": 8243.72701754386,
+      "ci_low": 8228.052279495034,
+      "ci_high": 8284.883093567252
+    },
+    {
+      "op": "case_lower",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 0.7091819406732853,
+      "ns_median": 0.7051976764082888,
+      "ci_low": 0.7035483298859638,
+      "ci_high": 0.71598475730692
+    },
+    {
+      "op": "find_byte",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 4.799246054445079,
+      "ns_median": 4.801257467102259,
+      "ci_low": 4.7586500510749445,
+      "ci_high": 4.841017175952152
+    },
+    {
+      "op": "find_substring",
+      "impl": "v8rs",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 78.51393387538045,
+      "ns_median": 77.92544996875142,
+      "ci_low": 78.03156944337604,
+      "ci_high": 79.06150984434132
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 39,
+      "ns_mean": 104.9642380190952,
+      "ns_median": 104.9492167430241,
+      "ci_low": 104.83432100610634,
+      "ci_high": 105.12047657430472
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 234.9296102433003,
+      "ns_median": 235.02460753342456,
+      "ci_low": 234.4350285955698,
+      "ci_high": 235.4173846012549
+    },
+    {
+      "op": "copy_chars",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 39,
+      "ns_mean": 25.910213795504195,
+      "ns_median": 25.91941684779473,
+      "ci_low": 25.853189632491535,
+      "ci_high": 25.96914364737969
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 32,
+      "ns_mean": 246.81923159597463,
+      "ns_median": 247.61746041324824,
+      "ci_low": 245.36775247112874,
+      "ci_high": 248.13912127150851
+    },
+    {
+      "op": "case_lower",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 0.7343422612397059,
+      "ns_median": 0.7303443228261608,
+      "ci_low": 0.7288995399108458,
+      "ci_high": 0.7416627497429757
+    },
+    {
+      "op": "find_byte",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 3.7273985195934713,
+      "ns_median": 3.733868999266365,
+      "ci_low": 3.706057387579966,
+      "ci_high": 3.7423179795733463
+    },
+    {
+      "op": "find_substring",
+      "impl": "v8rs",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 9.386296871519523,
+      "ns_median": 9.423872275900475,
+      "ci_low": 9.337279428931213,
+      "ci_high": 9.432191244953312
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 1303.4339025831882,
+      "ns_median": 1285.4760154314306,
+      "ci_low": 1281.5203908985745,
+      "ci_high": 1335.2254350989874
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 1565.4525033610062,
+      "ns_median": 1558.042622193805,
+      "ci_low": 1550.0997436535001,
+      "ci_high": 1589.9074449772663
+    },
+    {
+      "op": "copy_chars",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 26.326857828540085,
+      "ns_median": 26.31802060524133,
+      "ci_low": 26.208923320693756,
+      "ci_high": 26.478996750777263
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 1107.1205082963943,
+      "ns_median": 1106.6903804319222,
+      "ci_low": 1105.3002076717953,
+      "ci_high": 1109.3638540515371
+    },
+    {
+      "op": "case_lower",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 21.683867201803324,
+      "ns_median": 21.680011331359786,
+      "ci_low": 21.489065128841393,
+      "ci_high": 21.918131428641573
+    },
+    {
+      "op": "find_byte",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 14.79884612916075,
+      "ns_median": 14.893659372132586,
+      "ci_low": 14.674078444611592,
+      "ci_high": 14.906592059852088
+    },
+    {
+      "op": "find_substring",
+      "impl": "std",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 936.259761914965,
+      "ns_median": 939.3572942736009,
+      "ci_low": 931.4123304360651,
+      "ci_high": 940.6162672871885
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 1481.3987804803055,
+      "ns_median": 1476.845210127904,
+      "ci_low": 1476.0502217695114,
+      "ci_high": 1488.1756647810798
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 2758.4751173680315,
+      "ns_median": 2752.193072427229,
+      "ci_low": 2751.2639958155823,
+      "ci_high": 2767.242078098567
+    },
+    {
+      "op": "copy_chars",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 26.23145614393614,
+      "ns_median": 26.31346801962889,
+      "ci_low": 26.08737623228317,
+      "ci_high": 26.365688392220296
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 7026.868133674181,
+      "ns_median": 7009.875293483089,
+      "ci_low": 6951.794707378098,
+      "ci_high": 7107.3714782289935
+    },
+    {
+      "op": "case_lower",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 39.31339464662979,
+      "ns_median": 39.23670435615345,
+      "ci_low": 39.21996348012885,
+      "ci_high": 39.434915279317224
+    },
+    {
+      "op": "find_byte",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 2.5791057340285937,
+      "ns_median": 2.514246011705659,
+      "ci_low": 2.513001499798448,
+      "ci_high": 2.648764162139214
+    },
+    {
+      "op": "find_substring",
+      "impl": "std",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 1738.252529535698,
+      "ns_median": 1739.633699928893,
+      "ci_low": 1735.2215458632907,
+      "ci_high": 1740.8871205933476
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 1738.852847273102,
+      "ns_median": 1737.6078190371197,
+      "ci_low": 1733.9088482800494,
+      "ci_high": 1744.0681553201575
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 3537.531808483907,
+      "ns_median": 3526.7997456297016,
+      "ci_low": 3524.501773478997,
+      "ci_high": 3552.199220842128
+    },
+    {
+      "op": "copy_chars",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 25.983822657823634,
+      "ns_median": 25.92485579352352,
+      "ci_low": 25.884964328900885,
+      "ci_high": 26.10784206680065
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 3241.357297908924,
+      "ns_median": 3239.6080819420704,
+      "ci_low": 3230.5461522910487,
+      "ci_high": 3253.1091532785053
+    },
+    {
+      "op": "case_lower",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 58.34217046095895,
+      "ns_median": 57.98246650049484,
+      "ci_low": 57.929658723541344,
+      "ci_high": 58.761346873432814
+    },
+    {
+      "op": "find_byte",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 4.999760240256671,
+      "ns_median": 4.995148105708031,
+      "ci_low": 4.9853207359494025,
+      "ci_high": 5.0207161553080555
+    },
+    {
+      "op": "find_substring",
+      "impl": "std",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 2552.081277412427,
+      "ns_median": 2547.712231798082,
+      "ci_low": 2545.9386470877316,
+      "ci_high": 2558.9420112619227
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 1233,
+      "ns_mean": 2434.795990594953,
+      "ns_median": 2423.7578389606897,
+      "ci_low": 2418.208413680815,
+      "ci_high": 2452.443000262791
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 3572.933106905131,
+      "ns_median": 3558.0972554769287,
+      "ci_low": 3527.4135197751066,
+      "ci_high": 3641.248806465684
+    },
+    {
+      "op": "copy_chars",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 1233,
+      "ns_mean": 31.03378487064662,
+      "ns_median": 30.90117826878636,
+      "ci_low": 30.896340822653897,
+      "ci_high": 31.191188549804174
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 1024,
+      "ns_mean": 6645.4218720410845,
+      "ns_median": 6628.90127536991,
+      "ci_low": 6624.186784872987,
+      "ci_high": 6672.820588222178
+    },
+    {
+      "op": "case_lower",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 48.04021453394059,
+      "ns_median": 47.73501868619169,
+      "ci_low": 47.721831838379536,
+      "ci_high": 48.40622270370358
+    },
+    {
+      "op": "find_byte",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 16.26671612812032,
+      "ns_median": 16.27134574066737,
+      "ci_low": 16.24917328731428,
+      "ci_high": 16.284310207796537
+    },
+    {
+      "op": "find_substring",
+      "impl": "std",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 2077.7174357418435,
+      "ns_median": 2074.6830235475227,
+      "ci_low": 2072.538435866735,
+      "ci_high": 2083.9334822545134
+    },
+    {
+      "op": "transcode_encode",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 39,
+      "ns_mean": 131.97785366480932,
+      "ns_median": 131.7488601424686,
+      "ci_low": 131.69751301774582,
+      "ci_high": 132.33025578266765
+    },
+    {
+      "op": "transcode_decode",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 116.02400190697105,
+      "ns_median": 115.78106654139728,
+      "ci_low": 115.22776910800414,
+      "ci_high": 116.85436368869739
+    },
+    {
+      "op": "copy_chars",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 39,
+      "ns_mean": 2.1555283918468,
+      "ns_median": 2.1022486437751757,
+      "ci_low": 2.101786576542808,
+      "ci_high": 2.215959576975272
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 32,
+      "ns_mean": 208.69994833568944,
+      "ns_median": 201.96356611310983,
+      "ci_low": 201.68999978717943,
+      "ci_high": 218.38821173978596
+    },
+    {
+      "op": "case_lower",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 3.7369065308164076,
+      "ns_median": 3.730871600163777,
+      "ci_low": 3.7280658695356808,
+      "ci_high": 3.751729195047962
+    },
+    {
+      "op": "find_byte",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 5.891945433259165,
+      "ns_median": 5.895051503668908,
+      "ci_low": 5.873972315943079,
+      "ci_high": 5.910015293800729
+    },
+    {
+      "op": "find_substring",
+      "impl": "std",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 71.44646553578451,
+      "ns_median": 71.55155185222971,
+      "ci_low": 71.24122639027588,
+      "ci_high": 71.60839462548437
+    },
+    {
+      "op": "find_byte",
+      "impl": "memchr",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 2.5957680842884407,
+      "ns_median": 2.5999769618278163,
+      "ci_low": 2.5854816200729807,
+      "ci_high": 2.6055880576229793
+    },
+    {
+      "op": "find_substring",
+      "impl": "memchr",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 32.494510073505474,
+      "ns_median": 32.49508699201806,
+      "ci_low": 32.47102208626888,
+      "ci_high": 32.51905013640315
+    },
+    {
+      "op": "find_byte",
+      "impl": "memchr",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 1.2916224185365413,
+      "ns_median": 1.2607927168924418,
+      "ci_low": 1.2564330599693498,
+      "ci_high": 1.3549264447492517
+    },
+    {
+      "op": "find_substring",
+      "impl": "memchr",
+      "sample": "latin_1k",
+      "elems": 1920,
+      "ns_mean": 49.88402770548883,
+      "ns_median": 49.77930019935382,
+      "ci_low": 49.739562256331695,
+      "ci_high": 50.0485220836184
+    },
+    {
+      "op": "find_byte",
+      "impl": "memchr",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 1.2235546543668268,
+      "ns_median": 1.2189715871844817,
+      "ci_low": 1.2134226762849352,
+      "ci_high": 1.234919546239856
+    },
+    {
+      "op": "find_substring",
+      "impl": "memchr",
+      "sample": "cjk_1k",
+      "elems": 2816,
+      "ns_mean": 102.14183918620806,
+      "ns_median": 101.3552143151002,
+      "ci_low": 85.23171210508039,
+      "ci_high": 119.78213554165596
+    },
+    {
+      "op": "find_byte",
+      "impl": "memchr",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 3.340574432482562,
+      "ns_median": 3.0393540201452582,
+      "ci_low": 2.966625822283855,
+      "ci_high": 3.7943485584269228
+    },
+    {
+      "op": "find_substring",
+      "impl": "memchr",
+      "sample": "mixed_1k",
+      "elems": 2320,
+      "ns_mean": 59.45861999817164,
+      "ns_median": 59.30636957764889,
+      "ci_low": 59.23586136361603,
+      "ci_high": 59.75661618192277
+    },
+    {
+      "op": "find_byte",
+      "impl": "memchr",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 1.2516292032860907,
+      "ns_median": 1.2513860288486427,
+      "ci_low": 1.2497714052701379,
+      "ci_high": 1.2534955305751783
+    },
+    {
+      "op": "find_substring",
+      "impl": "memchr",
+      "sample": "mixed_32",
+      "elems": 68,
+      "ns_mean": 16.984590435537335,
+      "ns_median": 16.633185976011596,
+      "ci_low": 16.516962120060363,
+      "ci_high": 17.684878034906202
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "unicode-ident",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 1283.5648008972562,
+      "ns_median": 1214.4143080388762,
+      "ci_low": 1148.4240755820556,
+      "ci_high": 1460.6487177590957
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "unicode-ident",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 1595.811408521241,
+      "ns_median": 1436.8141032130202,
+      "ci_low": 1424.9065809944418,
+      "ci_high": 1827.9285215912307
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "unicode-ident",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 1193.9754637540516,
+      "ns_median": 1179.3300214497463,
+      "ci_low": 1165.3693684172083,
+      "ci_high": 1241.1099623799116
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "unicode-ident",
+      "sample": "mixed_1k",
+      "elems": 1024,
+      "ns_mean": 1229.5872289588845,
+      "ns_median": 1225.6617680603752,
+      "ci_low": 1222.2303843027817,
+      "ci_high": 1237.5815345757806
+    },
+    {
+      "op": "scan_identifier",
+      "impl": "unicode-ident",
+      "sample": "mixed_32",
+      "elems": 32,
+      "ns_mean": 40.671003821570025,
+      "ns_median": 40.80764569411048,
+      "ci_low": 40.42887775939751,
+      "ci_high": 40.87278397422504
+    },
+    {
+      "op": "normalize",
+      "impl": "unicode-normalization",
+      "sample": "ascii_1k",
+      "elems": 1024,
+      "ns_mean": 9799.419577878321,
+      "ns_median": 9803.633805031446,
+      "ci_low": 9791.164339430114,
+      "ci_high": 9807.16977051245
+    },
+    {
+      "op": "normalize",
+      "impl": "unicode-normalization",
+      "sample": "latin_1k",
+      "elems": 1024,
+      "ns_mean": 25308.456783574682,
+      "ns_median": 25328.100263599328,
+      "ci_low": 25272.990172537742,
+      "ci_high": 25338.810847981073
+    },
+    {
+      "op": "normalize",
+      "impl": "unicode-normalization",
+      "sample": "cjk_1k",
+      "elems": 1024,
+      "ns_mean": 12018.740650958342,
+      "ns_median": 12024.411435786435,
+      "ci_low": 11996.603197620618,
+      "ci_high": 12040.51809633603
+    },
+    {
+      "op": "normalize",
+      "impl": "unicode-normalization",
+      "sample": "mixed_1k",
+      "elems": 1233,
+      "ns_mean": 18829.4519207968,
+      "ns_median": 18778.838202866595,
+      "ci_low": 18730.083269018745,
+      "ci_high": 18961.0650252227
+    },
+    {
+      "op": "normalize",
+      "impl": "unicode-normalization",
+      "sample": "mixed_32",
+      "elems": 39,
+      "ns_mean": 538.6495798509275,
+      "ns_median": 540.8015848130966,
+      "ci_low": 533.804235738282,
+      "ci_high": 543.3057492756715
+    }
+  ]
+}

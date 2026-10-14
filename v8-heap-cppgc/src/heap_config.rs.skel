@@ -1,0 +1,126 @@
+// 由 tool/src/heap/cppgc-internal/heap-config.js 从 v8/src/heap/cppgc-internal/heap-config.h 生成; 修订就地改, 复跑覆盖
+// GC 配置数据面
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/heap-config.h CollectionType
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum CollectionType {
+    Minor,
+    Major,
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h FreeMemoryHandling
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum FreeMemoryHandling {
+    /// v8: kRetainMemory — 不 discard 不 decommit
+    RetainMemory,
+    /// v8: kReleaseMemory — 尽量归还系统 (discard + decommit pooled pages)
+    ReleaseMemory,
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h MarkingConfig::IsForcedGC
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum IsForcedGc {
+    NotForced,
+    Forced,
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h SweepingConfig::CompactableSpaceHandling
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum CompactableSpaceHandling {
+    Sweep,
+    Ignore,
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h MarkingConfig
+#[derive(Clone, Copy)]
+pub struct MarkingConfig {
+    pub collection_type: CollectionType,
+    pub stack_state: StackState,
+    pub marking_type: MarkingType,
+    pub is_forced_gc: IsForcedGc,
+}
+
+impl MarkingConfig {
+    /// v8: src/heap/cppgc-internal/heap-config.h MarkingConfig::Default
+    pub const fn default_config() -> Self {
+        Self {
+            collection_type: CollectionType::Major,
+            stack_state: StackState::MayContainHeapPointers,
+            marking_type: MarkingType::Incremental,
+            is_forced_gc: IsForcedGc::NotForced,
+        }
+    }
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h SweepingConfig
+#[derive(Clone, Copy)]
+pub struct SweepingConfig {
+    pub sweeping_type: SweepingType,
+    pub compactable_space_handling: CompactableSpaceHandling,
+    pub free_memory_handling: FreeMemoryHandling,
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h GCConfig
+#[derive(Clone, Copy)]
+pub struct GcConfig {
+    pub collection_type: CollectionType,
+    pub stack_state: StackState,
+    pub marking_type: MarkingType,
+    pub sweeping_type: SweepingType,
+    pub free_memory_handling: FreeMemoryHandling,
+    pub is_forced_gc: IsForcedGc,
+}
+
+impl GcConfig {
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::ConservativeAtomicConfig
+    pub const fn conservative_atomic() -> Self {
+        Self { collection_type: CollectionType::Major, stack_state: StackState::MayContainHeapPointers, marking_type: MarkingType::Atomic, sweeping_type: SweepingType::Atomic, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::PreciseAtomicConfig
+    pub const fn precise_atomic() -> Self {
+        Self { collection_type: CollectionType::Major, stack_state: StackState::NoHeapPointers, marking_type: MarkingType::Atomic, sweeping_type: SweepingType::Atomic, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::ConservativeIncrementalConfig
+    pub const fn conservative_incremental() -> Self {
+        Self { collection_type: CollectionType::Major, stack_state: StackState::MayContainHeapPointers, marking_type: MarkingType::Incremental, sweeping_type: SweepingType::Atomic, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::PreciseIncrementalConfig
+    pub const fn precise_incremental() -> Self {
+        Self { collection_type: CollectionType::Major, stack_state: StackState::NoHeapPointers, marking_type: MarkingType::Incremental, sweeping_type: SweepingType::Atomic, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::PreciseIncrementalMarkingConcurrentSweepingConfig
+    pub const fn precise_incremental_marking_concurrent_sweeping() -> Self {
+        Self { collection_type: CollectionType::Major, stack_state: StackState::NoHeapPointers, marking_type: MarkingType::Incremental, sweeping_type: SweepingType::IncrementalAndConcurrent, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::PreciseConcurrentConfig
+    pub const fn precise_concurrent() -> Self {
+        Self { collection_type: CollectionType::Major, stack_state: StackState::NoHeapPointers, marking_type: MarkingType::Incremental, sweeping_type: SweepingType::IncrementalAndConcurrent, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::MinorPreciseAtomicConfig
+    pub const fn minor_precise_atomic() -> Self {
+        Self { collection_type: CollectionType::Minor, stack_state: StackState::NoHeapPointers, marking_type: MarkingType::Atomic, sweeping_type: SweepingType::Atomic, ..Self::DEFAULT }
+    }
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig::MinorConservativeAtomicConfig
+    pub const fn minor_conservative_atomic() -> Self {
+        Self { collection_type: CollectionType::Minor, stack_state: StackState::MayContainHeapPointers, marking_type: MarkingType::Atomic, sweeping_type: SweepingType::Atomic, ..Self::DEFAULT }
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-config.h GCConfig 字段默认值
+    const DEFAULT: Self = Self {
+        collection_type: CollectionType::Major,
+        stack_state: StackState::MayContainHeapPointers,
+        marking_type: MarkingType::Atomic,
+        sweeping_type: SweepingType::Atomic,
+        free_memory_handling: FreeMemoryHandling::RetainMemory,
+        is_forced_gc: IsForcedGc::NotForced,
+    };
+}
+
+/// v8: src/heap/cppgc-internal/heap-config.h StackState (cppgc::Heap::StackState 别名)
+pub use crate::stack_state::StackState;
+/// v8: src/heap/cppgc-internal/heap-config.h MarkingType (cppgc::Heap::MarkingType)
+pub use crate::marking_type::MarkingType;
+/// v8: src/heap/cppgc-internal/heap-config.h SweepingType (cppgc::Heap::SweepingType)
+pub use crate::sweeping_type::SweepingType;

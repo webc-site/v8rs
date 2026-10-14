@@ -1,0 +1,40 @@
+// 由 tool/src/objects/js-locale.h.js 从 v8/src/objects/js-locale.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSLocale 布局与 Intl.Locale 静态入口骨架
+
+//! 差集骨架: JSLocale (icu::Locale 的 JS 包装)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。ICU/locale 解析语义面留 Developer。
+
+/// v8: src/objects/js-locale.h JSLocale: icu_locale_ offset=24 (Foreign, Managed<icu::Locale>)
+pub const K_JS_LOCALE_HEADER_SIZE: usize = 32;
+
+/// v8: src/objects/js-locale-inl.h JSLocale::icu_locale / set_icu_locale
+pub struct JSLocale { /* icu_locale_: Tagged<Foreign> */ }
+
+/// v8: src/objects/js-locale.h JSLocale 静态方法全集 (27 个, ToString 另有 std::string 重载共 2 形态):
+///   New — v8: src/objects/js-locale.h JSLocale::New
+///   Maximize — v8: src/objects/js-locale.h JSLocale::Maximize
+///   Minimize — v8: src/objects/js-locale.h JSLocale::Minimize
+///   GetCalendars — v8: src/objects/js-locale.h JSLocale::GetCalendars
+///   GetCollations — v8: src/objects/js-locale.h JSLocale::GetCollations
+///   GetHourCycles — v8: src/objects/js-locale.h JSLocale::GetHourCycles
+///   GetNumberingSystems — v8: src/objects/js-locale.h JSLocale::GetNumberingSystems
+///   GetTextInfo — v8: src/objects/js-locale.h JSLocale::GetTextInfo
+///   GetTimeZones — v8: src/objects/js-locale.h JSLocale::GetTimeZones
+///   GetWeekInfo — v8: src/objects/js-locale.h JSLocale::GetWeekInfo
+///   Language — v8: src/objects/js-locale.h JSLocale::Language
+///   Script — v8: src/objects/js-locale.h JSLocale::Script
+///   Region — v8: src/objects/js-locale.h JSLocale::Region
+///   Variants — v8: src/objects/js-locale.h JSLocale::Variants
+///   BaseName — v8: src/objects/js-locale.h JSLocale::BaseName
+///   Calendar — v8: src/objects/js-locale.h JSLocale::Calendar
+///   CaseFirst — v8: src/objects/js-locale.h JSLocale::CaseFirst
+///   Collation — v8: src/objects/js-locale.h JSLocale::Collation
+///   HourCycle — v8: src/objects/js-locale.h JSLocale::HourCycle
+///   FirstDayOfWeek — v8: src/objects/js-locale.h JSLocale::FirstDayOfWeek
+///   Numeric — v8: src/objects/js-locale.h JSLocale::Numeric
+///   NumberingSystem — v8: src/objects/js-locale.h JSLocale::NumberingSystem
+///   ToString — v8: src/objects/js-locale.h JSLocale::ToString
+///   std::string ToString — v8: src/objects/js-locale.h JSLocale::std::string ToString
+///   StartsWithUnicodeLanguageId — v8: src/objects/js-locale.h JSLocale::StartsWithUnicodeLanguageId
+///   Is38AlphaNumList — v8: src/objects/js-locale.h JSLocale::Is38AlphaNumList
+///   Is3Alpha — v8: src/objects/js-locale.h JSLocale::Is3Alpha

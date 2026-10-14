@@ -1,0 +1,93 @@
+// 由 tool/src/compiler/turbofan-typer.js 从 v8/src/compiler/turbofan-typer.h + turbofan-typer.cc 生成; 修订就地改, 复跑覆盖
+// 图类型标注 (Typer pass)
+
+//! turbofan-typer — Typer + Decorator (新节点即时定型)
+//!
+//! Visitor 声明面: DECLARE_METHOD(Node) 组: COMMON(47)
+//! + SIMPLIFIED_COMPARE(20) + SIMPLIFIED_OTHER(118)
+//! + JS_OBJECT(40) + JS_CONTEXT(9)
+//! + JS_OTHER(39) = 273;
+//! DECLARE_METHOD(Type) 组 (JS_SIMPLE_UNOP): 14;
+//! 显式: Start, IfException, ChangeUint32ToUint64, ChangeUint32ToUint64; IMPOSSIBLE(机器): 150。
+
+/// 原版 Typer::Flag 位标志
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct TyperFlags(u8);
+
+impl TyperFlags {
+  /// kNoFlags
+  pub const NONE: Self = Self(0);
+  /// kThisIsReceiver = 1
+  pub const THISISRECEIVER: Self = Self(1);
+  /// kNewTargetIsReceiver = 2
+  pub const NEWTARGETISRECEIVER: Self = Self(2);
+}
+
+/// 原版 Typer — 类型标注 pass
+pub struct Typer<'z, 'g> {
+  /// flags_
+  pub flags: TyperFlags,
+  /// graph_
+  pub graph: &'g mut TFGraph<'z>,
+  /// decorator_
+  pub decorator: *mut Decorator,
+  /// cache_
+  pub cache: *const TypeCache,
+  /// broker_
+  pub broker: *mut JSHeapBroker,
+  /// operation_typer_
+  pub operation_typer: OperationTyper<'z>,
+  /// singleton_false_ / singleton_true_
+  pub singleton_false: Type,
+  pub singleton_true: Type,
+}
+
+impl Typer<'_, '_> {
+  /// 原版 Run — 全图标注 (GraphVisitor)
+  /// v8: src/compiler/turbofan-typer.cc Typer::Run
+  pub fn run(&mut self, roots: Option<&ZoneVector<Node>>, induction_vars: Option<&mut LoopVariableOptimizer>) {
+    todo!("v8: src/compiler/turbofan-typer.cc Typer::Run (两个重载)")
+  }
+}
+
+/// 原版 Typer::Visitor — 逐节点定型
+/// Type##x 面: 291 个声明
+/// (Common 47 / SimplifiedCompare 20 /
+/// SimplifiedOther 118 / JSObject 40 /
+/// JSContext 9 / JSOther 39 /
+/// JSUnop 14 / 显式 4);
+/// IMPOSSIBLE 面 150 (机器码 UNREACHABLE 定型)。
+pub struct TyperVisitor<'t, 'z> {
+  /// typer_
+  pub typer: &'t mut Typer<'z, 'static>,
+  /// induction_vars_
+  pub induction_vars: *mut LoopVariableOptimizer,
+  /// weakened_nodes_
+  pub weakened_nodes: ZoneSet<NodeId>,
+}
+
+impl TyperVisitor<'_, '_> {
+  /// 原版 TypeType — 分派总入口 (Visitor 模板)
+  /// v8: src/compiler/turbofan-typer.cc Typer::Visitor::TypeType
+  pub fn type_type(&mut self, node: &Node) -> Type {
+    todo!("v8: src/compiler/turbofan-typer.cc Typer::Visitor::TypeType (分派 291 声明面 + 150 IMPOSSIBLE)")
+  }
+
+  /// 原版 TypeConstant — 常量定型
+  /// v8: src/compiler/turbofan-typer.cc Typer::Visitor::TypeConstant
+  pub fn type_constant(&mut self, value: Handle<Object>) -> Type {
+    todo!("v8: src/compiler/turbofan-typer.cc Typer::Visitor::TypeConstant")
+  }
+
+  /// 原版 Weaken — 防类型振荡弱化
+  /// v8: src/compiler/turbofan-typer.cc Typer::Visitor::Weaken
+  pub fn weaken(&mut self, node: &Node, current_type: Type, previous_type: Type) -> Type {
+    todo!("v8: src/compiler/turbofan-typer.cc Typer::Visitor::Weaken")
+  }
+
+  /// 原版 InductionVariablePhiTypeIsPrefixedPoint — 归纳变量定点判定
+  /// v8: src/compiler/turbofan-typer.cc Typer::Visitor::InductionVariablePhiTypeIsPrefixedPoint
+  pub fn induction_var_phi_type_is_prefixed_point(&self, induction_var: &InductionVariable) -> bool {
+    todo!("v8: src/compiler/turbofan-typer.cc Typer::Visitor::InductionVariablePhiTypeIsPrefixedPoint")
+  }
+}

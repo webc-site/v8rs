@@ -1,0 +1,18 @@
+// 由 tool/src/compiler/turbofan-enabled.cc.js 从 v8/src/compiler/turbofan-enabled.cc 生成; 修订就地改, 复跑覆盖
+// v8_enable_turbofan=true 时的实现 (向 Pipeline 转发)
+
+//! turbofan-enabled — TF 开启构建的实现面
+//!
+//! 单入口: NewCompilationJob → Pipeline::NewCompilationJob(
+//! isolate, function, CodeKind::TURBOFAN_JS, has_script == IsScriptAvailable::kYes, osr_offset)。
+//! has_script: IsScriptAvailable::kYes → bool true 直转。
+
+use crate::pipeline::Pipeline;
+use crate::turbofan::IsScriptAvailable;
+
+/// 原版 NewCompilationJob — 转发 Pipeline (CodeKind::TURBOFAN_JS)
+/// v8: src/compiler/turbofan-enabled.cc NewCompilationJob
+#[cfg(feature = "turbofan")]
+pub fn new_compilation_job(isolate: &Isolate, function: &JSFunction, has_script: IsScriptAvailable, osr_offset: BytecodeOffset) -> Box<dyn TurbofanCompilationJob> {
+  Pipeline::new_compilation_job(isolate, function, CodeKind::TURBOFAN_JS, has_script == IsScriptAvailable::Yes, osr_offset)
+}

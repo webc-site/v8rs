@@ -1,0 +1,3 @@
+// 由 tool/src/base/pointer-with-payload.js 从 v8/src/base/pointer-with-payload.h 生成; 修订就地改, 复跑覆盖
+// 掩码区:  |  private: |   static constexpr int kAvailableBits = PointerWithPayloadTraits< |       std::remove_const_t<PointerType>>::kAvailableBits; |   static_assert( |       kAvailableBits >= NumPayloadBits, |       "Ptr does not have sufficient alignment for the selected amount of " |       "storage bits. Override PointerWithPayloadTraits to guarantee available " |       "bits manually."); |  |   static constexpr uintptr_t kPayloadMask = |       (uintptr_t{1} << NumPayloadBits) - 1; |   static constexpr uintptr_t kPointerMask = ~kPayloadMask;
+// trait 区:  | namespace v8 { | namespace base { |  | template <typename PointerType> | struct PointerWithPayloadTraits {

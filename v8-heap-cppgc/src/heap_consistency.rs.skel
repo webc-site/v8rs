@@ -1,0 +1,71 @@
+// 由 tool/src/heap/cppgc-internal/heap-consistency.js 从 v8/src/heap/cppgc-internal/heap-consistency.cc 生成; 修订就地改, 复跑覆盖
+// GC 禁入/禁发 RAII 作用域
+
+#![allow(dead_code)]
+
+/// v8: include/cppgc/heap-consistency.h DisallowGarbageCollectionScope — 实现于本 cc
+pub struct DisallowGarbageCollectionScope<'a> {
+    /// v8: heap_handle_
+    heap_handle: &'a mut HeapHandle,
+}
+
+impl<'a> DisallowGarbageCollectionScope<'a> {
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc DisallowGarbageCollectionScope::IsGarbageCollectionAllowed
+    pub fn is_garbage_collection_allowed(heap_handle: &HeapHandle) -> bool {
+        !HeapBase::from(heap_handle).is_gc_forbidden()
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc DisallowGarbageCollectionScope::Enter
+    pub fn enter(heap_handle: &mut HeapHandle) {
+        HeapBase::from_mut(heap_handle).enter_disallow_gc_scope();
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc DisallowGarbageCollectionScope::Leave
+    pub fn leave(heap_handle: &mut HeapHandle) {
+        HeapBase::from_mut(heap_handle).leave_disallow_gc_scope();
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc DisallowGarbageCollectionScope 构造
+    pub fn new(heap_handle: &'a mut HeapHandle) -> Self {
+        Self::enter(heap_handle);
+        Self { heap_handle }
+    }
+}
+
+impl Drop for DisallowGarbageCollectionScope<'_> {
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc ~DisallowGarbageCollectionScope
+    fn drop(&mut self) {
+        Self::leave(self.heap_handle);
+    }
+}
+
+/// v8: include/cppgc/heap-consistency.h NoGarbageCollectionScope — 实现于本 cc
+pub struct NoGarbageCollectionScope<'a> {
+    /// v8: heap_handle_
+    heap_handle: &'a mut HeapHandle,
+}
+
+impl<'a> NoGarbageCollectionScope<'a> {
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc NoGarbageCollectionScope::Enter
+    pub fn enter(heap_handle: &mut HeapHandle) {
+        HeapBase::from_mut(heap_handle).enter_no_gc_scope();
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc NoGarbageCollectionScope::Leave
+    pub fn leave(heap_handle: &mut HeapHandle) {
+        HeapBase::from_mut(heap_handle).leave_no_gc_scope();
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc NoGarbageCollectionScope 构造
+    pub fn new(heap_handle: &'a mut HeapHandle) -> Self {
+        Self::enter(heap_handle);
+        Self { heap_handle }
+    }
+}
+
+impl Drop for NoGarbageCollectionScope<'_> {
+    /// v8: src/heap/cppgc-internal/heap-consistency.cc ~NoGarbageCollectionScope
+    fn drop(&mut self) {
+        Self::leave(self.heap_handle);
+    }
+}

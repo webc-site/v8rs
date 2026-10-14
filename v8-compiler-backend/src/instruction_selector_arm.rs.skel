@@ -1,0 +1,20 @@
+// 由 tool/src/compiler/backend/arm/instruction-selector-arm.js 从 v8/src/compiler/backend/arm/instruction-selector-arm.cc 生成; 修订就地改, 复跑覆盖
+// arm 指令选择: TryMatchShift/ROR 匹配族 + Operand2 寻址
+
+//! 台账: Visit* 定义 150 (::Visit 面 164); TryMatchShift /
+//!   TryMatchShiftImmediate / TryMatchROR (kWord32RotateRight 掩码匹配);
+//!   Operand2 立即数旋转编码寻址; Word64 双寄存器软实现; VFP 浮点选择。
+
+/// v8: TryMatchShift / TryMatchShiftImmediate / TryMatchROR — 移位匹配族
+// fn try_match_shift / try_match_shift_immediate / try_match_ror
+/// v8: InstructionSelector::Visit* (arm) — 32 位选择面
+// fn visit_* (Word64 双寄存器软实现锚)
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(VISIT_DEF_COUNT >= 30);
+};
+pub const VISIT_DEF_COUNT: usize = 150;
+const _: () = {
+  assert!(VISIT_DEF_COUNT == 150);
+};

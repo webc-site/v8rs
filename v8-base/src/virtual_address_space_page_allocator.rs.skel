@@ -1,0 +1,36 @@
+// 由 tool/src/base/virtual-address-space.h.js 从 v8/src/base/virtual-address-space-page-allocator.h + .cc 生成; 修订就地改, 复跑覆盖
+// VAS→PageAllocator 桥接适配器
+
+//! v8 侧: override 12; 其中一行转发 4
+//! Rust 策略: 适配器模式包 &dyn VirtualAddressSpace 实现 PageAllocator trait
+
+/// v8: class VirtualAddressSpacePageAllocator : public v8::PageAllocator
+/// 桥接: 新 API (VirtualAddressSpace) → 旧 API (PageAllocator)
+pub struct VirtualAddressSpacePageAllocator<'a> {
+    /// v8: vas_
+    vas: &'a dyn VirtualAddressSpace,
+}
+
+impl<'a> VirtualAddressSpacePageAllocator<'a> {
+    /// v8: VirtualAddressSpacePageAllocator(vas)
+    pub fn new(vas: &'a dyn VirtualAddressSpace) -> Self { Self { vas } }
+}
+
+// ---- 转发表 (v8 原文) ----
+/// v8: AllocatePageSize — return vas_->allocation_granularity();
+pub fn _allocate_page_size(&self) -> usize { todo!() }
+/// v8: CommitPageSize — return vas_->page_size();
+pub fn _commit_page_size(&self) -> usize { todo!() }
+/// v8: SetRandomMmapSeed — vas_->SetRandomSeed(seed);
+pub fn _set_random_mmap_seed(&self) -> usize { todo!() }
+/// v8: GetRandomMmapAddr — return reinterpret_cast<void*>(vas_->RandomPageAddress());
+pub fn _get_random_mmap_addr(&self) -> usize { todo!() }
+/// v8: AllocatePages / FreePages / ReleasePages / SetPermissions / RecommitPages / DiscardSystemPages / DecommitSystemPages
+/// 语义: Permission → PagePermissions 位映射 (kNoAccess→0 等), 地址换算后委托 vas_
+// override 对账 (12): AllocatePageSize, CommitPageSize, SetRandomMmapSeed, GetRandomMmapAddr, AllocatePages, FreePages, ReleasePages, SetPermissions, RecommitPages, DiscardSystemPages, DecommitPages, SealPages
+
+// 依赖 trait 声明 (本体在 virtual_address_space.rs.skel)
+pub trait VirtualAddressSpace {
+    fn allocation_granularity(&self) -> usize;
+    fn page_size(&self) -> usize;
+}

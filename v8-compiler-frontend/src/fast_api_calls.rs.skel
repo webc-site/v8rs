@@ -1,0 +1,81 @@
+// 由 tool/src/compiler/fast-api-calls.js 从 v8/src/compiler/fast-api-calls.h + fast-api-calls.cc 生成; 修订就地改, 复跑覆盖
+// Fast API 调用: 类型映射 + 可优化签名判定 + 快/慢路径子图构建
+
+//! fast_api_call — 把可优化的 C 签名 API 调用降为直接 C 调用子图。
+
+/// CTypeInfo 类型 → TypedArray ElementsKind 映射 (7 项 1:1)
+/// v8: src/compiler/fast-api-calls.cc GetTypedArrayElementsKind
+pub fn typed_array_elements_kind(ty: CTypeInfoType) -> ElementsKind {
+    match ty {
+        CTypeInfoType::Uint8 => ElementsKind::UINT8,
+        CTypeInfoType::Int32 => ElementsKind::INT32,
+        CTypeInfoType::Uint32 => ElementsKind::UINT32,
+        CTypeInfoType::Int64 => ElementsKind::BIGINT64,
+        CTypeInfoType::Uint64 => ElementsKind::BIGUINT64,
+        CTypeInfoType::Float32 => ElementsKind::FLOAT32,
+        CTypeInfoType::Float64 => ElementsKind::FLOAT64,
+        // UNREACHABLE: Void / SeqOneByteString / Bool / Pointer / V8Value / ApiObject / Any
+        _ => unreachable!(),
+    }
+}
+
+/// 重载决议结果
+/// v8: src/compiler/fast-api-calls.h OverloadsResolutionResult
+pub struct OverloadsResolutionResult {
+    /// 可区分重载参数的下标; 仅支持该参数为 JSArray vs TypedArray 的情形
+    /// is_valid = distinguishable_arg_index >= 0
+    /// v8: src/compiler/fast-api-calls.h OverloadsResolutionResult::is_valid
+    pub distinguishable_arg_index: i32,
+    /// TypedArray 参数的元素类型; Invalid() 时为 kVoid
+    pub element_type: CTypeInfoType,
+    /// 目标地址节点 (决议后填)
+    pub target_address: Option<NodeRef>,
+}
+
+impl OverloadsResolutionResult {
+    /// v8: src/compiler/fast-api-calls.h OverloadsResolutionResult::Invalid
+    pub fn invalid() -> Self { Self { distinguishable_arg_index: -1, element_type: CTypeInfoType::Void, target_address: None } }
+}
+
+/// 签名可否优化为快速调用 — 平台规则 (8 条 return 分支):
+/// - MacArm64: 参数 > 8 → false (不支持栈传参)
+/// - 无 FP-in-C-linkage / 模拟器: 返回或参数含 float32/float64 → false
+/// - 32 位: 返回或参数含 int64/uint64 → false
+/// - x64: kClampBit 需要 SSE4_2
+/// v8: src/compiler/fast-api-calls.cc CanOptimizeFastSignature
+pub fn can_optimize_fast_signature(c_signature: &CFunctionInfo) -> bool;
+
+/// 回调面 (4 个闭包参数)
+/// v8: src/compiler/fast-api-calls.h GetParameter/ConvertReturnValue/InitializeOptions/GenerateSlowApiCall
+pub type GetParameter<'a> = &'a dyn Fn(i32, &GraphAssemblerLabel) -> NodeRef;
+pub type ConvertReturnValue<'a> = &'a dyn Fn(&CFunctionInfo, NodeRef) -> NodeRef;
+pub type InitializeOptions<'a> = &'a dyn Fn(NodeRef);
+pub type GenerateSlowApiCall<'a> = &'a dyn Fn() -> NodeRef;
+
+/// 快速调用子图构建 (if_success/if_error 双出口 + 异常传播)
+/// v8: src/compiler/fast-api-calls.cc FastApiCallBuilder::Build
+pub fn build_fast_api_call(
+    isolate: &Isolate,
+    graph: &mut TFGraph,
+    graph_assembler: &mut GraphAssembler,
+    c_function: FastApiCallFunction,
+    data_argument: NodeRef,
+    get_parameter: GetParameter<'_>,
+    convert_return_value: ConvertReturnValue<'_>,
+    initialize_options: InitializeOptions<'_>,
+    generate_slow_api_call: GenerateSlowApiCall<'_>,
+) -> NodeRef;
+
+/// 挑选与 arg_count 匹配的可优化重载
+/// kReceiver = 1 (首个 C 参数是 receiver)
+/// v8: src/compiler/fast-api-calls.cc GetFastApiCallTarget
+pub fn get_fast_api_call_target(
+    broker: &JSHeapBroker,
+    function_template_info: FunctionTemplateInfoRef,
+    arg_count: usize,
+) -> FastApiCallFunction;
+
+// Call 节点输入布局: [fast callee, receiver, ...C args, [Options], effect, control]
+// FastApiCallbackOptions 栈槽 = 2 × uintptr (isolate + data)
+// —— 对数基准 ——
+// 类型映射 7 项 / UNREACHABLE 7 项

@@ -1,0 +1,41 @@
+[package]
+name = "v8rs-fuzz"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+v8-json = { path = "../v8-json" }
+v8-regexp-syntax = { path = "../v8-regexp-syntax" }
+v8-parsing = { path = "../v8-parsing" }
+v8-fuzzilli = { path = "../v8-fuzzilli" }
+
+[[bin]]
+name = "fuzz_json"
+path = "fuzz_targets/fuzz_json.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_regexp"
+path = "fuzz_targets/fuzz_regexp.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_parser"
+path = "fuzz_targets/fuzz_parser.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_fuzzilli"
+path = "fuzz_targets/fuzz_fuzzilli.rs"
+test = false
+doc = false
+
+[workspace]

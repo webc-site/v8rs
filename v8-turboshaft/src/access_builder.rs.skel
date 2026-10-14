@@ -1,0 +1,62 @@
+// 由 tool/src/compiler/turboshaft/access-builder.h.js 从 v8/src/compiler/turboshaft/access-builder.h 生成; 修订就地改, 复跑覆盖
+// 访问描述符工厂: 字段/元素访问方法面登记
+
+/// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS
+///
+/// 全静态工厂: 产出 FieldAccessTS/ElementAccessTS (TS 侧带类型参数 T)。
+/// 方法面: 9 个 ForXxx (直接定义) + 0 字段宏 + 0 元素宏展开。
+/// 宏: TF_FIELD_ACCESS / TF_ELEMENT_ACCESS
+pub struct AccessBuilderTs;
+
+impl AccessBuilderTs {
+  /// 原版 static ... ForMap(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForMap
+  pub fn map() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForFeedbackVectorLength(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForFeedbackVectorLength
+  pub fn feedback_vector_length() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForCellMaybeValue(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForCellMaybeValue
+  pub fn cell_maybe_value() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForPropertyCellValue(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForPropertyCellValue
+  pub fn property_cell_value() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForJSPrimitiveWrapperValue(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForJSPrimitiveWrapperValue
+  pub fn jsprimitive_wrapper_value() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForJSArrayLength(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForJSArrayLength
+  pub fn jsarray_length() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForContextSlot(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForContextSlot
+  pub fn context_slot() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForSymbolFlags(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForSymbolFlags
+  pub fn symbol_flags() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 static ... ForFixedArrayElement(...)
+  /// v8: src/compiler/turboshaft/access-builder.h AccessBuilderTS::ForFixedArrayElement
+  pub fn fixed_array_element() -> () {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(9 > 0); // For 方法面非空
+};

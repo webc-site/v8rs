@@ -1,0 +1,88 @@
+// 由 tool/src/heap/cppgc-internal/heap-statistics-collector.js 从 v8/src/heap/cppgc-internal/heap-statistics-collector.h + src/heap/cppgc-internal/heap-statistics-collector.cc 生成; 修订就地改, 复跑覆盖
+// 先序遍历产出详细堆统计
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/heap-statistics-collector.cc GetNormalPageSpaceName
+fn get_normal_page_space_name(index: usize) -> String {
+    debug_assert_ne!(RawHeap::K_NUMBER_OF_REGULAR_SPACES - 1, index);
+    if index < RawHeap::K_NUMBER_OF_REGULAR_SPACES {
+        format!("NormalPageSpace{index}")
+    } else {
+        format!("CustomSpace{}", index - RawHeap::K_NUMBER_OF_REGULAR_SPACES)
+    }
+}
+
+/// v8: src/heap/cppgc-internal/heap-statistics-collector.cc RecordObjectType
+/// type_map 插入 (name.value, size); 命中旧值则复用索引; entry{allocated_bytes, object_count} 累计。
+fn record_object_type(
+    type_map: &mut HashMap<*const core::ffi::c_void, usize>,
+    object_statistics: &mut Vec<ObjectStatsEntry>,
+    header: &HeapObjectHeader,
+    object_size: usize,
+) {
+    let next = type_map.len();
+    let type_index = *type_map.entry(header.get_name().value).or_insert(next);
+    if object_statistics.len() <= type_index {
+        object_statistics.resize(type_index + 1, ObjectStatsEntry::default());
+    }
+    object_statistics[type_index].allocated_bytes += object_size;
+    object_statistics[type_index].object_count += 1;
+}
+
+/// v8: src/heap/cppgc-internal/heap-statistics-collector.h HeapStatisticsCollector
+pub struct HeapStatisticsCollector {
+    /// v8: current_stats_
+    current_stats: *mut HeapStatistics,
+    /// v8: current_space_stats_
+    current_space_stats: Option<usize>,
+    /// v8: current_page_stats_
+    current_page_stats: Option<usize>,
+    /// v8: type_name_to_index_map_
+    type_name_to_index_map: HashMap<*const core::ffi::c_void, usize>,
+}
+
+impl HeapStatisticsCollector {
+    /// v8: src/heap/cppgc-internal/heap-statistics-collector.cc CollectDetailedStatistics
+    /// detail=kDetailed + ClassNameAsHeapObjectNameScope + Traverse + FinalizeSpace +
+    /// type_names 回填 + 池化内存并入 committed/resident。
+    pub fn collect_detailed_statistics(&mut self, heap: &mut HeapBase) -> HeapStatistics {
+        let mut stats = HeapStatistics { detail_level: DetailLevel::Detailed, ..Default::default() };
+        self.current_stats = &mut stats;
+        let _scope = ClassNameAsHeapObjectNameScope::new(heap);
+        traverse_heap(self, heap.raw_heap_mut());
+        todo!("FinalizeSpace + type_names 回填 + pooled memory 并入")
+    }
+
+    /// v8: src/heap/cppgc-internal/heap-statistics-collector.cc VisitNormalPageSpace
+    /// FinalizeSpace → InitializeSpace(GetNormalPageSpaceName(index)) → free_list().CollectStatistics
+    pub fn visit_normal_page_space(&mut self, space: &mut NormalPageSpace) -> bool {
+        debug_assert_eq!(0, space.linear_allocation_buffer().size());
+        todo!("空间级统计开卷")
+    }
+
+    /// v8: VisitLargePageSpace — FinalizeSpace → InitializeSpace("LargePageSpace")
+    pub fn visit_large_page_space(&mut self, _space: &mut LargePageSpace) -> bool { todo!("大页空间开卷") }
+
+    /// v8: VisitNormalPage — committed = kPageSize; resident = kPageSize - discarded
+    pub fn visit_normal_page(&mut self, page: &mut NormalPage) -> bool {
+        let _ = page;
+        todo!("页级统计")
+    }
+
+    /// v8: VisitLargePage — committed = resident = LargePage::AllocationSize(PayloadSize)
+    pub fn visit_large_page(&mut self, page: &mut LargePage) -> bool {
+        let _ = page;
+        todo!("大页页级统计")
+    }
+
+    /// v8: VisitHeapObjectHeader — IsFree 跳过; 尺寸 = 大页 PayloadSize 或 AllocatedSize; RecordObjectType
+    pub fn visit_heap_object_header(&mut self, header: &mut HeapObjectHeader) -> bool {
+        if header.is_free() { return true; }
+        todo!("对象级累计")
+    }
+}
+
+/// v8: src/heap/cppgc-internal/heap-statistics-collector.cc FinalizePage / FinalizeSpace
+/// page: committed/resident/used → space; space: 同三项 → heap stats。
+fn finalize_page_and_space() { todo!("三级聚合 (页→空间→堆)") }

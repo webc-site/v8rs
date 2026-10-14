@@ -1,0 +1,13 @@
+// 由 tool/src/objects/trusted-object-inl.h.js 从 v8/src/objects/trusted-object-inl.h 生成; 修订就地改, 复跑覆盖
+// trusted.rs 差集骨架 (inl 语义), 合并后就地修订; -inl 骨架仅存档
+
+//! 差集骨架: 受保护字段实现语义 + 发布链 (Rust 无 inl, 并入 trusted.rs 实现)
+
+// 1) 受保护字段 (8 访问器): 统一走 TaggedField<T, 0, TrustedSpaceCompressionScheme>
+//    本 crate 现状: 全尺寸槽 (tagged_field.rs 压缩抽象点), trusted cage 压缩推迟登记
+//    empty/clear 语义: 与 Smi::zero() 比较 / 写 Smi::zero()
+// 2) 发布链 (sandbox): tag = IndirectPointerTagFromInstanceType(map().instance_type(), shared)
+//    Publish: table.Publish(handle, tag); Unpublish: table.Unpublish(handle)
+//    IsPublished: !TrustedPointerField::IsTrustedPointerFieldUnpublished(host, offsetof(self_indirect_pointer_), tag, isolate)
+//    InitAndPublish/InitDontPublish/InitSelfIndirectPointerField: TPT 表项分配 → 推迟 (v8-sandbox)
+//    self_indirect_pointer_handle: relaxed load (非 sandbox 构建 UNREACHABLE)

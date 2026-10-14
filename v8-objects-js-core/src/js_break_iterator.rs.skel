@@ -1,0 +1,22 @@
+// 由 tool/src/objects/js-break-iterator.h.js 从 v8/src/objects/js-break-iterator.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSV8BreakIterator 布局与 Intl.v8BreakIterator 签名骨架
+
+//! 差集骨架: JSV8BreakIterator (icu::BreakIterator + bound 方法缓存)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。ICU 分词语义面留 Developer。
+
+/// v8: src/objects/js-break-iterator.h JSV8BreakIterator 字段布局:
+///   locale_ offset=24 (String)
+///   icu_iterator_with_text_ offset=32 (CppGCManagedBase)
+///   bound_adopt_text_ offset=40 (Undefined|JSFunction)
+///   bound_first_ offset=48 (Undefined|JSFunction)
+///   bound_next_ offset=56 (Undefined|JSFunction)
+///   bound_current_ offset=64 (Undefined|JSFunction)
+///   bound_break_type_ offset=72 (Undefined|JSFunction)
+pub const K_JS_V8_BREAK_ITERATOR_HEADER_SIZE: usize = 80;
+
+/// v8: src/objects/js-break-iterator-inl.h JSV8BreakIterator accessor 族 (locale/
+///   icu_iterator_with_text/bound_adopt_text/bound_first/bound_next/bound_current/bound_break_type)
+pub struct JSV8BreakIterator { /* 7 个 TaggedMember 字段, 见上布局 */ }
+
+/// v8: src/objects/js-break-iterator.h JSV8BreakIterator::New / ResolvedOptions /
+///   AdoptText / Current / First / Next / BreakType / GetAvailableLocales (8 个静态入口)

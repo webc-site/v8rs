@@ -1,0 +1,21 @@
+// 由 tool/src/base/algorithm.h.js 从 v8/src/base/algorithm.h 生成; 修订就地改, 复跑覆盖
+// std::copy 的 MemCopy 快路径分派
+
+//! v8: src/base/algorithm.h
+
+/// v8: src/base/algorithm.h internal::can_use_memcpy_v
+/// 原版合取条件:
+/// 1. InputIt/OutputIt 均 contiguous_iterator
+/// 2. 两者 value_type 相同
+/// 3. value_type trivially_copyable
+/// Rust 侧: 切片 &[T] → &mut [T] 天然满足, 由 trait 约束 T: Copy 表达;
+/// 布尔变量模板无直接对应, 登记为文档语义
+///
+/// v8: src/base/algorithm.h Copy (快路径, requires can_use_memcpy_v)
+/// 原版: MemCopy(dest, src, count * sizeof(T)); 返回 d_first + count
+/// Rust 侧快路径即 copy_from_slice; 注意原版语义禁重叠 (par_unseq 假设)
+pub fn copy<'a, T: Copy>(src: &'a [T], dst: &'a mut [T]) -> usize;
+
+/// v8: src/base/algorithm.h Copy (慢路径, requires !can_use_memcpy_v)
+/// 原版: 委托 std::copy (逐元素); Rust 侧由迭代器版 clone 语义表达
+pub fn copy_with<I: Iterator, O: Extend<I::Item>>(first: I, last_hint: usize, d_first: O) -> usize;

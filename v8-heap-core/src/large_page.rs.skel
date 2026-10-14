@@ -1,0 +1,53 @@
+// 由 tool/src/heap/large-page.h.js 从 v8/src/heap/large-page.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 大对象页: 代码页大小上限与越活区清槽
+
+/// 代码页大小上限 (对应 kMaxCodePageSize = 512 * MB)。
+/// 动机: 保证 old-to-old 记忆集 typed slot offset 不溢出
+/// (static_assert(kMaxCodePageSize <= TypedSlotSet::kMaxOffset))。
+pub const K_MAX_CODE_PAGE_SIZE: usize = 512 * 1024 * 1024;
+
+/// 大对象页骨架 (对应 class LargePage final : public MutablePage)。
+/// v8: src/heap/large-page.h LargePage
+pub struct LargePageSkeleton;
+
+impl LargePageSkeleton {
+  /// 对应 ctor 的可执行页大小检查: executable && chunk_size > kMaxCodePageSize
+  /// → FATAL("Code page is too large.")
+  /// v8: src/heap/large-page.cc LargePage::LargePage
+  #[must_use]
+  pub fn check_code_page_size(executable: bool, chunk_size: usize) -> Result<(), &'static str> {
+    if executable && chunk_size > K_MAX_CODE_PAGE_SIZE {
+      Err("Code page is too large.")
+    } else {
+      Ok(())
+    }
+  }
+
+  /// 对应 ClearOutOfLiveRangeSlots: 清 free_start 起的越活区槽。
+  /// area_end 不一定桶对齐 → 先对齐到桶边界使 RemoveRange 整桶丢弃。
+  /// v8: src/heap/large-page.cc LargePage::ClearOutOfLiveRangeSlots
+  #[must_use]
+  pub fn aligned_area_end_for_bucket_clear(chunk_address: u64, area_end: u64, bucket_size: u64) -> u64 {
+    let buckets = area_end.saturating_sub(chunk_address).div_ceil(bucket_size);
+    chunk_address + buckets * bucket_size
+  }
+
+  /// 对应 CastTraits<LargePage>::AllowFrom: page.is_large()
+  /// v8: src/heap/large-page.h CastTraits<LargePage>
+  #[must_use]
+  pub fn allow_from(is_large: bool) -> bool {
+    is_large
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(K_MAX_CODE_PAGE_SIZE, 512 * 1024 * 1024);
+  assert!(LargePageSkeleton::check_code_page_size(true, K_MAX_CODE_PAGE_SIZE + 1).is_err());
+  assert!(LargePageSkeleton::check_code_page_size(true, K_MAX_CODE_PAGE_SIZE).is_ok());
+  assert!(LargePageSkeleton::check_code_page_size(false, K_MAX_CODE_PAGE_SIZE * 2).is_ok());
+  // 桶对齐: area_end 已对齐则不变, 否则向上取整
+  assert_eq!(LargePageSkeleton::aligned_area_end_for_bucket_clear(0, 130, 64), 128 + 64);
+  assert_eq!(LargePageSkeleton::aligned_area_end_for_bucket_clear(0, 128, 64), 128);
+  assert!(LargePageSkeleton::allow_from(true));
+};

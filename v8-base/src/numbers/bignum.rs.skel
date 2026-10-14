@@ -1,0 +1,76 @@
+// 由 tool/src/base/numbers/bignum.h.js 从 v8/src/base/numbers/bignum.h + src/base/numbers/bignum.cc 生成; 修订就地改, 复跑覆盖
+// 定容大整数 (dtoa 精确算法用, 禁拷贝)
+
+//! v8: src/base/numbers/bignum.h/.cc
+
+// v8: bignum.h 常量
+/// 最大精确位: 2^3584 > 10^1000
+pub const MAX_SIGNIFICANT_BITS: i32 = 3584;
+/// bigit 位宽 28 (双精度尾数恰装两 chunk, 支持 Comba 乘法)
+pub const BIGIT_SIZE: i32 = 28;
+/// bigit 掩码 (1<<28)-1
+pub const BIGIT_MASK: u32 = (1 << 28) - 1;
+/// 容量 = 3584/28 = 128 chunk (栈上定容, 不增长)
+pub const BIGIT_CAPACITY: usize = 128;
+/// Chunk = u32; DoubleChunk = u64
+pub type Chunk = u32;
+
+/// v8: bignum.h Bignum
+/// 值 = value(bigits_) * 2^(exponent_ * kBigitSize); used_digits_ 记有效 bigit 数;
+/// bigits_buffer_[128] 栈上定容 + Vector 越界检查包装; 禁拷贝 (静态数组不可移)
+pub struct Bignum {
+    bigits: [Chunk; BIGIT_CAPACITY],
+    used_digits: i32,
+    exponent: i32,
+}
+
+impl Bignum {
+    /// v8: Bignum() — Zero()
+    pub fn new() -> Self;
+    // —— 赋值 ——
+    /// v8: AssignUInt16 / AssignUInt64 / AssignBignum
+    pub fn assign_uint16(&mut self, value: u16);
+    pub fn assign_uint64(&mut self, value: u64);
+    pub fn assign_bignum(&mut self, other: &Bignum);
+    /// v8: AssignDecimalString / AssignHexString (十进制 ASCII 逐位乘加)
+    pub fn assign_decimal_string(&mut self, value: &[u8]);
+    pub fn assign_hex_string(&mut self, value: &[u8]);
+    /// v8: AssignPowerUInt16 — 幂 via 反复平方法 (平方 + 乘)
+    pub fn assign_power_uint16(&mut self, base: u16, exponent: i32);
+    // —— 算术 ——
+    // v8: AddUInt16 — 头文件声明但 .cc 无定义无调用 (v8 死声明), Rust 侧登记跳过
+    /// v8: AddUInt64 / AddBignum (先 Align 指数)
+    pub fn add_uint64(&mut self, operand: u64);
+    pub fn add_bignum(&mut self, other: &Bignum);
+    /// v8: SubtractBignum — 前置 this >= other
+    pub fn subtract_bignum(&mut self, other: &Bignum);
+    /// v8: Square — Comba 乘法
+    pub fn square(&mut self);
+    /// v8: ShiftLeft / BigitsShiftLeft (by < kBigitSize)
+    pub fn shift_left(&mut self, shift_amount: i32);
+    /// v8: MultiplyByUInt32 / MultiplyByUInt64 / MultiplyByPowerOfTen / Times10
+    pub fn multiply_by_uint32(&mut self, factor: u32);
+    pub fn multiply_by_uint64(&mut self, factor: u64);
+    /// v8: MultiplyByPowerOfTen — 小幂查 kSmallPowersOfTen, 大幂 assign+乘
+    pub fn multiply_by_power_of_ten(&mut self, exponent: i32);
+    /// v8: DivideModuloIntBignum — 返回商 (0..65535), this 变余数; 最坏 O(this/other)
+    pub fn divide_modulo_int_bignum(&mut self, other: &Bignum) -> u16;
+    /// v8: ToHexString
+    pub fn to_hex_string(&self, buffer: &mut [u8]) -> bool;
+    // —— 比较 ——
+    /// v8: Compare — 按符号位对齐 BigitLength 后逐 bigit 比较
+    pub fn compare(a: &Bignum, b: &Bignum) -> std::cmp::Ordering;
+    /// v8: Equal / LessEqual / Less — Compare 包装
+    pub fn equal(a: &Bignum, b: &Bignum) -> bool;
+    pub fn less_equal(a: &Bignum, b: &Bignum) -> bool;
+    pub fn less(a: &Bignum, b: &Bignum) -> bool;
+    /// v8: PlusCompare / PlusEqual / PlusLessEqual / PlusLess — a+b 与 c 比较 (不物化和)
+    pub fn plus_compare(a: &Bignum, b: &Bignum, c: &Bignum) -> std::cmp::Ordering;
+    pub fn plus_equal(a: &Bignum, b: &Bignum, c: &Bignum) -> bool;
+    pub fn plus_less_equal(a: &Bignum, b: &Bignum, c: &Bignum) -> bool;
+    pub fn plus_less(a: &Bignum, b: &Bignum, c: &Bignum) -> bool;
+    // —— 私有 ——
+    // v8: EnsureCapacity (>capacity 则 UNREACHABLE) / Align / Clamp / IsClamped / Zero
+    // v8: BigitLength = used_digits_ + exponent_ (含指数隐藏位) / BigitAt (越界返回 0)
+    // v8: SubtractTimes — 减 other×factor (除法内核)
+}

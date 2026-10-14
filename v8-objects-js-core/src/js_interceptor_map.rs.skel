@@ -1,0 +1,20 @@
+// 由 tool/src/objects/js-interceptor-map.h.js 从 v8/src/objects/js-interceptor-map.{h,-inl.h,tq} 生成; 修订就地改, 复跑覆盖
+// JSInterceptorMap 位标志与拦截器缓存布局
+
+//! 差集骨架: JSInterceptorMap (ExtendedMap 的拦截器扩展视图, hasSameInstanceTypeAsParent)。
+//! 配置: 64 位非压缩 (kTaggedSize=8 → extended_padding_[7], tq @if 分支)。
+
+/// v8: src/objects/js-interceptor-map.h JSInterceptorMap::SupportsFastIterableToListBit
+pub const K_SUPPORTS_FAST_ITERABLE_TO_LIST_MASK: u8 = 0x1;
+
+/// v8: src/objects/js-interceptor-map.h JSInterceptorMap 自有字段段 (相对 ExtendedMap 头):
+///   flags_ offset=0 (u8, 1 字节) + extended_padding_[7] + named_interceptor_ offset=8 +
+///   indexed_interceptor_ offset=16 + fast_case_validity_cell_ offset=24
+pub const K_JS_INTERCEPTOR_MAP_SELF_SIZE: usize = 32;
+
+/// v8: src/objects/js-interceptor-map-inl.h named_interceptor DCHECK(is_named) / indexed DCHECK(!is_named)
+pub struct JSInterceptorMap { /* flags_: u8, padding_[7], named/indexed_interceptor_, fast_case_validity_cell_ */ }
+
+/// v8: src/objects/js-interceptor-map-inl.h Map::GetNamedInterceptor / GetIndexedInterceptor —
+///   Cast<JSInterceptorMap>(map) 后取缓存; 与 FunctionTemplateInfo 的 handler 一致性 DCHECK 语义面留锚
+/// v8: src/objects/js-interceptor-map-inl.h init_flags_and_clear_extended_padding — flags_=0 + memset padding

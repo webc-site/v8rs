@@ -1,0 +1,24 @@
+// 由 tool/src/heap/parallel-work-item.js 从 v8/src/heap/parallel-work-item.h 生成; 修订就地改, 复跑覆盖
+// 并行工作项: 一次性原子认领
+/// v8: src/heap/parallel-work-item.h ParallelWorkItem
+/// 原文以 reinterpret_cast<std::atomic<bool>> 访问 bool acquire_;
+/// Rust 直接用 AtomicBool, 语义等价 (relaxed 足够: 项内容自 job 起未变)。
+#[derive(Default)]
+pub struct ParallelWorkItem {
+  acquire: std::sync::atomic::AtomicBool,
+}
+
+impl ParallelWorkItem {
+  pub fn new() -> Self { Self::default() }
+
+  /// v8: ParallelWorkItem::TryAcquire
+  /// exchange(true, Relaxed) == false → 认领成功
+  pub fn try_acquire(&self) -> bool {
+    self.acquire.swap(true, std::sync::atomic::Ordering::Relaxed) == false
+  }
+
+  /// v8: ParallelWorkItem::IsAcquired
+  pub fn is_acquired(&self) -> bool {
+    self.acquire.load(std::sync::atomic::Ordering::Relaxed)
+  }
+}

@@ -1,0 +1,17 @@
+*.lock
+*.pyc
+*.pyo
+*.rlib
+.DS_Store
+.codegraph/
+.pytest_cache/
+.qoder/
+.ruff_cache/
+.venv/
+__pycache__/
+node_modules/
+target/
+
+/v8/
+reports/
+test262_report.*

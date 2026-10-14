@@ -1,0 +1,382 @@
+:root
+  --bg #ffffff
+  --card-bg #ffffff
+  --card-border #d0d7de
+  --text-main #1f2328
+  --text-dim #656d76
+  --text-bright #111111
+  --accent #0969da
+  --accent-hover #085cc0
+  --green #1a7f37
+  --blue #0969da
+  --purple #8250df
+  --orange #bf8700
+
+*, ::before, ::after
+  box-sizing border-box
+
+body
+  background-color var(--bg)
+  color var(--text-main)
+  font-family -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif
+  min-height 100vh
+  display flex
+  flex-direction column
+  margin 0
+
+a
+  color var(--blue)
+  text-decoration none
+  &:hover
+    text-decoration underline
+
+header.nav
+  display flex
+  align-items center
+  justify-content space-between
+  padding 0.85rem 2rem
+  background-color rgba(255, 255, 255, 0.88)
+  backdrop-filter blur(12px)
+  border-bottom 1px solid var(--card-border)
+  position sticky
+  top 0
+  z-index 100
+
+.brand
+  display flex
+  align-items center
+  gap 0.75rem
+  font-size 1.25rem
+  font-weight 700
+  color var(--text-bright)
+  img, svg
+    width 30px
+    height 30px
+
+.nav-links
+  display flex
+  align-items center
+  gap 1rem
+
+.lang-btn
+  background #f6f8fa
+  border 1px solid var(--card-border)
+  color var(--text-main)
+  padding 0.35rem 0.75rem
+  border-radius 6px
+  font-size 0.875rem
+  font-weight 500
+  cursor pointer
+  transition all 0.2s ease
+  &:hover
+    background #eaeef2
+    border-color #afb8c1
+
+main.container
+  flex 1
+  max-width 1200px
+  width 100%
+  margin 0 auto
+  padding 2rem 1.5rem
+  box-sizing border-box
+
+.hero
+  text-align center
+  padding 2.5rem 1rem 1.5rem
+  h1
+    font-size 2.75rem
+    font-weight 800
+    color var(--text-bright)
+    margin-bottom 0.75rem
+    letter-spacing -0.02em
+    .highlight
+      background linear-gradient(135deg, #0969da 0%, #218bff 100%)
+      -webkit-background-clip text
+      -webkit-text-fill-color transparent
+  p.desc
+    font-size 1.15rem
+    color var(--text-dim)
+    max-width 780px
+    margin 0 auto 1.5rem
+    line-height 1.6
+
+.stat-grid
+  display grid
+  grid-template-columns repeat(auto-fit, minmax(220px, 1fr))
+  gap 1rem
+  margin-bottom 2rem
+
+.stat-card
+  background var(--card-bg)
+  border 1px solid var(--card-border)
+  border-radius 10px
+  padding 1.25rem
+  display flex
+  flex-direction column
+  align-items center
+  text-align center
+  box-shadow 0 1px 3px rgba(31, 35, 40, 0.04)
+  transition transform 0.15s ease, box-shadow 0.15s ease
+  &:hover
+    transform translateY(-1px)
+    box-shadow 0 4px 12px rgba(9, 105, 218, 0.08)
+    border-color #afb8c1
+  .val
+    font-size 2rem
+    font-weight 700
+    color var(--text-bright)
+    margin 0.25rem 0
+    &.green
+      color var(--green)
+    &.accent
+      color var(--accent)
+    &.blue
+      color var(--blue)
+  .lbl
+    font-size 0.875rem
+    color var(--text-dim)
+
+.card
+  background var(--card-bg)
+  border 1px solid var(--card-border)
+  border-radius 10px
+  padding 1.5rem
+  margin-bottom 2rem
+  box-shadow 0 1px 3px rgba(31, 35, 40, 0.04)
+  transition all 0.2s ease
+  &:hover
+    border-color #afb8c1
+  h2
+    font-size 1.35rem
+    font-weight 600
+    color var(--text-bright)
+    margin-bottom 1rem
+    display flex
+    align-items center
+    gap 0.5rem
+
+.platform-bar
+  display flex
+  align-items center
+  justify-content space-between
+  flex-wrap wrap
+  gap 1rem
+  background #f6f8fa
+  border 1px solid var(--card-border)
+  border-radius 10px
+  padding 0.85rem 1.25rem
+  margin-bottom 1.5rem
+
+.selector-group
+  display flex
+  align-items center
+  gap 0.75rem
+
+.bar-label
+  font-size 0.9rem
+  color var(--text-dim)
+  font-weight 600
+
+.env-badges
+  display flex
+  align-items center
+  flex-wrap wrap
+  gap 0.5rem
+
+.card-header-flex
+  display flex
+  align-items center
+  justify-content space-between
+  flex-wrap wrap
+  gap 1rem
+  margin-bottom 0.5rem
+  h2
+    margin 0
+
+.metric-toggle
+  display flex
+  background #f6f8fa
+  border 1px solid var(--card-border)
+  border-radius 8px
+  padding 3px
+
+.pill-btn
+  background transparent
+  border none
+  color var(--text-dim)
+  padding 5px 12px
+  font-size 0.8rem
+  font-weight 600
+  border-radius 6px
+  cursor pointer
+  transition all 0.2s ease
+  &:hover
+    color var(--text-bright)
+  &.active
+    background #ffffff
+    color var(--accent)
+    box-shadow 0 1px 2px rgba(31, 35, 40, 0.1)
+
+.bench-dropdown
+  position relative
+  display inline-block
+
+.dropdown-trigger
+  display inline-flex
+  align-items center
+  gap 8px
+  background #ffffff
+  border 1px solid var(--card-border)
+  padding 7px 16px
+  font-size 0.88rem
+  font-weight 600
+  color var(--text-bright)
+  border-radius 8px
+  cursor pointer
+  box-shadow 0 1px 2px rgba(31, 35, 40, 0.04)
+  transition all 0.2s ease
+  user-select none
+  &:hover
+    border-color var(--accent)
+  &.open .arrow-icon
+    transform rotate(180deg)
+
+.arrow-icon
+  color var(--text-dim)
+  transition transform 0.2s ease
+  flex-shrink 0
+
+.dropdown-menu
+  position absolute
+  top calc(100% + 6px)
+  left 0
+  min-width 220px
+  background #ffffff
+  border 1px solid var(--card-border)
+  border-radius 8px
+  padding 6px
+  box-shadow 0 8px 24px rgba(140, 149, 159, 0.2)
+  z-index 50
+  display flex
+  flex-direction column
+  gap 2px
+
+.dropdown-item
+  display flex
+  align-items center
+  justify-content space-between
+  width 100%
+  border none
+  background transparent
+  padding 8px 12px
+  border-radius 6px
+  font-size 0.84rem
+  font-weight 500
+  color var(--text-main)
+  text-align left
+  cursor pointer
+  transition all 0.15s ease
+  &:hover
+    background #f6f8fa
+    color var(--text-bright)
+  &.selected
+    background rgba(9, 105, 218, 0.1)
+    color var(--accent)
+    font-weight 600
+
+.item-check
+  font-size 0.84rem
+  font-weight 700
+  color var(--accent)
+
+.svg-chart-wrapper
+  width 100%
+  overflow-x auto
+  padding 1rem 0
+
+.chart-svg
+  display block
+  width 100%
+  height auto
+
+.bar-track
+  fill #f6f8fa
+
+.bar-rect
+  transition width 0.35s cubic-bezier(0.16, 1, 0.3, 1)
+
+.label-engine
+  font-size 13px
+  font-weight 600
+  fill var(--text-main)
+
+.is-current .label-engine
+  fill var(--accent)
+  font-weight 700
+
+.badge-star
+  fill var(--green)
+  font-size 11px
+  font-weight 700
+
+.val-text
+  dominant-baseline central
+  font-size 12px
+
+.num-val
+  font-family ui-monospace, SFMono-Regular, Menlo, monospace
+  font-weight 700
+  fill var(--text-bright)
+
+.is-current .num-val
+  fill var(--accent)
+
+.unit-val
+  fill var(--text-dim)
+  font-size 11px
+
+.table-wrapper
+  width 100%
+  overflow-x auto
+
+table.data-table
+  width 100%
+  border-collapse collapse
+  font-size 0.925rem
+  text-align left
+  th, td
+    padding 0.75rem 1rem
+    border-bottom 1px solid var(--card-border)
+  th
+    background #f6f8fa
+    color var(--text-dim)
+    font-weight 600
+  tr:hover td
+    background #f6f8fa
+  .speedup
+    color var(--green)
+    font-weight 600
+  .code-font
+    font-family ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace
+
+.badge
+  display inline-block
+  padding 0.2rem 0.5rem
+  border-radius 4px
+  font-size 0.75rem
+  font-weight 600
+  &.green
+    background rgba(26, 127, 55, 0.1)
+    color var(--green)
+    border 1px solid rgba(26, 127, 55, 0.25)
+  &.blue
+    background rgba(9, 105, 218, 0.1)
+    color var(--blue)
+    border 1px solid rgba(9, 105, 218, 0.25)
+
+footer
+  text-align center
+  padding 2rem
+  border-top 1px solid var(--card-border)
+  color var(--text-dim)
+  font-size 0.875rem

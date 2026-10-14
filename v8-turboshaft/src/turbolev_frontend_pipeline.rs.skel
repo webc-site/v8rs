@@ -1,0 +1,41 @@
+// 由 tool/src/compiler/turboshaft/turbolev-frontend-pipeline.h.js 从 v8/src/compiler/turboshaft/turbolev-frontend-pipeline.{h,cc} 生成; 修订就地改, 复跑覆盖
+// Turbolev 前端: bytecode -> maglev 图
+
+/// 原版 TurbolevFrontendPipeline — 跑 maglev 前端产出 maglev::Graph,
+/// 供 TurbolevGraphBuildingPhase 转 Turboshaft。
+/// v8: src/compiler/turboshaft/turbolev-frontend-pipeline.{h,cc}
+pub struct TurbolevFrontendPipeline<'d> {
+  pub data: &'d mut PipelineData,
+  pub compilation_info: MaglevCompilationInfo,
+  pub graph: Option<*mut MaglevGraph>,
+}
+
+impl<'d> TurbolevFrontendPipeline<'d> {
+  /// v8: cc Run — RUN_MAYBE_ABORT 驱动的 maglev phase 序列
+  /// (11 个, flag 条件各异):
+  /// - MaglevGraphBuilderPhase
+  /// - InlinerPhase
+  /// - LoopPeelerPhase
+  /// - PostOptimizerPhase
+  /// - TruncationPhase
+  /// - PrePhiUntaggingPhase
+  /// - PhiUntaggingPhase
+  /// - RangeAnalysisPhase
+  /// - EscapeAnalysisPhase
+  /// - PostHocPhase
+  /// - DeadNodeSweepingPhase
+  /// 返回 Some(maglev::Graph*) 或 None (bailout)
+  pub fn run(&mut self) -> Option<&'d mut MaglevGraph> { todo!() }
+
+  /// v8: TurbolevPhaseMatchesFilter — print_filter 匹配
+  fn turbolev_phase_matches_filter(&self, phase: MaglevPhase) -> bool { todo!() }
+  /// v8: ShouldPrintMaglevGraph — trace_turbo_graph 或
+  /// print_turbolev_frontend, 且过 phase 过滤
+  fn should_print_maglev_graph(&self, phase: Option<MaglevPhase>) -> bool { todo!() }
+  /// v8: PrintBytecode / PrintMaglevGraph / PrintInliningTreeDebugInfo
+  fn print_bytecode(&self) { /* ... */ }
+  fn print_maglev_graph(&self, phase: MaglevPhase) { /* ... */ }
+  fn print_inlining_tree_debug_info(&self) { /* ... */ }
+}
+
+/// cc 涉及 flag: turbolev_phase_filter, log_colour, max_inlined_bytecode_size_small_total, max_inlined_bytecode_size_cumulative, maglev_optimistic_peeled_loops, trace_turbo_filter, print_turbolev_frontend, trace_maglev_range_analysis, maglev_range_verification, turbolev_escape_analysis, turbolev_non_eager_inlining, turbolev_non_eager_loop_peeling, maglev_truncation, turbolev_untagged_phis, maglev_range_analysis, print_turbolev_inline_functions

@@ -1,0 +1,15 @@
+// 由 tool/src/objects/js-shared-array.h.js 从 v8/src/objects/js-shared-array.h + js-shared-array.tq 生成; 修订就地改, 复跑覆盖
+// JSSharedArray length in-object 槽差集骨架
+
+//! JSSharedArray: 共享空间数组; length 常量字段住 in-object 槽 0, 恒等于 elements().length()。
+
+/// v8: src/objects/js-shared-array.h JSSharedArray::kHeaderSize (= sizeof, 即 JSObject 头)
+pub const K_HEADER_SIZE: usize = 24;
+/// v8: src/objects/js-shared-array.h JSSharedArray::kLengthFieldIndex (in-object 槽 0)
+pub const K_LENGTH_FIELD_INDEX: usize = 0;
+pub const K_LENGTH_OFFSET: usize = 24;
+/// v8: src/objects/js-shared-array.h JSSharedArray::kSize (kHeaderSize + 1 槽)
+pub const K_SIZE: usize = 32;
+
+// length 访问器: AccessorInfo 只读 (TODO v8:12547: 空间优化候选 — 换 elements().length() 直读)
+// 推迟: DECL_PRINTER / EXPORT_DECL_VERIFIER (L4 诊断); 共享值写屏障走 AlwaysSharedSpaceJSObject 实例类型快路径

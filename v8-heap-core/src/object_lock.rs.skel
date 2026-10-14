@@ -1,0 +1,25 @@
+// 由 tool/src/heap/object-lock.js 从 v8/src/heap/object-lock.h, src/heap/object-lock-inl.h 生成; 修订就地改, 复跑覆盖
+// 对象级锁: 转成所在 MutablePage 的互斥锁
+/// v8: src/heap/object-lock.h ObjectLock
+pub struct ObjectLock;
+
+impl ObjectLock {
+  /// v8: src/heap/object-lock-inl.h ObjectLock::Lock
+  /// 语义: MutablePage::FromHeapObject(heap_object)->mutex()->Lock()
+  pub fn lock(isolate: &Isolate, heap_object: TaggedHeapObject) { todo!() }
+  /// v8: src/heap/object-lock-inl.h ObjectLock::Unlock
+  pub fn unlock(isolate: &Isolate, heap_object: TaggedHeapObject) { todo!() }
+}
+
+/// v8: src/heap/object-lock.h ObjectLockGuard — RAII: 构造 Lock, 析构 Unlock
+pub struct ObjectLockGuard<'a> {
+  /// v8: isolate_
+  pub isolate: &'a Isolate,
+  /// v8: raw_object_
+  pub raw_object: TaggedHeapObject,
+}
+
+impl Drop for ObjectLockGuard<'_> {
+  /// v8: ~ObjectLockGuard → ObjectLock::Unlock
+  fn drop(&mut self) { todo!() }
+}

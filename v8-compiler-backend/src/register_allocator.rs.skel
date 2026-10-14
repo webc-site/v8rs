@@ -1,0 +1,74 @@
+// 由 tool/src/compiler/backend/register-allocator.js 从 v8/src/compiler/backend/register-allocator.h + register-allocator.cc 生成; 修订就地改, 复跑覆盖
+// 寄存器分配管线: LiveRange 数据族 + 六 pass (约束/活区/捆绑/线性扫描/溢出槽/引用图/连接)
+
+//! 台账: 数据族 — LifetimePosition (偶对齐序数) / UseInterval / UsePosition
+//!   (Type 4 + HintType 5) / LiveRange (区间链 + 寄存器/溢出/分裂) /
+//!   TopLevelLiveRange (child 链 + spill 面) / LiveRangeBundle (区间并) /
+//!   SpillRange / DoubleEndedSplitVector (GrowthDirection 2, kMinCapacity 2);
+//!   pass 族 — ConstraintBuilder → LiveRangeBuilder (BuildLiveRanges) →
+//!   BundleBuilder → LinearScanAllocator (AllocateRegisters) → OperandAssigner
+//!   (AssignSpillSlots) → ReferenceMapPopulator (PopulateReferenceMaps) →
+//!   LiveRangeConnector (ConnectRanges); kNumberOfFixedRangesPerRegister=2 双处。
+
+/// v8: UsePosition::Type — 使用点约束
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum UsePositionType {
+  /// kRegisterOrSlot
+  RegisterOrSlot,
+  /// kRegisterOrSlotOrConstant
+  RegisterOrSlotOrConstant,
+  /// kRequiresRegister
+  RequiresRegister,
+  /// kRequiresSlot
+  RequiresSlot,
+}
+
+/// v8: UsePosition::HintType — 使用点提示来源
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum UsePositionHintType {
+  /// kNone
+  None,
+  /// kOperand
+  Operand,
+  /// kUsePos
+  UsePos,
+  /// kPhi
+  Phi,
+  /// kUnresolved
+  Unresolved,
+}
+
+/// v8: DoubleEndedSplitVector 生长方向
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum GrowthDirection {
+  /// kFront
+  Front,
+  /// kFrontOrBack
+  FrontOrBack,
+}
+
+
+/// v8: RegisterAllocationData::kNumberOfFixedRangesPerRegister (LiveRangeBuilder 同值)
+pub const NUMBER_OF_FIXED_RANGES_PER_REGISTER: i32 = 2;
+/// v8: DoubleEndedSplitVector::kMinCapacity
+pub const MIN_CAPACITY: usize = 2;
+
+/// v8: RegisterAllocationData — 分配数据中枢 (各 pass 共享)
+// pub struct RegisterAllocationData (live_in/out/固定区间/分配掩码/溢出范围)
+/// v8: LiveRange::SplitAt — 区间分裂 (child 链)
+// fn split_at(&mut self, pos: LifetimePosition) -> LiveRange
+/// v8: TopLevelLiveRange — 顶层区间 (vreg 对应 + spill + child 链)
+// pub struct TopLevelLiveRange
+/// v8: 六 pass 入口 (见上); LinearScanAllocator 继承 RegisterAllocator 基类
+// ConstraintBuilder/LiveRangeBuilder/BundleBuilder/LinearScanAllocator/
+//   OperandAssigner/ReferenceMapPopulator/LiveRangeConnector
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(NUMBER_OF_FIXED_RANGES_PER_REGISTER == 2);
+  assert!(MIN_CAPACITY == 2);
+  assert!(UsePositionHintType::Unresolved as u8 == 4);
+};

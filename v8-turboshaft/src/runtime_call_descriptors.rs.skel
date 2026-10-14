@@ -1,0 +1,87 @@
+// 由 tool/src/compiler/turboshaft/runtime-call-descriptors.h.js 从 v8/src/compiler/turboshaft/runtime-call-descriptors.h 生成; 修订就地改, 复跑覆盖
+// 运行时调用描述符表
+
+/// 原版 runtime::Descriptor — 每条对应一个 Runtime::k 函数的 Turboshaft
+/// 调用描述符; Create() 经 Linkage::GetRuntimeCallDescriptor 装配,
+/// kCanTriggerLazyDeopt && caller_can_deopt 时挂 kNeedsFrameState。
+/// 默认 kEffects = CanCallAnything; Void/Never 以 V<Any> 哨兵表达。
+/// v8: src/compiler/turboshaft/runtime-call-descriptors.h runtime
+pub struct RuntimeCallDescriptor {
+  /// 原版 kFunction (Runtime::kXxx)
+  pub function: RuntimeFunctionId,
+  /// 原版 Arguments (ARG 展开)
+  pub args: &'static [(&'static str, Type)],
+  /// 原版 returns_t
+  pub returns: Type,
+  /// 原版 kCanTriggerLazyDeopt
+  pub can_trigger_lazy_deopt: bool,
+  /// 原版 kProperties (Operator::kNoProperties / kNoWrite / kFoldable / ...)
+  pub properties: OperatorProperties,
+  /// 原版自定义 kEffects (None = 默认 CanCallAnything)
+  pub effects: Option<OpEffects>,
+}
+
+pub const RUNTIME_CALL_DESCRIPTORS: &[RuntimeCallDescriptor] = &[
+  /// Abort: Runtime::kAbort, 返回 V<Object>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::Abort, args: &[("messageOrMessageId", Type::Smi)], returns: Type::Object, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// BigIntUnaryOp: Runtime::kBigIntUnaryOp, 返回 V<BigInt>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::BigIntUnaryOp, args: &[("x", Type::BigInt), ("opcode", Type::Smi)], returns: Type::BigInt, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// DateCurrentTime: Runtime::kDateCurrentTime, 返回 V<Number>, lazy_deopt=false, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::DateCurrentTime, args: &[], returns: Type::Number, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// NumberToStringSlow: Runtime::kNumberToStringSlow, 返回 V<String>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::NumberToStringSlow, args: &[("input", Type::Number)], returns: Type::String, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// StackGuard: Runtime::kStackGuard, 返回 V<Object>, lazy_deopt=false, Operator::kNoProperties, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::StackGuard, args: &[], returns: Type::Object, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// StackGuardWithGap: Runtime::kStackGuardWithGap, 返回 V<Object>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::StackGuardWithGap, args: &[("gap", Type::Smi)], returns: Type::Object, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// HandleNoHeapWritesInterrupts: Runtime::kHandleNoHeapWritesInterrupts, 返回 V<Object>, lazy_deopt=true, Operator::kNoWrite, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::HandleNoHeapWritesInterrupts, args: &[], returns: Type::Object, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// PropagateException: Runtime::kPropagateException, 返回 V<Object>, lazy_deopt=true, Operator::kNoProperties, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::PropagateException, args: &[], returns: Type::Object, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ReThrow: Runtime::kReThrow, 返回 V<Never>, lazy_deopt=false, Operator::kNoThrow
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ReThrow, args: &[("exception", Type::Object)], returns: Type::Never, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// StringCharCodeAt: Runtime::kStringCharCodeAt, 返回 V<Smi>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::StringCharCodeAt, args: &[("string", Type::String), ("index", Type::Number)], returns: Type::Smi, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// StringToUpperCaseIntl: Runtime::kStringToUpperCaseIntl, 返回 V<String>, lazy_deopt=true
+  RuntimeCallDescriptor { function: RuntimeFunctionId::StringToUpperCaseIntl, args: &[("string", Type::String)], returns: Type::String, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// SymbolDescriptiveString: Runtime::kSymbolDescriptiveString, 返回 V<String>, lazy_deopt=true, Operator::kNoDeopt
+  RuntimeCallDescriptor { function: RuntimeFunctionId::SymbolDescriptiveString, args: &[("symbol", Type::Symbol)], returns: Type::String, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// TerminateExecution: Runtime::kTerminateExecution, 返回 V<Object>, lazy_deopt=true, Operator::kNoDeopt, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::TerminateExecution, args: &[], returns: Type::Object, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// TransitionElementsKind: Runtime::kTransitionElementsKind, 返回 V<Object>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::TransitionElementsKind, args: &[("object", Type::HeapObject), ("target_map", Type::Map)], returns: Type::Object, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// TryMigrateInstance: Runtime::kTryMigrateInstance, 返回 V<Object>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::TryMigrateInstance, args: &[("heap_object", Type::HeapObject)], returns: Type::Object, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// TryMigrateInstanceAndMarkMapAsMigrationTarget: Runtime::kTryMigrateInstanceAndMarkMapAsMigrationTarget, 返回 V<Object>, lazy_deopt=false
+  RuntimeCallDescriptor { function: RuntimeFunctionId::TryMigrateInstanceAndMarkMapAsMigrationTarget, args: &[("heap_object", Type::HeapObject)], returns: Type::Object, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// ThrowAccessedUninitializedVariable: Runtime::kThrowAccessedUninitializedVariable, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowAccessedUninitializedVariable, args: &[("object", Type::Object)], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowConstructorReturnedNonObject: Runtime::kThrowConstructorReturnedNonObject, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowConstructorReturnedNonObject, args: &[], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowNotSuperConstructor: Runtime::kThrowNotSuperConstructor, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowNotSuperConstructor, args: &[("constructor", Type::Object), ("function", Type::Object)], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowSuperAlreadyCalledError: Runtime::kThrowSuperAlreadyCalledError, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowSuperAlreadyCalledError, args: &[], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowSuperNotCalled: Runtime::kThrowSuperNotCalled, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowSuperNotCalled, args: &[], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowCalledNonCallable: Runtime::kThrowCalledNonCallable, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowCalledNonCallable, args: &[("value", Type::Object)], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowInvalidStringLength: Runtime::kThrowInvalidStringLength, 返回 V<Never>, lazy_deopt=true, Operator::kNoProperties, 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowInvalidStringLength, args: &[], returns: Type::Never, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ThrowRangeError: Runtime::kThrowRangeError, 返回 V<Never>, lazy_deopt=false, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowRangeError, args: &[("template_index", Type::Smi)], returns: Type::Never, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// ThrowTypeError: Runtime::kThrowTypeError, 返回 V<Never>, lazy_deopt=false, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ThrowTypeError, args: &[("template_index", Type::Smi)], returns: Type::Never, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// NewClosure: Runtime::kNewClosure, 返回 V<JSFunction>, lazy_deopt=false, Operator::kNoThrow
+  RuntimeCallDescriptor { function: RuntimeFunctionId::NewClosure, args: &[("shared_function_info", Type::SharedFunctionInfo), ("feedback_cell", Type::FeedbackCell)], returns: Type::JSFunction, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// NewClosure_Tenured: Runtime::kNewClosure_Tenured, 返回 V<JSFunction>, lazy_deopt=false, Operator::kNoThrow
+  RuntimeCallDescriptor { function: RuntimeFunctionId::NewClosure_Tenured, args: &[("shared_function_info", Type::SharedFunctionInfo), ("feedback_cell", Type::FeedbackCell)], returns: Type::JSFunction, can_trigger_lazy_deopt: false, properties: _PROPS, effects: None },
+  /// HasInPrototypeChain: Runtime::kHasInPrototypeChain, 返回 V<Boolean>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::HasInPrototypeChain, args: &[("object", Type::Object), ("prototype", Type::Object)], returns: Type::Boolean, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// ToString: Runtime::kToString, 返回 V<String>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ToString, args: &[("input", Type::Object)], returns: Type::String, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+  /// MajorGCForCompilerTesting: Runtime::kMajorGCForCompilerTesting, 返回 V<Object>, lazy_deopt=false, Operator::kFoldable, effects=.CanAllocate().RequiredWhenUnused(), 无参
+  RuntimeCallDescriptor { function: RuntimeFunctionId::MajorGCForCompilerTesting, args: &[], returns: Type::Object, can_trigger_lazy_deopt: false, properties: _PROPS, effects: _EFFECTS },
+  /// ArrayIsArray: Runtime::kArrayIsArray, 返回 V<Boolean>, lazy_deopt=true, Operator::kNoProperties
+  RuntimeCallDescriptor { function: RuntimeFunctionId::ArrayIsArray, args: &[("input", Type::Object)], returns: Type::Boolean, can_trigger_lazy_deopt: true, properties: _PROPS, effects: None },
+];

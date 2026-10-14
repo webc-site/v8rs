@@ -1,0 +1,16 @@
+// 由 tool/src/compiler/turboshaft/wasm-simd-phase.h.js 从 v8/src/compiler/turboshaft/wasm-simd-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm SIMD: shuffle 降低 (256 位重向量化前置)
+
+/// 原版 WasmSimdPhase — 先分析后条件执行。
+/// v8: src/compiler/turboshaft/wasm-simd-phase.{h,cc}
+pub struct WasmSimdPhase;
+
+impl WasmSimdPhase {
+  /// v8: cc Run —
+  /// 1. WasmShuffleAnalyzer(temp_zone, graph).run()
+  /// 2. should_reduce() 为真才:
+  ///    set_wasm_shuffle_analyzer(&analyzer)
+  ///    CopyingPhase<WasmShuffleReducer>::Run
+  ///    clear_wasm_shuffle_analyzer()
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

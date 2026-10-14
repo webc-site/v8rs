@@ -1,0 +1,27 @@
+{
+  "name": "v8rs-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@3-/extract": "^0.1.8",
+    "@3-/read": "^0.1.4",
+    "@3-/stylus": "^0.1.17",
+    "@3-/write": "^0.1.2",
+    "@minify-html/node": "^0.18.1",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "browserslist": "^4.29.3",
+    "lightningcss": "^1.33.0",
+    "pug": "^3.0.4",
+    "stylus": "^0.64.0",
+    "svelte": "^5.57.2",
+    "svelte-preprocess": "^6.0.5",
+    "vite": "^8.3.4"
+  }
+}

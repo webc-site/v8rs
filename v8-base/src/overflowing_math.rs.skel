@@ -1,0 +1,35 @@
+// 由 tool/src/base/overflowing-math.h.js 从 v8/src/base/overflowing-math.h 生成; 修订就地改, 复跑覆盖
+// 有符号回绕算术与安全除法
+
+//! v8 侧: X-macro 算子 3 (含 int16 特化 1) + 其余函数 6
+
+// ---- OP_WITH_WRAPAROUND X-macro 展开 (unsigned 中转绕 UB) ----
+/// v8: OP_WITH_WRAPAROUND(Add, +)
+pub fn add_with_wraparound<T: Copy>(a: T, b: T) -> T { /* 语义: wrapping_add */ todo!() }
+/// v8: OP_WITH_WRAPAROUND(Sub, -)
+pub fn sub_with_wraparound<T: Copy>(a: T, b: T) -> T { /* 语义: wrapping_sub */ todo!() }
+/// v8: OP_WITH_WRAPAROUND(Mul, *)
+pub fn mul_with_wraparound<T: Copy>(a: T, b: T) -> T { /* 语义: wrapping_mul */ todo!() }
+/// v8: src/base/overflowing-math.h MulWithWraparound<int16_t> 特化
+/// C++ 整型提升陷阱 (llvm bug 25580): 提升到 uint32 乘后截断; Rust i16::wrapping_mul 等价
+pub fn mul_with_wraparound_i16(a: i16, b: i16) -> i16 { a.wrapping_mul(b) }
+
+// ---- 其余函数 ----
+/// v8: src/base/overflowing-math.h MulWithWraparound
+/// a=0→±inf, 否则 1/sqrt(a)
+pub fn mul_with_wraparound<T: Copy>(a: T) -> T { todo!() }
+/// v8: src/base/overflowing-math.h NegateWithWraparound
+/// MIN 不变 (避免 -MIN UB), 其余取负
+pub fn negate_with_wraparound<T: Copy>(a: T) -> T { todo!() }
+/// v8: src/base/overflowing-math.h ShlWithWraparound
+/// 移位量 & (位宽-1) 掩码后无符号左移
+pub fn shl_with_wraparound<T: Copy>(a: T) -> T { todo!() }
+/// v8: src/base/overflowing-math.h Divide
+/// y==0 时 IEEE 语义: x=0/NaN→NaN, 同号→+inf, 异号→-inf
+pub fn divide<T: Copy>(a: T) -> T { todo!() }
+/// v8: src/base/overflowing-math.h Recip
+/// 1.0f / a (经 Divide)
+pub fn recip<T: Copy>(a: T) -> T { todo!() }
+/// v8: src/base/overflowing-math.h RecipSqrt
+/// a=0→±inf, 否则 1/sqrt(a)
+pub fn recip_sqrt<T: Copy>(a: T) -> T { todo!() }

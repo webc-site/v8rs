@@ -1,0 +1,425 @@
+// 由 tool/src/compiler/wasm-graph-assembler.cc.js 从 v8/src/compiler/wasm-graph-assembler.h + wasm-graph-assembler.cc 生成; 修订就地改, 复跑覆盖
+// wasm 图组装器: GraphAssembler 子类, wasm 引擎态字段访问面
+
+
+/// WasmGraphAssembler — GraphAssembler 的 wasm 侧子类
+/// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler
+pub struct WasmGraphAssembler {
+  /// 基类组装器
+  pub assembler: crate::graph_assembler::GraphAssembler,
+}
+
+impl WasmGraphAssembler {
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::CallBuiltinThroughJumptable
+  pub fn call_builtin_through_jumptable(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::GetBuiltinPointerTarget
+  pub fn get_builtin_pointer_target(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::CallBuiltin
+  pub fn call_builtin(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::CallBuiltinWithFrameState
+  pub fn call_builtin_with_frame_state(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::Branch
+  pub fn branch(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::NumberConstant
+  pub fn number_constant(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::SmiConstant
+  pub fn smi_constant(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::MergeControlToEnd
+  pub fn merge_control_to_end(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildTruncateIntPtrToInt32
+  pub fn build_truncate_int_ptr_to_int32(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeInt32ToIntPtr
+  pub fn build_change_int32_to_int_ptr(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeIntPtrToInt64
+  pub fn build_change_int_ptr_to_int64(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeUint32ToUintPtr
+  pub fn build_change_uint32_to_uint_ptr(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildSmiShiftBitsConstant
+  pub fn build_smi_shift_bits_constant(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildSmiShiftBitsConstant32
+  pub fn build_smi_shift_bits_constant32(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeInt32ToSmi
+  pub fn build_change_int32_to_smi(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeUint31ToSmi
+  pub fn build_change_uint31_to_smi(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeSmiToInt32
+  pub fn build_change_smi_to_int32(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildConvertUint32ToSmiWithSaturation
+  pub fn build_convert_uint32_to_smi_with_saturation(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildChangeSmiToIntPtr
+  pub fn build_change_smi_to_int_ptr(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::Allocate
+  pub fn allocate(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadFromObject
+  pub fn load_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadProtectedPointerFromObject
+  pub fn load_protected_pointer_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadImmutableProtectedPointerFromObject
+  pub fn load_immutable_protected_pointer_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadImmutableFromObject
+  pub fn load_immutable_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadImmutable
+  pub fn load_immutable(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadWasmCodePointer
+  pub fn load_wasm_code_pointer(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StoreToObject
+  pub fn store_to_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::InitializeImmutableInObject
+  pub fn initialize_immutable_in_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildDecodeSandboxedExternalPointer
+  pub fn build_decode_sandboxed_external_pointer(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildLoadExternalPointerFromObject
+  pub fn build_load_external_pointer_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadImmutableTrustedPointerFromObject
+  pub fn load_immutable_trusted_pointer_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadTrustedPointerFromObject
+  pub fn load_trusted_pointer_from_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::BuildDecodeTrustedPointer
+  pub fn build_decode_trusted_pointer(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::IsSmi
+  pub fn is_smi(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadMap
+  pub fn load_map(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StoreMap
+  pub fn store_map(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadInstanceType
+  pub fn load_instance_type(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadWasmTypeInfo
+  pub fn load_wasm_type_info(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadFixedArrayElement
+  pub fn load_fixed_array_element(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadImmutableFixedArrayElement
+  pub fn load_immutable_fixed_array_element(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadFixedArrayElementSmi
+  pub fn load_fixed_array_element_smi(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadFixedArrayElementPtr
+  pub fn load_fixed_array_element_ptr(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadFixedArrayElementAny
+  pub fn load_fixed_array_element_any(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadProtectedFixedArrayElement
+  pub fn load_protected_fixed_array_element(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadByteArrayElement
+  pub fn load_byte_array_element(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StoreFixedArrayElement
+  pub fn store_fixed_array_element(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StoreFixedArrayElementSmi
+  pub fn store_fixed_array_element_smi(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StoreFixedArrayElementAny
+  pub fn store_fixed_array_element_any(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadWeakFixedArrayElement
+  pub fn load_weak_fixed_array_element(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadSharedFunctionInfo
+  pub fn load_shared_function_info(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadContextNoCellFromJSFunction
+  pub fn load_context_no_cell_from_jsfunction(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadFunctionDataFromJSFunction
+  pub fn load_function_data_from_jsfunction(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadExportedFunctionInstanceData
+  pub fn load_exported_function_instance_data(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadJSArrayElements
+  pub fn load_jsarray_elements(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::FieldOffset
+  pub fn field_offset(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmArrayElementOffset
+  pub fn wasm_array_element_offset(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::IsDataRefMap
+  pub fn is_data_ref_map(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmTypeCheck
+  pub fn wasm_type_check(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmTypeCheckAbstract
+  pub fn wasm_type_check_abstract(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmTypeCast
+  pub fn wasm_type_cast(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmTypeCastAbstract
+  pub fn wasm_type_cast_abstract(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::Null
+  pub fn null(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::IsNull
+  pub fn is_null(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::IsNotNull
+  pub fn is_not_null(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::AssertNotNull
+  pub fn assert_not_null(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmAnyConvertExtern
+  pub fn wasm_any_convert_extern(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::WasmExternConvertAny
+  pub fn wasm_extern_convert_any(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StructGet
+  pub fn struct_get(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StructSet
+  pub fn struct_set(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::ArrayGet
+  pub fn array_get(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::ArraySet
+  pub fn array_set(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::ArrayLength
+  pub fn array_length(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::ArrayInitializeLength
+  pub fn array_initialize_length(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadStringLength
+  pub fn load_string_length(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StringAsWtf16
+  pub fn string_as_wtf16(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::StringPrepareForGetCodeunit
+  pub fn string_prepare_for_get_codeunit(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::HasInstanceType
+  pub fn has_instance_type(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::HasInstanceTypeInRange
+  pub fn has_instance_type_in_range(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::TrapIf
+  pub fn trap_if(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::TrapUnless
+  pub fn trap_unless(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::LoadTrustedDataFromInstanceObject
+  pub fn load_trusted_data_from_instance_object(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+
+  /// v8: src/compiler/wasm-graph-assembler.h WasmGraphAssembler::CallBuiltinImpl
+  pub fn call_builtin_impl(&mut self) {
+    todo!() // 推迟台账: wasm 引擎态 (Isolate/WasmEngine)
+  }
+}
+
+// —— 对数基准 ——
+// 头方法面 82 项 / cc 定义面 71 处引用

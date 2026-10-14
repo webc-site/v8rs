@@ -1,0 +1,86 @@
+// 由 tool/src/base/region-allocator.h.js 从 v8/src/base/region-allocator.h + .cc 生成; 修订就地改, 复跑覆盖
+// 地址区间分配器 (区段切分/合并, 不做真实内存操作)
+
+//! v8 侧: 枚举 3+2; 方法 21; 双集布局
+//! Rust 策略: BTreeSet<Region> ×2 (AddressEndOrder / SizeAddressOrder) 或 Vec + 排序索引
+
+/// v8: enum class RegionState { // The region can be allocated from.
+    kFree, // The region has been carved out of the wider area and is not allocatable.
+    kExcluded, // The region has been allocated and is managed by a RegionAllocator.
+    kAllocated }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RegionState {
+    /// v8: // The region can be allocated from.
+    kFree
+    Free,
+    /// v8: // The region has been carved out of the wider area and is not allocatable.
+    kExcluded
+    Excluded,
+    /// v8: // The region has been allocated and is managed by a RegionAllocator.
+    kAllocated
+    Allocated,
+}
+
+/// v8: enum class AllocationStrategy { // Allocates in the first large enough free region.
+    kFirstFit, // Allocates in the largest free region.
+    kLargestFit }
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AllocationStrategy {
+    /// v8: // Allocates in the first large enough free region.
+    kFirstFit
+    FirstFit,
+    /// v8: // Allocates in the largest free region.
+    kLargestFit
+    LargestFit,
+}
+
+/// v8: class Region : public AddressRegion (address + size + state_)
+#[derive(Clone, Debug)]
+pub struct Region {
+    pub address: usize,
+    pub size: usize,
+    /// v8: state_
+    pub state: RegionState,
+}
+
+/// v8: class RegionAllocator final
+/// 布局: whole_region_ + all_regions_ (按地址尾排序) + free_regions_ (按大小/地址排序)
+/// 回调: on_split_ / on_merge_ (SplitMergeCallback)
+pub struct RegionAllocator {
+    /// v8: whole_region_ (构造时 [address, address+size))
+    whole_region: (usize, usize),
+    /// v8: all_regions_ — AddressEndOrder
+    all_regions: std::collections::BTreeSet<Region>,
+    /// v8: free_regions_ — SizeAddressOrder
+    free_size: usize,
+    /// v8: page_size_
+    page_size: usize,
+}
+
+impl RegionAllocator {
+    /// v8: RegionAllocator(address, size, page_size) — 初始一个 kFree 整区
+    pub fn new(address: usize, size: usize, page_size: usize) -> Self { todo!() }
+
+    /// v8: AllocateRegion(size, strategy=kFirstFit) / AllocateRegion(rng, size) — 随机地址版
+    /// v8: AllocateRegionAt(requested_address, size, state) — 定点
+    /// v8: AllocateAlignedRegion(size, alignment) / AllocateRegion(hint, size, alignment)
+    /// v8: FreeRegion(address) → 释放大小; TrimRegion(address, new_size) → 截小
+    /// v8: TryGrowRegion(address, new_size) — 相邻空闲吞并
+    pub fn allocate_region(&mut self, size: usize, strategy: AllocationStrategy) -> usize { todo!() }
+    pub fn allocate_region_at(&mut self, requested_address: usize, size: usize, state: RegionState) -> bool { todo!() }
+    pub fn free_region(&mut self, address: usize) -> usize { todo!() }
+    pub fn trim_region(&mut self, address: usize, new_size: usize) -> usize { todo!() }
+    pub fn try_grow_region(&mut self, address: usize, new_size: usize) -> bool { todo!() }
+
+    /// v8: CheckRegion(address) → 大小; IsFree(address, size)
+    /// v8: begin/end/size/contains ×2/free_size/GetLargestFreeRegionSize/page_size
+    pub fn check_region(&self, address: usize) -> usize { todo!() }
+    pub fn is_free(&self, address: usize, size: usize) -> bool { todo!() }
+    pub fn free_size(&self) -> usize { self.free_size }
+    pub fn get_largest_free_region_size(&self) -> usize { todo!() }
+    /// v8: set_on_split_callback / set_on_merge_callback — 切分/合并通知
+    /// v8: Print(os) — 调试输出
+}
+
+// ---- v8 方法对账 (21 项) ----
+// set_on_split_callback, set_on_merge_callback, AllocateRegion, AllocateRegionAt, AllocateAlignedRegion, FreeRegion, TrimRegion, TryGrowRegion, CheckRegion, IsFree, begin, end, size, contains, free_size, GetLargestFreeRegionSize, page_size, Print, FreeListAddRegion, FreeListRemoveRegion, Merge

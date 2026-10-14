@@ -1,0 +1,100 @@
+// 由 tool/src/base/numerics/checked_math.h.js 从 v8/src/base/numerics/checked_math.h + checked_math_impl.h 生成; 修订就地改, 复跑覆盖
+// 溢出检查算术: CheckedNumeric 类型面
+
+//! v8 侧: Checked*Op 结构 12 个; X-macro 算子 12 个; using 导出 17 条
+//! Rust 策略: 核心语义 → i*.checked_add 等原生方法; CheckedNumeric<T> 保留 Option<T> 式包装
+
+/// v8: src/base/numerics/checked_math.h class CheckedNumeric<T>
+/// state_ = (value, is_valid); Rust: (T, bool)
+pub struct CheckedNumeric<T> {
+    /// v8: state_ (CheckedNumericState: value_ + is_valid_)
+    pub value: T,
+    pub is_valid: bool,
+}
+
+impl<T> CheckedNumeric<T> {
+    /// v8: IsValid() / AssignIfValid(Dst*) / ValueOrDie() / ValueOrDefault()
+    /// v8 方法面 (解析): IsValid, ValueOrDie, ValueOrDefault, Cast, UnsignedAbs, MathOp, operator+
+    pub fn is_valid(&self) -> bool { self.is_valid }
+
+    /// v8: ValueOrDie — 无效则 CHECK 崩溃 (Rust: expect)
+    pub fn value_or_die(&self) -> T where T: Copy { /* 语义: expect 有效 */ todo!() }
+
+    /// v8: ValueOrDefault(default)
+    pub fn value_or_default(&self, default: T) -> T where T: Copy { todo!() }
+
+    /// v8: Cast<Dst>() — 目标类型域检查后转换
+    pub fn cast<Dst>(&self) -> CheckedNumeric<Dst> { todo!() }
+
+    /// v8: Abs() / UnsignedAbs() / Max() / Min() / FastRuntimeNegate()
+    /// 语义面就地修订
+}
+
+// ---- 12 个 Checked*Op (impl 侧规则结构) ----
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedAddOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedSubOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedMulOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedDivOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedModOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedLshOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedRshOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedAndOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedOrOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedXorOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedMaxOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+/// v8: src/base/numerics/checked_math_impl.h struct CheckedMinOp
+/// v8: result_type = MaxExponentPromotion<T, U>; DoSafeAdd 等分派 — Rust 用 checked_* 原生替换
+// 语义: Add/Sub/Mul → checked_add/checked_sub/checked_mul; Div/Mod 除零检查;
+// Lsh/Rsh 移位量界检查; And/Or/Xor 位运算仅域检查; Max/Min 比较后域检查
+
+// ---- X-macro 算子展开 (checked_math.h 尾部) ----
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Add, +, +=)
+pub fn check_add<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Sub, -, -=)
+pub fn check_sub<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Mul, *, *=)
+pub fn check_mul<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Div, /, /=)
+pub fn check_div<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Mod, %, %=)
+pub fn check_mod<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Lsh, <<, <<=)
+pub fn check_lsh<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Rsh, >>, >>=)
+pub fn check_rsh<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, And, &, &=)
+pub fn check_and<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Or, |, |=)
+pub fn check_or<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_OPERATORS(Checked, Check, Xor, ^, ^=)
+pub fn check_xor<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_VARIADIC(Checked, Check, Max)
+pub fn check_max<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+/// v8: BASE_NUMERIC_ARITHMETIC_VARIADIC(Checked, Check, Min)
+pub fn check_min<T>(lhs: T, rhs: T) -> CheckedNumeric<T> { todo!() }
+
+// ---- 自由函数 ----
+/// v8: src/base/numerics/checked_math.h IsValidForType
+pub fn isvalidfortype() { todo!() }
+/// v8: src/base/numerics/checked_math.h ValueOrDieForType
+pub fn valueordiefortype() { todo!() }
+/// v8: src/base/numerics/checked_math.h ValueOrDefaultForType
+pub fn valueordefaultfortype() { todo!() }
+/// v8: src/base/numerics/checked_math.h MakeCheckedNum
+pub fn makecheckednum() { todo!() }
+/// v8: src/base/numerics/checked_math.h CheckMathOp
+pub fn check_mathop() { todo!() }
+
+// ---- using 导出对账表 (v8 侧 17 条) ----
+// CheckAdd, CheckAnd, CheckDiv, CheckedNumeric, CheckLsh, CheckMax, CheckMin, CheckMod, CheckMul, CheckOr, CheckRsh, CheckSub, CheckXor, IsValidForType, MakeCheckedNum, ValueOrDefaultForType, ValueOrDieForType

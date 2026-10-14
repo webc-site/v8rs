@@ -1,0 +1,34 @@
+// 由 tool/src/heap/cppgc-internal/garbage-collector.js 从 v8/src/heap/cppgc-internal/garbage-collector.h 生成; 修订就地改, 复跑覆盖
+// GC 抽象接口; HeapBase 与之共享同签名虚方法
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/garbage-collector.h GarbageCollector
+pub trait GarbageCollector {
+    /// v8: GarbageCollector::CollectGarbage — 执行 config 指定的 GC
+    fn collect_garbage(&mut self, config: GcConfig);
+
+    /// v8: GarbageCollector::StartIncrementalGarbageCollection
+    fn start_incremental_garbage_collection(&mut self, config: GcConfig);
+
+    /// v8: GarbageCollector::RetryAllocate — GC 后重试 allocate, 最多两轮 (见 gc-invoker.cc)
+    fn retry_allocate(&mut self, allocate: &mut dyn FnMut() -> bool) -> bool;
+
+    /// v8: GarbageCollector::epoch — GC 纪元, 每次 GC 递增
+    fn epoch(&self) -> usize;
+
+    /// v8: GarbageCollector::overridden_stack_state
+    fn overridden_stack_state(&self) -> Option<StackState>;
+
+    /// v8: GarbageCollector::set_override_stack_state
+    fn set_override_stack_state(&mut self, state: StackState);
+
+    /// v8: GarbageCollector::clear_overridden_stack_state
+    fn clear_overridden_stack_state(&mut self);
+
+    /// v8: src/heap/cppgc-internal/garbage-collector.h GarbageCollector::UpdateAllocationTimeout
+    /// (C++ 侧在 V8_ENABLE_ALLOCATION_TIMEOUT 下; 语义面留锚)
+    fn update_allocation_timeout(&mut self) -> Option<i32> {
+        None
+    }
+}

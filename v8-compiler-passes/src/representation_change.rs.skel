@@ -1,0 +1,226 @@
+// 由 tool/src/compiler/representation-change.h.js 从 v8/src/compiler/representation-change.h 生成; 修订就地改, 复跑覆盖
+// 机器表示变更与 Simplified→Machine 转换
+
+//! representation-change — GetRepresentationFor 总分派
+//!
+//! 三层: 10 个 *OperatorFor (目标表示的等价机器算子) /
+//! 9 个 Get*RepresentationFor (目标表示分派) /
+//! 14 个 Insert* (插入转换节点);
+//! 常量折叠先行, 类型错误走 TypeError 收集。
+
+/// 原版 RepresentationChanger — 表示变更器
+pub struct RepresentationChanger<'z, 'g> {
+  /// cache_
+  pub cache: *const TypeCache,
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// broker_
+  pub broker: *mut JSHeapBroker,
+  /// verifier_
+  pub verifier: Option<Box<SimplifiedLoweringVerifier<'z, 'g>>>,
+  /// testing_type_errors_
+  pub testing_type_errors: bool,
+  /// type_error_
+  pub type_error: bool,
+  /// ieee754_fp16_raw_bits_to_fp32_raw_bits_code_ 等 4 个 SetOnce 缓存 (ieee754_fp16_raw_bits_to_fp32_raw_bits_code_/ieee754_fp64_to_fp16_raw_bits_code_/ieee754_fp16_raw_bits_to_fp32_raw_bits_operator_/ieee754_fp64_to_fp16_raw_bits_operator_)
+  pub ieee754_caches: [SetOncePtr<Node>; 4],
+}
+
+impl RepresentationChanger<'_, '_> {
+  /// 原版 GetRepresentationFor — 总入口 (output_rep/output_type → use_info)
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetRepresentationFor
+  pub fn get_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetRepresentationFor")
+  }
+
+  /// 原版 Int32OperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Int32OperatorFor
+  pub fn int32_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Int32OperatorFor")
+  }
+
+  /// 原版 Int32OverflowOperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Int32OverflowOperatorFor
+  pub fn int32_overflow_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Int32OverflowOperatorFor")
+  }
+
+  /// 原版 AdditiveSafeIntegerOverflowOperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::AdditiveSafeIntegerOverflowOperatorFor
+  pub fn additive_safe_integer_overflow_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::AdditiveSafeIntegerOverflowOperatorFor")
+  }
+
+  /// 原版 Int64OperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Int64OperatorFor
+  pub fn int64_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Int64OperatorFor")
+  }
+
+  /// 原版 Int64OverflowOperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Int64OverflowOperatorFor
+  pub fn int64_overflow_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Int64OverflowOperatorFor")
+  }
+
+  /// 原版 BigIntOperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::BigIntOperatorFor
+  pub fn big_int_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::BigIntOperatorFor")
+  }
+
+  /// 原版 TaggedSignedOperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::TaggedSignedOperatorFor
+  pub fn tagged_signed_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::TaggedSignedOperatorFor")
+  }
+
+  /// 原版 Uint32OperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Uint32OperatorFor
+  pub fn uint32_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Uint32OperatorFor")
+  }
+
+  /// 原版 Uint32OverflowOperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Uint32OverflowOperatorFor
+  pub fn uint32_overflow_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Uint32OverflowOperatorFor")
+  }
+
+  /// 原版 Float64OperatorFor — opcode → 目标表示机器算子
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::Float64OperatorFor
+  pub fn float64_operator_for(&self, opcode: IrOpcode) -> &Operator {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::Float64OperatorFor")
+  }
+
+  /// 原版 GetTaggedSignedRepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetTaggedSignedRepresentationFor
+  fn get_tagged_signed_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetTaggedSignedRepresentationFor")
+  }
+
+  /// 原版 GetTaggedPointerRepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetTaggedPointerRepresentationFor
+  fn get_tagged_pointer_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetTaggedPointerRepresentationFor")
+  }
+
+  /// 原版 GetTaggedRepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetTaggedRepresentationFor
+  fn get_tagged_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetTaggedRepresentationFor")
+  }
+
+  /// 原版 GetFloat16RawBitsRepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetFloat16RawBitsRepresentationFor
+  fn get_float16_raw_bits_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetFloat16RawBitsRepresentationFor")
+  }
+
+  /// 原版 GetFloat32RepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetFloat32RepresentationFor
+  fn get_float32_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetFloat32RepresentationFor")
+  }
+
+  /// 原版 GetFloat64RepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetFloat64RepresentationFor
+  fn get_float64_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetFloat64RepresentationFor")
+  }
+
+  /// 原版 GetWord32RepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetWord32RepresentationFor
+  fn get_word32_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetWord32RepresentationFor")
+  }
+
+  /// 原版 GetBitRepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetBitRepresentationFor
+  fn get_bit_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetBitRepresentationFor")
+  }
+
+  /// 原版 GetWord64RepresentationFor
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::GetWord64RepresentationFor
+  fn get_word64_representation_for(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use_node: &Node, use_info: UseInfo) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::GetWord64RepresentationFor")
+  }
+
+  /// 原版 TypeError — 类型错误记录 (testing 模式不 abort)
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::TypeError
+  fn type_error(&mut self, node: &Node, output_rep: MachineRepresentation, output_type: Type, use: MachineRepresentation) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::TypeError")
+  }
+
+  /// 原版 Insert* 插入族全清单 (各自骨架)
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeBitToTagged
+  fn insert_change_bit_to_tagged(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeBitToTagged")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat32ToFloat64
+  fn insert_change_float32_to_float64(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat32ToFloat64")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat64ToInt32
+  fn insert_change_float64_to_int32(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat64ToInt32")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat64ToUint32
+  fn insert_change_float64_to_uint32(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat64ToUint32")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeInt32ToFloat64
+  fn insert_change_int32_to_float64(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeInt32ToFloat64")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeTaggedSignedToInt32
+  fn insert_change_tagged_signed_to_int32(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeTaggedSignedToInt32")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeTaggedToFloat64
+  fn insert_change_tagged_to_float64(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeTaggedToFloat64")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeUint32ToFloat64
+  fn insert_change_uint32_to_float64(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeUint32ToFloat64")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertCheckedFloat64ToInt32
+  fn insert_checked_float64_to_int32(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertCheckedFloat64ToInt32")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat16RawBitsToFloat64Fallback
+  fn insert_change_float16_raw_bits_to_float64_fallback(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertChangeFloat16RawBitsToFloat64Fallback")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertTruncateFloat64ToFloat16RawBitsFallback
+  fn insert_truncate_float64_to_float16_raw_bits_fallback(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertTruncateFloat64ToFloat16RawBitsFallback")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertConversion
+  fn insert_conversion(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertConversion")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertTruncateInt64ToInt32
+  fn insert_truncate_int64_to_int32(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertTruncateInt64ToInt32")
+  }
+
+  /// v8: src/compiler/representation-change.cc RepresentationChanger::InsertUnconditionalDeopt
+  fn insert_unconditional_deopt(&mut self, node: &Node /*, ... */) -> *mut Node {
+    todo!("v8: src/compiler/representation-change.cc RepresentationChanger::InsertUnconditionalDeopt")
+  }
+}

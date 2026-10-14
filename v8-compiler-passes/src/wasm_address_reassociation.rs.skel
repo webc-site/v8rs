@@ -1,0 +1,99 @@
+// 由 tool/src/compiler/wasm-address-reassociation.js 从 v8/src/compiler/wasm-address-reassociation.h + wasm-address-reassociation.cc 生成; 修订就地改, 复跑覆盖
+// wasm 内存访问基址+偏移重结合
+
+//! wasm-address-reassociation — 同 (base, offset, effect 链) 的访存归并
+//!
+//! 键 = (NodeId, NodeId, NodeId); CandidateBaseAddr (base+offset 可合并对) →
+//! CandidateMemOps (共享对象 + 即时偏移的 load/store 集)。
+
+/// 原版 CandidateAddressKey — (base_id, offset_id, effect_chain_id)
+pub type CandidateAddressKey = (NodeId, NodeId, NodeId);
+
+/// 原版 CandidateBaseAddr — 可合并的 (base, offset) 节点对
+pub struct CandidateBaseAddr {
+  /// base_reg_
+  pub base_reg: *mut Node,
+  /// offset_reg_
+  pub offset_reg: *mut Node,
+}
+
+/// 原版 CandidateMemOps — 共享访问集 (mem_ops 与 imm_offsets 平行数组)
+pub struct CandidateMemOps<'z> {
+  /// mem_ops_
+  pub mem_ops: ZoneVector<*mut Node>,
+  /// imm_offsets_
+  pub imm_offsets: ZoneVector<i64>,
+}
+
+impl CandidateMemOps<'_> {
+  /// 原版 AddCandidate
+  /// v8: src/compiler/wasm-address-reassociation.cc CandidateMemOps::AddCandidate
+  pub fn add_candidate(&mut self, mem_op: *mut Node, imm_offset: i64) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc CandidateMemOps::AddCandidate")
+  }
+
+  /// 原版 GetNumNodes / mem_op / imm_offset
+  /// v8: src/compiler/wasm-address-reassociation.h CandidateMemOps::GetNumNodes
+  pub fn get_num_nodes(&self) -> usize {
+    self.mem_ops.len()
+  }
+}
+
+/// 原版 WasmAddressReassociation — 归并器
+pub struct WasmAddressReassociation<'z> {
+  /// graph_
+  pub graph: *mut TFGraph<'z>,
+  /// common_ / machine_
+  pub common: *mut CommonOperatorBuilder<'z>,
+  pub machine: *mut MachineOperatorBuilder<'z>,
+  /// candidate_base_addrs_
+  pub candidate_base_addrs: ZoneMap<CandidateAddressKey, CandidateBaseAddr>,
+  /// candidates_
+  pub candidates: ZoneMap<CandidateAddressKey, CandidateMemOps<'z>>,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+}
+
+impl WasmAddressReassociation<'_> {
+  /// 原版 Optimize
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::Optimize
+  pub fn optimize(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::Optimize")
+  }
+
+  /// 原版 VisitTrappingMemOp
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::VisitTrappingMemOp
+  pub fn visit_trapping_mem_op(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::VisitTrappingMemOp")
+  }
+
+  /// 原版 ShouldTryOptimize
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::ShouldTryOptimize
+  pub fn should_try_optimize(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::ShouldTryOptimize")
+  }
+
+  /// 原版 CreateNewBase
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::CreateNewBase
+  pub fn create_new_base(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::CreateNewBase")
+  }
+
+  /// 原版 HasCandidateBaseAddr
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::HasCandidateBaseAddr
+  pub fn has_candidate_base_addr(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::HasCandidateBaseAddr")
+  }
+
+  /// 原版 AddCandidate
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::AddCandidate
+  pub fn add_candidate(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::AddCandidate")
+  }
+
+  /// 原版 ReplaceInputs
+  /// v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::ReplaceInputs
+  pub fn replace_inputs(&mut self /*, 按签名 */) {
+    todo!("v8: src/compiler/wasm-address-reassociation.cc WasmAddressReassociation::ReplaceInputs")
+  }
+}

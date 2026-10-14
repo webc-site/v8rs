@@ -1,0 +1,92 @@
+// 由 tool/src/regexp/regexp-interpreter.cc.js 从 v8/src/regexp/regexp-interpreter.cc 生成; 修订就地改, 复跑覆盖
+// opcode/函数 处置台账 (审计专用): 61 handler 逐名双行号 (cc/rs) 逐批段; 落地面逐项锚; 推迟项 0 桩体
+
+//! RawMatch opcode handler 台账 (61 项, 枚举序; P-3a 23 项已落地 REG-1b2,
+//! P-3b 22 项已落地 REG-1b3, P-3c 9 + P-3d 7 = 16 项已落地 REG-1b3/REG-1b4
+//! (唯一残留为 P-3c-icu 运行态通道: 4 个 NoCase handler 的 uc16 态依赖 ICU 折叠);
+//! 前置: INIT 操作数解码基座 cc:402-414 已落 (rs OperandType/operand_layout/
+//! BYTECODE_LAYOUTS/bytecode_operands); computed-goto cc:338-358/510-556 为性能轨
+//! — rust 侧取 switch 等价物 (cc:349-357); 行号双对账: cc=原版实测,
+//! rs=regexp_interpreter.rs 派发臂行:
+// [ 0] Break                                cc:577  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2026
+// [ 1] PushCurrentPosition                  cc:578  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2072
+// [ 2] PushBacktrack                        cc:585  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2079
+// [ 3] WriteCurrentPositionToRegister       cc:618  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2188
+// [ 4] ReadCurrentPositionFromRegister      cc:623  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2199
+// [ 5] WriteStackPointerToRegister          cc:628  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2207
+// [ 6] ReadStackPointerFromRegister         cc:633  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2215
+// [ 7] SetRegister                          cc:600  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2154
+// [ 8] ClearRegisters                       cc:605  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2162
+// [ 9] AdvanceRegister                      cc:613  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2178
+// [10] PopCurrentPosition                   cc:638  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2106
+// [11] PushRegister                         cc:592  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2089
+// [12] PopRegister                          cc:657  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2136
+// [13] Fail                                 cc:662  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2234
+// [14] Succeed                              cc:667  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2239
+// [15] AdvanceCurrentPosition               cc:673  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2245
+// [16] GoTo                                 cc:678  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2252
+// [17] LoadCurrentCharacter                 cc:696  → P-3b 已落地 exec_char_ops rs:2334
+// [18] CheckPosition                        cc:991  → P-3b 已落地 exec_char_ops rs:2584
+// [19] CheckSpecialClassRanges              cc:1000 → P-3b 已落地 exec_char_ops rs:2596
+// [20] CheckCharacter                       cc:751  → P-3b 已落地 exec_char_ops rs:2427
+// [21] CheckNotCharacter                    cc:767  → P-3b 已落地 exec_char_ops rs:2449
+// [22] CheckCharacterAfterAnd               cc:783  → P-3b 已落地 exec_char_ops rs:2472
+// [23] CheckNotCharacterAfterAnd            cc:799  → P-3b 已落地 exec_char_ops rs:2496
+// [24] CheckNotCharacterAfterMinusAnd       cc:807  → P-3b 已落地 exec_char_ops rs:2510
+// [25] CheckCharacterInRange                cc:816  → P-3b 已落地 exec_char_ops rs:2526
+// [26] CheckCharacterNotInRange             cc:824  → P-3b 已落地 exec_char_ops rs:2538
+// [27] CheckCharacterLT                     cc:840  → P-3b 已落地 exec_char_ops rs:2562
+// [28] CheckCharacterGT                     cc:848  → P-3b 已落地 exec_char_ops rs:2573
+// [29] IfRegisterLT                         cc:856  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2280
+// [30] IfRegisterGE                         cc:864  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2291
+// [31] IfRegisterEqPos                      cc:872  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2304
+// [32] CheckAtStart                         cc:967  → P-3c 已落地 exec_backref_ops rs:2831
+// [33] CheckNotAtStart                      cc:975  → P-3c 已落地 exec_backref_ops rs:2843
+// [34] CheckFixedLengthLoop                 cc:687  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2268
+// [35] SetCurrentPositionFromEnd            cc:983  → P-3c 已落地 exec_backref_ops rs:2855
+// [36] Backtrack                            cc:643  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2113
+// [37] LoadCurrentCharacterUnchecked        cc:705  → P-3b 已落地 exec_char_ops rs:2351
+// [38] CheckBitInTable                      cc:832  → P-3b 已落地 exec_char_ops rs:2550
+// [39] Load2CurrentChars                    cc:711  → P-3b 已落地 exec_char_ops rs:2359
+// [40] Load2CurrentCharsUnchecked           cc:720  → P-3b 已落地 exec_char_ops rs:2376
+// [41] Load4CurrentChars                    cc:726  → P-3b 已落地 exec_char_ops rs:2384
+// [42] Load4CurrentCharsUnchecked           cc:736  → P-3b 已落地 exec_char_ops rs:2403
+// [43] Check4Chars                          cc:743  → P-3b 已落地 exec_char_ops rs:2416
+// [44] CheckNot4Chars                       cc:759  → P-3b 已落地 exec_char_ops rs:2438
+// [45] AndCheck4Chars                       cc:775  → P-3b 已落地 exec_char_ops rs:2460
+// [46] AndCheckNot4Chars                    cc:791  → P-3b 已落地 exec_char_ops rs:2484
+// [47] AdvanceCpAndGoto                     cc:682  → P-3a 已落地 exec_stack_ops/exec_reg_ops/exec_ctrl_ops rs:2258
+// [48] CheckNotBackRef                      cc:880  → P-3c 已落地 exec_backref_ops rs:2649
+// [49] CheckNotBackRefNoCase                cc:922  → P-3c 已落地 exec_backref_ops rs:2728
+// [50] CheckNotBackRefNoCaseUnicode         cc:908  → P-3c 已落地 exec_backref_ops rs:2692
+// [51] CheckNotBackRefBackward              cc:894  → P-3c 已落地 exec_backref_ops rs:2672
+// [52] CheckNotBackRefNoCaseBackward        cc:952  → P-3c 已落地 exec_backref_ops rs:2796
+// [53] CheckNotBackRefNoCaseUnicodeBackward cc:937  → P-3c 已落地 exec_backref_ops rs:2760
+// [54] SkipUntilBitInTable                  cc:1036 → P-3d 已落地 exec_skip_ops rs:2932
+// [55] SkipUntilCharAnd                     cc:1023 → P-3d 已落地 exec_skip_ops rs:2907
+// [56] SkipUntilChar                        cc:1010 → P-3d 已落地 exec_skip_ops rs:2882
+// [57] SkipUntilCharOrChar                  cc:1066 → P-3d 已落地 exec_skip_ops rs:2986
+// [58] SkipUntilGtOrNotBitInTable           cc:1049 → P-3d 已落地 exec_skip_ops rs:2956
+// [59] SkipUntilOneOfMasked                 cc:1086 → P-3d 已落地 exec_skip_ops rs:3016
+// [60] SkipUntilOneOfMasked3                cc:1111 → P-3d 已落地 exec_skip_ops rs:3068
+//!
+//! 批段切分: P-3a=23 / P-3b=22 / P-3c=9 / P-3d=7 = 61
+//! 已落纯函数 (REG-1b1, 非 isolate): CheckBitInTable 核 cc:321-326 / IndexIsInBounds
+//! cc:329-332 / BitsPerChar+Load2+Load4 cc:105-122 / BackRefMatchesNoCase Latin1
+//! cc:63-81 / CheckSpecialClassRanges 核 cc:418-497 (word 表参数注入) /
+//! BacktrackStack cc:129-165 / InterpreterRegisters cc:172-213 /
+//! ADVANCE/SET_PC/位置宏纯函数化 cc:367-381 / Bytecodes 纯读取子集
+//! (bytecodes.h:355-373) / Result·CallOrigin 协议面 (h:21-27, regexp.h:111-114)
+//! REG-1b2 落地: INIT 解码基座 cc:402-414 (OperandType 11 项 + 宽度/对齐/kIsBasic
+//! traits inl.h:23-69 + CalculateAlignedOffsets inl.h:107-136 + 61 项布局表 ≡
+//! kBytecodeSizes inl.h:312-316 + Get<op> inl.h:244-273) / RawMatch 派发主体
+//! cc:501-576 (preamble + while/DECODE/DISPATCH, switch 轨) / P-3a 23 handler
+//! 逐名双对账见上表 / Hooks trait = [P-2] isolate 消费点注入缝
+//! (maybe_throw_stack_overflow cc:227 / handle_interrupts cc:260 /
+//! add_backtrack_sample cc:663-664,668-669 调用点)
+//! 推迟自由函数 (P-2/P-4): ThrowStackOverflow cc:215 / MaybeThrow cc:227 (trait
+//! 注入承接调用点) / UpdateCodeAndSubjectReferences cc:236 / HandleInterrupts
+//! cc:260 (trait 注入承接调用点) / MaybeTraceInterpreter cc:84 /
+//! BackRefMatchesNoCase Unicode cc:46 (宏汇编器 CaseInsensitiveCompare* 依赖) /
+//! Match cc:1215 / MatchInternal cc:1298 / MatchForCallFromJs cc:1348 /
+//! MatchForCallFromRuntime cc:1380 (RawMatch cc:501 派发主体已落, 非本表项)

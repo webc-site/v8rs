@@ -1,0 +1,111 @@
+// 由 tool/src/compiler/turboshaft/operation-matcher.h.js 从 v8/src/compiler/turboshaft/operation-matcher.h 生成; 修订就地改, 复跑覆盖
+// 操作匹配器: 模式匹配 Match* 工具面
+
+/// 原版 detail::ValueMatch — 值匹配三态: 通配 / OpIndex 绑定 / 常量
+/// v8: src/compiler/turboshaft/operation-matcher.h detail::ValueMatch
+pub enum ValueMatch<T> {
+  /// Wildcard: 任意值均可
+  Wildcard,
+  /// 指定 OpIndex: 须全等
+  Index(OpIndex),
+  /// OpIndex* 输出绑定: 匹配成功时写出
+  Bind(*mut OpIndex),
+  /// constexpr 常量: 比对常量值
+  Constant(T),
+}
+
+/// 原版 detail::OptionMatch — 选项匹配 (通配/值/绑定)
+/// v8: src/compiler/turboshaft/operation-matcher.h detail::OptionMatch
+pub struct OptionMatch<T>(pub OptionE<T>);
+
+/// 原版 OperationMatcher — 只读图上的模式匹配器
+/// v8: src/compiler/turboshaft/operation-matcher.h OperationMatcher
+pub struct OperationMatcher<'g> {
+  pub graph: &'g Graph,
+}
+
+impl<'g> OperationMatcher<'g> {
+  /// v8: operation-matcher.h Is / TryCast / Cast / Get / Index — 薄委托 graph
+  pub fn is<Op>(&self, idx: V) -> bool { todo!() }
+  pub fn try_cast<Op>(&self, idx: V) -> Option<&'g Op> { todo!() }
+  pub fn get(&self, idx: V) -> &'g Operation { todo!() }
+
+  // —— Match* 方法面 (37 个名, 46 个重载) ——
+  /// v8: operation-matcher.h MatchZero
+  pub fn MatchZero(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchIntegralZero
+  pub fn MatchIntegralZero(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchSmiZero
+  pub fn MatchSmiZero(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloat32Constant
+  pub fn MatchFloat32Constant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloat64Constant
+  pub fn MatchFloat64Constant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloat
+  pub fn MatchFloat(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchNaN
+  pub fn MatchNaN(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchHeapConstant
+  pub fn MatchHeapConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchIntegralWordConstant
+  pub fn MatchIntegralWordConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchIntegralWord32Constant
+  pub fn MatchIntegralWord32Constant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchIntegralWord64Constant
+  pub fn MatchIntegralWord64Constant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchIntegralWordPtrConstant
+  pub fn MatchIntegralWordPtrConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchSignedIntegralConstant
+  pub fn MatchSignedIntegralConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchUnsignedIntegralConstant
+  pub fn MatchUnsignedIntegralConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchExternalConstant
+  pub fn MatchExternalConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchWasmStubCallConstant
+  pub fn MatchWasmStubCallConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchChange
+  pub fn MatchChange(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchTruncateWord64ToWord32
+  pub fn MatchTruncateWord64ToWord32(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchWordBinop
+  pub fn MatchWordBinop(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchWordAdd
+  pub fn MatchWordAdd(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchWordSub
+  pub fn MatchWordSub(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchWordMul
+  pub fn MatchWordMul(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchBitwiseAnd
+  pub fn MatchBitwiseAnd(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchBitwiseXor
+  pub fn MatchBitwiseXor(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchBitwiseAndWithConstant
+  pub fn MatchBitwiseAndWithConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchEqual
+  pub fn MatchEqual(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloatUnary
+  pub fn MatchFloatUnary(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloatRoundDown
+  pub fn MatchFloatRoundDown(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloatBinary
+  pub fn MatchFloatBinary(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchFloatSub
+  pub fn MatchFloatSub(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchConstantShift
+  pub fn MatchConstantShift(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchConstantRightShift
+  pub fn MatchConstantRightShift(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchConstantLeftShift
+  pub fn MatchConstantLeftShift(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchConstantShiftRightArithmeticShiftOutZeros
+  pub fn MatchConstantShiftRightArithmeticShiftOutZeros(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchPhi
+  pub fn MatchPhi(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchPowerOfTwoWordConstant
+  pub fn MatchPowerOfTwoWordConstant(&self, /* ... */) -> bool { todo!() }
+  /// v8: operation-matcher.h MatchPowerOfTwoWord32Constant
+  pub fn MatchPowerOfTwoWord32Constant(&self, /* ... */) -> bool { todo!() }
+}
+
+/// MatchIntegralWordPtrConstant 的 1 处 intptr_t 默认模板参数
+/// (Is64() 时走 Word64 分支) — Rust 侧按指针宽度静态分派。

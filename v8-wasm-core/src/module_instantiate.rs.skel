@@ -1,0 +1,81 @@
+// 由 tool/src/wasm/module-instantiate.h.js 从 v8/src/wasm/module-instantiate.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 实例化导入分派枚举与 InstanceBuilder 阶段面
+
+//! 导入调用解析与实例化构建。
+/// v8: src/wasm/module-instantiate.h ResolvedWasmImport / InstanceBuilder
+
+/// 导入调用分派 (声明序)
+/// v8: src/wasm/module-instantiate.h enum class ImportCallKind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ImportCallKind {
+    /// v8: kLinkError — 静态 Wasm->Wasm 类型错误
+    LinkError = 0,
+    /// v8: kRuntimeTypeError — 运行时 Wasm->JS 类型错误
+    RuntimeTypeError = 1,
+    /// v8: kWasmToCapi — 快速 Wasm->C-API 调用
+    WasmToCapi = 2,
+    /// v8: kWasmToJSFastApi — 快速 Wasm->JS Fast API C 调用
+    WasmToJSFastApi = 3,
+    /// v8: kWasmToWasm — 快速 Wasm->Wasm 调用
+    WasmToWasm = 4,
+    /// v8: kJSFunction — 快速 Wasm->JS 调用
+    JSFunction = 5,
+    /// v8: kUseCallBuiltin — 其余走 call builtin
+    UseCallBuiltin = 6,
+}
+
+/// v8: kDefaultImportCallKind
+pub const DEFAULT_IMPORT_CALL_KIND: ImportCallKind = ImportCallKind::JSFunction;
+
+/// 挂起语义
+/// v8: src/wasm/module-instantiate.h enum Suspend
+pub const SUSPEND: i32 = 0;
+pub const NO_SUSPEND: i32 = 1;
+
+/// JS Promise integration 形态 (kStressSwitch 仅测试: 换栈不带 JSPI 语义)
+/// v8: src/wasm/module-instantiate.h enum Promise
+pub const PROMISE_PROMISE: i32 = 0;
+pub const PROMISE_NO_PROMISE: i32 = 1;
+pub const PROMISE_STRESS_SWITCH: i32 = 2;
+
+/// 元素段初始化是否预创建外部函数
+/// v8: src/wasm/module-instantiate.h enum PrecreateExternal
+pub const ONLY_INTERNAL_FUNCTION: bool = false;
+pub const PRECREATE_EXTERNAL: bool = true;
+
+/// 实例化阶段序 (两段式 + 不可失败段 + start 函数)
+/// v8: src/wasm/module-instantiate.cc InstanceBuilder::Build_Phase1/1_Infallible/2/ExecuteStartFunction
+pub const BUILD_PHASES: &[&str] = &["Build_Phase1", "Build_Phase1_Infallible", "Build_Phase2", "ExecuteStartFunction"];
+
+/// 导入处理五个面
+/// v8: src/wasm/module-instantiate.cc InstanceBuilder::ProcessImported*
+pub const IMPORT_PROCESSORS: &[&str] = &[
+    "ProcessImportedFunction",
+    "ProcessImportedTable",
+    "ProcessImportedWasmGlobalObject",
+    "ProcessImportedGlobal",
+    "ProcessImportedMemories",
+];
+
+/// wrapper 编译信息 (图构建输入)
+/// v8: src/wasm/module-instantiate.h struct WrapperCompilationInfo
+pub struct WrapperCompilationInfo {
+    /// v8: CodeKind code_kind
+    pub code_kind: CodeKind,
+    /// v8: wasm::ImportCallKind import_kind (仅 wasm-js wrapper 用)
+    pub import_kind: ImportCallKind,
+    /// v8: int expected_arity
+    pub expected_arity: i32,
+    /// v8: wasm::Suspend suspend
+    pub suspend: i32,
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(ImportCallKind::LinkError as u8, 0);
+    assert_eq!(ImportCallKind::UseCallBuiltin as u8, 6);
+    assert_eq!(BUILD_PHASES.len(), 4);
+    assert_eq!(IMPORT_PROCESSORS.len(), 5);
+    assert_eq!(DEFAULT_IMPORT_CALL_KIND, ImportCallKind::JSFunction);
+};

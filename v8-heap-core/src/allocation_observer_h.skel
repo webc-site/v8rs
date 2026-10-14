@@ -1,0 +1,41 @@
+// 由 tool/src/heap/allocation-observer.h.js 从 v8/src/heap/allocation-observer.h 生成; 修订就地改, 复跑覆盖
+// 分配观察者层级台账: Observer 7 + Counter 9+7 字段 + PauseScope 3; DEBUG-only 1 剥除
+
+// ══ AllocationObserver (原版 h:18-51) → v8-heap-core/src/allocation_observer.rs ══
+// kNotUsingFixedStepSize=-1    h:20
+// ctor(step_size)              h:21
+// virtual dtor                 h:22
+// 禁拷贝对                         h:23
+// 纯虚 Step                      h:39
+// 虚 GetNextStepSize            h:42
+// 字段 step_size_                h:48
+// 处置: 落地 — Rust trait AllocationObserver (step 纯虚 / next_step_size 默认实现);
+// C++ 多态容器消费 (AllocationCounter 持有异构观察者) → ObserverRef 手动 fn 指针 vtable
+// (等价 C++ 虚表, 遵本仓 禁 dyn 规范; SAFETY 逐块标注)
+// ══ AllocationCounter (原版 h:54-107) → 同名结构落地, 逻辑全在 .cc (见 allocation-observer.cc.js) ══
+// AllocationCounter ctor           h:56
+// AddAllocationObserver            h:59
+// RemoveAllocationObserver         h:62
+// AdvanceAllocationObservers       h:65
+// InvokeAllocationObservers        h:69
+// IsStepInProgress                 h:73
+// NextBytes                        h:75
+// HasAllocationObservers(DEBUG)    h:81
+// 内嵌 AllocationObserverCounter     h:88
+// 字段 7: observers_/pending_added_/pending_removed_/current_counter_/next_counter_/step_in_progress_ (h:100-106)
+// HasAllocationObservers h:81 — DEBUG-only: 落地为 #[cfg(debug_assertions)] 方法 (非假绿, 原版即调试断言面)
+// ══ PauseAllocationObserversScope (原版 h:109-119) → 窄 trait PauseEnv 承接 ══
+// PauseScope ctor(Heap*)         h:111
+// PauseScope dtor                h:112
+// PauseScope 禁拷贝                 h:113
+// Heap::allocator()/gc_state()/pause_allocation_observers_depth_ 属 Heap 票面 →
+// Rust 侧以 PauseEnv trait 承接 (原版 h:111 声明 / cc:161-171 实现 双引用见模块), Drop 语义等价 RAII
+
+// ── rs 侧落地锚 (HC-1R 实测台账) ──
+// Landed @ v8-heap-core/src/allocation_observer.rs (46 结构/方法/字段锚 + 18 双行号 doc 锚):
+//   Observer 7 面 → pub trait AllocationObserver (step/step_size/next_step_size 默认实现) +
+//     ObserverRef 手动虚表 (type StepFn/NextStepSizeFn, new<T> 单态化, invoke_step/invoke_next_step_size,
+//     key 指针身份; 全区 0 处 dyn — 本仓禁 dyn);
+//   Counter 9 面 + 字段 7 → 同名 struct + Vec AOC + HashSet pending + SeqCst-free 纯 usize 计数;
+//   PauseScope 3 面 → PauseEnv 窄 trait (5 调用面) + #[must_use] (V8_NODISCARD) + Drop RAII (dtor);
+//   Heap 耦合实现 (gc_state/allocator/pause_depth) 推迟至 Heap 票 (模块头双行号: cc:161-171 ↔ PauseEnv 区)。

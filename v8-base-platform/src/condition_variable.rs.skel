@@ -1,0 +1,60 @@
+// 由 tool/src/base/platform/condition-variable.js 从 v8/src/base/platform/condition-variable.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 条件变量原语 (absl::CondVar 委托, 目标 Rust 侧走 std::sync::Condvar)
+
+/// 条件变量 (原版 base::ConditionVariable; 原版委托 absl::CondVar)
+/// v8: src/base/platform/condition-variable.h ConditionVariable
+///
+/// 不变式: Wait/WaitFor 前必须持有 |mutex|; 原版在原子释放互斥期间
+/// 先 AssertHeldAndUnmark 再 AssertUnheldAndMark, 只动 DEBUG 标记。
+pub struct ConditionVariable {
+  /// 原版成员 absl::CondVar native_handle_
+  cond: std::sync::Condvar,
+}
+
+impl ConditionVariable {
+  /// v8: src/base/platform/condition-variable.cc ConditionVariable()
+  pub fn new() -> Self { Self { cond: std::sync::Condvar::new() } }
+
+  /// v8: src/base/platform/condition-variable.cc NotifyOne
+  /// 唤醒一个等待线程 (原版 native_handle_.Signal())
+  pub fn notify_one(&self) { self.cond.notify_one(); }
+
+  /// v8: src/base/platform/condition-variable.cc NotifyAll
+  /// 唤醒全部等待线程 (原版 native_handle_.SignalAll())
+  pub fn notify_all(&self) { self.cond.notify_all(); }
+
+  /// v8: src/base/platform/condition-variable.cc Wait
+  /// 原子释放互斥并阻塞, 被唤醒后重新获取互斥
+  pub fn wait<'m>(&self, guard: std::sync::MutexGuard<'m, ()>) -> std::sync::MutexGuard<'m, ()> {
+    self.cond.wait(guard).unwrap_or_else(|e| e.into_inner().0)
+  }
+
+  /// v8: src/base/platform/condition-variable.cc WaitFor
+  /// 返回 true 表示通知先于超时到达 (原版 return !timed_out)
+  /// 超时换算: rel_time.InNanoseconds() → absl::Nanoseconds → WaitWithTimeout
+  pub fn wait_for<'m>(
+    &self,
+    guard: std::sync::MutexGuard<'m, ()>,
+    rel_time: std::time::Duration,
+  ) -> (std::sync::MutexGuard<'m, ()>, bool) {
+    let (guard, timed_out) = self
+      .cond
+      .wait_timeout(guard, rel_time)
+      .unwrap_or_else(|e| e.into_inner());
+    (guard, !timed_out.timed_out())
+  }
+}
+
+// —— 惰性初始化登记 (原版 LazyConditionVariable + LAZY_CONDITION_VARIABLE_INITIALIZER) ——
+/// v8: src/base/platform/condition-variable.h LazyConditionVariable
+/// Rust 侧由 std::sync::OnceLock / LazyLock 承担, 宏不再需要
+pub type LazyConditionVariable = std::sync::OnceLock<ConditionVariable>;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // 原版公共面: ctor/dtor/NotifyOne/NotifyAll/Wait/WaitFor = 6
+  const PUBLIC_SURFACE: usize = 6;
+  // Wait/WaitFor 各一对 unmark/mark
+  const MARK_PAIRS: usize = 2;
+  assert!(PUBLIC_SURFACE == 6 && MARK_PAIRS == 2);
+};

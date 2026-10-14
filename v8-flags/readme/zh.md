@@ -1,0 +1,83 @@
+# v8-flags
+
+`v8/src/flags` 的 Rust 转写 — V8 flag 系统 (998 主 flag, 规范配置 macOS arm64 release)。
+
+## 模块映射
+
+| v8 源文件 | 本 crate 模块 | 生成脚本 | 说明 |
+|---|---|---|---|
+| `src/flags/flag-definitions.h` | `src/defs.rs` (9042 行) | `tool/src/flags/flag-definitions.h.js` | flag 静态表 + phf 名字表 + 逐 flag 类型化访问器 |
+| `src/flags/flag-definitions.h` (IMPLICATIONS) | `src/implications_gen.rs` (5885 行) | 同上 | 847 条蕴含 (值 830 / 警告 5 / 泛型 6 / 不变式 6), 定义序即求值序 |
+| `src/flags/feature-flags.h` (数据) | `src/features_gen.rs` | 同上 | 34 条特性 (阶段 × 种类 × flag 名) |
+| `src/flags/flags.cc` (矛盾区) | `src/contradictions_gen.rs` | 同上 | 80 对 fuzzing 矛盾 (顺序即优先级) |
+| (对数基线) | `src/counts.rs` + `tool/src/flags/stats.json` | 同上 | 三方对数门禁: 表实数 == 常量 == stats.json |
+| `src/flags/flags.h` | `src/value.rs` | `tool/src/flags/flags.h.js` | 存储层: FlagValue/FlagType/Flags/SetBy/FlagProcessingMode/门禁 |
+| `src/flags/flags-impl.h` | `src/lookup.rs` | `tool/src/flags/flags-impl.h.js` | 查找层: 名字归一比较 + 按名查找 (精确/蕴含后缀) |
+| `src/flags/flags.cc` | `src/flags.rs` | `tool/src/flags/flags.cc.js` | FlagList 运行时: 命令行解析 / 蕴含执行器 / 矛盾处理 / 冻结 / 哈希 / 打印 / TracingFlags |
+| `src/flags/feature-flags.h` (枚举) | `src/features.rs` | `tool/src/flags/feature-flags.h.js` | FeatureStage/FeatureKind + feature_flags_json (PrintFeatureFlagsJSON) |
+| `src/flags/{save-flags.h, save-flags.cc}` | `src/save.rs` | `tool/src/flags/save-flags.h.js` | 快照层: SavedFlags (RAII → 显式 save/restore) |
+| `src/base/bits.h` + `include/v8-internal.h` (引用) | `src/base.rs` | 同 flags.cc.js | 自含 is_pow2 / is_valid_smi (31 位 Smi, 待 v8-base 接管) |
+| `src/logging/tracing-flags.h` | `src/flags.rs` 内 `Tracing`/`TRACING` | — | 泛型蕴含副作用目标 (进程级原子开关) |
+
+## 测试覆盖 (v8/test/unittests/flags/flag-definitions-unittest.cc)
+
+迁移保留原测试名 (`tests/main.rs`):
+
+- `counts_consistency` — 三方对数门禁 (表实数 == counts 常量 == stats.json; 表实数与常量另有编译期断言)
+- FlagDefinitionsTest: `default` `flags1` `flags2` `flags2b` `flags3` `flags3b` `flags4` `flags4b`
+  `flags5` `flags5b` `flags6` `flags6b` `assign_read_only_string_flag`
+  `reject_negative_unsigned_flag_and_keep_default` `flags_remove_incomplete`
+  `flags_jitless_implications` `flags_disable_optimizing_compilers_implications` `freeze_flags`
+  `unsafe_flag_implies_test_only_unsafe` `fuzzing_implies_disallow_unsafe_flags`
+  `array_destructure_bytecode_implications` `correctness_fuzzer_suppressions_is_developer_only`
+- FlagContradictionsTest: `resolves_contradictions` `resolves_neg_contradictions`
+- FlagHelpersTest: `compare_different_flags` `compare_same_flags` (V8_FUZZ_TEST 以代表性样例代替)
+- FlagInternalsTest: `lookup_flag_by_name` `lookup_all_flags_by_name`
+  `lookup_all_implication_flags_by_name` `implication_order_should_not_matter`
+- ExperimentalFlagImplicationTest: `experimental_not_enabled_{default,future,wasm_staging,harmony}`
+- 补充: `processing_modes` `flag_ops_save_restore` `feature_flags_json_shape`
+- 回归补充 (tests/main.rs): `implication_no_change_registers_no_reset_edge` (蕴含等值
+  不登记重置边, 对齐原版 implied_by_map_ 仅改值时 push) / `resolve_wasm_code_space_clamp`
+  (矛盾处理前置块) / `split_argument_name_too_long` (原版 SplitArgument 1KB 缓冲 FlagError)
+- 回归补充 (tests/review_round3_unittest.rs): 规范配置修正 (V8_ENABLE_MAGLEV_GRAPH_PRINTER
+  按 BUILD.gn:487 standalone 默认开; V8_CAN_CREATE_SHARED_HEAP_BOOL 按 globals.h:137 默认开) /
+  无符号溢出拒收 (≥2^63 对应原版 errno!=0, flags.cc:716-728) / 数值前缀对齐 strtol·strtod
+  (前导空白跳过 + inf/infinity/nan/十六进制浮点, flags.cc:801/823) / 边表以
+  EnforceFlagImplications 调用为界 (flags.cc:1508 每调用新建 processor) /
+  implied_by 残留语义 (flags.cc:238-241 非蕴含设置不清除) / 哈希串段 std::quoted 转义
+  (flags.cc:534) / 50 例命令行边界对拍表 (修复过程与轮次记录见 ../../log/v8-flags.md)
+
+未迁移 (语义依赖外部设施): Flags1 的 CpuFeatures 打印、FreezeFlags 的裸指针写保护段
+(以 Err(Frozen) 断言代替)、`--jitless` 蕴含 `wasm_lazy_compilation` (仅 V8_ENABLE_DRUMBRAKE 构建)。
+
+## 与原版的已文档化差异
+
+- 出错路径 Err 化 (原版 return_code 索引 / FlagError 终止进程); 命令行出错时 argv 不收缩,
+  已解析的 flag 变更不回滚 (与原版注释语义一致); 无符号越界后 fail-fast (原版继续解析)
+- 数值空值 (`--int-flag=` 等) 与原版 strtol/strtod 语义对齐: 设 0 且不报错
+  (原版 flags.cc:801/823, endp 指向 NUL 不触发 illegal value)
+- FreezeFlags 仅逻辑拒写 (原版另有内存页保护)。冻结后: 异值写入/解析/蕴含/矛盾处理
+  一律 Err(Frozen); 等值赋值也报错 (原版 operator= 等值路径静默); `allow_overwriting`
+  与冻结后 restore 原版可生效/CHECK 终止, 此处忽略 — 均为 CHECK/段错误路径的 Err 化变体
+- flag 哈希用 FNV-1a 自洽内核 (原版 base::hash_range; 数值无需与 V8 一致)
+- float 打印用 Rust 原生最短往返表示 (std Display; 原版 ostream 六位有效数字,
+  仅影响 help/values 显示)
+
+## 推迟项 (范围外登记)
+
+- FreezeFlags 内存页保护 (原版 mprotect 只读页): 本层仅 API 拒写, 页级保护随引擎
+  内存层 (M1+) 回收
+- `--help` / `--print-feature-flags-json` 的打印与 `exit(0)` 副作用: 属外壳 (d8/capi)
+  层; 本 crate 已以 `print_help` / `feature_flags_json` 纯函数暴露, 接线推迟
+- `HelpOptions` (over_api/over_channel 组合): 随外壳层
+- `V8_FUZZ_TEST` (fuzztest 域随机): 以代表性样例代替, 域随机差分随 7.4 fuzz 门禁接入
+- `TracingFlags` (`TRACING` 静态): 原版属 `src/logging/tracing-flags.h`, 已内联于
+  `flags.rs`, v8-logging / v8-tracing 接管时迁移
+- `ComputeFlagListHash` DEBUG 分支 (`flags_ignored_because_of_predictable` 全量校验):
+  规范配置 release, 暂缓
+- `base.rs` 的 `is_pow2` / `is_valid_smi`: 自含实现, v8-base 接管时迁移
+
+## 依赖 (todo.md 10.2 白名单)
+
+`thiserror` 错误 / `phf` 静态名字表 / `strum` 枚举 Display / `log` 日志;
+dev: `sonic-rs` 对数与 JSON 测试 / `aok`+`ctor`+`log_init` 测试基建。

@@ -1,0 +1,72 @@
+// 由 tool/src/heap/scavenger.js 从 v8/src/heap/scavenger.h, src/heap/scavenger.cc 生成; 修订就地改, 复跑覆盖
+// 半空间拷贝 GC: ScavengerCollector 入口与并行任务
+/// 对象年龄 (cc 局部 enum class ObjectAge)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ObjectAge {
+  /// kOld
+  Old = 0,
+  /// kYoung
+  Young = 1,
+}
+
+/// v8: src/heap/scavenger.cc ScavengedObjectListEntry
+pub struct ScavengedObjectListEntry {
+  pub heap_object: TaggedHeapObject,
+  pub map: TaggedMap,
+  /// v8: SafeHeapObjectSize
+  pub size: u32,
+}
+
+/// v8: src/heap/scavenger.cc PinnedObjectEntry
+pub struct PinnedObjectEntry {
+  pub address: Address,
+  /// v8: MapWord
+  pub map_word: MapWord,
+  pub size: u32,
+  /// v8: metadata (MutablePage*)
+  pub metadata: *mut MutablePage,
+}
+
+/// v8: src/heap/scavenger.cc Scavenger 常量
+pub mod scavenger_consts {
+  /// v8: ScavengerWeakObjectsProcessor::kWeakObjectListSegmentSize
+  pub const K_WEAK_OBJECT_LIST_SEGMENT_SIZE: usize = 64;
+  /// v8: Scavenger::kScavengedObjectListSegmentSize
+  pub const K_SCAVENGED_OBJECT_LIST_SEGMENT_SIZE: usize = 256;
+  /// v8: EmptyChunksList 段大小 (Worklist<MutablePage*, 64>)
+  pub const K_EMPTY_CHUNKS_LIST_SEGMENT_SIZE: usize = 64;
+  /// v8: NumberOfScavengeTasks 内 kMaxScavengerTasks (含主线程)
+  pub const K_MAX_SCAVENGER_TASKS: i32 = 8;
+  /// v8: Scavenger::ShouldEagerlyProcessPromotedList — kMinSegmentSize / 2
+  pub const K_PROCESS_PROMOTED_LIST_THRESHOLD: i32 =
+    (K_SCAVENGED_OBJECT_LIST_SEGMENT_SIZE / 2) as i32;
+}
+
+/// v8: src/heap/scavenger.h ScavengerCollector
+pub struct ScavengerCollector {
+  /// v8: heap_ (const)
+  pub heap: *mut Heap,
+  /// v8: quarantined_page_sweeper_
+  pub quarantined_page_sweeper: Option<Box<QuarantinedPageSweeper>>,
+}
+
+impl ScavengerCollector {
+  /// v8: ScavengerCollector::CollectGarbage — 半空间拷贝并行 GC 主入口
+  pub fn collect_garbage(&mut self) { todo!() }
+  /// v8: ScavengerCollector::CompleteSweepingQuarantinedPagesIfNeeded
+  pub fn complete_sweeping_quarantined_pages_if_needed(&mut self) { todo!() }
+}
+
+/// v8: src/heap/scavenger.cc Scavenger — 单任务拷贝器
+/// (copied_list_/promoted_list_ 为 Worklist Local, 字段面宽, 见原文 280-460 行)
+/// v8: ScavengerObjectVisitorBase / ScavengerCopiedObjectVisitor / ScavengerPromotedObjectVisitor
+/// v8: RootScavengeVisitor / ScavengerJobTask / ScavengerWeakObjectsProcessor
+/// v8: NumberOfScavengeTasks — capacity/MB+1 与核数取 min, 再夹 [1, 8]
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(ObjectAge::Young as u8 == 1);
+  assert!(scavenger_consts::K_MAX_SCAVENGER_TASKS == 8);
+  assert!(scavenger_consts::K_PROCESS_PROMOTED_LIST_THRESHOLD == 128);
+};

@@ -1,0 +1,11 @@
+// 由 tool/src/regexp/regexp-utils.h.js 从 v8/src/regexp/regexp-utils.h 生成; 修订就地改, 复跑覆盖
+// Utils 静态方法签名表 (8) 与处置; 落地以 regexp_utils.rs 就地修订为准
+
+//! regexp-utils.h → regexp_utils.rs 处置表 (8 方法):
+//! - 落地 (纯逻辑, 参数注入):
+//!   AdvanceStringIndex → advance_string_index(&[u16] 码元切片, u64, bool) → u64
+//!   IsMatchedCapture → is_matched_capture(&[i32] 捕获寄存器组, i32 计数, i32) → bool
+//!   (附带 capture_start/end_index 索引公式, regexp-match-info.h:60-65)
+//! - 推迟 (Isolate/DirectHandle 硬耦合, 待 objects-js L3; 对齐 REG-1b 双引用惯例):
+//!   GenericCaptureGetter / SetLastIndex / GetLastIndex / RegExpExec /
+//!   IsUnmodifiedRegExp / SetAdvancedStringIndex

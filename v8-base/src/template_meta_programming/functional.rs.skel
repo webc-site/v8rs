@@ -1,0 +1,18 @@
+// 由 tool/src/base/template-meta-programming/functional.h.js 从 v8/src/base/template-meta-programming/functional.h 生成; 修订就地改, 复跑覆盖
+// 惰性 bool 与函数签名分解
+
+//! v8 侧: 惰性元函数 2; call_parameters 特化 2
+//! Rust 策略: fn 指针分解用 trait FnSignature; Rust 泛型无成员函数指针特化需求, 面向堆调用场景落地
+
+/// v8: src/base/template-meta-programming/functional.h lazy_false/lazy_true
+/// 用途: 延迟实例化的编译期 bool (static_assert 分支防误触发)
+pub struct LazyFalse<T>(core::marker::PhantomData<T>);
+pub struct LazyTrue<T>(core::marker::PhantomData<T>);
+
+/// v8: call_parameters<R(*)(Args...)>::type = list<Args...>
+/// v8: call_parameters<R(O::*)(Args...)>::type = list<Args...> (成员版)
+/// Rust: 自由函数指针 → 元组trait 不可类型级分解; 运行期由 call 侧闭包适配, 语义面就地修订
+pub trait CallParameters {
+    /// v8: call_parameters_t
+    type Args;
+}

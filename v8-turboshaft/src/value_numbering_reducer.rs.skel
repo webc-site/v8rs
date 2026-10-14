@@ -1,0 +1,43 @@
+// 由 tool/src/compiler/turboshaft/value-numbering-reducer.h.js 从 v8/src/compiler/turboshaft/value-numbering-reducer.h 生成; 修订就地改, 复跑覆盖
+// GVN: 开放寻址哈希 + 支配树深度链表
+
+/// 原版 Entry — 开放寻址表项 (hash==0 为空; 深度邻接单链表支持
+/// 整深度批量摘除; epoch 避免全表清零)
+/// v8: value-numbering-reducer.h ValueNumberingReducer::Entry
+#[derive(Clone, Copy)]
+pub struct Entry {
+  pub value: OpIndex,
+  pub block: BlockIndex,
+  pub hash: usize,
+  pub depth_neighboring_entry: Option<usize>,
+  /// kMaxEpoch = i32::MAX
+  pub epoch: i32,
+}
+
+/// GVN 效果白名单 (IsSubsetOf):
+/// - CanDependOnChecks 等: CanDependOnChecks
+/// - CanDependOnChecks 等: CanChangeControlFlow
+/// - CanDependOnChecks 等: CanAllocateWithoutIdentity
+/// - CanDependOnChecks 等: CanReadMemory
+/// 即 CanDependOnChecks + CanChangeControlFlow + CanAllocateWithoutIdentity + CanReadMemory
+/// v8: value-numbering-reducer.h EffectsAllowGVN
+pub fn effects_allow_gvn(effects: OpEffects) -> bool { todo!() }
+
+/// 特例:
+/// - DeoptimizeIfOp: 尽管含 CanDeopt 也允许 GVN
+/// - LoadOp: offset == offsetof(HeapObject, map_) 且无 index 的
+///   map 载入不 GVN (string map 可能被 GC 改写, epoch 不递增)
+/// v8: value-numbering-reducer.h EffectsAllowGVN(const Op&)
+pub const GVN_EXCEPTION_COUNT: usize = 2;
+
+/// 原版 ScopeCounter / DisableValueNumbering — 有意复制指令时
+/// 关闭 GVN 的域 (构造进, 析构出)
+/// v8: value-numbering-reducer.h ScopeCounter
+pub struct DisableValueNumbering<'r>(pub &'r mut ScopeCounter);
+pub struct ScopeCounter { scopes: i32 }
+
+/// 原版 ValueNumberingReducer — 依赖支配序迭代: 下降时入表,
+/// 回升时按 depths_heads_ 链表整深度摘除; 可写操作递增 current_epoch_
+/// 使旧表项整体失效。
+/// v8: src/compiler/turboshaft/value-numbering-reducer.h
+pub struct ValueNumberingReducer;

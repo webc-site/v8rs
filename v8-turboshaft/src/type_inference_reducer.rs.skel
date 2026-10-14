@@ -1,0 +1,43 @@
+// 由 tool/src/compiler/turboshaft/type-inference-reducer.h.js 从 v8/src/compiler/turboshaft/type-inference-reducer.h 生成; 修订就地改, 复跑覆盖
+// 类型推断 reducer: 复制时逐操作打类型
+
+/// 原版 TypeInferenceReducerArgs::InputGraphTyping
+/// v8: type-inference-reducer.h TypeInferenceReducerArgs
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum InputGraphTyping {
+  /// kNone: 不为输入图算类型
+  None = 0,
+  /// kPrecise: 输入图完整 fixpoint
+  Precise = 1,
+}
+
+/// 原版 TypeInferenceReducerArgs::OutputGraphTyping
+/// v8: type-inference-reducer.h TypeInferenceReducerArgs
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum OutputGraphTyping {
+  /// kNone: 不为输出图算类型
+  None = 0,
+  /// kPreserveFromInputGraph: 尽量沿用输入图类型
+  PreserveFromInputGraph = 1,
+  /// kRefineFromInputGraph: 沿用并算新节点/更精确类型
+  RefineFromInputGraph = 2,
+}
+
+/// 原版 TypeInferenceReducer — 必须是 reducer 栈最后一个 (类注释 NOTE,
+/// static_assert 栈底); 基类即 UniformReducerAdapter<TypeInferenceReducer,Next>,
+/// Contextual args (Scope) 提供上述配置, 未特化操作统一走 ReduceOperation。
+/// REDUCE 特化面 (9 个):
+/// - REDUCE(PendingLoopPhi)
+/// - REDUCE(Phi)
+/// - REDUCE(Constant)
+/// - REDUCE(Comparison)
+/// - REDUCE(Projection)
+/// - REDUCE(WordBinop)
+/// - REDUCE(OverflowCheckedBinop)
+/// - REDUCE(FloatBinop)
+/// - REDUCE(CheckTurboshaftTypeOf)
+/// - CanBeTyped(op): outputs_rep().size() > 0 才参与
+/// v8: src/compiler/turboshaft/type-inference-reducer.h TypeInferenceReducer
+pub struct TypeInferenceReducer;

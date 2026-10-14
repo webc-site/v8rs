@@ -1,0 +1,79 @@
+// 由 tool/src/compiler/simplified-lowering-verifier.js 从 v8/src/compiler/simplified-lowering-verifier.h + simplified-lowering-verifier.cc 生成; 修订就地改, 复跑覆盖
+// SL 后的类型/截断一致性校验
+
+//! simplified-lowering-verifier — 降低后按 OperationTyper 复推类型比对
+//!
+//! PerNodeData = (type?, truncation); 缺省截断 Any[kDistinguishZeros];
+//! 机器常量的静态类型不采 (机器/非机器子图共享缓存)。
+
+/// 原版 PerNodeData — 每节点 (type, truncation)
+pub struct PerNodeData {
+  /// type = std::nullopt
+  pub type_: Option<Type>,
+  /// truncation = Truncation::Any(kDistinguishZeros)
+  pub truncation: Truncation,
+}
+
+/// 原版 SimplifiedLoweringVerifier — 校验器
+pub struct SimplifiedLoweringVerifier<'z, 'g> {
+  /// hints_ — 插入的 SLVerifierHint 节点
+  pub hints: ZoneVector<*mut Node>,
+  /// machine_uses_of_constants_ — 机器常量的使用方
+  pub machine_uses_of_constants: ZoneUnorderedMap<*mut Node, ZoneVector<*mut Node>>,
+  /// data_ — NodeId 索引
+  pub data: ZoneVector<PerNodeData>,
+  /// graph_
+  pub graph: &'g TFGraph<'z>,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+}
+
+impl SimplifiedLoweringVerifier<'_, '_> {
+  /// 原版 VisitNode — 逐节点重推类型/截断并核对
+  /// v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::VisitNode
+  pub fn visit_node(&mut self, node: &Node, op_typer: &mut OperationTyper<'_>) {
+    todo!("v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::VisitNode")
+  }
+
+  /// 原版 GetType — 静态类型优先 (机器常量除外), 否则查推断表
+  /// v8: src/compiler/simplified-lowering-verifier.h SimplifiedLoweringVerifier::GetType
+  pub fn get_type(&self, node: &Node) -> Option<Type> {
+    todo!("v8: src/compiler/simplified-lowering-verifier.h SimplifiedLoweringVerifier::GetType")
+  }
+
+  /// 原版 CheckType
+  /// v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::CheckType
+  fn check_type(&mut self, node: &Node /*, type */) {
+    todo!("v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::CheckType")
+  }
+
+  /// 原版 CheckAndSet
+  /// v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::CheckAndSet
+  fn check_and_set(&mut self, node: &Node /*, type */) {
+    todo!("v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::CheckAndSet")
+  }
+
+  /// 原版 InputType — 输入类型 (缺省 None)
+  /// v8: src/compiler/simplified-lowering-verifier.h SimplifiedLoweringVerifier::InputType
+  fn input_type(&self, node: &Node, input_index: usize) -> Type {
+    todo!("v8: src/compiler/simplified-lowering-verifier.h SimplifiedLoweringVerifier::InputType")
+  }
+
+  /// 原版 GeneralizeTruncation — 依类型泛化截断 (避免组合爆炸)
+  /// v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::GeneralizeTruncation
+  fn generalize_truncation(&self, truncation: &Truncation, type_: &Type) -> Truncation {
+    todo!("v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::GeneralizeTruncation")
+  }
+
+  /// 原版 JoinTruncation — 截断合并 (2 重载)
+  /// v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::JoinTruncation
+  fn join_truncation(&self, t1: &Truncation, t2: &Truncation /*, t3 */) -> Truncation {
+    todo!("v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::JoinTruncation")
+  }
+
+  /// 原版 ReportInvalidTypeCombination — 校验失败报告
+  /// v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::ReportInvalidTypeCombination
+  fn report_invalid_type_combination(&self, node: &Node, types: &[Type]) {
+    todo!("v8: src/compiler/simplified-lowering-verifier.cc SimplifiedLoweringVerifier::ReportInvalidTypeCombination")
+  }
+}

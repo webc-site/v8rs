@@ -1,0 +1,16 @@
+// 由 tool/src/compiler/turboshaft/wasm-dead-code-elimination-phase.h.js 从 v8/src/compiler/turboshaft/wasm-dead-code-elimination-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 死代码消除: 7-reducer 收尾清理
+
+/// 原版 WasmDeadCodeEliminationPhase — wasm 管线收尾清理期。
+/// v8: src/compiler/turboshaft/wasm-dead-code-elimination-phase.{h,cc}
+pub struct WasmDeadCodeEliminationPhase;
+
+impl WasmDeadCodeEliminationPhase {
+  /// v8: cc Run — UnparkedScopeIfNeeded(broker, DEBUG_BOOL) 后
+  /// CopyingPhase<DeadCodeEliminationReducer, StackCheckLoweringReducer, GrowableStacksReducer, LoadStoreSimplificationReducer, DuplicationOptimizationReducer, InstructionSelectionNormalizationReducer, ValueNumberingReducer>::Run
+  /// 顺序语义 (cc 注释):
+  /// - ValueNumbering 在复杂 load 间共享计算
+  /// - DuplicationOptimization 必须在 LoadStoreSimplification 之后
+  ///   (后者直接 Next::ReduceLoad/Store, 不走 Assembler helper)
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

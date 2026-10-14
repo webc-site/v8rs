@@ -1,0 +1,18 @@
+// 由 tool/src/compiler/turboshaft/wasm-optimize-phase.h.js 从 v8/src/compiler/turboshaft/wasm-optimize-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 优化期: 逃逸/机器/内存/分支/载入/GVN
+
+/// 原版 WasmOptimizePhase — wasm 主优化期。
+/// v8: src/compiler/turboshaft/wasm-optimize-phase.{h,cc}
+pub struct WasmOptimizePhase;
+
+impl WasmOptimizePhase {
+  /// v8: cc Run — UnparkedScopeIfNeeded(broker, trace_reduction) 后
+  /// CopyingPhase<LateEscapeAnalysisReducer,
+  ///                MachineOptimizationReducer,
+  ///                MemoryOptimizationReducer,
+  ///                BranchEliminationReducer,
+  ///                LateLoadEliminationReducer,
+  ///                WasmCodeCoverageReducer,
+  ///                ValueNumberingReducer>::Run
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

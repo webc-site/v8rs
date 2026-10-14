@@ -1,0 +1,43 @@
+// 由 tool/src/base/lazy-instance.h.js 从 v8/src/base/lazy-instance.h 生成; 修订就地改, 复跑覆盖
+// 惰性单实例 (线程安全 once + 静态/动态两模式)
+
+//! v8: src/base/lazy-instance.h
+//! Rust 对应: std::sync::Once + OnceLock / LazyLock; 结构面登记如下
+
+/// v8: src/base/lazy-instance.h LazyInstanceImpl<T, Alloc, Create, InitOnce, Destroy>
+/// 存储: mutable OnceType once_ + alignas(T) StorageType storage_ (静态模式 char[sizeof(T)])
+pub struct LazyInstanceImpl<T> {
+    once: std::sync::Once,
+    storage: std::cell::UnsafeCell<MaybeUninit<T>>,
+}
+
+impl<T> LazyInstanceImpl<T> {
+    /// v8: LazyInstanceImpl::Pointer — Init() 后返回 T*
+    pub fn pointer(&self) -> *mut T;
+    /// v8: LazyInstanceImpl::Get — Init() 后返回 const T&
+    pub fn get(&self) -> &T;
+    /// v8: LazyInstanceImpl::Init — InitOnceTrait::Init(CallOnce) 一次性构造
+    fn init(&self);
+}
+
+// v8: Trait 面 (Rust 侧由泛型参数/闭包表达):
+// - LeakyInstanceTrait: Destroy 空操作 (泄漏式, 静态变量友好)
+// - StaticallyAllocatedInstanceTrait: StorageType = char[sizeof(T)] (全局数据段)
+// - DynamicallyAllocatedInstanceTrait: StorageType = T* (堆分配, 配 LAZY_DYNAMIC_INSTANCE_INITIALIZER)
+// - DefaultConstructTrait: placement-new T()
+// - DefaultCreateTrait: new T 返回指针
+// - ThreadSafeInitOnceTrait: CallOnce (默认)
+// - SingleThreadInitOnceTrait: 查 ONCE_STATE_UNINITIALIZED 后直调 (无线程安全)
+// v8: LazyInstance / LazyStaticInstance / LazyDynamicInstance 三入口模板别名
+
+/// v8: src/base/lazy-instance.h LeakyObject<T>
+/// 构造时 placement-new, 永不析构 (trivially destructible), 用于静态惰性变量
+pub struct LeakyObject<T> { storage: [u8; std::mem::size_of::<T>()] }
+
+impl<T> LeakyObject<T> {
+    /// v8: LeakyObject::get — reinterpret_cast<T*>(storage_)
+    pub fn get(&self) -> &T;
+}
+
+// v8: DEFINE_LAZY_LEAKY_OBJECT_GETTER(T, FunctionName, ...) — 函数级 static LeakyObject;
+//     Rust: fn f() -> &'static T { static O: OnceLock<T> ... }, 宏登记跳过

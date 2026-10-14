@@ -1,0 +1,59 @@
+// 由 tool/src/compiler/turboshaft/late-escape-analysis-reducer.h.js 从 v8/src/compiler/turboshaft/late-escape-analysis-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 晚期逃逸分析: 无逃逸 AllocateOp 删除骨架
+
+/// v8: src/compiler/turboshaft/late-escape-analysis-reducer.h LateEscapeAnalysisAnalyzer
+///
+/// 策略: allocs_ 收集全部 AllocateOp → 收集使用 → 找可移除分配
+/// (仅 Store 自身且无其它逃逸路径) → 标记移除。
+pub struct LateEscapeAnalysisAnalyzer {
+  /// allocs_: 全图 AllocateOp 列表
+  pub allocs: Vec<crate::index::OpIndex>,
+}
+
+impl LateEscapeAnalysisAnalyzer {
+  /// 原版 LateEscapeAnalysisAnalyzer::Run() — 两遍: 收集使用+分配 → 找可移除
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::Run
+  pub fn run(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 LateEscapeAnalysisAnalyzer::RecordAllocateUse(OpIndex alloc, OpIndex use) — 记录分配的使用
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::RecordAllocateUse
+  pub fn record_allocate_use(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 LateEscapeAnalysisAnalyzer::CollectUsesAndAllocations() — 遍历全图填 allocs_ 与使用
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::CollectUsesAndAllocations
+  pub fn collect_uses_and_allocations(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 LateEscapeAnalysisAnalyzer::FindRemovableAllocations() — 逐分配判定可移除
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::FindRemovableAllocations
+  pub fn find_removable_allocations(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 LateEscapeAnalysisAnalyzer::AllocationIsEscaping(OpIndex alloc) -> bool — 逃逸判定
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::AllocationIsEscaping
+  pub fn allocation_is_escaping(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 LateEscapeAnalysisAnalyzer::EscapesThroughUse(OpIndex alloc, OpIndex use) -> bool — 单使用逃逸
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::EscapesThroughUse
+  pub fn escapes_through_use(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 LateEscapeAnalysisAnalyzer::MarkToRemove(OpIndex alloc) — 标记 (替换为过 diminution)
+  /// v8: src/compiler/turboshaft/late-escape-analysis-reducer.cc LateEscapeAnalysisAnalyzer::MarkToRemove
+  pub fn mark_to_remove(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/late-escape-analysis-reducer.h LateEscapeAnalysisReducer
+pub struct LateEscapeAnalysisReducer;
+
+impl LateEscapeAnalysisReducer {
+  /// 原版 void Analyze() — analyzer_.Run() 后 Next::Analyze()
+  pub fn analyze(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

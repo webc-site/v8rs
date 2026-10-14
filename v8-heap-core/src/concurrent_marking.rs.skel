@@ -1,0 +1,63 @@
+// 由 tool/src/heap/concurrent-marking.h.js 从 v8/src/heap/concurrent-marking.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 并发标记: 调度/汇合/暂停台账与并发度估计
+
+/// 并发标记器骨架 (对应 class ConcurrentMarking)。
+/// v8: src/heap/concurrent-marking.h ConcurrentMarking
+pub struct ConcurrentMarkingSkeleton {
+  pub total_marked_bytes: core::sync::atomic::AtomicUsize,
+  pub another_ephemeron_iteration: core::sync::atomic::AtomicBool,
+  pub estimate_concurrency: core::sync::atomic::AtomicUsize,
+}
+
+impl ConcurrentMarkingSkeleton {
+  /// 对应 FetchAndResetConcurrencyEstimate: exchange(0) 取旧值, 0 则回退 1
+  /// v8: src/heap/concurrent-marking.h ConcurrentMarking::FetchAndResetConcurrencyEstimate
+  pub fn fetch_and_reset_concurrency_estimate(&self) -> usize {
+    let estimate = self.estimate_concurrency.swap(0, core::sync::atomic::Ordering::Relaxed);
+    if estimate != 0 {
+      estimate
+    } else {
+      1
+    }
+  }
+
+  /// 对应 TotalMarkedBytes: relaxed 读累计值
+  pub fn total_marked_bytes(&self) -> usize {
+    self.total_marked_bytes.load(core::sync::atomic::Ordering::Relaxed)
+  }
+
+  /// 对应 set_another_ephemeron_iteration/another_ephemeron_iteration
+  pub fn set_another_ephemeron_iteration(&self, v: bool) {
+    self.another_ephemeron_iteration.store(v, core::sync::atomic::Ordering::Relaxed);
+  }
+
+  pub fn another_ephemeron_iteration(&self) -> bool {
+    self.another_ephemeron_iteration.load(core::sync::atomic::Ordering::Relaxed)
+  }
+
+  /// 对应 RunMajor 主循环骨架
+  /// v8: src/heap/concurrent-marking.cc ConcurrentMarking::RunMajor
+  pub fn run_major(&self) {
+    unimplemented!("骨架: MarkingWorklists 消费待 marking 族就位");
+  }
+
+  /// 对应 Pause: 抢占运行中作业, 返回是否确有并发标记在跑
+  /// v8: src/heap/concurrent-marking.cc ConcurrentMarking::Pause
+  pub fn pause(&mut self) -> bool {
+    unimplemented!("骨架: JobHandle::Cancel/进度同步待任务族就位");
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  let m = ConcurrentMarkingSkeleton {
+    total_marked_bytes: core::sync::atomic::AtomicUsize::new(1234),
+    another_ephemeron_iteration: core::sync::atomic::AtomicBool::new(false),
+    estimate_concurrency: core::sync::atomic::AtomicUsize::new(3),
+  };
+  assert_eq!(m.fetch_and_reset_concurrency_estimate(), 3); // 旧值
+  assert_eq!(m.fetch_and_reset_concurrency_estimate(), 1); // 清零后回退 1
+  assert_eq!(m.total_marked_bytes(), 1234);
+  m.set_another_ephemeron_iteration(true);
+  assert!(m.another_ephemeron_iteration());
+};

@@ -1,0 +1,137 @@
+// 由 tool/src/heap/cppgc-internal/marker.js 从 v8/src/heap/cppgc-internal/marker.h + src/heap/cppgc-internal/marker.cc 生成; 修订就地改, 复跑覆盖
+// 标记器: 增量/并发/原子停顿编排
+
+#![allow(dead_code)]
+
+pub mod constants {
+    /// v8: src/heap/cppgc-internal/marker.h MarkerBase::IncrementalMarkingAllocationObserver::kMinAllocatedBytesPerStep
+    pub const K_MIN_ALLOCATED_BYTES_PER_STEP: usize = 256 * K_KB;
+    /// v8: src/heap/cppgc-internal/marker.h MarkerBase::kMaximumIncrementalStepDuration
+    pub const K_MAXIMUM_INCREMENTAL_STEP_DURATION_MS: u64 = 2;
+    /// v8: src/heap/cppgc-internal/marker.cc kDefaultDeadlineCheckInterval
+    pub const K_DEFAULT_DEADLINE_CHECK_INTERVAL: usize = 150;
+}
+
+/// v8: src/heap/cppgc-internal/marker.h MarkerBase::WriteBarrierType
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum WriteBarrierType {
+    /// v8: kDijkstra — 增量 barrier: 未标则标 + 入 write_barrier 队
+    Dijkstra,
+    /// v8: kSteele — 删除 barrier: 已标才入 retrace 队
+    Steele,
+}
+
+/// v8: src/heap/cppgc-internal/marker.h MarkerBase
+pub struct MarkerBase {
+    /// v8: heap_
+    pub heap: *mut HeapBase,
+    /// v8: config_ = MarkingConfig::Default()
+    pub config: MarkingConfig,
+    /// v8: platform_ / foreground_task_runner_
+    platform: *mut Platform,
+    /// v8: incremental_marking_handle_
+    incremental_marking_handle: SingleThreadedHandle,
+    /// v8: incremental_marking_allocation_observer_
+    incremental_marking_allocation_observer: IncrementalMarkingAllocationObserver,
+    /// v8: marking_worklists_
+    pub marking_worklists: MarkingWorklists,
+    /// v8: mutator_marking_state_
+    pub mutator_marking_state: MutatorMarkingState,
+    /// v8: last_bytes_marked_
+    last_bytes_marked: usize,
+    /// v8: is_marking_ / main_marking_disabled_for_testing_ / visited_cross_thread_persistents_in_atomic_pause_ / processed_cross_thread_weakness_
+    is_marking: bool,
+    main_marking_disabled_for_testing: bool,
+    visited_cross_thread_persistents_in_atomic_pause: bool,
+    processed_cross_thread_weakness: bool,
+}
+
+impl MarkerBase {
+    /// v8: src/heap/cppgc-internal/marker.cc StartMarking
+    /// WriteBarrier 位进入 + set_incremental_marking_in_progress(true);
+    /// 返回是否增量 (kIncremental || kIncrementalAndConcurrent)。
+    pub fn start_marking(&mut self) { todo!("屏障位 + 旗") }
+
+    /// v8: src/heap/cppgc-internal/marker.cc EnterAtomicPause
+    /// 暂停并发 → FlushNotFullyConstructed → 按栈态更新 config → VisitLocalRoots。
+    pub fn enter_atomic_pause(&mut self, _stack_state: StackState) { todo!("四步") }
+    /// v8: EnterProcessGlobalAtomicPause = VisitCrossThreadRoots()
+    pub fn enter_process_global_atomic_pause(&mut self) { self.visit_cross_thread_roots(); }
+    /// v8: src/heap/cppgc-internal/marker.cc LeaveAtomicPause
+    /// 重置 mutator state (ephemeron/原子停顿) + 退出屏障位 + is_marking_=false。
+    pub fn leave_atomic_pause(&mut self) { todo!("复位") }
+    /// v8: src/heap/cppgc-internal/marker.cc FinishMarking
+    /// EnterAtomicPause → EnterProcessGlobal → AdvanceMarkingWithLimits → ProcessWeakness → LeaveAtomicPause。
+    pub fn finish_marking(&mut self, _stack_state: StackState) { todo!("五步组合") }
+
+    /// v8: src/heap/cppgc-internal/marker.cc AdvanceMarkingWithLimits
+    /// ProcessWorklistsWithDeadline(时刻上限, 字节上限); 回填 last_bytes_marked_。
+    pub fn advance_marking_with_limits(&mut self, _max_duration: TimeDelta, _marked_bytes_limit: usize) -> bool { todo!("限界推进") }
+
+    /// v8: src/heap/cppgc-internal/marker.cc ProcessWorklistsWithDeadline
+    /// 逐 worklist DrainWorklistWithBytesAndTimeDeadline<150>; bailout 项不受字节上限约束。
+    pub fn process_worklists_with_deadline(&mut self, _time_deadline: TimeTicks, _marked_bytes_deadline: usize) -> bool { todo!("八队排空") }
+
+    /// v8: src/heap/cppgc-internal/marker.cc ProcessWeakness / ProcessCrossThreadWeaknessIfNeeded
+    pub fn process_weakness(&mut self) { todo!("弱回调 + ephemeron 定点") }
+    pub fn process_cross_thread_weakness_if_needed(&mut self) { todo!("跨线程 persistents") }
+
+    /// v8: src/heap/cppgc-internal/marker.cc MarkNotFullyConstructedObjects
+    /// Extract previously 队 → MarkNoPush 重标; 并发期 dynamisch 前需暂停并发。
+    pub fn mark_not_fully_constructed_objects(&mut self) { todo!("重标先前构造中") }
+
+    /// v8: src/heap/cppgc-internal/marker.cc JoinConcurrentMarkingIfNeeded / NotifyConcurrentMarkingOfWorkIfNeeded / ReEnableConcurrentMarking
+    pub fn join_concurrent_marking_if_needed(&mut self) -> bool { todo!("job join") }
+    pub fn notify_concurrent_marking_of_work_if_needed(&mut self, _p: TaskPriority) { todo!("有活才通知") }
+    pub fn re_enable_concurrent_marking(&mut self) { todo!("本周期未启用才重启") }
+
+    /// v8: src/heap/cppgc-internal/marker.h MarkerBase::WriteBarrierForObject
+    /// Dijkstra: !TryMarkAtomic → return; Steele: 未标 → return;
+    /// 构造中 → Unmark + not_fully 队; 否则 Dijkstra→write_barrier 队 / Steele→retrace 队。
+    pub fn write_barrier_for_object(&mut self, ty: WriteBarrierType, header: &mut HeapObjectHeader) {
+        match ty {
+            WriteBarrierType::Dijkstra => { if !header.try_mark_atomic() { return; } }
+            WriteBarrierType::Steele => { if !header.is_marked() { return; } }
+        }
+        if header.is_in_construction() {
+            header.unmark();
+            self.mutator_marking_state.basic.base_not_fully_push(header);
+            return;
+        }
+        match ty {
+            WriteBarrierType::Dijkstra => self.mutator_marking_state.basic.write_barrier_push(header),
+            WriteBarrierType::Steele => self.mutator_marking_state.retrace_push(header),
+        }
+    }
+
+    /// v8: IncrementalMarkingStep — GetNextIncrementalStepDuration 后 AdvanceMarkingWithLimits (≤2ms)
+    pub fn incremental_marking_step(&mut self, _stack_state: StackState) -> bool { todo!("限 2ms 步进") }
+}
+
+/// v8: src/heap/cppgc-internal/marker.h MarkerBase::IncrementalMarkingAllocationObserver
+/// current_allocated_size 累计 ≥ 256KB → ScheduleIncrementalMarkingTask。
+pub struct IncrementalMarkingAllocationObserver {
+    /// v8: marker_
+    marker: *mut MarkerBase,
+    /// v8: current_allocated_size_
+    current_allocated_size: usize,
+}
+
+/// v8: src/heap/cppgc-internal/marker.h MarkerBase::PauseConcurrentMarkingScope
+/// 构造暂停 (记录 resume_on_exit_ = was_running), 析构按需恢复。
+/// v8: src/heap/cppgc-internal/marker.cc MarkerBase::IncrementalMarkingTask (cppgc::Task)
+/// Run → IncrementalMarkingStep; 句柄防重入。
+/// v8: src/heap/cppgc-internal/marker.cc EnterIncrementalMarkingIfNeeded / ExitIncrementalMarkingIfNeeded
+/// 屏障 FlagUpdater Enter/Exit + set_incremental_marking_in_progress; 返回是否增量型。
+
+/// v8: src/heap/cppgc-internal/marker.h Marker
+/// 组装: MutatorMarkingVisitor + ConservativeMarkingVisitor + IncrementalMarkingSchedule + ConcurrentMarker。
+pub struct Marker {
+    /// v8: MarkerBase 基类子对象
+    pub base: MarkerBase,
+    /// v8: marking_visitor_ / conservative_marking_visitor_ / schedule_ / concurrent_marker_
+    pub marking_visitor: MutatorMarkingVisitor,
+    pub conservative_marking_visitor: ConservativeMarkingVisitor,
+    pub schedule: Box<IncrementalMarkingSchedule>,
+    pub concurrent_marker: ConcurrentMarker,
+}

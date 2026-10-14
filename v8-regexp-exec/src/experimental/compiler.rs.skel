@@ -1,0 +1,23 @@
+// 由 tool/src/regexp/experimental/experimental-compiler.h.js 从 v8/src/regexp/experimental/experimental-compiler.h 生成; 修订就地改, 复跑覆盖
+// 入口签名映射骨架 (审计专用): h 层只含 2 个 static, 实现体在 .cc (见 experimental-compiler.cc.js)
+
+//! ExperimentalCompiler : AllStatic (h:17) ⟹ 无实例状态 → Rust 无状态自由函数 (模块级 pub)
+//!
+//! h:24  static bool CanBeHandled(Tree* tree, Flags flags, int capture_count)
+//!       → pub fn can_be_handled(tree: &Tree, flags: RegExpFlags, capture_count: i32,
+//!                              v8_flags: &V8Flags) -> bool
+//!   - capture_count: 原版声明而 cc:30-35 体内从不读取 → 1:1 保留形参并登记
+//!   - Flags (typedef uint32_t, regexp-flags.h) → RegExpFlags (syntax crate 冻结类型)
+//!   - v8_flags 注入: cc:187 读全局 v8_flags.experimental_regexp_engine_capture_group_opt
+//!
+//! h:28  static ZoneList<Instruction> Compile(Tree* tree, Flags flags, Zone* zone)
+//!       → pub fn compile(tree: &Tree, flags: RegExpFlags, v8_flags: &V8Flags)
+//!                              -> Vec<Instruction>
+//!   - Zone* 删除: zone 裸分配容器 (cc:257 code_ / cc:530 nodes_ / cc:612-614,1199-1200
+//!     ZoneMap / cc:1197 ZoneLinkedList) → Rust 栈上所有权容器 Vec/VecDeque/RemapMap
+//!   - 返回 ZoneList<Instruction> (cc:1219-1222) → Vec<Instruction>
+//!   - 前置条件 "must be handlable; see CanBeHandled" (h:25-27) 由调用方保证 (原版同)
+//!
+//! 实现类全集 (cc 层, 由 experimental-compiler.cc.js 逐函数对账):
+//!   CanBeHandledVisitor / Label / BytecodeAssembler / FilterGroupsCompileVisitor /
+//!   CompileVisitor

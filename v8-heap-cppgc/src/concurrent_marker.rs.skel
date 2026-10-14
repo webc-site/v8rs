@@ -1,0 +1,86 @@
+// 由 tool/src/heap/cppgc-internal/concurrent-marker.js 从 v8/src/heap/cppgc-internal/concurrent-marker.h + src/heap/cppgc-internal/concurrent-marker.cc 生成; 修订就地改, 复跑覆盖
+// 并发标记 job: 让出式排空 + 优先级提速
+
+#![allow(dead_code)]
+
+pub mod constants {
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc kMarkingScheduleRatioBeforeConcurrentPriorityIncrease
+    pub const K_MARKING_SCHEDULE_RATIO_BEFORE_CONCURRENT_PRIORITY_INCREASE: f64 = 0.5;
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc kDefaultDeadlineCheckInterval
+    pub const K_DEFAULT_DEADLINE_CHECK_INTERVAL: usize = 750;
+}
+
+/// v8: src/heap/cppgc-internal/concurrent-marker.h ConcurrentMarkerBase
+pub struct ConcurrentMarkerBase {
+    /// v8: heap_
+    heap: *mut HeapBase,
+    /// v8: marking_worklists_
+    marking_worklists: *mut MarkingWorklists,
+    /// v8: incremental_marking_schedule_
+    incremental_marking_schedule: *mut IncrementalMarkingSchedule,
+    /// v8: platform_
+    platform: *mut Platform,
+    /// v8: concurrent_marking_handle_ — 兼作"已启动"旗
+    concurrent_marking_handle: Option<JobHandle>,
+    /// v8: concurrently_marked_bytes_ (atomic)
+    concurrently_marked_bytes: AtomicUsize,
+    /// v8: concurrent_marking_priority_increased_
+    concurrent_marking_priority_increased: bool,
+}
+
+impl ConcurrentMarkerBase {
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc WorkSizeForConcurrentMarking
+    /// marking + write_barrier + previously_not_fully_constructed 三池 Size 之和。
+    pub fn work_size(marking_worklists: &MarkingWorklists) -> usize {
+        marking_worklists.marking_worklist().size()
+            + marking_worklists.write_barrier_worklist().size()
+            + marking_worklists.previously_not_fully_constructed_worklist().size()
+    }
+
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc HasWorkForConcurrentMarking
+    /// 同三池 IsEmpty 取反 (全局池非空即可窃取)。
+    pub fn has_work(marking_worklists: &MarkingWorklists) -> bool {
+        !marking_worklists.marking_worklist().is_empty()
+            || !marking_worklists.write_barrier_worklist().is_empty()
+            || !marking_worklists.previously_not_fully_constructed_worklist().is_empty()
+    }
+
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc ConcurrentMarkerBase::Start
+    pub fn start(&mut self) { todo!("PostJob 并发度 = HasWork ? 1 : 0") }
+    /// v8: ConcurrentMarkerBase::Join
+    pub fn join(&mut self) -> bool { todo!("JobHandle::Join") }
+    /// v8: ConcurrentMarkerBase::Cancel
+    pub fn cancel(&mut self) -> bool { todo!("JobHandle::Cancel") }
+    /// v8: ConcurrentMarkerBase::IsActive — handle 存在即活跃
+    pub fn is_active(&self) -> bool { todo!("handle 活跃判定") }
+    /// v8: ConcurrentMarkerBase::AddConcurrentlyMarkedBytes
+    pub fn add_concurrently_marked_bytes(&self, marked_bytes: usize) {
+        self.concurrently_marked_bytes.fetch_add(marked_bytes, Ordering::Relaxed);
+    }
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc IncreaseMarkingPriorityIfNeeded
+    /// 残余工作比例 > 0.5 且未提速过 → 提一个优先级并置标志。
+    pub fn increase_marking_priority_if_needed(&mut self) { todo!("kMarkingScheduleRatio 0.5 阈值") }
+    /// v8: NotifyIncrementalMutatorStepCompleted / NotifyOfWorkIfNeeded
+    pub fn notify_incremental_mutator_step_completed(&mut self) { todo!("步进后按需通知") }
+    pub fn notify_of_work_if_needed(&mut self, _priority: TaskPriority) { todo!("有工作才通知") }
+}
+
+/// v8: src/heap/cppgc-internal/concurrent-marker.cc ConcurrentMarkingTask (v8::JobTask)
+/// Run: DrainWorklistWithYielding (每 750 项查 ShouldYield, 期间回灌 RecentlyMarkedBytes);
+/// GetMaxConcurrency: HasWorkForConcurrentMarking ? 1 : 0。
+/// v8: src/heap/cppgc-internal/concurrent-marker.cc DrainWorklistWithYielding
+/// 包装 DrainWorklistWithPredicate<750>: ShouldYield = delegate 取消或让出;
+/// 每次检查前 AddConcurrentlyMarkedBytes(marking_state.RecentlyMarkedBytes())。
+
+/// v8: src/heap/cppgc-internal/concurrent-marker.h ConcurrentMarker
+pub struct ConcurrentMarker {
+    /// v8: ConcurrentMarkerBase 基类子对象
+    pub base: ConcurrentMarkerBase,
+}
+
+impl ConcurrentMarker {
+    /// v8: src/heap/cppgc-internal/concurrent-marker.cc ConcurrentMarker::CreateConcurrentMarkingVisitor
+    pub fn create_concurrent_marking_visitor(&self, _state: &mut ConcurrentMarkingState) -> Box<dyn Visitor> {
+        todo!("ConcurrentMarkingVisitor 构造")
+    }
+}

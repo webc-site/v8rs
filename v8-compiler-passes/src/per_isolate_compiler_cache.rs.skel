@@ -1,0 +1,42 @@
+// 由 tool/src/compiler/per-isolate-compiler-cache.h.js 从 v8/src/compiler/per-isolate-compiler-cache.h 生成; 修订就地改, 复跑覆盖
+// 跨编译运行持久的 isolate 级 refs snapshot 容器
+
+//! per-isolate-compiler-cache — 常见对象序列化数据跨编译运行复用
+//!
+//! 仅存 RefsMap snapshot (JSHeapBroker::InitializeRefsMap 消费);
+//! SetSnapshot 用 RefsMap(RefsMap*, Zone*) 拷贝构造 (廉价快照语义)。
+
+/// 原版 PerIsolateCompilerCache — isolate 级缓存 (挂 isolate->compiler_cache)
+pub struct PerIsolateCompilerCache<'z> {
+  /// zone_ ("Compiler zone")
+  pub zone: &'z Zone<'z>,
+  /// refs_snapshot_
+  pub refs_snapshot: Option<RefsMap<'z>>,
+}
+
+impl PerIsolateCompilerCache<'_> {
+  /// 原版 HasSnapshot
+  /// v8: src/compiler/per-isolate-compiler-cache.h PerIsolateCompilerCache::HasSnapshot
+  pub fn has_snapshot(&self) -> bool {
+    self.refs_snapshot.is_some()
+  }
+
+  /// 原版 GetSnapshot — 取 snapshot (需 HasSnapshot)
+  /// v8: src/compiler/per-isolate-compiler-cache.h PerIsolateCompilerCache::GetSnapshot
+  pub fn get_snapshot(&mut self) -> &RefsMap<'_> {
+    self.refs_snapshot.as_ref().expect("HasSnapshot")
+  }
+
+  /// 原版 SetSnapshot — 拷贝构造存入 (非空且此前无 snapshot)
+  /// v8: src/compiler/per-isolate-compiler-cache.h PerIsolateCompilerCache::SetSnapshot
+  pub fn set_snapshot(&mut self, refs: &RefsMap<'_>) {
+    debug_assert!(self.refs_snapshot.is_none());
+    self.refs_snapshot = Some(refs.clone_snapshot(self.zone));
+  }
+
+  /// 原版 Setup — isolate 上惰性建 "Compiler zone" + 缓存实例
+  /// v8: src/compiler/per-isolate-compiler-cache.h PerIsolateCompilerCache::Setup
+  pub fn setup(isolate: &mut Isolate) {
+    todo!("v8: src/compiler/per-isolate-compiler-cache.h PerIsolateCompilerCache::Setup")
+  }
+}

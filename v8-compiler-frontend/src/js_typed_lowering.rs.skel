@@ -1,0 +1,117 @@
+// 由 tool/src/compiler/js-typed-lowering.js 从 v8/src/compiler/js-typed-lowering.h + js-typed-lowering.cc 生成; 修订就地改, 复跑覆盖
+// 类型驱动降级: JS 算子 → simplified 算子
+
+
+/// 移位符号性
+/// v8: src/compiler/js-typed-lowering.h Signedness
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Signedness {
+    Signed,
+    Unsigned,
+}
+
+/// JSTypedLowering — 按类型把 JS 级算子降为 simplified 级
+/// v8: src/compiler/js-typed-lowering.h JSTypedLowering
+pub struct JSTypedLowering {
+    jsgraph: JSGraphRef,
+    broker: JSHeapBrokerRef,
+    /// 两个缓存类型: empty_string_type_ / pointer_comparable_type_
+    type_cache: TypeCacheRef,
+}
+
+impl JSTypedLowering {
+    /// 总分派 Reduce (按 IrOpcode)
+    /// v8: src/compiler/js-typed-lowering.cc JSTypedLowering::Reduce
+    fn reduce(&mut self, node: &Node) -> Reduction;
+
+    // —— Reduce 面 49 个 (cc 实现 49) ——
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSAdd
+    fn reduce_jsadd(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSBitwiseNot
+    fn reduce_jsbitwise_not(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSDecrement
+    fn reduce_jsdecrement(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSIncrement
+    fn reduce_jsincrement(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSNegate
+    fn reduce_jsnegate(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSComparison
+    fn reduce_jscomparison(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSLoadNamed
+    fn reduce_jsload_named(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSHasInPrototypeChain
+    fn reduce_jshas_in_prototype_chain(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSOrdinaryHasInstance
+    fn reduce_jsordinary_has_instance(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSHasContextExtension
+    fn reduce_jshas_context_extension(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSLoadContextNoCell
+    fn reduce_jsload_context_no_cell(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSLoadContext
+    fn reduce_jsload_context(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSStoreContextNoCell
+    fn reduce_jsstore_context_no_cell(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSStoreContext
+    fn reduce_jsstore_context(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSLoadModule
+    fn reduce_jsload_module(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSStoreModule
+    fn reduce_jsstore_module(&mut self, node: &Node) -> Reduction;
+    // ... 其余 33 个 (JSEqual,JSStrictEqual,JSToLength,JSToName,JSToNumberInput,JSToNumber,JSToBigInt,JSToBigIntConvertNumber,JSToNumeric,JSToStringInput,JSToString,JSToObject,JSConstructForwardVarargs,JSConstruct ...)
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSCallForwardVarargs
+    fn reduce_jscall_forward_varargs(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSCall
+    fn reduce_jscall(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSForInNext
+    fn reduce_jsfor_in_next(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSForInPrepare
+    fn reduce_jsfor_in_prepare(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSLoadMessage
+    fn reduce_jsload_message(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSStoreMessage
+    fn reduce_jsstore_message(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSGeneratorStore
+    fn reduce_jsgenerator_store(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSGeneratorRestoreContinuation
+    fn reduce_jsgenerator_restore_continuation(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSGeneratorRestoreContextNoCell
+    fn reduce_jsgenerator_restore_context_no_cell(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSGeneratorRestoreRegister
+    fn reduce_jsgenerator_restore_register(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSGeneratorRestoreInputOrDebugPos
+    fn reduce_jsgenerator_restore_input_or_debug_pos(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceNumberBinop
+    fn reduce_number_binop(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceInt32Binop
+    fn reduce_int32_binop(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceUI32Shift
+    fn reduce_ui32_shift(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceObjectIsArray
+    fn reduce_object_is_array(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSParseInt
+    fn reduce_jsparse_int(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSAsyncFunctionAwait
+    fn reduce_jsasync_function_await(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSFulfillPromise
+    fn reduce_jsfulfill_promise(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-typed-lowering.h JSTypedLowering::ReduceJSResolvePromise
+    fn reduce_jsresolve_promise(&mut self, node: &Node) -> Reduction;
+
+    /// ReduceJSAdd 字符串加法子图 (should_create_cons_string 分叉)
+    /// v8: src/compiler/js-typed-lowering.cc JSTypedLowering::GenerateStringAddition
+    fn generate_string_addition(&mut self, node: &Node, left: NodeRef, right: NodeRef, context: NodeRef, frame_state: FrameState, effect: &mut NodeRef, control: &mut NodeRef, should_create_cons_string: bool) -> Reduction;
+    /// 字符串包装解包
+    /// v8: src/compiler/js-typed-lowering.cc JSTypedLowering::UnwrapStringWrapper
+    fn unwrap_string_wrapper(&mut self, string_or_wrapper: NodeRef, effect: &mut NodeRef, control: &mut NodeRef) -> NodeRef;
+    /// 模块 cell 读取 (Load/StoreModule 共用)
+    /// v8: src/compiler/js-typed-lowering.cc JSTypedLowering::BuildGetModuleCell
+    fn build_get_module_cell(&mut self, node: &Node) -> NodeRef;
+}
+
+// —— JSBinopReduction — 二元算子降级协作类 (43 方法) ——
+/// v8: src/compiler/js-typed-lowering.cc JSBinopReduction
+// 方法面: GetCompareNumberOperationHint, GetCompareBigIntOperationHint, IsInternalizedStringCompareOperation, IsReceiverCompareOperation, IsReceiverOrNullOrUndefinedCompareOperation, IsStringCompareOperation, IsStringOrOddballCompareOperation, IsSymbolCompareOperation, ShouldCreateConsString, CheckLeftInputToReceiver, CheckLeftInputToReceiverOrNullOrUndefined, CheckInputsToReceiver, CheckInputsToReceiverOrNullOrUndefined, CheckLeftInputToSymbol, CheckInputsToSymbol, CheckInputsToString, CheckInputsToStringOrOddball, CheckInputsToStringOrStringWrapper, CheckInputsToInternalizedString, ConvertInputsToNumber, ConvertInputsToUI32, SwapInputs, ChangeToPureOperator, ChangeToSpeculativeOperator, LeftInputIs, RightInputIs, OneInputIs, BothInputsAre, BothInputsMaybe, OneInputCannotBe, NeitherInputCanBe, effect, control, context, left, right, left_type, right_type, type, ConvertPlainPrimitiveToNumber, ConvertToUI32, update_effect, ReduceBuiltin
+// (输入类型判定 → 输入改写 → simplified 算子替换三段式)
+
+// —— 对数基准 ——
+// Signedness 2 值 / Reduce 49(实现 49) / Binop 协作方法 43

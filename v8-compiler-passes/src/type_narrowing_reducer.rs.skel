@@ -1,0 +1,41 @@
+// 由 tool/src/compiler/type-narrowing-reducer.js 从 v8/src/compiler/type-narrowing-reducer.h + type-narrowing-reducer.cc 生成; 修订就地改, 复跑覆盖
+// 依 OperationTyper 重算并收窄节点静态类型
+
+//! type-narrowing-reducer — 用 OperationTyper 结果更新 NodeProperties 类型
+//!
+//! case 面 57 类:
+//! - 显式: NumberLessThan, TypeGuard
+//! - DECLARE_CASE: Name, SameValue, Name, ToBoolean
+//! - SIMPLIFIED_NUMBER_BINOP_LIST 展开 16: NumberAdd, NumberSubtract, NumberMultiply, NumberDivide, NumberModulus, NumberBitwiseOr, NumberBitwiseXor, NumberBitwiseAnd, NumberShiftLeft, NumberShiftRight, NumberShiftRightLogical, NumberAtan2, NumberImul, NumberMax, NumberMin, NumberPow
+//! - SIMPLIFIED_NUMBER_UNOP_LIST 展开 35: NumberAbs, NumberAcos, NumberAcosh, NumberAsin, NumberAsinh, NumberAtan, NumberAtanh, NumberCbrt, NumberCeil, NumberClz32, NumberCos, NumberCosh, NumberExp, NumberExpm1, NumberFloor, NumberFround, NumberLog, NumberLog1p, NumberLog2, NumberLog10, NumberRound, NumberSign, NumberSin, NumberSinh, NumberSqrt, NumberTan, NumberTanh, NumberTrunc, NumberToBoolean, NumberToInt32, NumberToString, NumberToUint32, NumberToUint8Clamped, Integral32OrMinusZeroToBigInt, NumberSilenceNaN
+
+/// 原版 TypeNarrowingReducer — AdvancedReducer
+pub struct TypeNarrowingReducer<'z, 'g> {
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// op_typer_
+  pub op_typer: OperationTyper<'z>,
+}
+
+impl TypeNarrowingReducer<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "TypeNarrowingReducer";
+
+  /// 原版 Reduce — new_type = op_typer(...); 与原类型取交, 收紧则 Changed
+  /// v8: src/compiler/type-narrowing-reducer.cc TypeNarrowingReducer::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/type-narrowing-reducer.cc TypeNarrowingReducer::Reduce (57 case)")
+  }
+
+  /// 原版 NumberLessThan 专属: PlainNumber 区间比较 → singleton_true/false
+  /// v8: src/compiler/type-narrowing-reducer.cc TypeNarrowingReducer::Reduce (kNumberLessThan 分支)
+  fn narrow_number_less_than(&mut self, node: &Node) -> Type {
+    todo!("v8: src/compiler/type-narrowing-reducer.cc TypeNarrowingReducer::Reduce kNumberLessThan")
+  }
+
+  /// 原版 TypeGuard 专属: TypeTypeGuard(op, input_type)
+  /// v8: src/compiler/type-narrowing-reducer.cc TypeNarrowingReducer::Reduce (kTypeGuard 分支)
+  fn narrow_type_guard(&mut self, node: &Node) -> Type {
+    todo!("v8: src/compiler/type-narrowing-reducer.cc TypeNarrowingReducer::Reduce kTypeGuard")
+  }
+}

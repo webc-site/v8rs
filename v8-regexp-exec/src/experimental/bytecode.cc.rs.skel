@@ -1,0 +1,8 @@
+// 由 tool/src/regexp/experimental/experimental-bytecode.cc.js 从 v8/src/regexp/experimental/experimental-bytecode.cc 生成; 修订就地改, 复跑覆盖
+// Dump 层骨架基线 (审计专用): 与 h 脚本同产物族, 落地以 bytecode.rs 就地修订为准
+
+//! Ostream 状态机: basefield(decimal/hex 粘性) + fill + width(一次性), 逐插入项复刻
+//! 19 opcode 标签串 (hex 触发后同流数值转小写 hex — 原版真实行为)
+//! ASSERTION 子表 6 出串 + END_OF_BUFFER unreachable! (原版 UNREACHABLE)
+//! dump(&[Instruction]) → String: 行号 setfill('0') setw(digits_required_below(len)) ": "
+//!   inst "\n"; Display(Instruction) = 全新流 (十进制起步)

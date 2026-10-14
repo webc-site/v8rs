@@ -1,0 +1,111 @@
+// 由 tool/src/base/macros.js 从 v8/src/base/macros.h 生成; 修订就地改, 复跑覆盖
+
+// ---- makeUint64 ----
+inline uint64_t make_uint64(uint32_t high, uint32_t low) {
+  return (uint64_t{high} << 32) + low;
+}
+
+// ---- roundDown ----
+// Return the largest multiple of m which is <= x.
+template <typename T>
+constexpr T RoundDown(T x, intptr_t m) {
+  static_assert(std::is_integral_v<T>);
+  // m must be a power of two.
+  DCHECK(m != 0 && ((m & (m - 1)) == 0));
+  return x & static_cast<T>(-m);
+}
+template <intptr_t m, typename T>
+constexpr T RoundDown(T x) {
+  static_assert(std::is_integral_v<T>);
+  // m must be a power of two.
+  static_assert(m != 0 && ((m & (m - 1)) == 0));
+  return x & static_cast<T>(-m);
+
+// ---- roundUp ----
+
+// Return the smallest multiple of m which is >= x.
+template <typename T>
+constexpr T RoundUp(T x, intptr_t m) {
+  static_assert(std::is_integral_v<T>);
+  DCHECK_GE(x, 0);
+  DCHECK_GE(std::numeric_limits<T>::max() - x, m - 1);  // Overflow check.
+  return RoundDown<T>(static_cast<T>(x + (m - 1)), m);
+}
+
+template <intptr_t m, typename T>
+constexpr T RoundUp(T x) {
+  static_assert(std::is_integral_v<T>);
+  DCHECK_GE(x, 0);
+  DCHECK_GE(std::numeric_limits<T>::max() - x, m - 1);  // Overflow check.
+  return RoundDown<m, T>(static_cast<T>(x + (m - 1)));
+}
+
+// ---- isAligned ----
+template <typename T, typename U>
+constexpr inline bool IsAligned(T value, U alignment) {
+  return (value & (alignment - 1)) == 0;
+}
+
+template <typename T>
+constexpr inline bool IsAlignedAddress(T* address, size_t alignment) {
+  return IsAligned(reinterpret_cast<uintptr_t>(address), alignment);
+}
+
+template <typename T>
+inline T* AlignedAddress(T* address, size_t alignment) {
+  return reinterpret_cast<T*>(
+      RoundDown(reinterpret_cast<uintptr_t>(address), alignment));
+}
+
+template <typename T>
+inline T* RoundUpAddress(T* address, size_t alignment) {
+  return reinterpret_cast<T*>(
+      RoundUp(reinterpret_cast<uintptr_t>(address), alignment));
+
+// ---- isInbounds ----
+
+// Bounds checks for float to integer conversions, which does truncation. Hence,
+// the range of legal values is (min - 1, max + 1).
+template <typename int_t, typename float_t, typename biggest_int_t = int64_t>
+bool is_inbounds(float_t v) {
+  static_assert(sizeof(int_t) < sizeof(biggest_int_t),
+                "int_t can't be bounds checked by the compiler");
+  constexpr float_t kLowerBound =
+      static_cast<float_t>(std::numeric_limits<int_t>::min()) - 1;
+  constexpr float_t kUpperBound =
+      static_cast<float_t>(std::numeric_limits<int_t>::max()) + 1;
+  constexpr bool kLowerBoundIsMin =
+      static_cast<biggest_int_t>(kLowerBound) ==
+      static_cast<biggest_int_t>(std::numeric_limits<int_t>::min());
+  constexpr bool kUpperBoundIsMax =
+      static_cast<biggest_int_t>(kUpperBound) ==
+      static_cast<biggest_int_t>(std::numeric_limits<int_t>::max());
+  // Using USE(var) is only a workaround for a GCC 8.1 bug.
+  USE(kLowerBoundIsMin);
+  USE(kUpperBoundIsMax);
+  return (kLowerBoundIsMin ? (kLowerBound <= v) : (kLowerBound < v)) &&
+
+// ---- arraysize ----
+// The expression is a compile-time constant, and therefore can be
+// used in defining new arrays, for example.  If you use arraysize on
+// a pointer by mistake, you will get a compile-time error.
+#define arraysize(array) (sizeof(ArraySizeHelper(array)))
+
+// This template function declaration is used in defining arraysize.
+// Note that the function doesn't need an implementation, as we only
+// use its type.
+template <typename T, size_t N>
+char (&ArraySizeHelper(T (&array)[N]))[N];
+
+#if !V8_CC_MSVC
+// That gcc wants both of these prototypes seems mysterious. VC, for
+// its part, can't decide which to use (another mystery). Matching of
+// template overloads: the final frontier.
+template <typename T, size_t N>
+char (&ArraySizeHelper(const T (&array)[N]))[N];
+#endif
+
+// Clang/GCC helpfully warn us about dangling else in nested if statements. This
+// dangling is intentional for the way some macros work, so we can suppress the
+// warning with Pragmas. Clang and GCC helpfully disagree on where the warning
+// is (on the if or the else), so they need separate macros.

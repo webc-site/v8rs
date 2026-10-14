@@ -1,0 +1,134 @@
+#!/usr/bin/env bun
+// v8/src/compiler/map-inference.cc + map-inference.h
+// → v8-compiler-passes/src/map_inference.rs.skel
+//
+// 规则面: 可靠/不可靠双态机制 (析构强制可靠化 CHECK)、查询面 6 +
+// 守卫面 3 (RelyOnMapsViaStability / RelyOnMapsPreferStability /
+// InsertMapChecks) + NoChange 旁路语义, 逐条签名核对。
+import { readV8, writeSrc, banner } from "../../lib.js";
+
+const h = readV8("src/compiler/map-inference.h");
+const cc = readV8("src/compiler/map-inference.cc");
+
+// —— 哨兵 ——
+const sentinels = [
+  [h, /class MapInference \{/, "MapInference"],
+  [h, /~MapInference\(\);/, "析构强制可靠化"],
+  [h, /bool HaveMaps\(\) const;/, "HaveMaps"],
+  [h, /bool AllOfInstanceTypesAreJSReceiver\(\) const;/, "查询面首"],
+  [h, /bool RelyOnMapsViaStability\(/, "守卫面 1"],
+  [h, /bool RelyOnMapsPreferStability\(/, "守卫面 2"],
+  [h, /void InsertMapChecks\(JSGraph\* jsgraph, Effect\* effect, Control control,/, "守卫面 3"],
+  [h, /V8_WARN_UNUSED_RESULT Reduction NoChange\(\);/, "NoChange 旁路"],
+  [cc, /MapInference::MapInference\(JSHeapBroker\* broker, Node\* object, Effect effect\)/, "cc 构造"],
+  [cc, /bool MapInference::RelyOnMapsHelper\(/, "RelyOnMapsHelper"],
+];
+for (const [src, re, name] of sentinels) {
+  if (!re.test(src)) throw new Error(`哨兵缺失: ${name}`);
+}
+
+const body = `${banner("src/compiler/map-inference.js", "src/compiler/map-inference.h + src/compiler/map-inference.cc", "MapInference — 对象 map 推断 (可靠/不可靠双态 + 守卫化)")}
+//! MapInference: 从 broker 取对象推断 map 集; 不可靠时调用方必须经
+//! Rely*/InsertMapChecks 守卫化, 否则析构 CHECK 失败。
+//!
+//! 规则面: 查询 6 + 守卫 3 + NoChange 旁路。
+//! 语义面 (推迟): InferMaps (broker 侧) 与 NoChange 的可靠化标记。
+
+#![allow(dead_code, unused_variables)]
+
+/// v8: src/compiler/map-inference.h MapInference
+pub struct MapInference {
+  /// 原 broker_
+  pub broker: *mut crate::broker::JSHeapBroker,
+  /// 原 maps_
+  pub maps: crate::heap_refs::ZoneRefSet<crate::heap_refs::MapRef>,
+  /// 原 maps_state_ — kMiss(kUnreliable) / kReliableOrGuarded
+  pub reliable: bool,
+}
+
+impl MapInference {
+  /// v8: src/compiler/map-inference.cc MapInference::~MapInference
+  /// 原文: CHECK(maps_state_ != kUnreliable) — 未守卫即崩
+  pub fn drop_check(&self) {
+    assert!(self.reliable, "MapInference dropped without making maps reliable");
+  }
+
+  /// v8: src/compiler/map-inference.h MapInference::HaveMaps
+  pub fn have_maps(&self) -> bool {
+    !self.maps.is_empty()
+  }
+
+  /// v8: src/compiler/map-inference.cc MapInference::AllOfInstanceTypesAreJSReceiver
+  pub fn all_of_instance_types_are_js_receiver(&self) -> bool {
+    todo!("maps 全 JSReceiver 实例类型")
+  }
+  /// v8: src/compiler/map-inference.cc MapInference::AllOfInstanceTypesAre (type 须非 String)
+  pub fn all_of_instance_types_are(&self, ty: crate::InstanceType) -> bool {
+    let _ = ty;
+    todo!("全等判定")
+  }
+  /// v8: src/compiler/map-inference.cc MapInference::AnyOfInstanceTypesAre
+  pub fn any_of_instance_types_are(&self, ty: crate::InstanceType) -> bool {
+    let _ = ty;
+    todo!("存在判定")
+  }
+
+  /// v8: src/compiler/map-inference.h MapInference::GetMaps (需守卫)
+  pub fn get_maps(&mut self) -> &crate::heap_refs::ZoneRefSet<crate::heap_refs::MapRef> {
+    todo!("守卫断言 + 返回")
+  }
+  /// v8: src/compiler/map-inference.cc MapInference::AllOfInstanceTypes (谓词版, 需守卫)
+  pub fn all_of_instance_types(&mut self, f: impl FnMut(crate::InstanceType) -> bool) -> bool {
+    let _ = f;
+    todo!("谓词全称量词")
+  }
+  /// v8: src/compiler/map-inference.cc MapInference::Is (需守卫)
+  pub fn is(&mut self, expected_map: crate::heap_refs::MapRef) -> bool {
+    let _ = expected_map;
+    todo!("单 map 判定")
+  }
+
+  /// v8: src/compiler/map-inference.cc MapInference::RelyOnMapsViaStability
+  /// 原文: 已可靠或 DependOnStableMap 全部成功 → true
+  pub fn rely_on_maps_via_stability(&mut self, dependencies: &mut crate::compilation_dependencies::CompilationDependencies) -> bool {
+    let _ = dependencies;
+    todo!("稳定性依赖守卫")
+  }
+  /// v8: src/compiler/map-inference.cc MapInference::RelyOnMapsPreferStability
+  /// 原文: 可稳定则依赖, 否则插 map 检查; 已可靠则 no-op
+  pub fn rely_on_maps_prefer_stability(
+    &mut self,
+    dependencies: &mut crate::compilation_dependencies::CompilationDependencies,
+    jsgraph: &mut crate::js_graph::JSGraph,
+    effect: &mut crate::node::Node,
+    control: crate::node::Node,
+    feedback: &crate::FeedbackSource,
+  ) -> bool {
+    let _ = (jsgraph, effect, control, feedback);
+    todo!("稳定优先守卫")
+  }
+  /// v8: src/compiler/map-inference.cc MapInference::InsertMapChecks
+  /// 原文: 无条件插 map 检查 (CheckMaps 节点)
+  pub fn insert_map_checks(
+    &mut self,
+    jsgraph: &mut crate::js_graph::JSGraph,
+    effect: &mut crate::node::Node,
+    control: crate::node::Node,
+    feedback: &crate::FeedbackSource,
+  ) {
+    let _ = (jsgraph, effect, control, feedback);
+    todo!("CheckMaps 插入")
+  }
+
+  /// v8: src/compiler/map-inference.cc MapInference::NoChange
+  /// 原文: InternallyMarkAsReliable + return NoChange()
+  /// — 仅在即将 return NoChange 时使用
+  pub fn no_change(&mut self) -> crate::graph_reducer::Reduction {
+    self.reliable = true;
+    crate::graph_reducer::Reduction::NoChange()
+  }
+}
+`;
+
+const p = writeSrc("v8-compiler-passes", "map_inference.rs.skel", body);
+console.log(`written ${p}\n查询=6 守卫=3 NoChange旁路=1 析构CHECK=1`);

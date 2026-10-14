@@ -1,0 +1,112 @@
+// 由 tool/src/wasm/canonical-types.cc.js 从 v8/src/wasm/canonical-types.cc 生成; 修订就地改, 复跑覆盖
+// 预定义类型表 (数组 6 + 签名 25 + reps 序列) 与 TypeCanonicalizer 方法台账
+
+//! 预定义 canonical 类型注册表; 索引常量见 canonical_types.rs。
+
+/// 预定义数组类型 (6 条: 索引 / 元素类型 / shared)
+/// v8: src/wasm/canonical-types.cc TypeCanonicalizer::AddPredefinedTypes
+#[rustfmt::skip]
+pub static PREDEFINED_ARRAY_TYPES: &[(&str, &str, bool)] = &[
+  ("kPredefinedArrayI8Index", "kWasmI8", false),
+  ("kPredefinedArrayI8SharedIndex", "kWasmI8", true),
+  ("kPredefinedArrayI16Index", "kWasmI16", false),
+  ("kPredefinedArrayI16SharedIndex", "kWasmI16", true),
+  ("kPredefinedArrayExternRefIndex", "kWasmExternRef", false),
+  ("kPredefinedArrayFuncRefIndex", "kWasmFuncRef", false),
+];
+
+/// 预定义签名 reps 形参序列 (kReps_* 共 21 组; 元素为 CanonicalValueType 记号)
+/// v8: src/wasm/canonical-types.cc TypeCanonicalizer::AddPredefinedTypes
+#[rustfmt::skip]
+pub static PREDEFINED_SIG_REPS: &[(&str, &[&str])] = &[
+  ("Reps_e_i", &["kRefExtern", "kI32"]),
+  ("Reps_t_i", &["kSharedRefExtern", "kI32"]),
+  ("Reps_e_rr", &["kRefExtern", "kExternRef", "kExternRef"]),
+  ("Reps_t_ss", &["kSharedRefExtern", "kSharedExternRef", "kSharedExternRef"]),
+  ("Reps_e_rii", &["kRefExtern", "kExternRef", "kI32", "kI32"]),
+  ("Reps_t_sii", &["kSharedRefExtern", "kSharedExternRef", "kI32", "kI32"]),
+  ("Reps_i_ri", &["kI32", "kExternRef", "kI32"]),
+  ("Reps_i_si", &["kI32", "kSharedExternRef", "kI32"]),
+  ("Reps_i_rr", &["kI32", "kExternRef", "kExternRef"]),
+  ("Reps_i_ss", &["kI32", "kSharedExternRef", "kSharedExternRef"]),
+  ("Reps_e_a16ii", &["kRefExtern", "kA16", "kI32", "kI32"]),
+  ("Reps_t_as16ii", &["kSharedRefExtern", "kAS16", "kI32", "kI32"]),
+  ("Reps_i_ra16i", &["kI32", "kExternRef", "kA16", "kI32"]),
+  ("Reps_i_sas16i", &["kI32", "kSharedExternRef", "kAS16", "kI32"]),
+  ("Reps_i_ra8i", &["kI32", "kExternRef", "kA8", "kI32"]),
+  ("Reps_i_sas8i", &["kI32", "kSharedExternRef", "kAS8", "kI32"]),
+  ("Reps_n8_r", &["kN8", "kExternRef"]),
+  ("Reps_ns8_s", &["kNS8", "kSharedExternRef"]),
+  ("Reps_e_a8ii", &["kRefExtern", "kA8", "kI32", "kI32"]),
+  ("Reps_t_as8ii", &["kSharedRefExtern", "kAS8", "kI32", "kI32"]),
+  ("Reps_configureAll", &["kAE", "kAF", "kA8", "kExternRef"]),
+];
+
+/// 预定义签名 (25 条: 索引 / 返回数 / 参数数 / reps 组名)
+/// v8: src/wasm/canonical-types.cc TypeCanonicalizer::AddPredefinedTypes
+#[rustfmt::skip]
+pub static PREDEFINED_SIGS: &[(&str, usize, usize, &str)] = &[
+  ("kPredefinedSigIndex_e_i", 1, 1, "Reps_e_i"),
+  ("kPredefinedSigIndex_t_i", 1, 1, "Reps_t_i"),
+  ("kPredefinedSigIndex_e_r", 1, 1, "Reps_e_rr"),
+  ("kPredefinedSigIndex_t_s", 1, 1, "Reps_t_ss"),
+  ("kPredefinedSigIndex_e_rr", 1, 2, "Reps_e_rr"),
+  ("kPredefinedSigIndex_t_ss", 1, 2, "Reps_t_ss"),
+  ("kPredefinedSigIndex_e_rii", 1, 3, "Reps_e_rii"),
+  ("kPredefinedSigIndex_t_sii", 1, 3, "Reps_t_sii"),
+  ("kPredefinedSigIndex_i_r", 1, 1, "Reps_i_ri"),
+  ("kPredefinedSigIndex_i_s", 1, 1, "Reps_i_si"),
+  ("kPredefinedSigIndex_i_ri", 1, 2, "Reps_i_ri"),
+  ("kPredefinedSigIndex_i_si", 1, 2, "Reps_i_si"),
+  ("kPredefinedSigIndex_i_rr", 1, 2, "Reps_i_rr"),
+  ("kPredefinedSigIndex_i_ss", 1, 2, "Reps_i_ss"),
+  ("kPredefinedSigIndex_e_a16ii", 1, 3, "Reps_e_a16ii"),
+  ("kPredefinedSigIndex_t_as16ii", 1, 3, "Reps_t_as16ii"),
+  ("kPredefinedSigIndex_i_ra16i", 1, 3, "Reps_i_ra16i"),
+  ("kPredefinedSigIndex_i_sas16i", 1, 3, "Reps_i_sas16i"),
+  ("kPredefinedSigIndex_i_ra8i", 1, 3, "Reps_i_ra8i"),
+  ("kPredefinedSigIndex_i_sas8i", 1, 3, "Reps_i_sas8i"),
+  ("kPredefinedSigIndex_n8_r", 1, 1, "Reps_n8_r"),
+  ("kPredefinedSigIndex_ns8_s", 1, 1, "Reps_ns8_s"),
+  ("kPredefinedSigIndex_e_a8ii", 1, 3, "Reps_e_a8ii"),
+  ("kPredefinedSigIndex_t_as8ii", 1, 3, "Reps_t_as8ii"),
+  ("kPredefinedSigIndex_configureAll", 0, 4, "Reps_configureAll"),
+];
+
+/// TypeCanonicalizer 方法定义台账 (.cc 侧 20 条)
+/// v8: src/wasm/canonical-types.cc
+#[rustfmt::skip]
+pub static TYPE_CANONICALIZER_METHODS: &[(&str, u32)] = &[
+  ("AddRecursiveGroup", 28),
+  ("AddRecursiveSingletonGroup", 100),
+  ("AddRecursiveGroup", 143),
+  ("AddPredefinedSingletonGroup", 232),
+  ("AddPredefinedTypes", 242),
+  ("IsCanonicalSubtype", 366),
+  ("IsCanonicalSubtype_Locked", 381),
+  ("IsHeapSubtype", 394),
+  ("EmptyStorageForTesting", 401),
+  ("CanonicalizeTypeDef", 415),
+  ("FindCanonicalGroup", 504),
+  ("FindCanonicalGroup", 515),
+  ("EstimateCurrentMemoryConsumption", 523),
+  ("GetCurrentNumberOfTypes", 539),
+  ("PrepareForCanonicalTypeId", 582),
+  ("ClearWasmCanonicalTypesForTesting", 613),
+  ("IsShared", 619),
+  ("has_descriptor", 622),
+  ("is_descriptor", 625),
+  ("Contains", 630),
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(PREDEFINED_ARRAY_TYPES.len() == 6);
+    assert!(PREDEFINED_SIGS.len() == 25);
+    assert!(PREDEFINED_SIG_REPS.len() == 21);
+    assert!(PREDEFINED_ARRAY_TYPES[0].0 == "kPredefinedArrayI8Index");
+    assert!(PREDEFINED_ARRAY_TYPES[5].0 == "kPredefinedArrayFuncRefIndex");
+    assert!(PREDEFINED_SIGS[0].0 == "kPredefinedSigIndex_e_i");
+    assert!(PREDEFINED_SIGS[24].0 == "kPredefinedSigIndex_configureAll");
+    assert!(PREDEFINED_SIGS[24].1 == 0 && PREDEFINED_SIGS[24].2 == 4);
+};

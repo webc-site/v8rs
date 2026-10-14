@@ -1,0 +1,38 @@
+[package]
+name = "rs8"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "rs8"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+coarsetime = "0.1.38"
+fancy-regex = "0.19.2"
+gxhash = "3.5.0"
+itoa = "1.0.18"
+parking_lot = "0.12.5"
+rusty_alloc-api = { workspace = true }
+thiserror = "2.0.20"
+v8-api = { version = "0.1.0", path = "../v8-api" }
+v8-ast = { version = "0.1.0", path = "../v8-ast" }
+v8-execution-isolate = { version = "0.1.0", path = "../v8-execution-isolate" }
+v8-interpreter = { version = "0.1.0", path = "../v8-interpreter" }
+v8-libplatform = { version = "0.1.0", path = "../v8-libplatform" }
+v8-numbers = { version = "0.1.0", path = "../v8-numbers" }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"
+

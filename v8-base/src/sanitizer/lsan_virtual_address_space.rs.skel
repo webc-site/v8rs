@@ -1,0 +1,38 @@
+// 由 tool/src/base/sanitizer/lsan-virtual-address-space.h.js 从 v8/src/base/sanitizer/lsan-virtual-address-space.h + .cc 生成; 修订就地改, 复跑覆盖
+// VAS 的 LSan 根区域登记装饰器
+
+//! v8 侧: override 15; 一行转发 10
+//! 语义: AllocatePages 登记根 (__lsan_register_root_region), FreePages 注销; 其余转发 vas_
+
+/// v8: class LsanVirtualAddressSpace final — 装饰 v8::VirtualAddressSpace
+pub struct LsanVirtualAddressSpace<'a> {
+    /// v8: vas_
+    vas: &'a mut dyn VirtualAddressSpace,
+}
+
+impl<'a> LsanVirtualAddressSpace<'a> {
+    pub fn new(vas: &'a mut dyn VirtualAddressSpace) -> Self { Self { vas } }
+
+    /// v8: AllocatePages — 分配成功后登记 LSan 根
+    pub fn allocate_pages(&mut self, hint: usize, size: usize, alignment: usize, permissions: PagePermissions) -> usize { todo!() }
+    /// v8: FreePages — 注销根
+    pub fn free_pages(&mut self, address: usize, size: usize) { todo!() }
+    /// v8: AllocateSubspace — 递归包 LsanVirtualAddressSpace
+    pub fn allocate_subspace(&mut self, hint: usize, size: usize, alignment: usize, max: PagePermissions) { todo!() }
+}
+
+// ---- 一行转发面 (v8 原文) ----
+/// v8: SetRandomSeed — vas_->SetRandomSeed(seed)
+/// v8: RandomPageAddress — vas_->RandomPageAddress()
+/// v8: SetPagePermissions — vas_->SetPagePermissions(address, size, permissions)
+/// v8: RecommitPages — vas_->RecommitPages(address, size, permissions)
+/// v8: AllocateGuardRegion — vas_->AllocateGuardRegion(address, size)
+/// v8: FreeGuardRegion — vas_->FreeGuardRegion(address, size)
+/// v8: CanAllocateSubspaces — vas_->CanAllocateSubspaces()
+/// v8: ActiveMemoryProtectionKey — std::nullopt
+/// v8: DiscardSystemPages — vas_->DiscardSystemPages(address, size)
+/// v8: DecommitPages — vas_->DecommitPages(address, size)
+
+// ---- override 对账 (15 项) ----
+// SetRandomSeed, RandomPageAddress, AllocatePages, FreePages, AllocateSharedPages, FreeSharedPages, SetPagePermissions, RecommitPages, AllocateGuardRegion, FreeGuardRegion, CanAllocateSubspaces, ActiveMemoryProtectionKey, AllocateSubspace, DiscardSystemPages, DecommitPages
+// 依赖 trait: VirtualAddressSpace (virtual_address_space.rs.skel)

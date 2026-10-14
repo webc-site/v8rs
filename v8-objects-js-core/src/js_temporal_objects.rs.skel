@@ -1,0 +1,39 @@
+// 由 tool/src/objects/js-temporal-objects.h.js 从 v8/src/objects/js-temporal-objects.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSTemporal 8 类包装槽/类型登记差集骨架
+
+//! 每类 = JSObject + 1 个 CppGCManaged<temporal_rs::T> tagged 槽;
+//! 类型登记 ASSIGN_MANAGED_TYPE_ID_FOR_MANAGED → ManagedTypeId::kTemporal*。
+
+/// v8: src/objects/js-temporal-objects.h JSTemporalDuration (槽: duration_ @ 24, CppGCManaged<temporal_rs::Duration>)
+pub const K_JSTEMPORALDURATION_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=false
+/// v8: src/objects/js-temporal-objects.h JSTemporalInstant (槽: instant_ @ 24, CppGCManaged<temporal_rs::Instant>)
+pub const K_JSTEMPORALINSTANT_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=false
+/// v8: src/objects/js-temporal-objects.h JSTemporalPlainDate (槽: date_ @ 24, CppGCManaged<temporal_rs::PlainDate>)
+pub const K_JSTEMPORALPLAINDATE_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=true
+/// v8: src/objects/js-temporal-objects.h JSTemporalPlainDateTime (槽: date_time_ @ 24, CppGCManaged<temporal_rs::PlainDateTime>)
+pub const K_JSTEMPORALPLAINDATETIME_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=true
+/// v8: src/objects/js-temporal-objects.h JSTemporalPlainMonthDay (槽: month_day_ @ 24, CppGCManaged<temporal_rs::PlainMonthDay>)
+pub const K_JSTEMPORALPLAINMONTHDAY_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=true
+/// v8: src/objects/js-temporal-objects.h JSTemporalPlainTime (槽: time_ @ 24, CppGCManaged<temporal_rs::PlainTime>)
+pub const K_JSTEMPORALPLAINTIME_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=false
+/// v8: src/objects/js-temporal-objects.h JSTemporalPlainYearMonth (槽: year_month_ @ 24, CppGCManaged<temporal_rs::PlainYearMonth>)
+pub const K_JSTEMPORALPLAINYEARMONTH_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=true
+/// v8: src/objects/js-temporal-objects.h JSTemporalZonedDateTime (槽: zoned_date_time_ @ 24, CppGCManaged<temporal_rs::ZonedDateTime>)
+pub const K_JSTEMPORALZONEDDATETIME_HEADER_SIZE: usize = 32; // 3+1 槽; calendar=true
+
+// ManagedTypeId 登记表 (h:54-69):
+// temporal_rs::Instant → ManagedTypeId::kTemporalInstant
+// temporal_rs::Duration → ManagedTypeId::kTemporalDuration
+// temporal_rs::PlainDate → ManagedTypeId::kTemporalPlainDate
+// temporal_rs::PlainDateTime → ManagedTypeId::kTemporalPlainDateTime
+// temporal_rs::PlainMonthDay → ManagedTypeId::kTemporalPlainMonthDay
+// temporal_rs::PlainTime → ManagedTypeId::kTemporalPlainTime
+// temporal_rs::PlainYearMonth → ManagedTypeId::kTemporalPlainYearMonth
+// temporal_rs::ZonedDateTime → ManagedTypeId::kTemporalZonedDateTime
+
+// 方法映射 (cc 126 个静态定义, 语义推迟到 temporal_rs FFI 层):
+//   Constructor/From/Compare/Equals/Add/Subtract/Round/Until/Since/With(WithCalendar|WithPlainTime|WithTimeZone)/
+//   ToJSON/ToLocaleString/ToString/ToPlain*/ToZonedDateTime*/NowISO/GetEpochMillisecondsForUtc/...
+//   JSTemporalNowTimeZoneId + temporal::CreateTemporalInstantWithValidityCheck/BuiltinTimeZoneGetPlainDateTimeFor/
+//   ToTemporalDurationAsRecord (DurationFormat 共享)
+// 宏三角: DECL_ACCESSORS_FOR_RUST_WRAPPER (h) ↔ DEFINE_TEMPORAL_ACCESSORS (inl x8) ↔ initialize_with_wrapped_rust_value (cc)

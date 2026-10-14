@@ -1,0 +1,23 @@
+// 由 tool/src/base/discriminated-union.h.js 从 v8/src/base/discriminated-union.h 生成; 修订就地改, 复跑覆盖
+// 枚举判别的类型联合 (Rust enum 天然形态)
+
+//! v8: src/base/discriminated-union.h
+//! 原版: TagEnum 成员数 = 类型数, 值序对应类型序; 全类型 trivially destructible;
+//!       存储 max{sizeof}, 对齐 max{alignof}, tag 为 uint8 (类型数 <= 255)
+//! Rust: enum 直接表达; 本骨架登记 API 面 + 不变量
+
+/// v8: src/base/discriminated-union.h DiscriminatedUnion<TagEnum, Ts...>
+/// Rust 对应: enum X { A(T0), B(T1), ... } — tag() = 判别值, get<T>() = 模式匹配
+/// 以下为语义约定 (Developer 按具体 TagEnum 生成):
+/// - tag() 返回 TagEnum, 值 = 类型在 Ts... 中的序数 (原版 uint8_t tag_)
+/// - get<Tag>()/get<T>() 原版 DCHECK tag 匹配; Rust 侧用 match 穷尽, 失配不可达
+/// - 原版禁重复类型 (TODO(leszeks) 登记); Rust enum 变体可同名域不受限
+/// - 构造: DiscriminatedUnion(tag, t) 与 DiscriminatedUnion(t) 等价 (前者 DCHECK tag)
+pub trait DiscriminatedUnion {
+    type Tag;
+    /// v8: tag() — static_cast<Tag>(tag_)
+    fn tag(&self) -> Self::Tag;
+}
+
+// v8: index_of_type_v<T, Ts...> / nth_type_t<N, Ts...> 来自 template-utils.h (别席),
+//     Rust 侧由 enum 变体序数天然表达, 登记跳过

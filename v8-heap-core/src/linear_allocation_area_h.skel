@@ -1,0 +1,29 @@
+// 由 tool/src/heap/linear-allocation-area.h.js 从 v8/src/heap/linear-allocation-area.h 生成; 修订就地改, 复跑覆盖
+// LinearAllocationArea 21 方法 + 3 字段台账; 目标配置 DEBUG 关, Verify 为 cfg 门
+
+// ══ LinearAllocationArea (原版 linear-allocation-area.h:19-124) → v8-heap-core/src/linear_allocation_area.rs ══
+// 全部落地 (纯结构, 无 Isolate 耦合); Verify 断言按原版 DEBUG 门 → Rust cfg!(debug_assertions)
+// 默认 ctor                  h:21
+// 双参 ctor                  h:22
+// Reset                    h:27
+// ResetStart               h:34
+// CanIncrementTop          h:36
+// IncrementTop             h:41
+// DecrementTopIfAdjacent   h:48
+// SetLimit                 h:61
+// start()                  h:66
+// top()                    h:70
+// limit()                  h:74
+// top_address const        h:78
+// top_address mut          h:79
+// limit_address const      h:80
+// limit_address mut        h:81
+// Verify                   h:83
+// StartOffset              h:99
+// TopOffset                h:102
+// LimitOffset              h:105
+// Size                     h:108
+// 布局金标准 (tests/memory_chunk.rs 同组断言): sizeof = 3*kSystemPointerSize = 24;
+//   StartOffset=0 / TopOffset=8 / LimitOffset=16 (8 平台, repr(C) 三 Address 字段)
+// 不变量: start_ <= top_ <= limit_; top 对齐 kObjectAlignment (8GB 堆则 kObjectAlignment8GbHeap)
+// 私有 offset 访问器原版 friend IsolateData 专用 → Rust 侧 pub const fn 供布局断言与上层 IsolateData 票消费

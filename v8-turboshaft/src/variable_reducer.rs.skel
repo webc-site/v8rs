@@ -1,0 +1,51 @@
+// 由 tool/src/compiler/turboshaft/variable-reducer.h.js 从 v8/src/compiler/turboshaft/variable-reducer.h 生成; 修订就地改, 复跑覆盖
+// 变量 reducer: 块间 SSA 变量与 phi 物化
+
+/// 原版 VariableReducer — SnapshotTable<OpIndex, VariableData> 驱动,
+/// 栈内恒插 RequiredOptimizationReducer (常量 phi 须消)。
+/// v8: src/compiler/turboshaft/variable-reducer.h VariableReducer
+pub struct VariableReducer {
+  pub table: VariableTable,
+  /// block_to_snapshot_mapping_: 块 -> Snapshot
+  pub snapshots: Vec<Option<Snapshot>>,
+  /// loop_pending_phis_: 循环头的 PendingLoopPhi 批
+  pub loop_pending_phis: HashMap<BlockIndex, Vec<(Variable, OpIndex)>>,
+}
+
+/// 原版 VariableTable — ChangeTrackingSnapshotTable 子类:
+/// OnValueChange 维护 active_loop_variables 侵入集
+/// (loop_invariant 变量跳过);
+/// valid->invalid 摘除, invalid->valid 加入。
+/// v8: variable-reducer.h VariableReducer::VariableTable
+pub struct VariableTable {
+  pub active_loop_variables: IntrusiveSet<Variable>,
+}
+
+/// 原版 kMaxAllowedMergeStateSize = 100_000 —
+/// max_merge_pred_count * (variable_count + n) 超限即拒绝建变量
+/// (防 OOM), too_many_variables_bailouts_count_ 记数。
+/// v8: variable-reducer.h VariableReducer::CanCreateNVariables
+pub const MAX_ALLOWED_MERGE_STATE_SIZE: u32 = 100_000;
+
+impl VariableReducer {
+  /// v8: Bind — 前驱快照逆序后 StartNewSnapshot(merge_variables);
+  /// 任一前驱 Invalid 则该变量不合并; LoadRootRegister 值恒定;
+  /// 循环头为活跃变量发 PendingLoopPhi
+  pub fn bind(&mut self, new_block: &Block) { todo!() }
+
+  /// v8: REDUCE(Goto) — 发边时记录目标块前驱快照
+  pub fn reduce_goto(&mut self, destination: &Block, is_backedge: bool) -> V<None> { todo!() }
+
+  /// 其余 API 面 (11 个):
+  /// v8: SetVariable
+  /// v8: Set
+  /// v8: GetVariable
+  /// v8: GetPredecessorValue
+  /// v8: NewVariable
+  /// v8: NewLoopInvariantVariable
+  /// v8: CanCreateNVariables
+  /// v8: RestoreTemporaryVariableSnapshotAfter
+  /// v8: CloseTemporaryVariableSnapshot
+  /// v8: SealAndSaveVariableSnapshot
+  pub fn api(&mut self) { todo!() }
+}

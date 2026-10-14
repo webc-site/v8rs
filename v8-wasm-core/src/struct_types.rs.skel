@@ -1,0 +1,90 @@
+// 由 tool/src/wasm/struct-types.h.js 从 v8/src/wasm/struct-types.h 生成; 修订就地改, 复跑覆盖
+// struct/array/cont wasm 类型骨架与字段偏移布局算法
+
+//! GC 类型系统的三对类型 (模块相对 / canonical) 与布局计算。
+/// v8: src/wasm/struct-types.h StructTypeBase
+
+/// 对齐上限: shared 结构体按 f64(8) 对齐, 否则按 tagged(压缩 4 / 非压缩 8)
+/// v8: src/wasm/struct-types.h StructTypeBase::Align
+pub fn align_field(offset: u32, alignment: u32, is_shared: bool, tagged_size: u32) -> u32 {
+    let cap = if is_shared { k_double_size } else { tagged_size };
+    let align = alignment.min(cap);
+    offset.div_ceil(align) * align
+}
+
+/// 非合并 descriptor 的首字段预留 (kTaggedSize); 合并 descriptors 时为 0
+/// v8: src/wasm/struct-types.h field_offset(index == 0)
+pub const fn first_field_reserved(is_descriptor: bool, merged_descriptors: bool, tagged_size: u32) -> u32 {
+    if merged_descriptors { 0 } else if is_descriptor { tagged_size } else { 0 }
+}
+
+/// gap 填充布局器 (保持子类型安全: 公共前缀必得公共偏移)
+/// v8: src/wasm/struct-types.h InitializeOffsets
+pub fn initialize_offsets(sizes: &[u32], is_shared: bool, tagged_size: u32, out_offsets: &mut [u32]) {
+    let n = sizes.len();
+    if n == 0 { return; }
+    let mut offset = 0usize;
+    let mut gap_position = 0usize;
+    let mut gap_size = 0usize;
+    for i in 1..n {
+        let field_size = sizes[i] as usize;
+        if field_size <= gap_size {
+            let aligned_gap = align_field(gap_position as u32, field_size as u32, is_shared, tagged_size) as usize;
+            let gap_before = aligned_gap - gap_position;
+            let aligned_gap_size = gap_size - gap_before;
+            if field_size <= aligned_gap_size {
+                out_offsets[i - 1] = aligned_gap as u32;
+                let gap_after = aligned_gap_size - field_size;
+                if gap_before > gap_after {
+                    gap_size = gap_before;
+                } else {
+                    gap_position = aligned_gap + field_size;
+                    gap_size = gap_after;
+                }
+                continue;
+            }
+        }
+        let old_offset = offset;
+        offset = align_field(offset as u32, field_size as u32, is_shared, tagged_size) as usize;
+        let gap = offset - old_offset;
+        if gap > gap_size {
+            gap_size = gap;
+            gap_position = old_offset;
+        }
+        out_offsets[i - 1] = offset as u32;
+        offset += field_size;
+    }
+    offset = align_field(offset as u32, tagged_size, false, tagged_size) as usize;
+    out_offsets[n - 1] = offset as u32;
+}
+
+/// builder 是否计算偏移
+/// v8: src/wasm/struct-types.h BuilderImpl::ComputeOffsets
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ComputeOffsets {
+    /// v8: kComputeOffsets = true
+    Compute,
+    /// v8: kUseProvidedOffsets = false
+    UseProvided,
+}
+
+/// 首字段可作 JS 原型判定: descriptor 且首字段不可变 extern 引用
+/// v8: src/wasm/struct-types.h first_field_can_be_prototype
+pub fn first_field_can_be_prototype(
+    is_descriptor: bool,
+    field_count: usize,
+    first_mutability: bool,
+    first_is_extern_ref: bool,
+) -> bool {
+    is_descriptor && field_count > 0 && !first_mutability && first_is_extern_ref
+}
+
+/// v8: src/wasm/struct-types.h kDoubleSize (f64 宽度)
+pub const k_double_size: u32 = 8;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(k_double_size, 8);
+    assert_eq!(first_field_reserved(true, false, 4), 4);
+    assert_eq!(first_field_reserved(false, false, 4), 0);
+};

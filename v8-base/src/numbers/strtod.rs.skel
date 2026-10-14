@@ -1,0 +1,73 @@
+// 由 tool/src/base/numbers/strtod.h.js 从 v8/src/base/numbers/strtod.h + .cc 生成; 修订就地改, 复跑覆盖
+// 字符串→double: Strtod 三级分派规则面
+
+//! v8 侧: 导出 1 (Strtod) + static 9 个; 精确幂表 23 项 (10^0..10^22)
+
+// ---- 常量表 ----
+/// v8: src/base/numbers/strtod.cc kMaxExactDoubleIntegerDecimalDigits = 15
+pub const K_MAX_EXACT_DOUBLE_INTEGER_DECIMAL_DIGITS: i32 = 15;
+/// v8: src/base/numbers/strtod.cc kMaxUint64DecimalDigits = 19
+pub const K_MAX_UINT64DECIMAL_DIGITS: i32 = 19;
+/// v8: src/base/numbers/strtod.cc kMaxDecimalPower = 309
+pub const K_MAX_DECIMAL_POWER: i32 = 309;
+/// v8: src/base/numbers/strtod.cc kMinDecimalPower = -324
+pub const K_MIN_DECIMAL_POWER: i32 = -324;
+/// v8: src/base/numbers/strtod.cc kMaxUint64 = 0xFFFF'FFFF'FFFF'FFFF
+pub const K_MAX_UINT64: u64 = 0xFFFF'FFFF'FFFF'FFFF;
+/// v8: src/base/numbers/strtod.cc kMaxSignificantDecimalDigits = 780
+pub const K_MAX_SIGNIFICANT_DECIMAL_DIGITS: i32 = 780;
+
+/// v8: src/base/numbers/strtod.cc exact_powers_of_ten[] — 10^0..10^22 精确幂 (23 项)
+pub static EXACT_POWERS_OF_TEN: [f64; 23] = [
+    1.0, 10.0, 100.0, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10,
+    1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19, 1e20,
+    1e21, 1e22, // 10^22 = 0x878678326EAC9 * 2^22 (v8 原注)
+];
+
+// ---- static 辅助 (v8 侧 9 个) ----
+// 对账: TrimLeadingZeros, TrimTrailingZeros, TrimToMaxSignificantDigits, ReadUint64, ReadDiyFp, DoubleStrtod, AdjustmentPowerOfTen, DiyFpStrtod, BignumStrtod
+/// TrimLeadingZeros/TrimTrailingZeros: 去首/尾 '0'
+/// TrimToMaxSignificantDigits: 截到 780 位有效数字后递归
+/// ReadUint64/ReadDiyFp: 数字串读入 (19 位内直接 u64)
+/// DoubleStrtod: <=15 位且域内 → 直接乘精确幂 (guess 校正 round-up)
+/// AdjustmentPowerOfTen: 10^k 校正因子
+/// DiyFpStrtod: DiyFp 乘 cached power, 误差界判定正确舍入
+/// BignumStrtod: 兜底大数路径 (bignum.cc)
+
+/// v8: src/base/numbers/strtod.h Strtod(buffer, exponent)
+/// 语义: buffer 为纯数字 [0-9] 非空不以 '0' 开头; 值 = digits * 10^exponent
+/// 分派: 空→0.0; >780 位截断递归; 上溢→inf (>=10^309); 下溢→0.0 (<=10^-324);
+///       DoubleStrtod → DiyFpStrtod → BignumStrtod 兜底
+pub fn strtod(buffer: &[u8], exponent: i32) -> f64 {
+    /// v8: 主分派原文见尾; 三级回退链
+    todo!()
+}
+
+// ---- v8 主函数原文 (分派证据, Developer 对照) ----
+// double Strtod(Vector<const char> buffer, int exponent) {
+//   Vector<const char> left_trimmed = TrimLeadingZeros(buffer);
+//   Vector<const char> trimmed = TrimTrailingZeros(left_trimmed);
+//   exponent += left_trimmed.length() - trimmed.length();
+//   if (trimmed.empty()) return 0.0;
+//   if (trimmed.length() > kMaxSignificantDecimalDigits) {
+//     char significant_buffer[kMaxSignificantDecimalDigits];
+//     int significant_exponent;
+//     TrimToMaxSignificantDigits(trimmed, exponent, significant_buffer,
+//                                &significant_exponent);
+//     return Strtod(
+//         Vector<const char>(significant_buffer, kMaxSignificantDecimalDigits),
+//         significant_exponent);
+//   }
+//   if (exponent + trimmed.length() - 1 >= kMaxDecimalPower) {
+//     return std::numeric_limits<double>::infinity();
+//   }
+//   if (exponent + trimmed.length() <= kMinDecimalPower) return 0.0;
+// 
+//   double guess;
+//   if (DoubleStrtod(trimmed, exponent, &guess) ||
+//       DiyFpStrtod(trimmed, exponent, &guess)) {
+//     return guess;
+//   }
+//   return BignumStrtod(trimmed, exponent, guess);
+// }
+// 

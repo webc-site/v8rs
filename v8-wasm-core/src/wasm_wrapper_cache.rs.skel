@@ -1,0 +1,55 @@
+// 由 tool/src/wasm/wasm-wrapper-cache.h.js 从 v8/src/wasm/wasm-wrapper-cache.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// WasmWrapperCache 泛型缓存布局与 AddWrapper/Lookup 契约
+
+//! 进程级 wrapper 缓存基类: entry_map (weak) + codes (按地址有序 map)。
+/// v8: src/wasm/wasm-wrapper-cache.h WasmWrapperCache
+
+/// AddWrapper 构造 WasmCode 时的固定参数 (wrapper 无函数身份)
+/// v8: src/wasm/wasm-wrapper-cache-inl.h AddWrapper
+pub mod add_wrapper_convention {
+    /// v8: kAnonymousFuncIndex (= -1, src/wasm/wasm-constants.h)
+    pub const ANONYMOUS_FUNC_INDEX: i32 = -1;
+    /// v8: ExecutionTier::kNone
+    pub const EXECUTION_TIER_NONE: u8 = 0;
+    /// v8: wasm::kNotForDebugging
+    pub const NOT_FOR_DEBUGGING: u8 = 0;
+    /// v8: constexpr bool frame_has_feedback_slot = false
+    pub const FRAME_HAS_FEEDBACK_SLOT: bool = false;
+    /// v8: safepoint_table_size == 0 时 safepoint_table_offset 归零
+    pub fn safepoint_table_offset(table_size: usize, table_offset: usize) -> usize {
+        if table_size == 0 { 0 } else { table_offset }
+    }
+}
+
+/// wrapper 内禁止出现的 reloc 模式 (断言语义)
+/// v8: src/wasm/wasm-wrapper-cache-inl.h AddWrapper reloc 迭代
+pub const WRAPPER_FORBIDS_WASM_CALL_RELOC: bool = true;
+pub const WRAPPER_FORBIDS_WASM_STUB_CALL_RELOC: bool = true;
+
+/// Lookup(pc): codes 按 instruction_start 有序, upper_bound 后退一位
+/// v8: src/wasm/wasm-wrapper-cache-inl.h WasmWrapperCache::Lookup
+pub fn lookup_by_pc<'a>(codes: &'a BTreeMap<usize, &'a str>, pc: usize) -> Option<(&'a usize, &'a &'a str)> {
+    let mut iter = codes.range(..=pc);
+    iter.next_back()
+}
+
+/// 原版尺寸看板基准 (x64 clang linux debug 指针压缩构建)
+/// v8: src/wasm/wasm-wrapper-cache-inl.h UPDATE_WHEN_CLASS_CHANGES
+pub const WASM_WRAPPER_CACHE_SIZE_BASELINE: usize = 240;
+
+/// ImportWrapperCacheKey 禁止 kWasmToJSFastApi
+/// v8: src/wasm/wasm-wrapper-cache-inl.h GetCompiled
+pub const IMPORT_KEY_FORBIDS_FAST_API: bool = true;
+
+/// 编译完成后上报的计数器名
+/// v8: src/wasm/wasm-wrapper-cache-inl.h CacheCompiledWrapper
+pub const COUNTER_GENERATED_CODE_SIZE: &str = "wasm_generated_code_size";
+pub const COUNTER_RELOC_SIZE: &str = "wasm_reloc_size";
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(!add_wrapper_convention::FRAME_HAS_FEEDBACK_SLOT);
+    assert_eq!(add_wrapper_convention::safepoint_table_offset(0, 64), 0);
+    assert_eq!(add_wrapper_convention::safepoint_table_offset(8, 64), 64);
+    assert_eq!(WASM_WRAPPER_CACHE_SIZE_BASELINE, 240);
+};

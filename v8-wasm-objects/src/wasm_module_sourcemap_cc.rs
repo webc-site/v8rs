@@ -1,0 +1,59 @@
+// 由 tool/src/wasm/wasm-module-sourcemap.cc.js 从 v8/src/wasm/wasm-module-sourcemap.cc 生成; 修订就地改, 复跑覆盖
+// sourcemap 版本门控与 VLQ 映射解码语义
+
+//! Wasm 模块 sourcemap (version 3)。
+
+/// 支持的 sourcemap 版本 (其余版本整体视为无效)
+/// v8: src/wasm/wasm-module-sourcemap.cc WasmModuleSourceMap 构造
+pub const SUPPORTED_VERSION: u32 = 3;
+
+/// 必需字段: "sources" 必须为数组, "mappings" 必须为字符串
+/// v8: src/wasm/wasm-module-sourcemap.cc WasmModuleSourceMap 构造
+#[rustfmt::skip]
+pub static REQUIRED_FIELDS: &[(&str, &str)] = &[
+    ("sources", "IsArray"),
+    ("mappings", "IsString"),
+];
+
+/// VLQ 解码字段: 前 3 个为相对增量累加, 第 4 个 (源列号) 解码后弃用
+/// v8: src/wasm/wasm-module-sourcemap.cc DecodeMapping
+#[rustfmt::skip]
+pub static VLQ_FIELDS: &[(&str, bool)] = &[
+    ("gen_col (生成列)", true),
+    ("file_idx (文件索引)", true),
+    ("ori_line (源行)", true),
+    ("源列号 (Emscripten 恒 0)", false),
+];
+
+/// VLQ 解码失败哨兵 (int32 最小值, 绝不会是合法增量)
+/// v8: src/wasm/wasm-module-sourcemap.cc DecodeMapping
+pub const VLQ_ERROR_SENTINEL: i32 = i32::MIN;
+
+/// 分隔规则: 冗余逗号跳过; 每组 4 字段后必须是逗号或串尾
+/// v8: src/wasm/wasm-module-sourcemap.cc DecodeMapping
+pub const SEPARATOR_RULE: &str = "',' 跳过; 4 字段后须 ',' 或结尾";
+
+/// 行号/文件名查找: offsets 上 upper_bound, 取命中位置的前驱条目
+/// v8: src/wasm/wasm-module-sourcemap.cc GetSourceLine / GetFilename
+pub const LOOKUP_SEMANTICS: &str = "upper_bound 前驱";
+/// HasValidEntry: 无前驱 (addr 在首条前) 返回 false; 命中条目的 offset 须 >= start
+/// v8: src/wasm/wasm-module-sourcemap.cc HasValidEntry
+pub const HAS_VALID_ENTRY_SEMANTICS: &str = "前驱存在且 entry_offset >= start";
+
+/// HasSource 半开区间: start <= 最大 offset 且 end > 最小 offset
+/// v8: src/wasm/wasm-module-sourcemap.cc HasSource
+pub const HAS_SOURCE_SEMANTICS: &str = "start <= last && end > first";
+
+/// sizeof(WasmModuleSourceMap) 估算基准
+/// v8: src/wasm/wasm-module-sourcemap.cc EstimateCurrentMemoryConsumption
+pub const SIZEOF_WASM_MODULE_SOURCE_MAP: usize = 104;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(SUPPORTED_VERSION, 3);
+    assert_eq!(REQUIRED_FIELDS.len(), 2);
+    assert_eq!(VLQ_FIELDS.len(), 4);
+    assert_eq!(VLQ_FIELDS.iter().filter(|f| f.1).count(), 3);
+    assert_eq!(VLQ_ERROR_SENTINEL, -2147483648);
+    assert_eq!(SIZEOF_WASM_MODULE_SOURCE_MAP, 104);
+};

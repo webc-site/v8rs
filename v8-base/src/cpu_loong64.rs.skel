@@ -1,0 +1,23 @@
+// 由 tool/src/base/cpu/cpu-loong64.cc.js 从 v8/src/base/cpu/cpu-loong64.cc 生成; 修订就地改, 复跑覆盖
+// LoongArch LSX/LASX 特性探测
+
+//! v8: src/base/cpu/cpu-loong64.cc
+
+// v8: cpu-loong64.cc 掩码常量
+pub const LOONGARCH_CFG2: u32 = 0x2;      // v8: LOONGARCH_CFG2 (cpucfg 寄存器号)
+pub const LOONGARCH_CFG2_LSX: u32 = 1 << 6; // v8: LOONGARCH_CFG2_LSX
+pub const LOONGARCH_CFG2_LASX: u32 = 1 << 7; // v8: LOONGARCH_CFG2_LASX
+
+/// v8: cpu-loong64.cc cpu_flags_cpucfg — 内联汇编 cpucfg 读配置字
+#[cfg(all(target_os = "linux", target_arch = "loongarch64"))]
+fn cpu_flags_cpucfg(cfg: u32) -> u32;
+
+impl Cpu {
+    /// v8: cpu-loong64.cc DetectFeatures
+    /// 主路: cpucfg(LOONGARCH_CFG2) != 0 → 按 LSX/LASX 位;
+    /// 回退: /proc/cpuinfo "features" 字段 HasListItem("lsx"/"lasx")
+    #[cfg(target_arch = "loongarch64")]
+    fn detect_features(&mut self) {
+        // Developer: has_lsx / has_lasx 赋值逻辑
+    }
+}

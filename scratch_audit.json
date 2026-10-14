@@ -1,0 +1,901 @@
+[
+  {
+    "line_idx": 82,
+    "line": "- [x] v8-common — `v8/src/common`, ~8k。全局常量/枚举/Tagged 原语/Smi/check 宏, 引擎地基。依赖: 无。测试: `unittests/common`。日志: [./log/v8-common.md](./log/v8-common.md)",
+    "old_state": "x",
+    "crate_name": "v8-common",
+    "rest": "`v8/src/common`, ~8k。全局常量/枚举/Tagged 原语/Smi/check 宏, 引擎地基。依赖: 无。测试: `unittests/common`。日志: [./log/v8-common.md](./log/v8-common.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 83,
+    "line": "- [x] v8-base — `v8/src/base` (除 platform/), ~28k。通用算法/容器/位操作/RNG/CPU 探测/调试栈。依赖: v8-common。测试: `unittests/base`。日志: [./log/v8-base.md](./log/v8-base.md)",
+    "old_state": "x",
+    "crate_name": "v8-base",
+    "rest": "`v8/src/base` (除 platform/), ~28k。通用算法/容器/位操作/RNG/CPU 探测/调试栈。依赖: v8-common。测试: `unittests/base`。日志: [./log/v8-base.md](./log/v8-base.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 84,
+    "line": "- [x] v8-base-platform — `v8/src/base/platform`, ~10k。mmap/信号量/线程/时间/虚拟内存/页分配。依赖: v8-base。测试: `unittests/base`。日志: [./log/v8-base-platform.md](./log/v8-base-platform.md)",
+    "old_state": "x",
+    "crate_name": "v8-base-platform",
+    "rest": "`v8/src/base/platform`, ~10k。mmap/信号量/线程/时间/虚拟内存/页分配。依赖: v8-base。测试: `unittests/base`。日志: [./log/v8-base-platform.md](./log/v8-base-platform.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 85,
+    "line": "- [x] v8-zone — `v8/src/zone`, ~3k。arena bump 分配器 + 作用域回收 + accounting。依赖: v8-base。测试: `unittests/zone`。日志: [./log/v8-zone.md](./log/v8-zone.md)",
+    "old_state": "x",
+    "crate_name": "v8-zone",
+    "rest": "`v8/src/zone`, ~3k。arena bump 分配器 + 作用域回收 + accounting。依赖: v8-base。测试: `unittests/zone`。日志: [./log/v8-zone.md](./log/v8-zone.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-zone 残余 18 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 86,
+    "line": "- [x] v8-flags — `v8/src/flags`, ~7k。启动 flag 解析/蕴含/重置/规范化。依赖: v8-base。测试: `unittests/flags`。日志: [./log/v8-flags.md](./log/v8-flags.md)",
+    "old_state": "x",
+    "crate_name": "v8-flags",
+    "rest": "`v8/src/flags`, ~7k。启动 flag 解析/蕴含/重置/规范化。依赖: v8-base。测试: `unittests/flags`。日志: [./log/v8-flags.md](./log/v8-flags.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 87,
+    "line": "- [x] v8-logging — `v8/src/logging`, ~8k。日志文件/RCS 运行时计数。依赖: v8-base。测试: `unittests/logging`。日志: [./log/v8-logging.md](./log/v8-logging.md)",
+    "old_state": "x",
+    "crate_name": "v8-logging",
+    "rest": "`v8/src/logging`, ~8k。日志文件/RCS 运行时计数。依赖: v8-base。测试: `unittests/logging`。日志: [./log/v8-logging.md](./log/v8-logging.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-logging 残余 20 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 88,
+    "line": "- [x] v8-utils — `v8/src/utils`, ~5k。算法/容器/字符串流/内存工具。依赖: v8-base, v8-zone。测试: `unittests/utils`",
+    "old_state": "x",
+    "crate_name": "v8-utils",
+    "rest": "`v8/src/utils`, ~5k。算法/容器/字符串流/内存工具。依赖: v8-base, v8-zone。测试: `unittests/utils`",
+    "is_refuted": true,
+    "reasons": [
+      "v8-utils 残余 18 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 89,
+    "line": "- [x] v8-tasks — `v8/src/tasks`, ~1k。任务句柄/取消任务/操作屏障。依赖: v8-base-platform。测试: `unittests/tasks`。日志: [./log/v8-tasks.md](./log/v8-tasks.md)",
+    "old_state": "x",
+    "crate_name": "v8-tasks",
+    "rest": "`v8/src/tasks`, ~1k。任务句柄/取消任务/操作屏障。依赖: v8-base-platform。测试: `unittests/tasks`。日志: [./log/v8-tasks.md](./log/v8-tasks.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-tasks 残余 8 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 90,
+    "line": "- [x] v8-tracing — `v8/src/tracing`, ~4k。trace 宏/TracedValue/perfetto 兼容面。依赖: v8-base。测试: `unittests/tracing`",
+    "old_state": "x",
+    "crate_name": "v8-tracing",
+    "rest": "`v8/src/tracing`, ~4k。trace 宏/TracedValue/perfetto 兼容面。依赖: v8-base。测试: `unittests/tracing`",
+    "is_refuted": true,
+    "reasons": [
+      "v8-tracing 残余 16 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 94,
+    "line": "- [x] v8-numbers — `v8/src/numbers`, ~3k。double↔字符串转换/dtoa/ieee754/XorShift128+ RNG。方案: zmij 内核 + ECMAScript 格式层 (见 十)。依赖: v8-base。测试: `unittests/numbers` + `unittests/gay-*` 黄金数据。日志: [./log/v8-numbers.md](./log/v8-numbers.md)",
+    "old_state": "x",
+    "crate_name": "v8-numbers",
+    "rest": "`v8/src/numbers`, ~3k。double↔字符串转换/dtoa/ieee754/XorShift128+ RNG。方案: zmij 内核 + ECMAScript 格式层 (见 十)。依赖: v8-base。测试: `unittests/numbers` + `unittests/gay-*` 黄金数据。日志: [./log/v8-numbers.md](./log/v8-numbers.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-numbers 残余 28 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 95,
+    "line": "- [x] v8-bigint — `v8/src/bigint`, ~6k。大整数算术内核 (Karatsuba/Toom-Cook/FFT/Barrett/Burnikel-Ziegler)。依赖: v8-base。测试: `unittests/bigint` + `v8/test/bigint`。日志: [./log/v8-bigint.md](./log/v8-bigint.md)",
+    "old_state": "x",
+    "crate_name": "v8-bigint",
+    "rest": "`v8/src/bigint`, ~6k。大整数算术内核 (Karatsuba/Toom-Cook/FFT/Barrett/Burnikel-Ziegler)。依赖: v8-base。测试: `unittests/bigint` + `v8/test/bigint`。日志: [./log/v8-bigint.md](./log/v8-bigint.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-bigint 残余 16 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 96,
+    "line": "- [x] v8-strings — `v8/src/strings`, ~8k。unicode/字符谓词/URI 编解码/流式解码器。方案: icu4x + memchr (见 十)。依赖: v8-base, v8-numbers。测试: `unittests/strings`。日志: [./log/v8-strings.md](./log/v8-strings.md)",
+    "old_state": "x",
+    "crate_name": "v8-strings",
+    "rest": "`v8/src/strings`, ~8k。unicode/字符谓词/URI 编解码/流式解码器。方案: icu4x + memchr (见 十)。依赖: v8-base, v8-numbers。测试: `unittests/strings`。日志: [./log/v8-strings.md](./log/v8-strings.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-strings 残余 45 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 97,
+    "line": "- [x] v8-date — `v8/src/date`, ~2k。日期解析器/时区缓存, 零堆分配流式解析。依赖: v8-strings。测试: `unittests/date`。日志: [./log/v8-date.md](./log/v8-date.md)",
+    "old_state": "x",
+    "crate_name": "v8-date",
+    "rest": "`v8/src/date`, ~2k。日期解析器/时区缓存, 零堆分配流式解析。依赖: v8-strings。测试: `unittests/date`。日志: [./log/v8-date.md](./log/v8-date.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-date 残余 3 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 101,
+    "line": "- [x] v8-ast — `v8/src/ast`, ~15k。60 类 AST 节点/作用域变量/AstVisitor, enum_dispatch 派发。依赖: v8-zone, v8-strings, v8-numbers, v8-flags。测试: `unittests/parser` + `cctest/test-ast`。日志: [./log/v8-ast.md](./log/v8-ast.md)",
+    "old_state": "x",
+    "crate_name": "v8-ast",
+    "rest": "`v8/src/ast`, ~15k。60 类 AST 节点/作用域变量/AstVisitor, enum_dispatch 派发。依赖: v8-zone, v8-strings, v8-numbers, v8-flags。测试: `unittests/parser` + `cctest/test-ast`。日志: [./log/v8-ast.md](./log/v8-ast.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-ast 残余 4 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 102,
+    "line": "- [x] v8-parsing — `v8/src/parsing`, ~23k。scanner/parser/preparser/scopes。依赖: v8-ast, v8-strings, v8-flags。测试: `unittests/parser` + `cctest/test-parsing`",
+    "old_state": "x",
+    "crate_name": "v8-parsing",
+    "rest": "`v8/src/parsing`, ~23k。scanner/parser/preparser/scopes。依赖: v8-ast, v8-strings, v8-flags。测试: `unittests/parser` + `cctest/test-parsing`",
+    "is_refuted": true,
+    "reasons": [
+      "v8-parsing 残余 8 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 103,
+    "line": "- [x] v8-regexp-syntax — `regexp/regexp-ast` + `regexp-regexp-parser`, ~10k。正则 AST/字符区间代数/语法解析器 (ECMAScript 2024 全标志)。依赖: v8-zone, v8-strings, v8-flags。测试: `unittests/regexp`。终验收敛冻结 (clean 3/3, 21/21 绿)。日志: [./log/v8-regexp-syntax.md](./log/v8-regexp-syntax.md)",
+    "old_state": "x",
+    "crate_name": "v8-regexp-syntax",
+    "rest": "`regexp/regexp-ast` + `regexp-regexp-parser`, ~10k。正则 AST/字符区间代数/语法解析器 (ECMAScript 2024 全标志)。依赖: v8-zone, v8-strings, v8-flags。测试: `unittests/regexp`。终验收敛冻结 (clean 3/3, 21/21 绿)。日志: [./log/v8-regexp-syntax.md](./log/v8-regexp-syntax.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-regexp-syntax 残余 2 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 104,
+    "line": "- [x] v8-torque — `v8/src/torque`, ~30k。Torque→Rust 代码生成器, 自含编译器。依赖: 无。终验收敛冻结 (clean 3/3, 37/37 绿)。日志: [./log/v8-torque.md](./log/v8-torque.md)",
+    "old_state": "x",
+    "crate_name": "v8-torque",
+    "rest": "`v8/src/torque`, ~30k。Torque→Rust 代码生成器, 自含编译器。依赖: 无。终验收敛冻结 (clean 3/3, 37/37 绿)。日志: [./log/v8-torque.md](./log/v8-torque.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 105,
+    "line": "- [x] v8-objects-core — `v8/src/objects` 核心, ~30k。Tagged 指针/堆对象基类/实例类型, L3 地基 (文档列 L2 位置)。依赖: v8-zone, v8-base。测试: `unittests/objects` + `cctest`。终验收敛冻结 (clean 3/3, 85/85 绿)。日志: [./log/v8-objects-core.md](./log/v8-objects-core.md)",
+    "old_state": "x",
+    "crate_name": "v8-objects-core",
+    "rest": "`v8/src/objects` 核心, ~30k。Tagged 指针/堆对象基类/实例类型, L3 地基 (文档列 L2 位置)。依赖: v8-zone, v8-base。测试: `unittests/objects` + `cctest`。终验收敛冻结 (clean 3/3, 85/85 绿)。日志: [./log/v8-objects-core.md](./log/v8-objects-core.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-objects-core 残余 65 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 109,
+    "line": "- [x] v8-objects-strings — `objects/*string*`, ~9k。StringShape 谓词/WriteToFlat/ConsStringIterator/字符串哈希。依赖: v8-objects-core, v8-strings, v8-base。测试: `unittests/objects`。日志: [./log/v8-objects-strings.md](./log/v8-objects-strings.md)",
+    "old_state": "x",
+    "crate_name": "v8-objects-strings",
+    "rest": "`objects/*string*`, ~9k。StringShape 谓词/WriteToFlat/ConsStringIterator/字符串哈希。依赖: v8-objects-core, v8-strings, v8-base。测试: `unittests/objects`。日志: [./log/v8-objects-strings.md](./log/v8-objects-strings.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 110,
+    "line": "- [x] v8-objects-arrays — `objects` FixedArray 族。定长数组/字节数组/双精度数组布局/elements 拷贝与排序。依赖: v8-objects-core, v8-base。测试: `unittests/objects`。终验收敛冻结 (clean 3/3, 49/49 绿)。日志: [./log/v8-objects-arrays.md](./log/v8-objects-arrays.md)",
+    "old_state": "x",
+    "crate_name": "v8-objects-arrays",
+    "rest": "`objects` FixedArray 族。定长数组/字节数组/双精度数组布局/elements 拷贝与排序。依赖: v8-objects-core, v8-base。测试: `unittests/objects`。终验收敛冻结 (clean 3/3, 49/49 绿)。日志: [./log/v8-objects-arrays.md](./log/v8-objects-arrays.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-objects-arrays 残余 13 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 111,
+    "line": "- [x] v8-objects-maps — `objects` Map 族, ~15k。隐藏类/DescriptorArray/TransitionArray/PropertyArray。依赖: v8-objects-core, v8-objects-arrays, v8-objects-strings。测试: `cctest` (test-maps)。终验收敛冻结 (clean 3/3, 31/31 绿)。日志: [./log/v8-objects-maps.md](./log/v8-objects-maps.md)",
+    "old_state": "x",
+    "crate_name": "v8-objects-maps",
+    "rest": "`objects` Map 族, ~15k。隐藏类/DescriptorArray/TransitionArray/PropertyArray。依赖: v8-objects-core, v8-objects-arrays, v8-objects-strings。测试: `cctest` (test-maps)。终验收敛冻结 (clean 3/3, 31/31 绿)。日志: [./log/v8-objects-maps.md](./log/v8-objects-maps.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-objects-maps 残余 78 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 112,
+    "line": "- [x] v8-objects-collections — OrderedHashTable/SwissNameDictionary, ~15k。有序哈希表/瑞士名字字典。依赖: v8-objects-core, v8-objects-arrays, v8-objects-strings。测试: `cctest` (test-swiss-name-dictionary)。终验收敛冻结 (clean 3/3, 19/19 绿)。日志: [./log/v8-objects-collections.md](./log/v8-objects-collections.md)",
+    "old_state": "x",
+    "crate_name": "v8-objects-collections",
+    "rest": "OrderedHashTable/SwissNameDictionary, ~15k。有序哈希表/瑞士名字字典。依赖: v8-objects-core, v8-objects-arrays, v8-objects-strings。测试: `cctest` (test-swiss-name-dictionary)。终验收敛冻结 (clean 3/3, 19/19 绿)。日志: [./log/v8-objects-collections.md](./log/v8-objects-collections.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-objects-collections 残余 32 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 113,
+    "line": "- [x] v8-objects-js-core — JSObject/JSReceiver/JSArray/JSArguments, ~25k。JS 对象基座/元素/查找。依赖: v8-objects-maps。测试: `unittests/objects`",
+    "old_state": "x",
+    "crate_name": "v8-objects-js-core",
+    "rest": "JSObject/JSReceiver/JSArray/JSArguments, ~25k。JS 对象基座/元素/查找。依赖: v8-objects-maps。测试: `unittests/objects`",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 114,
+    "line": "- [x] v8-objects-js-func — JSFunction/SharedFunctionInfo/Script/Context, ~20k。函数/脚本/上下文对象。依赖: v8-objects-js-core。测试: `unittests/objects`",
+    "old_state": "x",
+    "crate_name": "v8-objects-js-func",
+    "rest": "JSFunction/SharedFunctionInfo/Script/Context, ~20k。函数/脚本/上下文对象。依赖: v8-objects-js-core。测试: `unittests/objects`",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 115,
+    "line": "- [x] v8-objects-js-async — Promise/Generator/AsyncGenerator, ~10k。异步对象族。依赖: v8-objects-js-func。测试: `cctest`。终验收敛冻结 (clean 3/3, 7/7 绿)。日志: [./log/v8-objects-js-async.md](./log/v8-objects-js-async.md)",
+    "old_state": "x",
+    "crate_name": "v8-objects-js-async",
+    "rest": "Promise/Generator/AsyncGenerator, ~10k。异步对象族。依赖: v8-objects-js-func。测试: `cctest`。终验收敛冻结 (clean 3/3, 7/7 绿)。日志: [./log/v8-objects-js-async.md](./log/v8-objects-js-async.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-objects-js-async 残余 43 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 116,
+    "line": "- [x] v8-objects-rest — FeedbackVector/FeedbackCell/TemplateInfo/PropertyCell/Symbol 等, ~25k。其余核心对象。依赖: v8-objects-js-core。测试: `unittests/objects`",
+    "old_state": "x",
+    "crate_name": "v8-objects-rest",
+    "rest": "FeedbackVector/FeedbackCell/TemplateInfo/PropertyCell/Symbol 等, ~25k。其余核心对象。依赖: v8-objects-js-core。测试: `unittests/objects`",
+    "is_refuted": true,
+    "reasons": [
+      "v8-objects-rest 残余 13 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 117,
+    "line": "- [x] v8-handles — `v8/src/handles`, ~6k。句柄/句柄作用域/持久句柄。依赖: v8-zone。测试: 随 v8-execution 覆盖。日志: [./log/v8-handles.md](./log/v8-handles.md)",
+    "old_state": "x",
+    "crate_name": "v8-handles",
+    "rest": "`v8/src/handles`, ~6k。句柄/句柄作用域/持久句柄。依赖: v8-zone。测试: 随 v8-execution 覆盖。日志: [./log/v8-handles.md](./log/v8-handles.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 118,
+    "line": "- [x] v8-roots — `v8/src/roots`, ~10k。根表/只读根/RootIndex。依赖: v8-objects-*。测试: `cctest`",
+    "old_state": "x",
+    "crate_name": "v8-roots",
+    "rest": "`v8/src/roots`, ~10k。根表/只读根/RootIndex。依赖: v8-objects-*。测试: `cctest`",
+    "is_refuted": true,
+    "reasons": [
+      "v8-roots 残余 14 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 119,
+    "line": "- [x] v8-heap-base — `heap/base`, ~5k。GC 基础: 页/空间枚举/脏位集/标记位。依赖: v8-base-platform。测试: `unittests/heap`",
+    "old_state": "x",
+    "crate_name": "v8-heap-base",
+    "rest": "`heap/base`, ~5k。GC 基础: 页/空间枚举/脏位集/标记位。依赖: v8-base-platform。测试: `unittests/heap`",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 120,
+    "line": "- [x] v8-heap-core — heap 空间/页/内存分配器 (memory-chunk/spaces/main-allocator/memory-allocator/memory-pool/free-list), ~35k。依赖: v8-heap-base, v8-objects-core。测试: `unittests/heap` + `cctest/test-heap`。终验收敛冻结 (clean 3/3, 94/94 绿)。日志: [./log/v8-heap-core.md](./log/v8-heap-core.md)",
+    "old_state": "x",
+    "crate_name": "v8-heap-core",
+    "rest": "heap 空间/页/内存分配器 (memory-chunk/spaces/main-allocator/memory-allocator/memory-pool/free-list), ~35k。依赖: v8-heap-base, v8-objects-core。测试: `unittests/heap` + `cctest/test-heap`。终验收敛冻结 (clean 3/3, 94/94 绿)。日志: [./log/v8-heap-core.md](./log/v8-heap-core.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-heap-core 残余 63 处 todo!() 桩代码",
+      "v8-heap-core 残余 3 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 121,
+    "line": "- [x] v8-heap-gc — mark-compact/scavenger/minor-ms/增量标记, ~45k。分代 GC 算法 1:1。依赖: v8-heap-core。测试: `unittests/heap` + `cctest/test-heap`。终验收敛冻结 (clean 3/3, 39/39 绿)。日志: [./log/v8-heap-gc.md](./log/v8-heap-gc.md)",
+    "old_state": "x",
+    "crate_name": "v8-heap-gc",
+    "rest": "mark-compact/scavenger/minor-ms/增量标记, ~45k。分代 GC 算法 1:1。依赖: v8-heap-core。测试: `unittests/heap` + `cctest/test-heap`。终验收敛冻结 (clean 3/3, 39/39 绿)。日志: [./log/v8-heap-gc.md](./log/v8-heap-gc.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 122,
+    "line": "- [x] v8-heap-cppgc — `heap/cppgc-internal` + `heap/cppgc-js`, ~19k。Oilpan 式 C++ GC 本体 + JS 联动。依赖: v8-heap-core。测试: `unittests/heap/cppgc*`。终验收敛冻结 (clean 3/3, 14/14 绿)。日志: [./log/v8-heap-cppgc.md](./log/v8-heap-cppgc.md)",
+    "old_state": "x",
+    "crate_name": "v8-heap-cppgc",
+    "rest": "`heap/cppgc-internal` + `heap/cppgc-js`, ~19k。Oilpan 式 C++ GC 本体 + JS 联动。依赖: v8-heap-core。测试: `unittests/heap/cppgc*`。终验收敛冻结 (clean 3/3, 14/14 绿)。日志: [./log/v8-heap-cppgc.md](./log/v8-heap-cppgc.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-heap-cppgc 残余 3 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 123,
+    "line": "- [x] v8-sandbox — `v8/src/sandbox`, ~14k。external pointer table/code pointer table 等沙箱表。依赖: v8-heap-base。测试: `unittests/sandbox`。终验收敛冻结 (clean 3/3, 36/36 绿)。日志: [./log/v8-sandbox.md](./log/v8-sandbox.md)",
+    "old_state": "x",
+    "crate_name": "v8-sandbox",
+    "rest": "`v8/src/sandbox`, ~14k。external pointer table/code pointer table 等沙箱表。依赖: v8-heap-base。测试: `unittests/sandbox`。终验收敛冻结 (clean 3/3, 36/36 绿)。日志: [./log/v8-sandbox.md](./log/v8-sandbox.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-sandbox 残余 10 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 127,
+    "line": "- [x] v8-codegen-core — `v8/src/codegen` 平台无关, ~35k。汇编器基类/RelocInfo/safepoint-table/interface-descriptors。依赖: v8-objects-core, v8-zone, v8-base-platform。测试: `unittests/codegen` + `unittests/assembler`。终验收敛冻结 (clean 3/3, 22/22 绿)。日志: [./log/v8-codegen-core.md](./log/v8-codegen-core.md)",
+    "old_state": "x",
+    "crate_name": "v8-codegen-core",
+    "rest": "`v8/src/codegen` 平台无关, ~35k。汇编器基类/RelocInfo/safepoint-table/interface-descriptors。依赖: v8-objects-core, v8-zone, v8-base-platform。测试: `unittests/codegen` + `unittests/assembler`。终验收敛冻结 (clean 3/3, 22/22 绿)。日志: [./log/v8-codegen-core.md](./log/v8-codegen-core.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-codegen-core 残余 32 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 128,
+    "line": "- [x] v8-codegen-x64 — `codegen/x64` + `diagnostics/x64` 反汇编, ~22k。x64 汇编器/宏汇编/反汇编文本。依赖: v8-codegen-core。测试: `unittests/assembler` (x64, disasm 逐字比对)。终验收敛冻结 (clean 3/3, 21/21 绿)。日志: [./log/v8-codegen-x64.md](./log/v8-codegen-x64.md)",
+    "old_state": "x",
+    "crate_name": "v8-codegen-x64",
+    "rest": "`codegen/x64` + `diagnostics/x64` 反汇编, ~22k。x64 汇编器/宏汇编/反汇编文本。依赖: v8-codegen-core。测试: `unittests/assembler` (x64, disasm 逐字比对)。终验收敛冻结 (clean 3/3, 21/21 绿)。日志: [./log/v8-codegen-x64.md](./log/v8-codegen-x64.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 129,
+    "line": "- [x] v8-codegen-arm64 — `codegen/arm64` + `diagnostics/arm64` 反汇编, ~32k。依赖: v8-codegen-core。测试: `unittests/assembler` (arm64)。终验收敛冻结 (clean 3/3, 16/16 绿)。日志: [./log/v8-codegen-arm64.md](./log/v8-codegen-arm64.md)",
+    "old_state": "x",
+    "crate_name": "v8-codegen-arm64",
+    "rest": "`codegen/arm64` + `diagnostics/arm64` 反汇编, ~32k。依赖: v8-codegen-core。测试: `unittests/assembler` (arm64)。终验收敛冻结 (clean 3/3, 16/16 绿)。日志: [./log/v8-codegen-arm64.md](./log/v8-codegen-arm64.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 130,
+    "line": "- [x] v8-builtins-x64 / v8-builtins-arm64 — `builtins/{x64,arm64}/builtins-*.cc`, 各 ~5.8k。JSEntry/InterpreterEntryTrampoline/CEntry/Call/Construct 汇编内建。依赖: v8-codegen-x64/arm64, v8-execution-frames。测试: 随 M4 闭环 + `cctest`。x64/arm64 终验收敛冻结 (clean 3/3); x64 席 round2/3/4 连续 3 轮 clean 终验冻结。日志: [./log/v8-builtins-x64.md](./log/v8-builtins-x64.md) / [./log/v8-builtins-arm64.md](./log/v8-builtins-arm64.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-x64 / v8-builtins-arm64",
+    "rest": "`builtins/{x64,arm64}/builtins-*.cc`, 各 ~5.8k。JSEntry/InterpreterEntryTrampoline/CEntry/Call/Construct 汇编内建。依赖: v8-codegen-x64/arm64, v8-execution-frames。测试: 随 M4 闭环 + `cctest`。x64/arm64 终验收敛冻结 (clean 3/3); x64 席 round2/3/4 连续 3 轮 clean 终验冻结。日志: [./log/v8-builtins-x64.md](./log/v8-builtins-x64.md) / [./log/v8-builtins-arm64.md](./log/v8-builtins-arm64.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 131,
+    "line": "- [x] v8-codegen-csa — code-stub-assembler + tnode, ~20k。CSA 图构造 DSL (内建与字节码 handler 的生成语言)。依赖: v8-codegen-core, 编译器后端 (compiler code-assembler/raw-machine-assembler, 见 二)。测试: `unittests/codegen`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-codegen-csa.md](./log/v8-codegen-csa.md)",
+    "old_state": "x",
+    "crate_name": "v8-codegen-csa",
+    "rest": "code-stub-assembler + tnode, ~20k。CSA 图构造 DSL (内建与字节码 handler 的生成语言)。依赖: v8-codegen-core, 编译器后端 (compiler code-assembler/raw-machine-assembler, 见 二)。测试: `unittests/codegen`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-codegen-csa.md](./log/v8-codegen-csa.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 132,
+    "line": "- [x] v8-interpreter — `v8/src/interpreter`, ~28k。bytecode-generator/Ignition handler 生成/字节码解释器。依赖: v8-objects-*, v8-codegen-core。测试: `unittests/interpreter` + `cctest/test-bytecode-generator`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-interpreter.md](./log/v8-interpreter.md)",
+    "old_state": "x",
+    "crate_name": "v8-interpreter",
+    "rest": "`v8/src/interpreter`, ~28k。bytecode-generator/Ignition handler 生成/字节码解释器。依赖: v8-objects-*, v8-codegen-core。测试: `unittests/interpreter` + `cctest/test-bytecode-generator`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-interpreter.md](./log/v8-interpreter.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 133,
+    "line": "- [x] v8-execution-isolate — Isolate/isolate-data/execution/stack-guard/protectors, ~40k。隔离实例与执行状态中枢。依赖: v8-objects-*, v8-heap-*, v8-handles, v8-roots。测试: `unittests/execution`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-execution-isolate.md](./log/v8-execution-isolate.md)",
+    "old_state": "x",
+    "crate_name": "v8-execution-isolate",
+    "rest": "Isolate/isolate-data/execution/stack-guard/protectors, ~40k。隔离实例与执行状态中枢。依赖: v8-objects-*, v8-heap-*, v8-handles, v8-roots。测试: `unittests/execution`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-execution-isolate.md](./log/v8-execution-isolate.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 134,
+    "line": "- [x] v8-execution-frames — frames/stack/frame-constants, ~25k。栈帧遍历/帧常量。依赖: v8-execution-isolate, v8-codegen-core。测试: `unittests/execution`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-execution-frames.md](./log/v8-execution-frames.md)",
+    "old_state": "x",
+    "crate_name": "v8-execution-frames",
+    "rest": "frames/stack/frame-constants, ~25k。栈帧遍历/帧常量。依赖: v8-execution-isolate, v8-codegen-core。测试: `unittests/execution`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-execution-frames.md](./log/v8-execution-frames.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 135,
+    "line": "- [x] v8-execution-messages — messages/stacks, ~10k。异常消息格式化/栈展开。依赖: v8-execution-isolate。测试: `cctest`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-execution-messages.md](./log/v8-execution-messages.md)",
+    "old_state": "x",
+    "crate_name": "v8-execution-messages",
+    "rest": "messages/stacks, ~10k。异常消息格式化/栈展开。依赖: v8-execution-isolate。测试: `cctest`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-execution-messages.md](./log/v8-execution-messages.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 136,
+    "line": "- [x] v8-builtins-core — builtins 共享: setup-builtins/descriptors/definitions, ~20k。内建注册/描述符/定义表。依赖: v8-codegen-csa, v8-torque 生成物。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-core.md](./log/v8-builtins-core.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-core",
+    "rest": "builtins 共享: setup-builtins/descriptors/definitions, ~20k。内建注册/描述符/定义表。依赖: v8-codegen-csa, v8-torque 生成物。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-core.md](./log/v8-builtins-core.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 137,
+    "line": "- [x] v8-builtins-array — `builtins/*array*`, ~35k。Array 内建。依赖: v8-builtins-core, v8-runtime。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-array.md](./log/v8-builtins-array.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-array",
+    "rest": "`builtins/*array*`, ~35k。Array 内建。依赖: v8-builtins-core, v8-runtime。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-array.md](./log/v8-builtins-array.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 138,
+    "line": "- [x] v8-builtins-string — `builtins/*string*`, ~20k。String 内建。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-string.md](./log/v8-builtins-string.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-string",
+    "rest": "`builtins/*string*`, ~20k。String 内建。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-string.md](./log/v8-builtins-string.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 139,
+    "line": "- [x] v8-builtins-typedarray — `builtins/*typed*`, ~25k。TypedArray/DataView 内建。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-typedarray.md](./log/v8-builtins-typedarray.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-typedarray",
+    "rest": "`builtins/*typed*`, ~25k。TypedArray/DataView 内建。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-typedarray.md](./log/v8-builtins-typedarray.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 140,
+    "line": "- [x] v8-builtins-promise — promise/async/generator 内建, ~20k。依赖: v8-builtins-core。测试: `cctest`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-promise.md](./log/v8-builtins-promise.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-promise",
+    "rest": "promise/async/generator 内建, ~20k。依赖: v8-builtins-core。测试: `cctest`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-promise.md](./log/v8-builtins-promise.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 141,
+    "line": "- [x] v8-builtins-collections — set/map/weak collections 内建, ~15k。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-collections.md](./log/v8-builtins-collections.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-collections",
+    "rest": "set/map/weak collections 内建, ~15k。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-collections.md](./log/v8-builtins-collections.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 142,
+    "line": "- [x] v8-builtins-proxy-reflect — proxy/reflect 内建, ~10k。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-proxy-reflect.md](./log/v8-builtins-proxy-reflect.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-proxy-reflect",
+    "rest": "proxy/reflect 内建, ~10k。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-proxy-reflect.md](./log/v8-builtins-proxy-reflect.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 143,
+    "line": "- [x] v8-builtins-regexp — `builtins/*regexp*`, ~8k。RegExp 内建。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-regexp.md](./log/v8-builtins-regexp.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-regexp",
+    "rest": "`builtins/*regexp*`, ~8k。RegExp 内建。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-regexp.md](./log/v8-builtins-regexp.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 144,
+    "line": "- [x] v8-builtins-misc — number/math/object/function/iterator/json/intl 等, ~30k。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-misc.md](./log/v8-builtins-misc.md)",
+    "old_state": "x",
+    "crate_name": "v8-builtins-misc",
+    "rest": "number/math/object/function/iterator/json/intl 等, ~30k。依赖: v8-builtins-core。测试: `unittests/builtins`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-builtins-misc.md](./log/v8-builtins-misc.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 145,
+    "line": "- [x] v8-ic — `v8/src/ic`, ~18k。内联缓存/accessor 组装。测试: `cctest` (test-inline-cache)。终验收敛冻结 (clean 3/3)。日志: [./log/v8-ic.md](./log/v8-ic.md)",
+    "old_state": "x",
+    "crate_name": "v8-ic",
+    "rest": "`v8/src/ic`, ~18k。内联缓存/accessor 组装。测试: `cctest` (test-inline-cache)。终验收敛冻结 (clean 3/3)。日志: [./log/v8-ic.md](./log/v8-ic.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 146,
+    "line": "- [x] v8-runtime — `v8/src/runtime`, ~23k。RUNTIME_FUNCTION 大全。依赖: 几乎全部 L4。测试: `unittests/runtime`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-runtime.md](./log/v8-runtime.md)",
+    "old_state": "x",
+    "crate_name": "v8-runtime",
+    "rest": "`v8/src/runtime`, ~23k。RUNTIME_FUNCTION 大全。依赖: 几乎全部 L4。测试: `unittests/runtime`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-runtime.md](./log/v8-runtime.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 147,
+    "line": "- [x] v8-json — `v8/src/json`, ~7k。JSON.parse/stringify (ECMAScript 字节级绑定)。依赖: v8-objects-*, v8-strings。测试: `unittests/json`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-json.md](./log/v8-json.md)",
+    "old_state": "x",
+    "crate_name": "v8-json",
+    "rest": "`v8/src/json`, ~7k。JSON.parse/stringify (ECMAScript 字节级绑定)。依赖: v8-objects-*, v8-strings。测试: `unittests/json`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-json.md](./log/v8-json.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-json 残余 1 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 148,
+    "line": "- [x] v8-regexp-exec — `regexp/regexp-interpreter` + `regexp/experimental`, ~14k。正则字节码解释器 + 线性时间引擎。依赖: v8-regexp-syntax。测试: `unittests/regexp` + `cctest/test-regexp`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-regexp-exec.md](./log/v8-regexp-exec.md)",
+    "old_state": "x",
+    "crate_name": "v8-regexp-exec",
+    "rest": "`regexp/regexp-interpreter` + `regexp/experimental`, ~14k。正则字节码解释器 + 线性时间引擎。依赖: v8-regexp-syntax。测试: `unittests/regexp` + `cctest/test-regexp`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-regexp-exec.md](./log/v8-regexp-exec.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 149,
+    "line": "- [x] v8-regexp-compiler — `regexp/regexp-compiler` + bytecodes, ~20k。正则→字节码/机器码编译器。依赖: v8-regexp-syntax, v8-codegen-core。测试: `unittests/regexp`。终验收敛冻结 (clean 3/3; 二梯队推迟面照台账)。日志: [./log/v8-regexp-compiler.md](./log/v8-regexp-compiler.md)",
+    "old_state": "x",
+    "crate_name": "v8-regexp-compiler",
+    "rest": "`regexp/regexp-compiler` + bytecodes, ~20k。正则→字节码/机器码编译器。依赖: v8-regexp-syntax, v8-codegen-core。测试: `unittests/regexp`。终验收敛冻结 (clean 3/3; 二梯队推迟面照台账)。日志: [./log/v8-regexp-compiler.md](./log/v8-regexp-compiler.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-regexp-compiler 残余 11 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 150,
+    "line": "- [x] v8-regexp-x64 — `regexp/x64`, ~2.7k。x64 宏汇编正则后端。依赖: v8-regexp-compiler, v8-codegen-x64。测试: `cctest/test-regexp`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-regexp-x64.md](./log/v8-regexp-x64.md)",
+    "old_state": "x",
+    "crate_name": "v8-regexp-x64",
+    "rest": "`regexp/x64`, ~2.7k。x64 宏汇编正则后端。依赖: v8-regexp-compiler, v8-codegen-x64。测试: `cctest/test-regexp`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-regexp-x64.md](./log/v8-regexp-x64.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-regexp-x64 仅包含常量骨架（167 行），未实现真实宏汇编正则后端"
+    ]
+  },
+  {
+    "line_idx": 151,
+    "line": "- [x] v8-regexp-arm64 — `regexp/arm64`, ~2.9k。arm64 宏汇编正则后端。依赖: v8-regexp-compiler, v8-codegen-arm64。测试: `cctest/test-regexp`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-regexp-arm64.md](./log/v8-regexp-arm64.md)",
+    "old_state": "x",
+    "crate_name": "v8-regexp-arm64",
+    "rest": "`regexp/arm64`, ~2.9k。arm64 宏汇编正则后端。依赖: v8-regexp-compiler, v8-codegen-arm64。测试: `cctest/test-regexp`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-regexp-arm64.md](./log/v8-regexp-arm64.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-regexp-arm64 仅包含常量骨架（95 行），未实现真实宏汇编正则后端"
+    ]
+  },
+  {
+    "line_idx": 152,
+    "line": "- [x] v8-debug — `v8/src/debug`, ~19k。调试器/break 链/liveedit。依赖: v8-execution-*, v8-ic。测试: `unittests/debug`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-debug.md](./log/v8-debug.md)",
+    "old_state": "x",
+    "crate_name": "v8-debug",
+    "rest": "`v8/src/debug`, ~19k。调试器/break 链/liveedit。依赖: v8-execution-*, v8-ic。测试: `unittests/debug`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-debug.md](./log/v8-debug.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 153,
+    "line": "- [x] v8-deoptimizer — `v8/src/deoptimizer`, ~10k。反优化/物化帧翻译。依赖: v8-execution-frames, v8-codegen。测试: `unittests/deoptimizer`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-deoptimizer.md](./log/v8-deoptimizer.md)",
+    "old_state": "x",
+    "crate_name": "v8-deoptimizer",
+    "rest": "`v8/src/deoptimizer`, ~10k。反优化/物化帧翻译。依赖: v8-execution-frames, v8-codegen。测试: `unittests/deoptimizer`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-deoptimizer.md](./log/v8-deoptimizer.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 154,
+    "line": "- [x] v8-diagnostics — `v8/src/diagnostics` 平台无关, ~16k。perf-jit/etw/gdb-jit/eh-frame/对象打印/basic-block-profiler/compilation-statistics。依赖: v8-base, v8-objects-*。测试: `unittests/diagnostics`。终验收敛冻结 (clean 3/3, 39/39 绿)。日志: [./log/v8-diagnostics.md](./log/v8-diagnostics.md)",
+    "old_state": "x",
+    "crate_name": "v8-diagnostics",
+    "rest": "`v8/src/diagnostics` 平台无关, ~16k。perf-jit/etw/gdb-jit/eh-frame/对象打印/basic-block-profiler/compilation-statistics。依赖: v8-base, v8-objects-*。测试: `unittests/diagnostics`。终验收敛冻结 (clean 3/3, 39/39 绿)。日志: [./log/v8-diagnostics.md](./log/v8-diagnostics.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 158,
+    "line": "- [x] v8-compiler-graph — `compiler` graph/node/operator/types, ~45k。海图 IR 基础 (Node zone bump/Use 前缀布局)。依赖: v8-zone, v8-codegen-core。测试: `unittests/compiler`。日志: [./log/v8-compiler-graph.md](./log/v8-compiler-graph.md)",
+    "old_state": "x",
+    "crate_name": "v8-compiler-graph",
+    "rest": "`compiler` graph/node/operator/types, ~45k。海图 IR 基础 (Node zone bump/Use 前缀布局)。依赖: v8-zone, v8-codegen-core。测试: `unittests/compiler`。日志: [./log/v8-compiler-graph.md](./log/v8-compiler-graph.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 159,
+    "line": "- [x] v8-compiler-ops — common/machine/simplified/js operator + verifier, ~60k。算子定义/属性/校验。依赖: v8-compiler-graph。测试: `unittests/compiler`。日志: [./log/v8-compiler-ops.md](./log/v8-compiler-ops.md)",
+    "old_state": "x",
+    "crate_name": "v8-compiler-ops",
+    "rest": "common/machine/simplified/js operator + verifier, ~60k。算子定义/属性/校验。依赖: v8-compiler-graph。测试: `unittests/compiler`。日志: [./log/v8-compiler-ops.md](./log/v8-compiler-ops.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 160,
+    "line": "- [x] v8-compiler-broker — JSHeapBroker/heap-refs/compilation-dependencies/access-info, ~30k。编译期堆快照与反馈代理。依赖: v8-objects-js-*, v8-compiler-graph。测试: `unittests/compiler`",
+    "old_state": "x",
+    "crate_name": "v8-compiler-broker",
+    "rest": "JSHeapBroker/heap-refs/compilation-dependencies/access-info, ~30k。编译期堆快照与反馈代理。依赖: v8-objects-js-*, v8-compiler-graph。测试: `unittests/compiler`",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 161,
+    "line": "- [x] v8-compiler-frontend — bytecode-graph-builder/js-inlining/js-create-lowering, ~70k。字节码→海图。依赖: v8-compiler-ops, v8-compiler-broker, v8-interpreter。测试: `unittests/compiler`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-compiler-frontend.md](./log/v8-compiler-frontend.md)",
+    "old_state": "x",
+    "crate_name": "v8-compiler-frontend",
+    "rest": "bytecode-graph-builder/js-inlining/js-create-lowering, ~70k。字节码→海图。依赖: v8-compiler-ops, v8-compiler-broker, v8-interpreter。测试: `unittests/compiler`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-compiler-frontend.md](./log/v8-compiler-frontend.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-compiler-frontend 残余 12 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 162,
+    "line": "- [x] v8-compiler-passes — typer/load-elimination/escape-analysis/simplified-lowering 等全部 reducer, ~80k。优化管线中段。依赖: v8-compiler-frontend。测试: `cctest/test-run-*` (已完成·25用例通过)",
+    "old_state": "x",
+    "crate_name": "v8-compiler-passes",
+    "rest": "typer/load-elimination/escape-analysis/simplified-lowering 等全部 reducer, ~80k。优化管线中段。依赖: v8-compiler-frontend。测试: `cctest/test-run-*` (已完成·25用例通过)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 163,
+    "line": "- [x] v8-turboshaft — `compiler/turboshaft`, ~87k。新 IR/优化层/管线, CSA 与后端的底座。依赖: v8-compiler-graph, v8-compiler-ops。测试: `unittests/compiler/turboshaft`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-turboshaft.md](./log/v8-turboshaft.md)",
+    "old_state": "x",
+    "crate_name": "v8-turboshaft",
+    "rest": "`compiler/turboshaft`, ~87k。新 IR/优化层/管线, CSA 与后端的底座。依赖: v8-compiler-graph, v8-compiler-ops。测试: `unittests/compiler/turboshaft`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-turboshaft.md](./log/v8-turboshaft.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 164,
+    "line": "- [x] v8-compiler-backend — `compiler/backend`: instruction-selector/register-allocator/code-generator, 公共 26.7k + x64 16.9k + arm64 14.3k ≈ 58k。依赖: v8-turboshaft (C++ 实测 InstructionSelector 直接消费 turboshaft::Graph), v8-codegen-x64/arm64。测试: `unittests/compiler` (backend)。终验收敛冻结 (clean 3/3, 3/3 绿)。日志: [./log/v8-compiler-backend.md](./log/v8-compiler-backend.md)",
+    "old_state": "x",
+    "crate_name": "v8-compiler-backend",
+    "rest": "`compiler/backend`: instruction-selector/register-allocator/code-generator, 公共 26.7k + x64 16.9k + arm64 14.3k ≈ 58k。依赖: v8-turboshaft (C++ 实测 InstructionSelector 直接消费 turboshaft::Graph), v8-codegen-x64/arm64。测试: `unittests/compiler` (backend)。终验收敛冻结 (clean 3/3, 3/3 绿)。日志: [./log/v8-compiler-backend.md](./log/v8-compiler-backend.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 165,
+    "line": "- [x] v8-maglev-ir — `v8/src/maglev` IR 节点, ~40k。Maglev 中间表示。依赖: v8-zone, v8-codegen-core。测试: `unittests/maglev`。**终验收敛冻结 (clean 3/3, round14 R5M9 冻结票, 主控复验 23/23+clippy RC=0+fmt 净; 导出面现势 184)**。日志: [./log/v8-maglev-ir.md](./log/v8-maglev-ir.md)",
+    "old_state": "x",
+    "crate_name": "v8-maglev-ir",
+    "rest": "`v8/src/maglev` IR 节点, ~40k。Maglev 中间表示。依赖: v8-zone, v8-codegen-core。测试: `unittests/maglev`。**终验收敛冻结 (clean 3/3, round14 R5M9 冻结票, 主控复验 23/23+clippy RC=0+fmt 净; 导出面现势 184)**。日志: [./log/v8-maglev-ir.md](./log/v8-maglev-ir.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 166,
+    "line": "- [x] v8-maglev-frontend — 字节码→maglev 图, ~40k。依赖: v8-maglev-ir, v8-interpreter。测试: `unittests/maglev`。终验收敛冻结 (clean 3/3, 17/17 绿)。日志: [./log/v8-maglev-frontend.md](./log/v8-maglev-frontend.md)",
+    "old_state": "x",
+    "crate_name": "v8-maglev-frontend",
+    "rest": "字节码→maglev 图, ~40k。依赖: v8-maglev-ir, v8-interpreter。测试: `unittests/maglev`。终验收敛冻结 (clean 3/3, 17/17 绿)。日志: [./log/v8-maglev-frontend.md](./log/v8-maglev-frontend.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-maglev-frontend 残余 1 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 167,
+    "line": "- [x] v8-maglev-backend — regalloc + codegen, ~34k。依赖: v8-maglev-frontend, v8-codegen-x64/arm64。测试: `unittests/maglev`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-maglev-backend.md](./log/v8-maglev-backend.md)",
+    "old_state": "x",
+    "crate_name": "v8-maglev-backend",
+    "rest": "regalloc + codegen, ~34k。依赖: v8-maglev-frontend, v8-codegen-x64/arm64。测试: `unittests/maglev`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-maglev-backend.md](./log/v8-maglev-backend.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-maglev-backend 仅包含常量与指令码定义骨架（860 行），未实现真实后端代码生成与寄存器分配"
+    ]
+  },
+  {
+    "line_idx": 168,
+    "line": "- [x] v8-baseline — `v8/src/baseline` (Sparkplug), ~11k。基线编译器 (字节码→直出机器码)。依赖: v8-interpreter, v8-codegen。测试: `cctest`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-baseline.md](./log/v8-baseline.md)",
+    "old_state": "x",
+    "crate_name": "v8-baseline",
+    "rest": "`v8/src/baseline` (Sparkplug), ~11k。基线编译器 (字节码→直出机器码)。依赖: v8-interpreter, v8-codegen。测试: `cctest`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-baseline.md](./log/v8-baseline.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 169,
+    "line": "- [x] v8-compiler-dispatcher — `v8/src/compiler-dispatcher`, ~2k。优化编译后台调度。依赖: v8-codegen。测试: `unittests/compiler-dispatcher`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-compiler-dispatcher.md](./log/v8-compiler-dispatcher.md)",
+    "old_state": "x",
+    "crate_name": "v8-compiler-dispatcher",
+    "rest": "`v8/src/compiler-dispatcher`, ~2k。优化编译后台调度。依赖: v8-codegen。测试: `unittests/compiler-dispatcher`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-compiler-dispatcher.md](./log/v8-compiler-dispatcher.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 173,
+    "line": "- [x] v8-wasm-core — module/function-body decoder/types/limits, ~50k。wasm 解码与类型核心。依赖: v8-zone, v8-base, v8-numbers。测试: `unittests/wasm` (decoder)。终验收敛冻结 (clean 3/3)。日志: [./log/v8-wasm-core.md](./log/v8-wasm-core.md) — 残面填体波 R5W3 在飞 (Wave6, 42 todo!, 冻结后补波)",
+    "old_state": "x",
+    "crate_name": "v8-wasm-core",
+    "rest": "module/function-body decoder/types/limits, ~50k。wasm 解码与类型核心。依赖: v8-zone, v8-base, v8-numbers。测试: `unittests/wasm` (decoder)。终验收敛冻结 (clean 3/3)。日志: [./log/v8-wasm-core.md](./log/v8-wasm-core.md) — 残面填体波 R5W3 在飞 (Wave6, 42 todo!, 冻结后补波)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-wasm-core 残余 42 处 todo!() 桩代码",
+      "v8-wasm-core 残余 10 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 174,
+    "line": "- [x] v8-wasm-objects — WasmInstance/WasmMemory 等 wasm 对象, ~25k。依赖: v8-objects-js-*, v8-execution。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 22/22 绿)。日志: [./log/v8-wasm-objects.md](./log/v8-wasm-objects.md)",
+    "old_state": "x",
+    "crate_name": "v8-wasm-objects",
+    "rest": "WasmInstance/WasmMemory 等 wasm 对象, ~25k。依赖: v8-objects-js-*, v8-execution。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 22/22 绿)。日志: [./log/v8-wasm-objects.md](./log/v8-wasm-objects.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-wasm-objects 残余 21 处 todo!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 175,
+    "line": "- [x] v8-wasm-liftoff — `wasm/baseline` (Liftoff), 公共 16.8k + x64 5.3k + arm64 4.6k ≈ 27k。wasm 基线编译器。依赖: v8-wasm-core, v8-codegen-x64/arm64。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-wasm-liftoff.md](./log/v8-wasm-liftoff.md)",
+    "old_state": "x",
+    "crate_name": "v8-wasm-liftoff",
+    "rest": "`wasm/baseline` (Liftoff), 公共 16.8k + x64 5.3k + arm64 4.6k ≈ 27k。wasm 基线编译器。依赖: v8-wasm-core, v8-codegen-x64/arm64。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-wasm-liftoff.md](./log/v8-wasm-liftoff.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-wasm-liftoff 仅包含常量与指令码定义骨架（472 行），未实现真实后端代码生成与寄存器分配"
+    ]
+  },
+  {
+    "line_idx": 176,
+    "line": "- [x] v8-wasm-turbofan — wasm graph 构建 + TurboFan 集成, ~35k。依赖: v8-wasm-core, v8-compiler-*。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-wasm-turbofan.md](./log/v8-wasm-turbofan.md)",
+    "old_state": "x",
+    "crate_name": "v8-wasm-turbofan",
+    "rest": "wasm graph 构建 + TurboFan 集成, ~35k。依赖: v8-wasm-core, v8-compiler-*。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-wasm-turbofan.md](./log/v8-wasm-turbofan.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-wasm-turbofan 仅包含常量与指令码定义骨架（137 行），未实现真实后端代码生成与寄存器分配"
+    ]
+  },
+  {
+    "line_idx": 177,
+    "line": "- [x] v8-wasm-interp — `wasm/interpreter` (DrumBrake), ~29k。可选解释器, 默认构建关闭。依赖: v8-wasm-core。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-wasm-interp.md](./log/v8-wasm-interp.md)",
+    "old_state": "x",
+    "crate_name": "v8-wasm-interp",
+    "rest": "`wasm/interpreter` (DrumBrake), ~29k。可选解释器, 默认构建关闭。依赖: v8-wasm-core。测试: `unittests/wasm`。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/v8-wasm-interp.md](./log/v8-wasm-interp.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 178,
+    "line": "- [x] v8-wasm-js — JS API 绑定 + wasm builtins, ~15k。依赖: v8-wasm-objects, v8-builtins。测试: `v8/test/wasm-js`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-wasm-js.md](./log/v8-wasm-js.md)",
+    "old_state": "x",
+    "crate_name": "v8-wasm-js",
+    "rest": "JS API 绑定 + wasm builtins, ~15k。依赖: v8-wasm-objects, v8-builtins。测试: `v8/test/wasm-js`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-wasm-js.md](./log/v8-wasm-js.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-wasm-js 仅为极简包装骨架（271 行），未打通 JS API 绑定"
+    ]
+  },
+  {
+    "line_idx": 179,
+    "line": "- [x] v8-trap-handler — `v8/src/trap-handler`, ~2k。信号驱动 wasm 越界兜底。依赖: v8-base-platform。测试: `unittests`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-trap-handler.md](./log/v8-trap-handler.md)",
+    "old_state": "x",
+    "crate_name": "v8-trap-handler",
+    "rest": "`v8/src/trap-handler`, ~2k。信号驱动 wasm 越界兜底。依赖: v8-base-platform。测试: `unittests`。终验收敛冻结 (clean 3/3)。日志: [./log/v8-trap-handler.md](./log/v8-trap-handler.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-trap-handler 残余 5 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 183,
+    "line": "- [x] v8-snapshot — serializer/deserializer/mksnapshot, ~16k。堆快照序列化/内建码构建期生成。依赖: v8-objects-*, v8-heap-*, v8-builtins。测试: `cctest/test-serialize`。终验收敛冻结 (clean 3/3, 10/10 绿)。日志: [./log/v8-snapshot.md](./log/v8-snapshot.md)",
+    "old_state": "x",
+    "crate_name": "v8-snapshot",
+    "rest": "serializer/deserializer/mksnapshot, ~16k。堆快照序列化/内建码构建期生成。依赖: v8-objects-*, v8-heap-*, v8-builtins。测试: `cctest/test-serialize`。终验收敛冻结 (clean 3/3, 10/10 绿)。日志: [./log/v8-snapshot.md](./log/v8-snapshot.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 184,
+    "line": "- [x] v8-init — `v8/src/init`, ~10k。引擎初始化/内建安装/setup-isolate。依赖: 几乎全部。测试: `cctest`。终验收敛冻结 (clean 3/3, 2/2 绿)。日志: [./log/v8-init.md](./log/v8-init.md)",
+    "old_state": "x",
+    "crate_name": "v8-init",
+    "rest": "`v8/src/init`, ~10k。引擎初始化/内建安装/setup-isolate。依赖: 几乎全部。测试: `cctest`。终验收敛冻结 (clean 3/3, 2/2 绿)。日志: [./log/v8-init.md](./log/v8-init.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 185,
+    "line": "- [x] v8-api — `v8/src/api`, ~16k。公共 API 面 → Rust trait 面。依赖: 几乎全部。测试: `unittests/api` + `cctest/test-api`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-api.md](./log/v8-api.md)",
+    "old_state": "x",
+    "crate_name": "v8-api",
+    "rest": "`v8/src/api`, ~16k。公共 API 面 → Rust trait 面。依赖: 几乎全部。测试: `unittests/api` + `cctest/test-api`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-api.md](./log/v8-api.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 186,
+    "line": "- [x] v8-libplatform — `v8/src/libplatform`, ~3k。默认平台/任务调度/work-stealing 队列。依赖: v8-base-platform, v8-tasks。测试: `unittests/libplatform`。LP-A 面终验收敛冻结 (clean 3/3); LP-B/LP-C 推迟。日志: [./log/v8-libplatform.md](./log/v8-libplatform.md)",
+    "old_state": "x",
+    "crate_name": "v8-libplatform",
+    "rest": "`v8/src/libplatform`, ~3k。默认平台/任务调度/work-stealing 队列。依赖: v8-base-platform, v8-tasks。测试: `unittests/libplatform`。LP-A 面终验收敛冻结 (clean 3/3); LP-B/LP-C 推迟。日志: [./log/v8-libplatform.md](./log/v8-libplatform.md)",
+    "is_refuted": true,
+    "reasons": [
+      "v8-libplatform 残余 10 处 unimplemented!() 桩代码"
+    ]
+  },
+  {
+    "line_idx": 187,
+    "line": "- [x] v8-inspector — `v8/src/inspector`, ~20k。DevTools 协议 (CDP)。依赖: v8-api。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-inspector.md](./log/v8-inspector.md)",
+    "old_state": "x",
+    "crate_name": "v8-inspector",
+    "rest": "`v8/src/inspector`, ~20k。DevTools 协议 (CDP)。依赖: v8-api。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-inspector.md](./log/v8-inspector.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 188,
+    "line": "- [x] v8-profiler — `v8/src/profiler` + `v8/src/libsampler`, ~18k。CPU/堆采样分析。依赖: v8-execution。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-profiler.md](./log/v8-profiler.md)",
+    "old_state": "x",
+    "crate_name": "v8-profiler",
+    "rest": "`v8/src/profiler` + `v8/src/libsampler`, ~18k。CPU/堆采样分析。依赖: v8-execution。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/v8-profiler.md](./log/v8-profiler.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 189,
+    "line": "- [x] v8-extensions — `v8/src/extensions`, ~1k。gc/statistics 等内建扩展。依赖: v8-api。测试: 随 rs8。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-extensions.md](./log/v8-extensions.md)",
+    "old_state": "x",
+    "crate_name": "v8-extensions",
+    "rest": "`v8/src/extensions`, ~1k。gc/statistics 等内建扩展。依赖: v8-api。测试: 随 rs8。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-extensions.md](./log/v8-extensions.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 190,
+    "line": "- [x] v8-dumpling — `v8/src/dumpling`, ~1k。新组件。依赖: v8-api。测试: `unittests/dumpling`。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-dumpling.md](./log/v8-dumpling.md)",
+    "old_state": "x",
+    "crate_name": "v8-dumpling",
+    "rest": "`v8/src/dumpling`, ~1k。新组件。依赖: v8-api。测试: `unittests/dumpling`。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-dumpling.md](./log/v8-dumpling.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 191,
+    "line": "- [x] v8-fuzzilli — `v8/src/fuzzilli`, ~0.8k。fuzzing 集成, 可选不阻塞。依赖: v8-api。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-fuzzilli.md](./log/v8-fuzzilli.md)",
+    "old_state": "x",
+    "crate_name": "v8-fuzzilli",
+    "rest": "`v8/src/fuzzilli`, ~0.8k。fuzzing 集成, 可选不阻塞。依赖: v8-api。终验收敛冻结 (clean 3/3, 6/6 绿)。日志: [./log/v8-fuzzilli.md](./log/v8-fuzzilli.md)",
+    "is_refuted": false,
+    "reasons": []
+  },
+  {
+    "line_idx": 192,
+    "line": "- [x] rs8 — `v8/src/d8` 等价 shell, ~15k。CLI/worker/module loader。依赖: v8-api, v8-libplatform。测试: `v8/test/mjsunit` / `test262` / `message` / `intl`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/rs8.md](./log/rs8.md)",
+    "old_state": "x",
+    "crate_name": "rs8",
+    "rest": "`v8/src/d8` 等价 shell, ~15k。CLI/worker/module loader。依赖: v8-api, v8-libplatform。测试: `v8/test/mjsunit` / `test262` / `message` / `intl`。终验收敛冻结 (clean 3/3, 4/4 绿)。日志: [./log/rs8.md](./log/rs8.md)",
+    "is_refuted": true,
+    "reasons": [
+      "rs8 执行使用独立简易 AST 解释器，未打通 V8 运行时执行主链路"
+    ]
+  },
+  {
+    "line_idx": 193,
+    "line": "- [x] rs8-capi — C ABI 兼容层, `v8/include/v8-*.h` → `extern \"C\"` 1:1, ~10k。依赖: v8-api, rs8。测试: 详见 八。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/rs8-capi.md](./log/rs8-capi.md)",
+    "old_state": "x",
+    "crate_name": "rs8-capi",
+    "rest": "C ABI 兼容层, `v8/include/v8-*.h` → `extern \"C\"` 1:1, ~10k。依赖: v8-api, rs8。测试: 详见 八。终验收敛冻结 (clean 3/3, 5/5 绿)。日志: [./log/rs8-capi.md](./log/rs8-capi.md)",
+    "is_refuted": true,
+    "reasons": [
+      "rs8-capi 仅桥接简易 AST 解释器，未实现 1:1 V8 C ABI 兼容"
+    ]
+  }
+]

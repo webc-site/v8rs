@@ -1,0 +1,18 @@
+// 由 tool/src/compiler/backend/loong64/code-generator-loong64.js 从 v8/src/compiler/backend/loong64/code-generator-loong64.cc 生成; 修订就地改, 复跑覆盖
+// loong64 代码生成: ArchInstruction 分发 (387 case) + 32/64 双宽
+
+//! 台账: AssembleArchInstruction case kLoong64 ×387 (+ 公共 kArch ×41 +
+//!   kMode_MRI/MRR 寻址 ×2); ArchBranch/ArchBoolean/TailCallAfterGap; W/D 双宽。
+
+/// v8: CodeGenerator::AssembleArchInstruction (loong64)
+// fn assemble_arch_instruction(instr: &Instruction) -> CodeGenResult
+/// v8: 32/64 双宽 (W/D 寄存器) 面锚
+// fn 双宽发射锚
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(ARCH_CASE_COUNT == 387);
+  assert!(COMMON_CASE_COUNT == 41);
+};
+pub const ARCH_CASE_COUNT: usize = 387;
+pub const COMMON_CASE_COUNT: usize = 41;

@@ -1,0 +1,92 @@
+// 由 tool/src/heap/cppgc-internal/process-heap.h.js 从 v8/src/heap/cppgc-internal/process-heap.h 生成; 修订就地改, 复跑覆盖
+// ProcessGlobalLock 进程互斥 + HeapRegistry 堆注册表 (cc 实现一并落地)
+
+// ══ ProcessGlobalLock (原版 process-heap.h:18-70, ODR cc:19) ══
+
+/// 原版 process-heap.h:20-23
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Reason {
+    ForGc,
+    ForCrossThreadHandleCreation,
+}
+
+/// v8: 原版 Lock/Unlock 均模板 <Reason reason>; PERFETTO 门内 kForCrossThreadHandleCreation 臂再套 DEBUG 门
+pub struct ProcessGlobalLock;
+
+impl ProcessGlobalLock {
+    pub fn lock<REASON: ReasonTag>() {
+        PROCESS_MUTEX.get().lock();
+        // v8: V8_USE_PERFETTO — GC 臂 TRACE_EVENT_BEGIN("AcquiredForGC"); 跨线程臂仅 DEBUG 追踪
+    }
+    pub fn unlock<REASON: ReasonTag>() {
+        // v8: V8_USE_PERFETTO — 对应 TRACE_EVENT_END
+        PROCESS_MUTEX.get().unlock();
+    }
+    /// 原版 process-heap.h:66
+    pub fn assert_held() {
+        PROCESS_MUTEX.get().assert_held();
+    }
+}
+
+// ══ HeapRegistry (原版 process-heap.h:72-93, 实现 cc:34-71) ══
+// 全进程堆表; 指针 → 所属堆定位靠 PageBackend::Lookup 线性扫。
+
+pub struct HeapRegistry;
+type Storage = Vec<*mut HeapBase>;
+
+impl HeapRegistry {
+    /// 原版 cc:34-40 — mutex + 查重 push
+    pub fn register_heap(heap: &mut HeapBase) {
+        let _g = HEAP_REGISTRY_MUTEX.get().guard();
+        let storage = heap_registry_storage();
+        debug_assert!(!storage.contains(&(heap as *mut _)));
+        storage.push(heap);
+    }
+
+    /// 原版 cc:43-54 — 反注册时 DCHECK page_backend 仍活 (TryFromManagedPointer 依赖)
+    pub fn unregister_heap(heap: &mut HeapBase) {
+        let _g = HEAP_REGISTRY_MUTEX.get().guard();
+        debug_assert!(!heap.page_backend().is_null());
+        let storage = heap_registry_storage();
+        let pos = storage.iter().position(|h| *h == heap as *mut _);
+        debug_assert!(pos.is_some());
+        storage.remove(pos.unwrap());
+    }
+
+    /// 原版 cc:57-66 — 线性扫各堆 page_backend().Lookup(needle), 命中即返
+    pub fn try_from_managed_pointer(needle: *const u8) -> *mut HeapBase {
+        let _g = HEAP_REGISTRY_MUTEX.get().guard();
+        for heap in heap_registry_storage() {
+            let address = unsafe { &**heap }.page_backend().lookup(needle);
+            if !address.is_null() {
+                return *heap;
+            }
+        }
+        std::ptr::null_mut()
+    }
+
+    /// 原版 cc:69-71 — 不取锁, 仅测试用
+    pub fn get_registered_heaps_for_testing() -> &'static Storage {
+        heap_registry_storage()
+    }
+}
+
+// ══ Subscription RAII (原版 process-heap.h:76-83, 内联实现 :95-101) ══
+
+/// 构造注册 / 析构反注册
+pub struct Subscription {
+    heap: *mut HeapBase,
+}
+
+impl Subscription {
+    pub fn new(heap: &mut HeapBase) -> Self {
+        HeapRegistry::register_heap(heap);
+        Self { heap }
+    }
+}
+
+impl Drop for Subscription {
+    fn drop(&mut self) {
+        HeapRegistry::unregister_heap(unsafe { &mut *self.heap });
+    }
+}

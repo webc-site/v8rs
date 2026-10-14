@@ -1,0 +1,55 @@
+// 由 tool/src/compiler/turboshaft/wasm-load-elimination-reducer.h.js 从 v8/src/compiler/turboshaft/wasm-load-elimination-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 载入消除: 依内存地址追踪冗余 load
+
+/// 原版负索引哨兵 — 表内特殊键 (非真实字段偏移):
+/// - kArrayLengthFieldIndex = -1
+/// - kStringPrepareForGetCodeunitIndex = -2
+/// - kStringAsWtf16Index = -3
+/// - kAnyConvertExternIndex = -4
+/// - kAssertNotNullIndex = -5
+/// - kGetDescIndex = -6
+/// 另: kLoadLikeType = ModuleTypeIndex{kV8MaxWasmTypes+1} (哨兵类型),
+/// kLoadLikeSize = 4 ("fair dice roll" 注释)。
+/// v8: wasm-load-elimination-reducer.h 顶部常量
+pub const K_ARRAY_LENGTH_FIELD_INDEX: i32 = -1;
+pub const K_STRING_PREPARE_FOR_GET_CODEUNIT_INDEX: i32 = -2;
+pub const K_STRING_AS_WTF16_INDEX: i32 = -3;
+pub const K_ANY_CONVERT_EXTERN_INDEX: i32 = -4;
+pub const K_ASSERT_NOT_NULL_INDEX: i32 = -5;
+pub const K_GET_DESC_INDEX: i32 = -6;
+
+/// 原版 WasmMemoryAddress — 消除键的五元组
+/// v8: wasm-load-elimination-reducer.h WasmMemoryAddress
+pub struct WasmMemoryAddress {
+  pub base: OpIndex,
+  pub offset: int32_t,
+  pub type_index: wasm::ModuleTypeIndex,
+  pub size: uint8_t,
+  pub mutability: bool,
+}
+
+/// 原版 KeyData — 快照表键数据: WasmMemoryAddress + 同基/同偏移双向链
+/// (同基链 prev 为指针 next 为值; OffsetListTraits/BaseListTraits 供
+/// DoublyThreadedList 使用; BaseData 按 base 聚合 with_offsets 键)。
+/// v8: wasm-load-elimination-reducer.h KeyData/BaseData
+pub struct KeyData {
+  pub mem: WasmMemoryAddress,
+  pub prev_same_base: Option<Key>,
+  pub next_same_offset: Key,
+}
+
+/// 原版 EntriesWithOffsets — offset 化简后旧键处置
+/// v8: wasm-load-elimination-reducer.h EntriesWithOffsets
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EntriesWithOffsets {
+  /// kInvalidate: 作废
+  Invalidate,
+  /// kKeep: 保留
+  Keep,
+}
+
+/// 原版 analyzer/reducer 面:
+/// - cc analyzer 方法 (25 个): Run, ProcessBlock, ProcessStructGet, ProcessStructSet, ProcessStructAtomicRMW, ProcessArrayAtomicRMW, ProcessLoad, ProcessStore, ProcessArrayGet, ProcessArraySet, ProcessArrayLength, ProcessWasmAllocateArray, ProcessStringAsWtf16, ProcessStringPrepareForGetCodeUnit, ProcessAnyConvertExtern, ProcessAssertNotNull, ProcessCall, InvalidateAllNonAliasingInputs, InvalidateIfAlias, DcheckWordBinop, ProcessAllocate, ProcessPhi, FinishBlock, SealAndDiscard, StoreLoopSnapshotInForwardPredecessor
+/// - reducer 持内嵌 Snapshot 结构, 按块恢复/合并
+/// v8: wasm-load-elimination-reducer.{h,cc}
+pub struct WasmLoadEliminationReducer;

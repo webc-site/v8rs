@@ -1,0 +1,75 @@
+#!/usr/bin/env bun
+// tool/src/base/iterator.h.js — 族: src/base/iterator.h
+// 覆盖: iterator 基类 + iterator_range + DerefPtrIterator + Reversed×2
+//        + IterateWithoutLast×2 + IterateWithoutFirst×2 + TupleIterator + zip
+// → v8-base/src/iterator.rs.skel
+
+import { readV8, writeSrc, banner } from "../../lib.js";
+
+const src = readV8("src/base/iterator.h");
+
+// —— 锚点断言 ——
+if (!src.includes("struct iterator {")) throw new Error("缺 iterator 基类");
+if (!src.includes("class iterator_range {")) throw new Error("缺 iterator_range");
+if (!src.includes("auto make_iterator_range(ForwardIterator begin, ForwardIterator end)")) throw new Error("缺工厂");
+if (!src.includes("struct V8_GSL_POINTER DerefPtrIterator")) throw new Error("缺 DerefPtrIterator");
+if (!src.includes("class TupleIterator")) throw new Error("缺 TupleIterator");
+
+// —— 真解析: 适配器工厂重载计数 ——
+const counts = {
+  Reversed: (src.match(/^auto Reversed\(/gm) || []).length,
+  IterateWithoutLast: (src.match(/^auto IterateWithoutLast\(/gm) || []).length,
+  IterateWithoutFirst: (src.match(/^auto IterateWithoutFirst\(/gm) || []).length,
+  zip: (src.match(/^auto zip\(Containers&\.\.\./gm) || []).length,
+};
+if (counts.Reversed !== 2) throw new Error(`Reversed ${counts.Reversed} != 2`);
+if (counts.IterateWithoutLast !== 2) throw new Error(`IterateWithoutLast ${counts.IterateWithoutLast} != 2`);
+if (counts.IterateWithoutFirst !== 2) throw new Error(`IterateWithoutFirst ${counts.IterateWithoutFirst} != 2`);
+if (counts.zip !== 1) throw new Error(`zip ${counts.zip} != 1`);
+console.log(`iterator: 类 3 (range/deref/tuple), 工厂 Reversed 2 + WithoutLast 2 + WithoutFirst 2 + zip 1`);
+
+let rust = banner(
+  "src/base/iterator.h.js",
+  "src/base/iterator.h",
+  "迭代器工具 (range 封装/反向/去头尾/zip)",
+);
+
+rust += `
+//! v8: src/base/iterator.h
+
+// v8: base::iterator<Category, Type, Diff, Pointer, Reference> — STL 五参迭代器基类
+// Rust: Iterator trait 天然覆盖, 登记跳过
+
+/// v8: src/base/iterator.h iterator_range<ForwardIterator>
+/// begin/end 双迭代器封装, 可当容器用 (empty/size/operator[] 仅随机访问)
+/// Rust 侧多由 &[T] 切片直接表达
+pub struct IteratorRange<I> { begin: I, end: I }
+
+/// v8: src/base/iterator.h make_iterator_range
+pub fn make_iterator_range<I: Iterator>(begin: I, end: I) -> IteratorRange<I>;
+
+/// v8: src/base/iterator.h DerefPtrIterator<T> — 双重解引用 (T* const* 游标)
+/// ++/-- 双向; operator* 返回 **ptr
+pub struct DerefPtrIterator<'a, T> { ptr: *const *const T }
+
+/// v8: src/base/iterator.h Reversed(T&) — 反向遍历 (禁绑临时, 引用形参刻意)
+/// v8: Reversed(const iterator_range<T>&) — 迭代器自持版对临时安全
+/// Rust: slice.iter().rev(), 登记跳过
+
+/// v8: src/base/iterator.h IterateWithoutLast(T&) — 去尾 (空容器 DCHECK)
+/// v8: src/base/iterator.h IterateWithoutFirst(T&) — 去头 (空容器 DCHECK)
+/// 各含 iterator_range 右值安全第二重载; Rust: slice[..len-1] / slice[1..]
+pub fn iterate_without_last<T>(c: &[T]) -> &[T];
+pub fn iterate_without_first<T>(c: &[T]) -> &[T];
+
+/// v8: src/base/iterator.h TupleIterator<Iterators...>
+/// 打包多迭代器; operator!= 任一分量不等即真; operator* 返回引用 tuple
+pub struct TupleIterator<A, B> { a: A, b: B }
+
+/// v8: src/base/iterator.h zip(Containers&...) — 多容器并行迭代, 短者截断
+/// Rust 对应: Iterator::zip 链 (std 已有, 天然 short-circuit)
+pub fn zip<A, B>(a: A, b: B) -> std::iter::Zip<A, B>;
+`;
+
+writeSrc("v8-base", "iterator.rs.skel", rust);
+console.log("written v8-base/src/iterator.rs.skel");

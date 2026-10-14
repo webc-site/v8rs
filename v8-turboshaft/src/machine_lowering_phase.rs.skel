@@ -1,0 +1,39 @@
+// 由 tool/src/compiler/turboshaft/machine-lowering-phase.h.js 从 v8/src/compiler/turboshaft/machine-lowering-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// MachineLoweringPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/machine-lowering-phase.h MachineLoweringPhase
+pub struct MachineLoweringPhase;
+
+impl MachineLoweringPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "MachineLowering" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftMachineLowering";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "StringEscapeAnalysisReducer",
+    "JSGenericLoweringReducer",
+    "DataViewLoweringReducer",
+    "MachineLoweringReducer",
+    "FastApiCallLoweringReducer",
+    "VariableReducer",
+    "SelectLoweringReducer",
+    "MachineOptimizationReducer",
+    "ValueNumberingReducer",
+  ];
+  /// 条件编译成员 (原版 #if V8_ENABLE_WEBASSEMBLY): WasmLoweringReducer
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/machine-lowering-phase.cc MachineLoweringPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<StringEscapeAnalysisReducer, JSGenericLoweringReducer, DataViewLoweringReducer, MachineLoweringReducer, FastApiCallLoweringReducer, VariableReducer, SelectLoweringReducer, MachineOptimizationReducer, ValueNumberingReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(MachineLoweringPhase::PHASE_NAME == "V8.TFTurboshaftMachineLowering");
+  assert!(MachineLoweringPhase::REDUCERS.len() == 9);
+  assert!(MachineLoweringPhase::REDUCERS[0] == "StringEscapeAnalysisReducer");
+};

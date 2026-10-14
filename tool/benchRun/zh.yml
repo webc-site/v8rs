@@ -1,0 +1,25 @@
+title: 性能对标
+desc: 基准测试覆盖全部 8 项官方经典算法负载（几何平均得分对标 C++ 官方 V8 实测）：
+env: "**测试环境**：{cpu} ({core_count} 核心) | {os_name} {os_ver} ({arch}) | 官方 C++ V8 v{v8_ver}"
+table:
+  headers:
+    - 测试项 (v8-v7)
+    - 负载特征
+    - V8RS
+    - 原版 C++ V8
+    - 相对提升
+    - 单次耗时 (V8RS)
+highlights:
+  title: 核心优势
+  startup: "- **进程冷启动**：**{v8rs_startup} ms** vs 原版 V8 **{cpp_startup} ms**（启动提速 **{startup_speedup}x**，启动延迟降低 **{startup_reduction}%**）"
+  score: "- **综合得分**：**{v8rs_score}** vs 原版 V8 **{cpp_score}**（{delta}）"
+  binary_size: "- **二进制体积**：**{bin_size_mb} MB** vs 原版 V8 **{cpp_bin_mb} MB**（体积缩减 **{reduction_pct}%**）"
+suites:
+  Richards: OS 内核调度与任务分发
+  DeltaBlue: 增量双向约束求解
+  Crypto: SHA-1/MD5 密码学高密位运算
+  RayTrace: 3D 光线追踪与浮点运算
+  EarleyBoyer: Earley 解析器与符号项重写
+  RegExp: Irregexp 有限状态机与正则回溯
+  Splay: 伸展树与内存高频重分配
+  NavierStokes: 2D 流体动力学非线性偏微分求解

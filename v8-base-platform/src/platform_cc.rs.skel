@@ -1,0 +1,83 @@
+// 由 tool/src/base/platform/platform.cc.js 从 v8/src/base/platform/platform.cc 生成; 修订就地改, 复跑覆盖
+// 线程栈界缓存与线程号 (平台无关公共实现)
+
+use std::cell::Cell;
+
+thread_local! {
+  /// 当前线程栈起始 (原版 thread_local void* thread_stack_start)
+  /// v8: src/base/platform/platform.cc thread_stack_start
+  static THREAD_STACK_START: Cell<usize> = const { Cell::new(0) };
+
+  /// 当前线程保留栈下限 (原版 thread_local void* thread_reserved_stack_limit)
+  /// v8: src/base/platform/platform.cc thread_reserved_stack_limit
+  static THREAD_RESERVED_STACK_LIMIT: Cell<usize> = const { Cell::new(0) };
+}
+
+/// 栈操作面 (原版 class Stack 的平台无关缓存层)
+/// v8: src/base/platform/platform.cc Stack::GetStackStartUnchecked
+/// 首次调用经 ObtainCurrentThreadStackStart (darwin 实现:
+/// pthread_get_stackaddr_np(pthread_self()), 见 platform-darwin 族) 填充
+pub fn get_stack_start_unchecked() -> *mut std::ffi::c_void {
+  THREAD_STACK_START.with(|c| {
+    let mut p = c.get();
+    if p == 0 {
+      p = obtain_current_thread_stack_start() as usize;
+      c.set(p);
+    }
+    p as *mut std::ffi::c_void
+  })
+}
+
+/// v8: src/base/platform/platform.cc Stack::GetReservedStackLimit
+/// 保留栈下限: 首次经 ObtainCurrentThreadStackReservedLimit 填充
+/// (darwin: stackaddr - stacksize, 见 platform-darwin 族)
+pub fn get_reserved_stack_limit() -> *mut std::ffi::c_void {
+  THREAD_RESERVED_STACK_LIMIT.with(|c| {
+    let mut p = c.get();
+    if p == 0 {
+      p = obtain_current_thread_stack_reserved_limit() as usize;
+      c.set(p);
+    }
+    p as *mut std::ffi::c_void
+  })
+}
+
+/// v8: src/base/platform/platform.cc Stack::GetStackStart
+/// 直通 GetStackStartUnchecked (0 判空即 "Unchecked" 语义差异点)
+pub fn get_stack_start() -> *mut std::ffi::c_void { get_stack_start_unchecked() }
+
+// —— 平台钩子 (实现在各 platform-<os> 族, 此处登记签名) ——
+/// v8: src/base/platform/platform-darwin.cc Stack::ObtainCurrentThreadStackStart
+fn obtain_current_thread_stack_start() -> *mut std::ffi::c_void {
+  unsafe { libc::pthread_get_stackaddr_np(libc::pthread_self()) as *mut std::ffi::c_void }
+}
+/// v8: src/base/platform/platform-darwin.cc Stack::ObtainCurrentThreadStackReservedLimit
+fn obtain_current_thread_stack_reserved_limit() -> *mut std::ffi::c_void {
+  unsafe {
+    let addr = libc::pthread_get_stackaddr_np(libc::pthread_self()) as usize;
+    let size = libc::pthread_get_stacksize_np(libc::pthread_self());
+    (addr - size) as *mut std::ffi::c_void
+  }
+}
+
+thread_local! {
+  /// 线程号缓存 (原版 static thread_local int id = GetCurrentThreadIdInternal())
+  /// v8: src/base/platform/platform.cc OS::GetCurrentThreadId
+  static THREAD_ID: std::cell::OnceCell<i32> = const { std::cell::OnceCell::new() };
+}
+
+/// v8: src/base/platform/platform.cc OS::GetCurrentThreadId
+/// 惰性求值一次后线程内复用; 内部函数 darwin: pthread_mach_thread_np
+pub fn get_current_thread_id() -> i32 {
+  THREAD_ID.with(|c| *c.get_or_init(|| unsafe {
+    libc::pthread_mach_thread_np(libc::pthread_self()) as i32
+  }))
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // 2 个 thread_local 栈界 + 3 个 Stack 静态 + 1 个 OS 静态
+  const STACK_STATICS: usize = 3;
+  const OS_STATICS: usize = 1;
+  assert!(STACK_STATICS == 3 && OS_STATICS == 1);
+};

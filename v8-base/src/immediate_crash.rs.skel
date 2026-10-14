@@ -1,0 +1,24 @@
+// 由 tool/src/base/immediate-crash.h.js 从 v8/src/base/immediate-crash.h 生成; 修订就地改, 复跑覆盖
+// 最快崩溃路径 (无日志, 信号须异于访存错, 禁折叠)
+
+//! v8: src/base/immediate-crash.h
+//! Rust 对应: std::process::abort / core::arch 陷阱指令; 语义约束登记如下
+
+/// v8: src/base/immediate-crash.h IMMEDIATE_CRASH
+/// 约束: 必致死 (不可被调试器 continue 跳过); 各实例不折叠 (asm volatile 保唯一);
+///       信号区别于非法访存; noreturn (unreachable 提示)
+pub fn immediate_crash() -> !;
+
+// v8: TRAP_SEQUENCE_ = TRAP_SEQUENCE1_ + TRAP_SEQUENCE2_, 各架构指令表:
+// | 架构 | SEQ1 | SEQ2 |
+// | --- | --- | --- |
+// | x64/ia32 (GNU) | int3 | ud2 (darwin 为空, unreachable 已出 ud2) |
+// | arm | bkpt #0 | udf #0 |
+// | arm64 | brk #0 | hlt #0 |
+// | ppc64 | .4byte 0x7D821008 (AIX: .vbyte 4,...) | 空 |
+// | s390x | .2byte 0x0001 | 空 |
+// | zOS / 兜底 | __builtin_trap() | 空 |
+// | MSVC 非 clang | __debugbreak() | 空 |
+// v8: WRAPPED_TRAP_SEQUENCE_ — GNU 下包进立即 lambda 绕 constexpr 禁 asm 限制
+//     (代价: 栈顶指向匿名 lambda, 而非 CHECK 调用点)
+// Rust: Developer 选 std::intrinsics::abort / platform-specific trap!, 登记跳过

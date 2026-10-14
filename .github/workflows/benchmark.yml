@@ -1,0 +1,140 @@
+name: Benchmark Regression
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    name: benchmark (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - platform: linux-x86_64
+            os: ubuntu-latest
+            rustflags: "-C opt-level=3 -C codegen-units=1 -C panic=abort -C target-feature=+aes,+sse4.1"
+          # Linux aarch64 (ARM)
+          - platform: linux-arm64
+            os: ubuntu-24.04-arm
+            rustflags: "-C opt-level=3 -C codegen-units=1 -C panic=abort -C target-feature=+aes,+neon"
+          # macOS (Apple Silicon M-series)
+          - platform: macos-arm64
+            os: macos-latest
+            rustflags: "-C opt-level=3 -C codegen-units=1 -C panic=abort -C target-feature=+aes,+neon"
+          # Windows x86_64
+          - platform: windows-x86_64
+            os: windows-latest
+            rustflags: "-C opt-level=3 -C codegen-units=1 -C panic=abort -C target-feature=+aes,+sse4.1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install latest stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: bench-${{ matrix.platform }}
+
+      - name: Setup Node.js for Native C++ V8 baseline
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Run End-to-End Real JavaScript Benchmarks
+        shell: bash
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          mkdir -p reports
+          echo "=== 1. 运行 V8RS 真实 JavaScript 端到端基准 ==="
+          cargo run --release -p v8-benchmarks -- --json > reports/benchmark-${{ matrix.platform }}.json
+          cargo run --release -p v8-benchmarks
+
+          echo "=== 2. 运行原版 Native C++ V8 (Node v8-v7) 真实基准 ==="
+          node -e '
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const vm = require("node:vm");
+          const dir = "v8-benchmarks/benches/v8-v7";
+          const files = ["base.js", "richards.js", "deltablue.js", "crypto.js", "raytrace.js", "earley-boyer.js", "regexp.js", "splay.js", "navier-stokes.js"];
+          for (const f of files) {
+            vm.runInThisContext(fs.readFileSync(path.join(dir, f), "utf8"));
+          }
+          BenchmarkSuite.RunSuites({});
+          const score_map = {};
+          for (const s of BenchmarkSuite.suites) {
+            const mean = BenchmarkSuite.GeometricMean(s.results);
+            const score = Math.round(100 * s.reference / mean);
+            score_map[s.name] = score;
+          }
+          const total_score = Math.round(100 * BenchmarkSuite.GeometricMean(BenchmarkSuite.scores));
+          fs.writeFileSync("reports/cpp-v8-${{ matrix.platform }}.json", JSON.stringify({ score_map, total_score, v8_ver: process.versions.v8 }));
+          '
+
+          # 生成 GitHub Actions 实时对标报表
+          echo "## V8RS vs Native C++ V8 (Real JavaScript) Benchmark (${{ matrix.platform }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Benchmark Suite | V8RS Score | Native C++ V8 Score | Relative | V8RS Latency |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :---: | :---: | :---: | :---: |" >> $GITHUB_STEP_SUMMARY
+          python3 -c "
+          import json
+          with open('reports/benchmark-${{ matrix.platform }}.json', 'r', encoding='utf-8') as f:
+              v8rs = json.load(f)
+          with open('reports/cpp-v8-${{ matrix.platform }}.json', 'r', encoding='utf-8') as f:
+              cpp = json.load(f)
+          
+          mapping = {
+              'Richards': 'richards',
+              'DeltaBlue': 'deltablue',
+              'Crypto': 'crypto',
+              'RayTrace': 'raytrace',
+              'EarleyBoyer': 'earley-boyer',
+              'RegExp': 'regexp',
+              'Splay': 'splay',
+              'NavierStokes': 'navier-stokes',
+          }
+          lat_map = {b['name']: b['ns_per_op'] for b in v8rs.get('benchmarks', [])}
+          suite = v8rs.get('suite', {})
+          cpp_scores = cpp.get('score_map', {})
+
+          for k, v in mapping.items():
+              v_score = suite.get(k, 0)
+              c_score = cpp_scores.get(k, 1)
+              diff = ((v_score - c_score) / max(c_score, 1)) * 100
+              sign = '+' if diff >= 0 else ''
+              lat = lat_map.get(v, 0.0)
+              lat_str = f'{lat:.2f} ns' if lat < 1000 else f'{(lat/1000):.2f} µs'
+              print(f'| **{k}** | **{v_score:,}** | {c_score:,} | {sign}{diff:.1f}% | {lat_str} |')
+
+          total_v = suite.get('Score', 0)
+          total_c = cpp.get('total_score', 1)
+          total_diff = ((total_v - total_c) / max(total_c, 1)) * 100
+          print(f'\n### Full Real JS Geometric Mean Score: V8RS **{total_v:,}** vs C++ V8 **{total_c:,}** ({total_diff:+.1f}%)\n')
+          " >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Benchmark Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-${{ matrix.platform }}
+          path: reports/benchmark-${{ matrix.platform }}.json
+          if-no-files-found: error

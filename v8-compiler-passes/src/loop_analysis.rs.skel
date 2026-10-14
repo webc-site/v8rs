@@ -1,0 +1,136 @@
+// 由 tool/src/compiler/loop-analysis.js 从 v8/src/compiler/loop-analysis.h + src/compiler/loop-analysis.cc 生成; 修订就地改, 复跑覆盖
+// LoopTree / LoopFinder / NodeCopier — 循环嵌套树与节点复制器
+
+//! 循环分析: header/body/exits 区间切成树; NodeCopier 供 peel/unroll 复制。
+
+#![allow(dead_code, unused_variables)]
+
+/// v8: src/compiler/loop-analysis.h LoopTree::Loop
+/// 区间 [header_start_, body_start_) = header, [body_start_, exits_start_)
+/// = body, [exits_start_, exits_end_) = exits (对 LoopTree::node_to_loop_num_ 索引)
+pub struct Loop {
+  /// 原 parent_ / children_
+  pub parent: *mut Loop,
+  pub children: Vec<*mut Loop>,
+  /// 原 header_start_ / body_start_ / exits_start_ / exits_end_
+  pub header_start: u32,
+  pub body_start: u32,
+  pub exits_start: u32,
+  pub exits_end: u32,
+  /// 原 depth_
+  pub depth: u32,
+}
+
+impl Loop {
+  /// v8: src/compiler/loop-analysis.h LoopTree::Loop::HeaderSize
+  /// 原文: body_start_ - header_start_
+  pub const fn header_size(&self) -> u32 {
+    self.body_start - self.header_start
+  }
+  /// v8: src/compiler/loop-analysis.h LoopTree::Loop::BodySize
+  /// 原文: exits_start_ - body_start_
+  pub const fn body_size(&self) -> u32 {
+    self.exits_start - self.body_start
+  }
+  /// v8: src/compiler/loop-analysis.h LoopTree::Loop::ExitsSize
+  /// 原文: exits_end_ - exits_start_
+  pub const fn exits_size(&self) -> u32 {
+    self.exits_end - self.exits_start
+  }
+  /// v8: src/compiler/loop-analysis.h LoopTree::Loop::TotalSize
+  /// 原文: exits_end_ - header_start_
+  pub const fn total_size(&self) -> u32 {
+    self.exits_end - self.header_start
+  }
+  /// v8: src/compiler/loop-analysis.h LoopTree::Loop::depth
+  pub const fn depth(&self) -> u32 {
+    self.depth
+  }
+}
+
+/// v8: src/compiler/loop-analysis.h LoopTree
+pub struct LoopTree {
+  /// 原 zone_
+  pub zone: *mut crate::zone::Zone,
+  /// 原 outer_loops_ — 顶层循环表
+  pub outer_loops: Vec<*mut Loop>,
+  /// 原 all_loops_ — 全部循环
+  pub all_loops: Vec<*mut Loop>,
+  /// 原 node_to_loop_num_ — 节点 id → 循环号 (-1 = 无)
+  pub node_to_loop_num: Vec<i32>,
+  /// 原 loop_nodes_ — 区间切分用的节点序
+  pub loop_nodes: Vec<crate::node::Node>,
+}
+
+/// v8: src/compiler/loop-analysis.h LoopFinder::Purpose
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Purpose {
+  /// kLoopPeeling
+  LoopPeeling,
+  /// kLoopUnrolling
+  LoopUnrolling,
+}
+
+/// v8: src/compiler/loop-analysis.h LoopFinder
+pub struct LoopFinder;
+
+impl LoopFinder {
+  /// v8: src/compiler/loop-analysis.cc LoopFinder::BuildLoopTree
+  /// 原文: 深度优先标记 + 回边判定环 + 拓扑成树 (O(N+E))
+  pub fn build_loop_tree(graph: &crate::graph::TFGraph, tick_counter: &mut crate::TickCounter, temp_zone: &mut crate::zone::Zone) -> *mut LoopTree {
+    let _ = (graph, tick_counter, temp_zone);
+    todo!("DFS + backedge 归环")
+  }
+
+  /// v8: src/compiler/loop-analysis.cc LoopFinder::HasMarkedExits
+  pub fn has_marked_exits(loop_tree: &mut LoopTree, loop: &Loop) -> bool {
+    let _ = (loop_tree, loop);
+    todo!("exits 区间含 LoopExit* 标记判定")
+  }
+
+  /// v8: src/compiler/loop-analysis.cc LoopFinder::FindSmallInnermostLoopFromHeader
+  /// 约束 (原文): 超过 max_size / 含大调用 (calls_are_large) /
+  /// 含嵌套循环 → None; WASM 用
+  pub fn find_small_innermost_loop_from_header(
+    loop_header: crate::node::Node,
+    all_nodes: &crate::all_nodes::AllNodes,
+    zone: &mut crate::zone::Zone,
+    max_size: usize,
+    purpose: Purpose,
+  ) -> Option<&'static std::collections::HashSet<crate::node::Node>> {
+    let _ = (loop_header, all_nodes, zone, max_size, purpose);
+    todo!("最内层小环收集")
+  }
+}
+
+/// v8: src/compiler/loop-analysis.h NodeCopier
+/// {max}: 追踪上限 (原节点 + 全部副本); {p}: 原节点与副本共表;
+/// {copy_count}: 复制份数 (>0); 副本 0-indexed
+pub struct NodeCopier {
+  /// 原 node_map_
+  pub node_map: crate::node_marker::NodeMarker<Vec<crate::node::Node>>,
+  /// 原 copies_
+  pub copies: *mut Vec<crate::node::Node>,
+  /// 原 copy_count_
+  pub copy_count: u32,
+}
+
+impl NodeCopier {
+  /// v8: src/compiler/loop-analysis.h NodeCopier::NodeCopier
+  pub fn new(graph: &crate::graph::TFGraph, max: u32, p: *mut Vec<crate::node::Node>, copy_count: u32) -> Self {
+    debug_assert!(copy_count > 0);
+    Self { node_map: crate::node_marker::NodeMarker::new(graph, max as usize), copies: p, copy_count }
+  }
+
+  /// v8: src/compiler/loop-analysis.cc NodeCopier::map
+  /// 原文: 未在映射中的节点返回自身; 否则返回第 copy_index 份副本
+  pub fn map(&self, node: crate::node::Node, copy_index: u32) -> crate::node::Node {
+    todo!("映射查询")
+  }
+
+  /// v8: src/compiler/loop-analysis.cc NodeCopier::CopyNodes
+  /// 原文: 按序复制 p 中节点, 副本输入重指
+  pub fn copy_nodes(&mut self) {
+    todo!("批量复制 + 输入重写")
+  }
+}

@@ -1,0 +1,53 @@
+// 由 tool/src/base/atomicops.h.js 从 v8/src/base/atomicops.h 生成; 修订就地改, 复跑覆盖
+// 原子原语层 (v8 旧原子 API, 全部委托 std::atomic_ref)
+
+//! v8: src/base/atomicops.h
+//! Rust 对应: std::sync::atomic::{AtomicI8..AtomicIsize, Ordering}; 此处登记原版 API 面
+
+// v8: using Atomic8 = char; Atomic16 = int16_t; Atomic32 = int32_t;
+//     Atomic64 = intptr_t (非 ILP32 的 64 位); AtomicWord = Atomic64 (64 位宿主)
+// Rust: i8/i16/i32/i64/isize, 登记跳过 (类型别名无独立语义)
+
+/// v8: src/base/atomicops.h SeqCst_MemoryFence
+pub fn seq_cst_memory_fence();
+
+// v8: 以下 14 个模板函数均为 std::atomic_ref + 对应 Ordering 的薄包装
+//     CAS 系列用 compare_exchange_strong, 返回操作前的旧值 (C++ 版返回 old_value 形参)
+
+/// v8: atomicops.h Relaxed_CompareAndSwap — relaxed 成功序 + relaxed 失败序
+pub fn relaxed_cas<T>(ptr: &T, old: T, new: T) -> T;
+/// v8: atomicops.h AcquireRelease_CompareAndSwap — acq_rel 成功 + acquire 失败
+pub fn acq_rel_cas<T>(ptr: &T, old: T, new: T) -> T;
+/// v8: atomicops.h Release_CompareAndSwap — release 成功 + relaxed 失败
+pub fn release_cas<T>(ptr: &T, old: T, new: T) -> T;
+/// v8: atomicops.h SeqCst_CompareAndSwap — seq_cst 成功 + seq_cst 失败
+pub fn seq_cst_cas<T>(ptr: &T, old: T, new: T) -> T;
+/// v8: atomicops.h Relaxed_AtomicExchange
+pub fn relaxed_exchange<T>(ptr: &T, new: T) -> T;
+/// v8: atomicops.h SeqCst_AtomicExchange
+pub fn seq_cst_exchange<T>(ptr: &T, new: T) -> T;
+/// v8: atomicops.h Relaxed_FetchOr
+pub fn relaxed_fetch_or<T>(ptr: &T, bits: T) -> T;
+/// v8: atomicops.h Relaxed_AtomicIncrement — 返回 increment + fetch_add 结果
+pub fn relaxed_increment<T>(ptr: &T, increment: T) -> T;
+/// v8: atomicops.h Relaxed_Store / Release_Store / SeqCst_Store
+pub fn relaxed_store<T>(ptr: &T, value: T);
+pub fn release_store<T>(ptr: &T, value: T);
+pub fn seq_cst_store<T>(ptr: &T, value: T);
+/// v8: atomicops.h Relaxed_Load / Acquire_Load / SeqCst_Load
+pub fn relaxed_load<T>(ptr: &T) -> T;
+pub fn acquire_load<T>(ptr: &T) -> T;
+pub fn seq_cst_load<T>(ptr: &T) -> T;
+
+/// v8: src/base/atomicops.h Relaxed_Memcpy
+/// 逐字节对齐前导 → 字对齐主体 (AtomicWord 宽) → 尾部逐字节; 全程 Relaxed
+pub fn relaxed_memcpy(dst: &mut [u8], src: &[u8]);
+
+/// v8: src/base/atomicops.h Relaxed_Memmove
+/// dst-src >= bytes (无重叠或 dst 在前) 走 memcpy; 否则反向复制
+pub fn relaxed_memmove(dst: &mut [u8], src: &[u8]);
+
+/// v8: src/base/atomicops.h helper::MemcmpNotEqualFundamental
+/// Atomic8 版: u1 < u2 ? -1 : 1; AtomicWord 版: 小端逐字节比较
+/// v8: src/base/atomicops.h Relaxed_Memcmp — 对齐前导 + 字对齐主体 + 尾部; 相等返回 0
+pub fn relaxed_memcmp(s1: &[u8], s2: &[u8]) -> std::cmp::Ordering;

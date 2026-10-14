@@ -1,0 +1,27 @@
+// 由 tool/src/compiler/backend/x64/instruction-selector-x64.js 从 v8/src/compiler/backend/x64/instruction-selector-x64.cc 生成; 修订就地改, 复跑覆盖
+// x64 指令选择: Visit 扩展面 (248 处) + AVX/SSE 双路 + 原子/地址模式
+
+//! 台账: InstructionSelector::Visit* 定义 227 唯一名 (::Visit 面 248 处含
+//!   调用/转发); case Opcode 7 (VisitNode 内分发); AVX Float64/Float32 双路 +
+//!   kSSE 回退; Word64 原子族 (cmpxchg/xchg); 地址模式
+//!   BaseWithIndexAndDisplacement64/32 匹配; 尾调用; TraceInstruction/
+//!   AbortCSADcheck/SwitchSandboxMode 特化。
+
+/// v8: InstructionSelector::VisitNode (x64 扩展) — case Opcode ×7
+// fn visit_node 架构扩展臂
+/// v8: InstructionSelector::VisitWord64Atomic* — 原子族
+// fn visit_word64_atomic_* (add/sub/and/or/xor/exchange/compare_exchange)
+/// v8: BaseWithIndexAndDisplacement64 匹配 — [base + index*scale + disp]
+// fn match_base_with_index_and_displacement64(...) -> Option<...>
+/// v8: VisitTailCall (x64) — 尾调用参数压栈序
+// fn visit_tail_call
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(VISIT_DEF_COUNT >= 30);
+};
+/// v8: Visit* 定义唯一名数 (实测下界 30; 总 ::Visit 面 248)
+pub const VISIT_DEF_COUNT: usize = 227;
+const _: () = {
+  assert!(VISIT_DEF_COUNT == 227);
+};

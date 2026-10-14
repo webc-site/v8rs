@@ -1,0 +1,98 @@
+// 由 tool/src/compiler/pipeline-statistics.js 从 v8/src/compiler/pipeline-statistics.h + pipeline-statistics.cc 生成; 修订就地改, 复跑覆盖
+// 编译相位计时/内存统计与 trace 输出
+
+//! pipeline-statistics — CompilationStatistics 的相位/相位类两层数据源
+//!
+//! trace 类别: v8.turbofan, v8.wasm.turbofan; CommonStats 五字段:
+//! scope_ / timer_ / outer_zone_initial_size_ / allocated_bytes_at_start_ / graph_size_at_start_; PhaseScope/PhaseScopeKind 为 RAII 配对 Begin/End。
+
+/// 原版 PipelineStatisticsBase::CommonStats — 单区间统计
+pub struct CommonStats {
+  /// scope_ — ZoneStats::StatsScope
+  pub scope: Option<StatsScope<'static>>,
+  /// timer_
+  pub timer: ElapsedTimer,
+  /// outer_zone_initial_size_
+  pub outer_zone_initial_size: usize,
+  /// allocated_bytes_at_start_
+  pub allocated_bytes_at_start: usize,
+  /// graph_size_at_start_
+  pub graph_size_at_start: usize,
+}
+
+/// 原版 PipelineStatisticsBase — 统计基类 (总/相位类/相位三层 CommonStats)
+pub struct PipelineStatisticsBase {
+  /// outer_zone_
+  pub outer_zone: *mut Zone<'static>,
+  /// zone_stats_
+  pub zone_stats: *mut ZoneStats,
+  /// compilation_stats_
+  pub compilation_stats: Option<std::sync::Arc<CompilationStatistics>>,
+  /// code_kind_
+  pub code_kind: CodeKind,
+  /// function_name_
+  pub function_name: String,
+  /// total_stats_
+  pub total_stats: CommonStats,
+  /// phase_kind_name_ / phase_kind_stats_
+  pub phase_kind_name: Option<&'static str>,
+  pub phase_kind_stats: CommonStats,
+  /// phase_name_ / phase_stats_
+  pub phase_name: Option<&'static str>,
+  pub phase_stats: CommonStats,
+}
+
+impl PipelineStatisticsBase {
+  /// 原版 BeginPhaseKind / EndPhaseKind
+  /// v8: src/compiler/pipeline-statistics.cc PipelineStatisticsBase::BeginPhaseKind
+  pub fn begin_phase_kind(&mut self, phase_kind_name: &'static str) {
+    todo!("v8: src/compiler/pipeline-statistics.cc PipelineStatisticsBase::BeginPhaseKind")
+  }
+
+  /// 原版 BeginPhase / EndPhase — 计时 + zone 增量入 CompilationStatistics
+  /// v8: src/compiler/pipeline-statistics.cc PipelineStatisticsBase::BeginPhase
+  pub fn begin_phase(&mut self, name: &'static str) {
+    todo!("v8: src/compiler/pipeline-statistics.cc PipelineStatisticsBase::BeginPhase")
+  }
+
+  /// 原版 CommonStats::Begin / End
+  /// v8: src/compiler/pipeline-statistics.cc CommonStats::Begin
+  pub fn common_stats_begin(stats: &mut CommonStats, pipeline_stats: &mut PipelineStatisticsBase) {
+    todo!("v8: src/compiler/pipeline-statistics.cc CommonStats::Begin")
+  }
+}
+
+/// 原版 TurbofanPipelineStatistics — TF 专用统计 (Malloced)
+pub struct TurbofanPipelineStatistics {
+  /// base
+  pub base: PipelineStatisticsBase,
+}
+
+impl TurbofanPipelineStatistics {
+  /// 原版 kTraceCategory — "v8.turbofan,v8.wasm.turbofan"
+  pub const TRACE_CATEGORY: &'static str = "v8.turbofan,v8.wasm.turbofan";
+
+  /// 原版 BeginPhaseKind — 记录 + TRACE_EVENT
+  /// v8: src/compiler/pipeline-statistics.cc TurbofanPipelineStatistics::BeginPhaseKind
+  pub fn begin_phase_kind(&mut self, name: &'static str) {
+    todo!("v8: src/compiler/pipeline-statistics.cc TurbofanPipelineStatistics::BeginPhaseKind")
+  }
+
+  /// 原版 BeginPhase — 同上 (相位层)
+  /// v8: src/compiler/pipeline-statistics.cc TurbofanPipelineStatistics::BeginPhase
+  pub fn begin_phase(&mut self, name: &'static str) {
+    todo!("v8: src/compiler/pipeline-statistics.cc TurbofanPipelineStatistics::BeginPhase")
+  }
+}
+
+/// 原版 PhaseScope — RAII 相位区间
+pub struct StatsPhaseScope<'s> {
+  /// pipeline_stats_
+  pub pipeline_stats: Option<&'s mut TurbofanPipelineStatistics>,
+}
+
+/// 原版 PhaseScopeKind — RAII 相位类区间
+pub struct StatsPhaseScopeKind<'s> {
+  /// pipeline_stats_
+  pub pipeline_stats: Option<&'s mut TurbofanPipelineStatistics>,
+}

@@ -1,0 +1,129 @@
+// 由 tool/src/compiler/functional-list.js 从 v8/src/compiler/functional-list.h 生成; 修订就地改, 复跑覆盖
+// FunctionalList — O(1) 拷贝函数链表 (Cons + size 缓存 + hint 复用)
+
+//! FunctionalList: 单链 Cons + 每节点 size 缓存; 拷贝 O(1)。
+//! 传值即为不可变副本 (底层可变, 谨防别名)。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/functional-list.h FunctionalList::Cons
+/// size = 1 + rest.size (构造时缓存)
+struct Cons<A> {
+  top: A,
+  rest: Option<Box<Cons<A>>>,
+  size: usize,
+}
+
+/// v8: src/compiler/functional-list.h FunctionalList
+pub struct FunctionalList<A> {
+  /// 原 elements_
+  elements: Option<Box<Cons<A>>>,
+}
+
+impl<A: PartialEq + Clone> FunctionalList<A> {
+  /// v8: src/compiler/functional-list.h FunctionalList::FunctionalList
+  pub fn new() -> Self {
+    Self { elements: None }
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::Size
+  /// 原文: elements_ ? elements_->size : 0
+  pub fn size(&self) -> usize {
+    self.elements.as_ref().map_or(0, |c| c.size)
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::operator==
+  /// 同链或逐元素等长比较
+  fn eq(&self, other: &Self) -> bool {
+    if self.size() != other.size() {
+      return false;
+    }
+    let mut it = self.iter();
+    let mut other_it = other.iter();
+    loop {
+      match (it.next(), other_it.next()) {
+        (None, None) => return true,
+        (Some(a), Some(b)) if a == b => continue,
+        _ => return false,
+      }
+    }
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::TriviallyEquals
+  /// 同一 Cons 指针
+  pub fn trivially_equals(&self, other: &Self) -> bool {
+    std::ptr::eq(
+      self.elements.as_deref().map(|c| c as *const _).unwrap_or(std::ptr::null()),
+      other.elements.as_deref().map(|c| c as *const _).unwrap_or(std::ptr::null()),
+    )
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::Front
+  /// 原文: DCHECK_GT(Size(), 0); return elements_->top;
+  pub fn front(&self) -> &A {
+    debug_assert!(self.size() > 0);
+    &self.elements.as_ref().unwrap().top
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::Rest
+  pub fn rest(&self) -> Self {
+    let mut result = Self { elements: self.elements.clone() };
+    result.drop_front();
+    result
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::DropFront
+  /// 原文: CHECK_GT(Size(), 0); elements_ = elements_->rest;
+  pub fn drop_front(&mut self) {
+    assert!(self.size() > 0);
+    self.elements = self.elements.take().and_then(|mut c| c.rest.take());
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::PushFront (双参)
+  pub fn push_front(&mut self, a: A, zone: &mut crate::zone::Zone) {
+    let _ = zone;
+    let rest = self.elements.take();
+    let size = 1 + rest.as_ref().map_or(0, |c| c.size);
+    self.elements = Some(Box::new(Cons { top: a, rest, size }));
+  }
+
+  /// v8: src/compiler/functional-list.h FunctionalList::PushFront (三参 hint)
+  /// 原文: hint.elements_ 的 rest 恰为本表且 top == a 时,
+  /// 直接整链复用 hint.elements_, 免 zone 分配
+  pub fn push_front_with_hint(&mut self, a: A, zone: &mut crate::zone::Zone, hint: &Self) {
+    let _ = zone;
+    let hit = match (hint.elements.as_deref(), self.elements.as_deref()) {
+      (Some(hc), self_el) => {
+        hc.top == a
+          && match (&hc.rest, self_el) {
+            (None, None) => true,
+            (Some(hr), Some(se)) => std::ptr::eq(hr.as_ref() as *const _, se as *const _),
+            _ => false,
+          }
+      }
+      _ => false,
+    };
+    if hit {
+      self.elements = hint.elements.clone();
+    } else {
+      self.push_front(a, zone);
+    }
+  }
+
+  fn iter(&self) -> Iter<'_, A> {
+    Iter { cur: self.elements.as_deref() }
+  }
+}
+
+struct Iter<'a, A> {
+  cur: Option<&'a Cons<A>>,
+}
+
+impl<'a, A> Iterator for Iter<'a, A> {
+  type Item = &'a A;
+  fn next(&mut self) -> Option<&'a A> {
+    let c = self.cur?;
+    self.cur = c.rest.as_deref();
+    Some(&c.top)
+  }
+}

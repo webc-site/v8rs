@@ -1,0 +1,26 @@
+// 由 tool/src/base/timezone-cache.h.js 从 v8/src/base/timezone-cache.h 生成; 修订就地改, 复跑覆盖
+// 时区缓存抽象接口
+
+//! v8 侧: 纯虚方法 4 个; 枚举 1 个 (2 变体)
+
+/// v8: src/base/timezone-cache.h enum class TimeZoneDetection
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TimeZoneDetection {
+    /// v8: kSkip — 不重探测
+    Skip,
+    /// v8: kRedetect — 重探测并设默认时区
+    Redetect,
+}
+
+/// v8: src/base/timezone-cache.h class TimezoneCache (虚基类)
+/// Rust: trait 替代虚表; 实现体在 platform 层 (Platform::TimeZoneCache)
+pub trait TimezoneCache {
+    /// v8: LocalTimezone(time_ms) — 本地时区短名 (如 EST)
+    fn local_timezone(&self, time_ms: f64) -> &str;
+    /// v8: DaylightSavingsOffset(time_ms) — 夏令时偏移 (ECMA-262 daylight-saving-time-adjustment)
+    fn daylight_savings_offset(&self, time_ms: f64) -> f64;
+    /// v8: LocalTimeOffset(time_ms, is_utc) — 本地时区偏移 (local-time-zone-adjustment)
+    fn local_time_offset(&self, time_ms: f64, is_utc: bool) -> f64;
+    /// v8: Clear(time_zone_detection) — 时区变更通知
+    fn clear(&mut self, time_zone_detection: TimeZoneDetection);
+}

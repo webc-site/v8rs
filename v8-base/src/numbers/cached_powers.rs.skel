@@ -1,0 +1,42 @@
+// 由 tool/src/base/numbers/cached-powers.h.js 从 v8/src/base/numbers/cached-powers.h + src/base/numbers/cached-powers.cc 生成; 修订就地改, 复跑覆盖
+// 十的幂缓存 (Grisu 用)
+
+//! v8: src/base/numbers/cached-powers.h/.cc
+
+/// v8: cached-powers.cc CachedPower
+#[derive(Debug, Clone, Copy)]
+pub struct CachedPower {
+    pub significand: u64,
+    pub binary_exponent: i16,
+    pub decimal_exponent: i16,
+}
+
+// v8: cached-powers.cc 常量
+/// 相邻缓存项十进制指数差
+pub const DECIMAL_EXPONENT_DISTANCE: i32 = 8;
+/// 最小十进制指数
+pub const MIN_DECIMAL_EXPONENT: i32 = -348;
+/// 最大十进制指数
+pub const MAX_DECIMAL_EXPONENT: i32 = 340;
+/// 首项 decimal_exponent 的负值 (索引偏移)
+pub const CACHED_POWERS_OFFSET: i32 = 348;
+/// 表长 = (340 - (-348)) / 8 + 1
+pub const CACHED_POWERS_LENGTH: usize = 87;
+
+/// v8: cached-powers.cc kCachedPowers — 87 项, 每项 (significand, binary_exp, decimal_exp);
+/// decimal_exponent 从 -348 起 +8 步进; Developer: 展开全表或 include 数据文件
+pub static CACHED_POWERS: [CachedPower; CACHED_POWERS_LENGTH] = [ /* v8: 逐项搬运 */ ];
+
+pub struct PowersOfTenCache;
+
+impl PowersOfTenCache {
+    /// v8: cached-powers.cc GetCachedPowerForBinaryExponentRange
+    /// 求 k 使 10^k 的二进制指数落入 [min, max]: index = foo = (-61 - min) 起算,
+    /// 再除以 8 对齐表步进; 输出 power 与 decimal_exponent
+    pub fn get_cached_power_for_binary_exponent_range(min_exponent: i32, max_exponent: i32) -> (DiyFp, i32);
+
+    /// v8: cached-powers.cc GetCachedPowerForDecimalExponent
+    /// index = (requested + kCachedPowersOffset) / 8 (截断);
+    /// 前置: kMinDecimalExponent <= requested < kMaxDecimalExponent + kDecimalExponentDistance
+    pub fn get_cached_power_for_decimal_exponent(requested_exponent: i32) -> (DiyFp, i32);
+}

@@ -1,0 +1,30 @@
+// 由 tool/src/base/cpu/cpu-riscv.cc.js 从 v8/src/base/cpu/cpu-riscv.cc 生成; 修订就地改, 复跑覆盖
+// RISC-V 特性探测 (hwprobe syscall + cpuinfo isa 回退)
+
+//! v8: src/base/cpu/cpu-riscv.cc
+
+// v8: hwprobe 位 → 特性映射 (RISCV_HWPROBE_KEY_IMA_EXT_0)
+// v8: RISCV_HWPROBE_IMA_V→has_rvv_
+// v8: RISCV_HWPROBE_IMA_FD→has_fpu_
+// v8: RISCV_HWPROBE_EXT_ZBA→has_zba_
+// v8: RISCV_HWPROBE_EXT_ZBB→has_zbb_
+// v8: RISCV_HWPROBE_EXT_ZBS→has_zbs_
+// v8: RISCV_HWPROBE_EXT_ZFA→has_zfa_
+// v8: RISCV_HWPROBE_EXT_ZFH→has_zfh_
+// v8: RISCV_HWPROBE_EXT_ZVFH→has_zvfh_
+// v8: RISCV_HWPROBE_IMA_C→has_rvc_
+
+/// v8: cpu-riscv.cc IsaHasFeature — 下划线分隔 isa 串整词匹配 (如 "rv64imafdcv_zba_zbb")
+fn isa_has_feature(isa: Option<&str>, feature: &str) -> bool;
+
+impl Cpu {
+    /// v8: cpu-riscv.cc DetectFeatures
+    /// 主路: __NR_riscv_hwprobe syscall (Linux 6.4+), 9 扩展位见上表
+    /// 回退: /proc/cpuinfo "isa" 行 — "rv64imafdc"→fpu, "rv64imafdcv"→fpu+rvv
+    /// mmu: "mmu" 字段 sv48/sv39/sv57 顺序判定, 后命中者覆盖 (sv39 后于 sv48, sv57 最后)
+    /// vlen: has_rvv_ 时 __riscv_vlenb()*8 (target attribute arch=+v 编译)
+    #[cfg(target_arch = "riscv64")]
+    fn detect_features(&mut self) {
+        // Developer: syscall + 回退 + vlen 组装
+    }
+}

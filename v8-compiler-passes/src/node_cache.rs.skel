@@ -1,0 +1,59 @@
+// 由 tool/src/compiler/node-cache.js 从 v8/src/compiler/node-cache.h 生成; 修订就地改, 复跑覆盖
+// NodeCache — 键 → 节点槽缓存 (canonicalization 支撑)
+
+//! NodeCache: unordered_map<Key, Node*> 包装; Find 返回槽位指针
+//! (调用方: 槽空则自建节点回填 — 惰性 canonicalization)。
+
+#![allow(dead_code, non_camel_case_types)]
+
+/// v8: src/compiler/node-cache.h NodeCache
+pub struct NodeCache<Key: std::hash::Hash + Eq> {
+  /// 原 map_ — ZoneUnorderedMap<Key, Node*, Hash, Pred>
+  map: std::collections::HashMap<Key, Option<crate::node::Node>>,
+}
+
+impl<Key: std::hash::Hash + Eq + Clone> NodeCache<Key> {
+  /// v8: src/compiler/node-cache.h NodeCache::NodeCache
+  pub fn new(zone: *mut crate::zone::Zone) -> Self {
+    let _ = zone;
+    Self { map: Default::default() }
+  }
+
+  /// v8: src/compiler/node-cache.h NodeCache::Find
+  /// 原文: return &(map_[key]) — 返回键槽位 (operator[] 空槽插入);
+  /// Rust 侧以 entry 可变引用等价
+  pub fn find(&mut self, key: Key) -> &mut Option<crate::node::Node> {
+    self.map.entry(key).or_insert(None)
+  }
+
+  /// v8: src/compiler/node-cache.h NodeCache::GetCachedNodes
+  /// 原文: 空槽 (entry.second == nullptr) 跳过
+  pub fn get_cached_nodes(&self, nodes: &mut Vec<crate::node::Node>) {
+    for entry in self.map.values() {
+      if let Some(node) = entry {
+        nodes.push(*node);
+      }
+    }
+  }
+}
+
+// —— 默认缓存类型 (v8: src/compiler/node-cache.h) ——
+/// v8: using Int32NodeCache = NodeCache<int32_t>;
+pub type Int32NodeCache = NodeCache<i32>;
+/// v8: using Int64NodeCache = NodeCache<int64_t>;
+pub type Int64NodeCache = NodeCache<i64>;
+/// v8: using RelocInt32NodeCache = NodeCache<RelocInt32Key>;
+pub type RelocInt32NodeCache = NodeCache<RelocInt32Key>;
+/// v8: using RelocInt64NodeCache = NodeCache<RelocInt64Key>;
+pub type RelocInt64NodeCache = NodeCache<RelocInt64Key>;
+
+/// v8: src/compiler/node-cache.h RelocInfoMode — 仅取数值 (char)
+pub type RelocInfoMode = i8;
+/// v8: using RelocInt32Key = std::pair<int32_t, RelocInfoMode>;
+pub type RelocInt32Key = (i32, RelocInfoMode);
+/// v8: using RelocInt64Key = std::pair<int64_t, RelocInfoMode>;
+pub type RelocInt64Key = (i64, RelocInfoMode);
+/// v8: using RelocInt32NodeCache = NodeCache<RelocInt32Key>;
+pub type RelocInt32NodeCache = NodeCache<RelocInt32Key>;
+/// v8: using RelocInt64NodeCache = NodeCache<RelocInt64Key>;
+pub type RelocInt64NodeCache = NodeCache<RelocInt64Key>;

@@ -1,0 +1,53 @@
+// 由 tool/src/compiler/turboshaft/wasm-revec-reducer.h.js 从 v8/src/compiler/turboshaft/wasm-revec-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 重向量化: SLP 式 128->256 位打包
+
+/// 原版 NodeGroup — 128 位节点对 (2) 为重向量化单元
+/// v8: wasm-revec-reducer.h NodeGroup
+pub struct NodeGroup {
+  /// kSize = kSimd256Size / kSimd128Size
+  pub nodes: [OpIndex; 2],
+}
+
+/// 原版 PackNode::NodeType — 打包节点五类
+/// v8: wasm-revec-reducer.h PackNode::NodeType
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum NodeType {
+  /// kDefault: 自然成对
+  Default = 0,
+  /// kForcePackNode: 不满足打包规则但可 Pack128To256 强合 (x64 vinsertf128)
+  ForcePackNode = 1,
+  /// kShufflePackNode: 特定 shuffle 信息
+  ShufflePackNode = 2,
+  /// kBundlePackNode: i8x16/i16x8 -> f32x4 转换束
+  BundlePackNode = 3,
+  /// kIntersectPackNode: 已被现有 PackNode 打包的节点
+  IntersectPackNode = 4,
+}
+
+/// 原版 ShufflePackNode::SpecificInfo::Kind (7 态):
+/// - kS256Load32Transform
+/// - kS256Load64Transform
+/// - kS256Load8x8U
+/// - kShufd
+/// - kShufps
+/// - kS32x8UnpackLow
+/// - kS32x8UnpackHigh
+/// v8: wasm-revec-reducer.h ShufflePackNode::SpecificInfo::Kind
+pub enum ShufflePackKind;
+
+/// 原版 SLPTree — superword level parallelism 树, 递归深度上限
+/// kMaxRecursionDepth = 1000。
+/// v8: wasm-revec-reducer.h SLPTree
+pub const K_MAX_RECURSION_DEPTH: usize = 1000;
+
+/// 原版结构面:
+/// - ForcePackNode (ForcePackType 枚举) / ShufflePackNode / BundlePackNode
+///   三类 PackNode 子类; is_force_packing() 含 kForcePackNode 与
+///   kIntersectPackNode
+/// - SLPTree 方法面 (cc, 7 个): Print, HasReorderInput, HasInputDependencies, AddLoadToShufflePackNode, TryMatchExtendIntToF32x4, IsSideEffectFreeRange, IsEqual
+/// - WasmRevecAnalyzer 方法面 (cc, 6 个): MergeSLPTree, IsSupportedReduceSeed, ProcessBlock, Run, DecideVectorize, Print
+/// - WasmRevecReducer: UniformReducerAdapter 基, 按树重写
+/// v8: src/compiler/turboshaft/wasm-revec-reducer.{h,cc}
+pub struct WasmRevecAnalyzer;
+pub struct WasmRevecReducer;

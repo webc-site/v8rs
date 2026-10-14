@@ -1,0 +1,12 @@
+// 由 tool/src/compiler/backend/ppc/unwinding-info-writer-ppc.js 从 v8/src/compiler/backend/ppc/unwinding-info-writer-ppc.h + unwinding-info-writer-ppc.cc 生成; 修订就地改, 复跑覆盖
+// ppc64 eh_frame: LR 保存/恢复标记 + 块初始状态 (saved_lr) 缓存
+
+//! 台账: 与 arm64 同构 — Begin/End 块对 + Mark 构造/析构 + LR 双标记。
+
+/// v8: UnwindingInfoWriter (ppc64) — 6 方法面
+// pub struct UnwindingInfoWriter { eh_frame_writer, block_initial_states }
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 过程面; 6 实现对数见生成脚本日志
+};

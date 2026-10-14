@@ -1,0 +1,12 @@
+// 由 tool/src/regexp/regexp-stack.cc.js 从 v8/src/regexp/regexp-stack.cc 生成; 修订就地改, 复跑覆盖
+// 13 定义处置表 (审计专用): 落地以 regexp_stack.rs 就地修订为准
+
+//! regexp-stack.cc → regexp_stack.rs 映射 (13 定义, 0 缺项):
+//! - StackScope(Isolate*) → StackScope::new(&Stack) 参数注入; ~StackScope → Drop
+//!   (原版 CHECK_EQ 走 v8_base::logging check_op_eq + v8_fatal, 非 panic 路径)
+//! - Stack()/~Stack → Stack::new() / Drop; New/Delete → new()→Box 交付 + drop 承接
+//!   (沙箱页分配分支 4 组 #ifdef 排除, 见票单)
+//! - ThreadLocal::ResetToStaticStack/IfEmpty/FreeAndInvalidate/NewDynamicStack/DeleteDynamicStack
+//!   → 同名 snake_case 私有方法 (动态栈 = Box<[u8]> 精确 size 分配; 零初始化超集语义见票单)
+//! - EnsureCapacity: 上限 kNullAddress / max(最小动态栈) / 顶拷贝 / delta 复用 / limit+slack 1:1
+//! - ArchiveStack/RestoreStack → pub unsafe fn (char* 契约 → *mut u8 + SAFETY 块)

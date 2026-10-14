@@ -1,0 +1,42 @@
+[package]
+name = "v8-bigint"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-bigint"
+keywords = []
+categories = []
+# base.rs 是评测公共模块 (被 main.rs `#[path]` 引入), 不希望被自动发现为独立 bench
+autobenches = false
+
+[features]
+default = []
+# 单独评测 num-bigint (malachite-nz 编译过重, 不引入, 已在评测报告说明)
+bench-num-bigint = []
+# 全部对比库评测
+bench = ["bench-num-bigint"]
+
+[[bench]]
+name = "bigint"
+path = "benches/main.rs"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+thiserror = "2.0.21"
+
+[dev-dependencies]
+aok = "0.1.18"
+criterion = "0.8.2"
+ctor = "1.0.13"
+fastrand = "2.5.0"
+humansize = "2.1.3"
+log = "0.4.34"
+log_init = "0.1.39"
+num-bigint = "0.5.1"
+rusty_alloc-api = { workspace = true }
+

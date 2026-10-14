@@ -1,0 +1,154 @@
+#!/usr/bin/env bun
+// v8/src/compiler/control-path-state.h (单文件, 无 .cc)
+// → v8-compiler-passes/src/control_path_state.rs.skel
+//
+// 规则面: NodeUniqueness 枚举 (2 变体)、ControlPathState 泛型契约
+// (NodeState 须有 IsSet 方法 + node 成员, static_assert 逐条)、
+// AdvancedReducerWithControlPathState 基类字段与方法签名。
+import { readV8, writeSrc, banner } from "../../lib.js";
+
+const h = readV8("src/compiler/control-path-state.h");
+
+// —— 哨兵 ——
+const sentinels = [
+  [/enum NodeUniqueness \{ kUniqueInstance, kMultipleInstances \};/, "NodeUniqueness"],
+  [/template <typename NodeState, NodeUniqueness node_uniqueness>\nclass ControlPathState \{/, "ControlPathState 模板"],
+  [/std::is_member_function_pointer_v<decltype\(&NodeState::IsSet\)>/, "IsSet 契约"],
+  [/std::is_member_object_pointer_v<decltype\(&NodeState::node\)>/, "node 契约"],
+  [/FunctionalList<FunctionalList<NodeState>> blocks_;/, "blocks_ 数据结构"],
+  [/PersistentMap<NodeWithPathDepth, NodeState> states_;/, "states_ 数据结构"],
+  [/class AdvancedReducerWithControlPathState : public AdvancedReducer \{/, "reducer 基类"],
+  [/Reduction TakeStatesFromFirstControl\(Node\* node\);/, "TakeStatesFromFirstControl"],
+  [/Reduction UpdateStates\(\n      Node\* state_owner,\n      ControlPathState<NodeState, node_uniqueness> new_state\);/, "UpdateStates 单参"],
+  [/bool in_new_block\);/, "UpdateStates 五参"],
+];
+for (const [re, name] of sentinels) {
+  if (!re.test(h)) throw new Error(`哨兵缺失: ${name}`);
+}
+// UpdateStates 重载 2
+if ([...h.matchAll(/Reduction UpdateStates\(/g)].length !== 2) throw new Error("UpdateStates 重载 != 2");
+
+const body = `${banner("src/compiler/control-path-state.js", "src/compiler/control-path-state.h", "ControlPathState — 控制路径状态块链 (branch-elimination 等共用基类)")}
+//! ControlPathState: 状态按代码块 (IfTrue/IfFalse → Merge 之间) 组织成
+//! FunctionalList 嵌套链; states_ 为快查镜像 PersistentMap, 两者恒同
+//! (BlocksAndStatesInvariant)。
+//!
+//! 规则面: 枚举 + 泛型契约 + 基类签名。
+//! 语义面 (推迟): ResetToCommonAncestor 的最长公共前缀回退。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/control-path-state.h NodeUniqueness
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NodeUniqueness {
+  /// kUniqueInstance — 一节点一状态 (depth 恒 0)
+  UniqueInstance,
+  /// kMultipleInstances — 最新状态优先 (depth 计数)
+  MultipleInstances,
+}
+
+/// v8: src/compiler/control-path-state.h ControlPathState
+/// 契约 (static_assert): NodeState 须有 IsSet() 方法与 node 成员。
+/// 数据: blocks_ = FunctionalList<FunctionalList<NodeState>> (块链);
+/// states_ = PersistentMap<(Node*, depth), NodeState> 镜像。
+pub struct ControlPathState<NodeState> {
+  /// 原 blocks_
+  pub blocks: crate::functional_list::FunctionalList<crate::functional_list::FunctionalList<NodeState>>,
+  /// 原 states_ — (节点, 路径深度) → 状态; UniqueInstance 时深度恒 0
+  pub states: crate::persistent_map::PersistentMap<(crate::node::Node, usize), NodeState>,
+  /// 模板参 node_uniqueness
+  pub node_uniqueness: NodeUniqueness,
+}
+
+impl<NodeState: Default + Clone> ControlPathState<NodeState> {
+  /// v8: src/compiler/control-path-state.h ControlPathState::ControlPathState
+  pub fn new(zone: &mut crate::zone::Zone) -> Self {
+    let _ = zone;
+    Self { blocks: Default::default(), states: Default::default(), node_uniqueness: NodeUniqueness::UniqueInstance }
+  }
+
+  /// v8: src/compiler/control-path-state.h ControlPathState::depth
+  /// 原文: kMultipleInstances ? depth_if_multiple_instances : 0
+  fn depth(&self, depth_if_multiple_instances: usize) -> usize {
+    if self.node_uniqueness == NodeUniqueness::MultipleInstances { depth_if_multiple_instances } else { 0 }
+  }
+
+  /// v8: src/compiler/control-path-state.h ControlPathState::LookupState
+  /// 原文: 默认 NodeState{} 兜底
+  pub fn lookup_state(&self, node: crate::node::Node) -> NodeState {
+    todo!("states_ 查 (node, depth)")
+  }
+
+  /// v8: src/compiler/control-path-state.h ControlPathState::AddState
+  pub fn add_state(&mut self, zone: &mut crate::zone::Zone, node: crate::node::Node, state: NodeState, hint: &ControlPathState<NodeState>) {
+    let _ = (zone, hint);
+    todo!("块链空则新块; 前端追加 + states_ 镜像")
+  }
+
+  /// v8: src/compiler/control-path-state.h ControlPathState::AddStateInNewBlock
+  pub fn add_state_in_new_block(&mut self, zone: &mut crate::zone::Zone, node: crate::node::Node, state: NodeState) {
+    let _ = zone;
+    todo!("强制新块")
+  }
+
+  /// v8: src/compiler/control-path-state.h ControlPathState::ResetToCommonAncestor
+  pub fn reset_to_common_ancestor(&mut self, other: ControlPathState<NodeState>) {
+    let _ = other;
+    todo!("最长公共前缀回退")
+  }
+
+  /// v8: src/compiler/control-path-state.h ControlPathState::IsEmpty
+  pub fn is_empty(&self) -> bool {
+    self.blocks.size() == 0
+  }
+}
+
+/// v8: src/compiler/control-path-state.h AdvancedReducerWithControlPathState
+/// 基类: node_states_ (控制节点 → 状态) + reduced_ 已归标记
+pub struct AdvancedReducerWithControlPathState<NodeState> {
+  /// 原 zone_
+  pub zone: *mut crate::zone::Zone,
+  /// 原 node_states_ — NodeAuxData<ControlPathState>
+  pub node_states: crate::node_aux_data::NodeAuxData<ControlPathState<NodeState>>,
+  /// 原 reduced_ — NodeAuxData<bool>
+  pub reduced: crate::node_aux_data::NodeAuxData<bool>,
+}
+
+impl<NodeState: Default + Clone> AdvancedReducerWithControlPathState<NodeState> {
+  /// v8: src/compiler/control-path-state.h AdvancedReducerWithControlPathState 构造
+  pub fn new(editor: &mut dyn crate::graph_reducer::Editor, zone: *mut crate::zone::Zone, graph: &crate::graph::TFGraph) -> Self {
+    let _ = (editor, graph);
+    todo!("两个 NodeAuxData 以 NodeCount 初始化")
+  }
+
+  /// v8: src/compiler/control-path-state.h TakeStatesFromFirstControl
+  pub fn take_states_from_first_control(&mut self, node: crate::node::Node) -> crate::graph_reducer::Reduction {
+    todo!("承继首个控制输入的状态")
+  }
+
+  /// v8: src/compiler/control-path-state.h UpdateStates (单参版)
+  pub fn update_states(&mut self, state_owner: crate::node::Node, new_state: ControlPathState<NodeState>) -> crate::graph_reducer::Reduction {
+    todo!("写回 + revisit")
+  }
+
+  /// v8: src/compiler/control-path-state.h UpdateStates (五参版)
+  /// prev_states + additional_state@additional_node; in_new_block 强制新块
+  pub fn update_states_with(&mut self, state_owner: crate::node::Node, prev_states: ControlPathState<NodeState>, additional_node: crate::node::Node, additional_state: NodeState, in_new_block: bool) -> crate::graph_reducer::Reduction {
+    let _ = (additional_node, additional_state, in_new_block);
+    todo!("AddState[InNewBlock] + 写回")
+  }
+
+  /// v8: src/compiler/control-path-state.h GetState
+  pub fn get_state(&self, node: crate::node::Node) -> ControlPathState<NodeState> {
+    todo!("node_states_.Get(node)")
+  }
+
+  /// v8: src/compiler/control-path-state.h IsReduced
+  pub fn is_reduced(&self, node: crate::node::Node) -> bool {
+    todo!("reduced_.Get(node)")
+  }
+}
+`;
+
+const p = writeSrc("v8-compiler-passes", "control_path_state.rs.skel", body);
+console.log(`written ${p}\n枚举=1 (NodeUniqueness 2) UpdateStates重载=2 方法面=9 数据结构=2 (FunctionalList嵌套+PersistentMap)`);

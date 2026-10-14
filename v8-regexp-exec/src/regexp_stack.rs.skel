@@ -1,0 +1,20 @@
+// 由 tool/src/regexp/regexp-stack.h.js 从 v8/src/regexp/regexp-stack.h 生成; 修订就地改, 复跑覆盖
+// 签名骨架基线 (审计专用): 常量/字段序/方法全集逐项 1:1; 落地以 regexp_stack.rs 就地修订为准
+
+//! regexp-stack.h → regexp_stack.rs 处置表 (27 方法 / 12 常量):
+//! - kSlotSize 非 PPC64/S390X 分支 = K_INT32_SIZE; 沙箱硬件分支排除
+//! - ThreadLocal: repr(C) 六字段序 1:1; offset 常量 ×3 + K_THREAD_LOCAL_SIZE
+//! - Stack::New/Delete → Stack::new() (Box 堆定址静态区) + Drop
+//! - StackScope(Isolate*) → StackScope::new(&Stack) 参数注入 (Isolate L3 前占位)
+//! - friend 访存面 → pub thread_local_address() + K_*_OFFSET (代码生成侧消费)
+//! - 锁: 0 处 (线程亲和 !Send/!Sync + archive/restore)
+
+// pub const K_SLOT_SIZE / K_STACK_LIMIT_SLACK_SLOT_COUNT / K_STACK_LIMIT_SLACK_SIZE
+// pub const K_MAXIMUM_STACK_SIZE / K_STATIC_STACK_SIZE / K_MINIMUM_DYNAMIC_STACK_SIZE
+// const K_MEMORY_TOP; static_assert ×3 → const _: () = assert!(..)
+// struct ThreadLocal (repr(C), Clone+Copy) + INIT + 6 方法
+// pub struct Stack { static_stack_: Box<UnsafeCell<[u8; K]>>, thread_local_: UnsafeCell<ThreadLocal> }
+//   new/begin/end/memory_top/stack_pointer/memory_size/ensure_capacity/
+//   archive_space_per_thread/archive_stack/restore_stack/free_thread_resources/thread_local_address
+//   私有: sp_top_delta/reset_if_empty/is_valid/static_stack_ptr/tl
+// pub struct StackScope<'a> { regexp_stack_: &Stack, old_sp_top_delta_: isize } + Drop

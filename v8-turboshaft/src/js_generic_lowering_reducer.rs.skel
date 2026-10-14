@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/turboshaft/js-generic-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/js-generic-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// JS 泛型操作降级 reducer
+
+/// v8: src/compiler/turboshaft/js-generic-lowering-reducer.h JSGenericLoweringReducer
+/// 泛型二元/一元 → builtin 调用
+pub struct JSGenericLoweringReducer {
+  pub placeholder: (),
+}
+
+impl JSGenericLoweringReducer {
+  /// 原版 V<Object> REDUCE(GenericBinop)(V<Object> left, V<Object> right, V<LazyFrameState> frame_state, V<Context> context, GenericBinopOp::Kind kind, LazyDeoptOnThrow lazy_deopt_on_throw)
+  /// v8: src/compiler/turboshaft/js-generic-lowering-reducer.h JSGenericLoweringReducer::REDUCE(GenericBinop)
+  pub fn reduce_generic_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Object> REDUCE(GenericUnop)(V<Object> input, V<LazyFrameState> frame_state, V<Context> context, GenericUnopOp::Kind kind, LazyDeoptOnThrow lazy_deopt_on_throw)
+  /// v8: src/compiler/turboshaft/js-generic-lowering-reducer.h JSGenericLoweringReducer::REDUCE(GenericUnop)
+  pub fn reduce_generic_unop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(ToNumberOrNumeric)(V<Object> input, V<LazyFrameState> frame_state, V<Context> context, Object::Conversion kind, LazyDeoptOnThrow lazy_deopt_on_throw)
+  /// v8: src/compiler/turboshaft/js-generic-lowering-reducer.h JSGenericLoweringReducer::REDUCE(ToNumberOrNumeric)
+  pub fn reduce_to_number_or_numeric(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

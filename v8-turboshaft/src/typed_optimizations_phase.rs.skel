@@ -1,0 +1,14 @@
+// 由 tool/src/compiler/turboshaft/typed-optimizations-phase.h.js 从 v8/src/compiler/turboshaft/typed-optimizations-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 类型优化: 借类型做常量折叠
+
+/// 原版 TypedOptimizationsPhase — 输入图精确类型 + TypedOptimizationsReducer
+/// v8: src/compiler/turboshaft/typed-optimizations-phase.{h,cc}
+pub struct TypedOptimizationsPhase;
+
+impl TypedOptimizationsPhase {
+  /// v8: cc Run —
+  /// - typing args: InputGraphTyping=kPrecise, OutputGraphTyping=kNone
+  /// - UnparkedScope 仅 DEBUG (trace_typing)
+  /// - CopyingPhase<turboshaft::TypedOptimizationsReducer, turboshaft::TypeInferenceReducer>::Run
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

@@ -1,0 +1,16 @@
+// 由 tool/src/compiler/wasm-inlining-into-js.js 从 v8/src/compiler/wasm-inlining-into-js.h + wasm-inlining-into-js.cc 生成; 修订就地改, 复跑覆盖
+// 小 wasm 函数体直接内联进 JS 图
+
+//! wasm-inlining-into-js — wrapper 内联: JS→wasm 调用点直接建 wasm 体
+//! (参数计数受限; 走 wasm 解码器取函数体)。
+
+/// 原版 WasmIntoJSInliner — AllStatic
+pub struct WasmIntoJSInliner;
+
+impl WasmIntoJSInliner {
+  /// 原版 TryInlining — 唯一入口 (参数计数门控: 见 cc)
+  /// v8: src/compiler/wasm-inlining-into-js.cc WasmIntoJSInliner::TryInlining
+  pub fn try_inlining(zone: &Zone<'_>, module: &wasm::WasmModule, mcgraph: &mut MachineGraph<'_>, body: &wasm::FunctionBody, bytes: &[u8], source_position_table: &mut SourcePositionTable, inlining_id: i32) -> bool {
+    todo!("v8: src/compiler/wasm-inlining-into-js.cc WasmIntoJSInliner::TryInlining (解码器面: wasm FunctionBody 解码)")
+  }
+}

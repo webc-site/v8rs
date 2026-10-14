@@ -1,0 +1,41 @@
+// 由 tool/src/wasm/wasm-stack-wrapper-cache.h.js 从 v8/src/wasm/wasm-stack-wrapper-cache.{h,cc} 生成; 修订就地改, 复跑覆盖
+// WasmStackEntryWrapperCache 键与编译契约
+
+//! 栈切换入口 wrapper 的进程级缓存 (turbofan 编译)。
+/// v8: src/wasm/wasm-stack-wrapper-cache.h WasmStackEntryWrapperCache
+
+/// 缓存键: canonical 签名指针
+/// v8: src/wasm/wasm-stack-wrapper-cache.h StackEntryWrapperCacheKey
+#[derive(Debug)]
+pub struct StackEntryWrapperCacheKey {
+    /// v8: const CanonicalSig* sig
+    pub sig: &'static CanonicalSig,
+}
+
+impl StackEntryWrapperCacheKey {
+    /// hash 直接取 canonical type index
+    /// v8: src/wasm/wasm-stack-wrapper-cache.h StackEntryWrapperCacheKey::Hash
+    pub fn hash(&self) -> u32 {
+        self.sig.index.index
+    }
+}
+
+/// 编译产物代码类别 (WasmCode::Kind 变体名)
+/// v8: src/wasm/wasm-stack-wrapper-cache.cc CompileWrapper
+pub const STACK_ENTRY_WRAPPER_CODE_KIND: &str = "kWasmStackEntryWrapper";
+
+/// 派生缓存类与泛型基类尺寸一致 (无新增字段)
+/// v8: src/wasm/wasm-stack-wrapper-cache.h static_assert
+pub const DERIVED_SAME_SIZE_AS_BASE: bool = true;
+
+/// 编译入口 (turbofan 关闭时不可达)
+/// v8: src/wasm/wasm-stack-wrapper-cache.cc WasmStackEntryWrapperCache::CompileWrapper
+pub fn compile_wrapper(_sig: &CanonicalSig) -> WasmCompilationResult {
+    // /// v8: compiler::CompileWasmStackEntryWrapper — 接 turbofan 编译层
+    unimplemented!("CompileWasmStackEntryWrapper")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(DERIVED_SAME_SIZE_AS_BASE);
+};

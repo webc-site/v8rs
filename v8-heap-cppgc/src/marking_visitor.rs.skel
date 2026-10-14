@@ -1,0 +1,122 @@
+// 由 tool/src/heap/cppgc-internal/marking-visitor.js 从 v8/src/heap/cppgc-internal/marking-visitor.h + src/heap/cppgc-internal/marking-visitor.cc 生成; 修订就地改, 复跑覆盖
+// 标记期访问者五件套
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/marking-visitor.h MarkingVisitorBase
+pub struct MarkingVisitorBase {
+    /// v8: marking_state_
+    marking_state: *mut BasicMarkingState,
+}
+
+impl MarkingVisitorBase {
+    /// v8: src/heap/cppgc-internal/marking-visitor.cc MarkingVisitorBase::Visit
+    pub fn visit(&mut self, _object: *const core::ffi::c_void, desc: TraceDescriptor) {
+        // v8: MarkAndPush(desc.base_object_payload, desc)
+        unsafe { (*self.marking_state).mark_and_push(desc.base_object_payload, desc); }
+    }
+
+    /// v8: MarkingVisitorBase::VisitMultipleUncompressedMember
+    /// 数组逐槽步长 kSizeOfUncompressedMember, 空槽跳过; LoadAtomic 后逐个 MarkAndPush。
+    pub fn visit_multiple_uncompressed_member(&mut self, start: *const core::ffi::c_void, len: usize, get_desc: TraceDescriptorCallback) {
+        let mut it = start as *const u8;
+        let end = unsafe { it.add(len * K_SIZE_OF_UNCOMPRESSED_MEMBER) };
+        while it < end {
+            let object = unsafe { (*(it as *const RawPointer)).load_atomic() };
+            if !object.is_null() {
+                unsafe { (*self.marking_state).mark_and_push(object, get_desc(object)); }
+            }
+            it = unsafe { it.add(K_SIZE_OF_UNCOMPRESSED_MEMBER) };
+        }
+    }
+
+    /// v8: MarkingVisitorBase::VisitWeak
+    pub fn visit_weak(&mut self, _object: *const core::ffi::c_void, desc: TraceDescriptor, weak_callback: WeakCallback, parameter: *const core::ffi::c_void) {
+        unsafe { (*self.marking_state).mark_and_push(desc.base_object_payload, desc); }
+        unsafe { (*self.marking_state).register_weak_reference_if_needed(desc, weak_callback, parameter); }
+    }
+
+    /// v8: MarkingVisitorBase::VisitEphemeron
+    pub fn visit_ephemeron(&mut self, key: *const core::ffi::c_void, value: *const core::ffi::c_void, value_desc: TraceDescriptor) {
+        unsafe { (*self.marking_state).process_ephemeron(key, value, value_desc); }
+    }
+
+    /// v8: MarkingVisitorBase::VisitWeakContainer — 委托 ProcessWeakContainer(object, weak_desc, callback, data)
+    pub fn visit_weak_container(&mut self, object: *const core::ffi::c_void, _strong_desc: TraceDescriptor, weak_desc: TraceDescriptor, callback: WeakCallback, data: *const core::ffi::c_void) {
+        unsafe { (*self.marking_state).process_weak_container(object, weak_desc, callback, data); }
+    }
+
+    /// v8: MarkingVisitorBase::RegisterWeakCallback
+    pub fn register_weak_callback(&mut self, callback: WeakCallback, parameter: *const core::ffi::c_void) {
+        unsafe { (*self.marking_state).register_weak_custom_callback(callback, parameter); }
+    }
+
+    /// v8: MarkingVisitorBase::HandleMovableReference
+    pub fn handle_movable_reference(&mut self, slot: *mut *const core::ffi::c_void) {
+        unsafe { (*self.marking_state).register_movable_reference(slot); }
+    }
+}
+
+/// v8: src/heap/cppgc-internal/marking-visitor.h MutatorMarkingVisitor
+pub struct MutatorMarkingVisitor {
+    /// v8: MarkingVisitorBase 基类子对象
+    pub base: MarkingVisitorBase,
+}
+
+/// v8: src/heap/cppgc-internal/marking-visitor.h ConcurrentMarkingVisitor
+pub struct ConcurrentMarkingVisitor {
+    /// v8: MarkingVisitorBase 基类子对象
+    pub base: MarkingVisitorBase,
+}
+
+impl ConcurrentMarkingVisitor {
+    /// v8: src/heap/cppgc-internal/marking-visitor.cc DeferTraceToMutatorThreadIfConcurrent
+    /// 并发线程不直接 trace: 压 bailout worklist (回调 + 尺寸), 由 mutator 补 trace。
+    pub fn defer_trace_to_mutator_thread_if_concurrent(&mut self, object: *const core::ffi::c_void, callback: TraceCallback, bailedout_size: usize) -> bool {
+        unsafe { (*self.base.marking_state).concurrent_marking_bailout_worklist_mut().push(ConcurrentMarkingBailoutItem {
+            parameter: object, callback, bailedout_size,
+        }); }
+        true
+    }
+    /// v8: IsConcurrent — 恒真
+    pub fn is_concurrent(&self) -> bool { true }
+}
+
+/// v8: src/heap/cppgc-internal/marking-visitor.h RootMarkingVisitor
+pub struct RootMarkingVisitor {
+    /// v8: mutator_marking_state_
+    mutator_marking_state: *mut MutatorMarkingState,
+}
+
+impl RootMarkingVisitor {
+    /// v8: src/heap/cppgc-internal/marking-visitor.cc RootMarkingVisitor::VisitRoot
+    pub fn visit_root(&mut self, _object: *const core::ffi::c_void, desc: TraceDescriptor, _loc: SourceLocation) {
+        unsafe { (*self.mutator_marking_state).mark_and_push(desc.base_object_payload, desc); }
+    }
+    /// v8: RootMarkingVisitor::VisitWeakRoot
+    pub fn visit_weak_root(&mut self, _object: *const core::ffi::c_void, desc: TraceDescriptor, weak_callback: WeakCallback, parameter: *const core::ffi::c_void, _loc: SourceLocation) {
+        unsafe { (*self.mutator_marking_state).invoke_weak_roots_callback_if_needed(desc, weak_callback, parameter); }
+    }
+}
+
+/// v8: src/heap/cppgc-internal/marking-visitor.h ConservativeMarkingVisitor
+pub struct ConservativeMarkingVisitor {
+    /// v8: marking_state_
+    marking_state: *mut MutatorMarkingState,
+}
+
+impl ConservativeMarkingVisitor {
+    /// v8: src/heap/cppgc-internal/marking-visitor.cc VisitFullyConstructedConservatively
+    /// 动态标记 + TraceConservativelyCallback 走 header。
+    pub fn visit_fully_constructed_conservatively(&mut self, header: &mut HeapObjectHeader) {
+        todo!("DynamicallyMarkAddress + trace_conservatively")
+    }
+    /// v8: VisitInConstructionConservatively — 压 not_fully_constructed + bailout
+    pub fn visit_in_construction_conservatively(&mut self, header: &mut HeapObjectHeader, cb: TraceConservativelyCallback) {
+        todo!("压构造中 worklist")
+    }
+    /// v8: VisitPointer — 委托 TraceConservativelyIfNeeded (栈扫描入口)
+    pub fn visit_pointer(&mut self, address: *const core::ffi::c_void) {
+        trace_conservatively_if_needed(address);
+    }
+}

@@ -1,0 +1,20 @@
+// 由 tool/src/compiler/turboshaft/stack-check-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/stack-check-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// 栈检查降低: 栈溢出比较 + StackGuard 调用
+
+/// 原版 StackCheckLoweringReducer — 把 JS/Wasm 栈检查 op 降为
+/// 栈指针与 jslimit/wasm limit 的比较 + 条件调 StackGuard builtin。
+/// v8: src/compiler/turboshaft/stack-check-lowering-reducer.h
+pub struct StackCheckLoweringReducer;
+
+impl StackCheckLoweringReducer {
+  /// v8: REDUCE(JSStackCheck)(context, frame_state)
+  /// - 读 JS 栈限 ExternalReference::address_of_jslimit(isolate)
+  /// - 触发时 CallRuntime<runtime::StackGuard>(context, {})
+  ///   (带 gap 变体: runtime::StackGuardWithGap)
+  pub fn reduce_js_stack_check(&mut self, context: V<Context>, fs: V<FrameState>) -> V<None> { todo!() }
+
+  /// v8: REDUCE(WasmStackCheck)(kind)
+  /// kind 面: FunctionEntry / Loop
+  /// builtin 面: kWasmStackGuard / kWasmStackGuardLoop (growable stacks flag)
+  pub fn reduce_wasm_stack_check(&mut self, kind: WasmStackCheckKind) -> V<None> { todo!() }
+}

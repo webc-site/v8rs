@@ -1,0 +1,67 @@
+// 由 tool/src/compiler/feedback-source.js 从 v8/src/compiler/feedback-source.h + feedback-source.cc 生成; 修订就地改, 复跑覆盖
+// 反馈槽值类型: FeedbackVector+FeedbackSlot / BytecodeArray+offset
+
+
+/// 反馈来源 — (vector, slot) 二元组
+/// v8: src/compiler/feedback-source.h FeedbackSource
+#[derive(Clone, Copy)]
+pub struct FeedbackSource {
+    pub vector: IndirectHandle<FeedbackVector>,
+    pub slot: FeedbackSlot,
+}
+
+impl FeedbackSource {
+    /// 默认构造为无效 (DCHECK(!IsValid()))
+    /// v8: src/compiler/feedback-source.h FeedbackSource::FeedbackSource()
+    pub fn invalid() -> Self;
+    /// v8: src/compiler/feedback-source.h FeedbackSource::IsValid
+    pub fn is_valid(&self) -> bool { !self.vector.is_null() && !self.slot.is_invalid() }
+    /// v8: src/compiler/feedback-source.cc FeedbackSource::index
+    /// CHECK(IsValid()); 返回 FeedbackVector::GetIndex(slot)
+    pub fn index(&self) -> i32;
+}
+
+impl PartialEq for FeedbackSource {
+    /// v8: src/compiler/feedback-source.h FeedbackSource::Equal
+    fn eq(&self, other: &Self) -> bool { self.vector == other.vector && self.slot == other.slot }
+}
+impl Eq for FeedbackSource {}
+
+impl std::hash::Hash for FeedbackSource {
+    /// v8: src/compiler/feedback-source.h FeedbackSource::Hash
+    /// base::hash_combine(vector.address(), slot)
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H);
+}
+
+/// 嵌入式提示来源 — (bytecode_array, offset) 二元组
+/// v8: src/compiler/feedback-source.h EmbeddedFeedbackSource
+#[derive(Clone, Copy)]
+pub struct EmbeddedFeedbackSource {
+    pub bytecode_array: IndirectHandle<BytecodeArray>,
+    pub offset: i32,
+}
+
+impl EmbeddedFeedbackSource {
+    /// v8: src/compiler/feedback-source.h EmbeddedFeedbackSource::IsValid
+    pub fn is_valid(&self) -> bool { !self.bytecode_array.is_null() }
+}
+
+impl PartialEq for EmbeddedFeedbackSource {
+    /// v8: src/compiler/feedback-source.h EmbeddedFeedbackSource::Equal
+    fn eq(&self, other: &Self) -> bool {
+        self.bytecode_array == other.bytecode_array && self.offset == other.offset
+    }
+}
+impl Eq for EmbeddedFeedbackSource {}
+
+impl std::hash::Hash for EmbeddedFeedbackSource {
+    /// v8: src/compiler/feedback-source.h EmbeddedFeedbackSource::Hash
+    /// base::hash_combine(bytecode_array.address(), offset)
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H);
+}
+
+// Display: "FeedbackSource(slot)" / "FeedbackSource(INVALID)"
+//          "EmbeddedFeedbackSource(offset)" / "(INVALID)"
+// —— 对数基准 ——
+// FeedbackSource 成员 vector+slot / Embedded bytecode_array_+offset_
+// cc 定义面 8 处

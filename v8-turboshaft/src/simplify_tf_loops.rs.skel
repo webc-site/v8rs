@@ -1,0 +1,22 @@
+// 由 tool/src/compiler/turboshaft/simplify-tf-loops.h.js 从 v8/src/compiler/turboshaft/simplify-tf-loops.{h,cc} 生成; 修订就地改, 复跑覆盖
+// TF 循环化简: 多输入 Loop 拆二输入 (Turbofan 前置)
+
+/// 原版 SimplifyTFLoops — Turbofan AdvancedReducer (非 Turboshaft reducer),
+/// 把 >2 输入的 Loop 约束为 2 输入: 新 Loop(2) 套 Merge。
+/// v8: src/compiler/turboshaft/simplify-tf-loops.{h,cc}
+/// namespace: v8::internal::compiler
+pub struct SimplifyTFLoops<'m> {
+  pub mcgraph: &'m mut MachineGraph,
+}
+
+impl<'m> SimplifyTFLoops<'m> {
+  /// v8: simplify-tf-loops.cc Reduce
+  /// - opcode != kLoop 或 InputCount <= 2 -> NoChange
+  /// - new_loop = NewNode(common->Loop(2), input0, node)
+  /// - 原 node RemoveInput(0) 后 ChangeOp 为 Merge(InputCount)
+  /// - phi: 对 use_edges 中 Phi/EffectPhi
+  ///   (Loop×1, Merge×1, Phi×2, EffectPhi×2)
+  ///   重建为支配输入 + new_phi(2), ReplaceWithValue(use, new_phi, new_phi, new_phi)
+  /// - control_uses (非 phi 控制边) 改接 new_loop
+  pub fn reduce(&mut self, node: &mut Node) -> Reduction { todo!() }
+}

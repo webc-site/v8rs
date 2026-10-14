@@ -1,0 +1,91 @@
+// 由 tool/src/compiler/phase.h.js 从 v8/src/compiler/phase.h 生成; 修订就地改, 复跑覆盖
+// 管线相位公共件: 相位名/zone 名/相位种类 + Turbolizer JSON 输出辅助
+
+//! phase — 相位元数据与 JSON 可视化辅助
+//!
+//! DECL_PIPELINE_PHASE_CONSTANTS(Name) 展开:
+//!   phase_name() = "V8.TF"#Name; kKind = PhaseKind::kTurbofan;
+//!   kCounterMode = kThreadSpecific; synchronization_point_name() = "Turbofan"#Name;
+//!   (RCS 开时再加 kRuntimeCallCounterId = kOptimize##Name)。
+
+use std::sync::LazyLock;
+
+/// 原版 PhaseKind — 相位所属管线
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PhaseKind {
+  /// kTurbofan
+  Turbofan,
+  /// kTurbolev
+  Turbolev,
+  /// kTurboshaft
+  Turboshaft,
+}
+
+// —— zone 名常量 (5 个, 字面量逐字一致) ——
+/// kCodegenZoneName
+pub const CODEGEN_ZONE_NAME: &str = "codegen-zone";
+
+/// kGraphZoneName
+pub const GRAPH_ZONE_NAME: &str = "graph-zone";
+
+/// kInstructionZoneName
+pub const INSTRUCTION_ZONE_NAME: &str = "instruction-zone";
+
+/// kRegisterAllocationZoneName
+pub const REGISTER_ALLOCATION_ZONE_NAME: &str = "register-allocation-zone";
+
+/// kRegisterAllocatorVerifierZoneName
+pub const REGISTER_ALLOCATOR_VERIFIER_ZONE_NAME: &str = "register-allocator-verifier-zone";
+
+/// 原版 DECL_PIPELINE_PHASE_CONSTANTS 展开 — 单相位常量包
+pub struct PhaseConstants {
+  /// "V8.TF"#Name
+  pub phase_name: &'static str,
+  /// PhaseKind (kTurbofan / kTurbolev / kTurboshaft)
+  pub kind: PhaseKind,
+  /// "Turbofan"#Name
+  pub synchronization_point_name: &'static str,
+  /// RuntimeCallCounterId::kOptimize##Name (RCS 开)
+  pub runtime_call_counter_id: Option<RuntimeCallCounterId>,
+}
+
+/// 原版 TurbolizerInstructionStartInfo — 单指令起点三元组
+pub struct TurbolizerInstructionStartInfo {
+  /// gap_pc_offset
+  pub gap_pc_offset: i32,
+  /// arch_instr_pc_offset
+  pub arch_instr_pc_offset: i32,
+  /// condition_pc_offset
+  pub condition_pc_offset: i32,
+}
+
+// —— Turbolizer JSON 辅助 (3 个 AsJSON 包装: InstructionStartsAsJSON, TurbolizerCodeOffsetsInfoAsJSON, BlockStartsAsJSON; SourcePosition/NodeOrigin 两 AsJSON 在 turbofan-graph-visualizer.h) ——
+
+/// 原版 InstructionStartsAsJSON — instructionOffsetToPCOffset 段
+/// v8: src/compiler/phase.h InstructionStartsAsJSON
+pub fn instruction_starts_as_json(out: &mut String, instr_starts: &[TurbolizerInstructionStartInfo]) {
+  todo!("v8: src/compiler/phase.h operator<<(InstructionStartsAsJSON)")
+}
+
+/// 原版 TurbolizerCodeOffsetsInfoAsJSON — codeOffsetsInfo 段 (字段 code_start_register_check/deopt_check/blocks_start/out_of_line_code/deoptimization_exits/pools/jump_tables）
+/// v8: src/compiler/phase.h operator<<(TurbolizerCodeOffsetsInfoAsJSON)
+pub fn code_offsets_info_as_json(out: &mut String, info: &TurbolizerCodeOffsetsInfo) {
+  todo!("v8: src/compiler/phase.h operator<<(TurbolizerCodeOffsetsInfoAsJSON)")
+}
+
+/// 原版 BlockStartsAsJSON — blockIdToOffset 段
+/// v8: src/compiler/phase.h operator<<(BlockStartsAsJSON)
+pub fn block_starts_as_json(out: &mut String, block_starts: &[i32]) {
+  todo!("v8: src/compiler/phase.h operator<<(BlockStartsAsJSON)")
+}
+
+/// 原版 PrintCode / TraceSchedule 自由函数
+/// v8: src/compiler/phase.h PrintCode
+pub fn print_code(isolate: &Isolate, code: &Code, info: &OptimizedCompilationInfo) {
+  todo!("v8: src/compiler/phase.h PrintCode")
+}
+
+/// v8: src/compiler/phase.h TraceSchedule
+pub fn trace_schedule(info: &OptimizedCompilationInfo, data: &TFPipelineData<'_, '_>, schedule: &Schedule<'_>, phase_name: &str) {
+  todo!("v8: src/compiler/phase.h TraceSchedule")
+}

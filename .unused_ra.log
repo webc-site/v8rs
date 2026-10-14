@@ -1,0 +1,44 @@
+Generating SCIP start...
+rust-analyzer: Loading discovering sysroot
+rust-analyzer: Loading querying project metadata
+rust-analyzer: Loading cargo metadata: started
+rust-analyzer: Loading cargo metadata: started
+rust-analyzer: Loading cargo metadata: finished
+rust-analyzer: Loading cargo metadata: finished
+rust-analyzer: Loading build script proc-macro2 run
+rust-analyzer: Loading build script quote run
+rust-analyzer: Loading build script rustversion run
+rust-analyzer: Loading build script rayon-core run
+rust-analyzer: Loading build script ref-cast run
+rust-analyzer: Loading build script crossbeam-utils run
+rust-analyzer: Loading build script thiserror run
+rust-analyzer: Loading build script serde_core run
+rust-analyzer: Loading build script zerocopy run
+rust-analyzer: Loading proc-macro strum_macros built
+rust-analyzer: Loading proc-macro enum_dispatch built
+rust-analyzer: Loading proc-macro ref-cast-impl built
+rust-analyzer: Loading proc-macro zerovec-derive built
+rust-analyzer: Loading proc-macro thiserror-impl built
+rust-analyzer: Loading proc-macro zerocopy-derive built
+rust-analyzer: Loading proc-macro displaydoc built
+rust-analyzer: Loading build script getrandom run
+rust-analyzer: Loading build script zmij run
+rust-analyzer: Loading build script parking_lot_core run
+rust-analyzer: Loading proc-macro zerofrom-derive built
+rust-analyzer: Loading proc-macro yoke-derive built
+rust-analyzer: Loading proc-macro phf_macros built
+rust-analyzer: Loading build script anyhow run
+rust-analyzer: Loading build script serde run
+rust-analyzer: Loading build script crossbeam-deque run
+rust-analyzer: Loading build script crossbeam-epoch run
+rust-analyzer: Loading build script alloca run
+rust-analyzer: Loading build script libm run
+rust-analyzer: Loading build script serde_json run
+rust-analyzer: Loading build script libc run
+rust-analyzer: Loading build script ahash run
+rust-analyzer: Loading build script num-traits run
+rust-analyzer: Loading proc-macro rustversion built
+rust-analyzer: Loading build script gxhash run
+rust-analyzer: Loading build script icu_properties_data run
+rust-analyzer: Loading proc-macro linktime-proc-macro built
+rust-analyzer: Loading proc-macro serde_derive built

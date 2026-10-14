@@ -1,0 +1,18 @@
+// 由 tool/src/base/sanitizer/msan.h.js 从 v8/src/base/sanitizer/msan.h 生成; 修订就地改, 复跑覆盖
+// MemorySanitizer 宏面
+
+//! v8 侧: 参数化宏 3 (双分支); DISABLE_MSAN 1
+//! Rust: extern "C" __msan_* 或空转; 语义面就地修订
+
+/// v8: MSAN_ALLOCATED_UNINITIALIZED_MEMORY(start, size)
+/// 语义: 标记新分配内存为未初始化 (shadow 置脏)
+pub fn msan_allocated_uninitialized_memory(start: *mut u8, size: usize) { let _ = (start, size); /* v8: __msan_allocated_memory */ }
+
+/// v8: MSAN_MEMORY_IS_INITIALIZED(start, size) — bool
+pub fn msan_memory_is_initialized(start: *const u8, size: usize) -> bool { let _ = (start, size); true }
+
+/// v8: MSAN_CHECK_MEM_IS_INITIALIZED(start, byte_size) — CHECK 失败即崩
+pub fn msan_check_mem_is_initialized(start: *const u8, size: usize) { let _ = (start, size); }
+
+/// v8: DISABLE_MSAN — no_sanitize("memory") (Rust 恒空)
+// 宏对账 (v8 解析 3 项): MSAN_ALLOCATED_UNINITIALIZED_MEMORY, MSAN_MEMORY_IS_INITIALIZED, MSAN_CHECK_MEM_IS_INITIALIZED

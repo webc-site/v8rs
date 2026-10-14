@@ -1,0 +1,591 @@
+// 由 tool/src/heap/heap-visitor.h.js 从 v8/src/heap/heap-visitor.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 堆访问者: 类型分发 X-macro 展开与定制开关
+
+/// 对象大小可选值 (对应 class MaybeObjectSize final — std::optional<size_t> 平替)。
+/// raw_size_ == 0 表 None; AssumeSize 在 debug 下断言非 0。
+/// v8: src/heap/heap-visitor.h MaybeObjectSize
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct MaybeObjectSize {
+  raw_size: usize,
+}
+
+impl MaybeObjectSize {
+  /// 对应 explicit MaybeObjectSize(size_t): DCHECK_GT(size, 0)
+  pub fn new(size: usize) -> Self {
+    debug_assert!(size > 0);
+    Self { raw_size: size }
+  }
+
+  /// 对应 MaybeObjectSize(): raw_size_(0)
+  pub fn none() -> Self {
+    Self { raw_size: 0 }
+  }
+
+  /// 对应 AssumeSize: DCHECK_GT(raw_size_, 0) 后返回
+  pub fn assume_size(self) -> usize {
+    debug_assert!(self.raw_size > 0);
+    self.raw_size
+  }
+
+  /// 对应 IsNone: raw_size_ == 0
+  pub fn is_none(self) -> bool {
+    self.raw_size == 0
+  }
+}
+
+/// 访问者定制开关 (对应 HeapVisitor CRTP 的 8 个 constexpr 谓词, 默认值)。
+/// v8: src/heap/heap-visitor.h HeapVisitor
+pub trait VisitorSwitches {
+  const SHOULD_VISIT_MAP_POINTER: bool = true;
+  const SHOULD_VISIT_READ_ONLY_MAP_POINTER: bool = true;
+  const CAN_ENCOUNTER_FILLER_OR_FREE_SPACE: bool = true;
+  const SHOULD_USE_UNCHECKED_CAST: bool = false;
+  const ENABLE_CONCURRENT_VISITATION: bool = false;
+  const USE_PRECOMPUTED_OBJECT_SIZE: bool = false;
+  const SHOULD_VISIT_FULL_JS_OBJECT: bool = false;
+}
+
+/// 默认全开 (对应 HeapVisitor 基类默认)。
+pub struct DefaultSwitches;
+impl VisitorSwitches for DefaultSwitches {}
+
+/// 并发访问者开关 (对应 ConcurrentHeapVisitor: 并发停用)。
+pub struct ConcurrentSwitches;
+impl VisitorSwitches for ConcurrentSwitches {}
+
+/// 新生代访问者开关 (对应 NewSpaceVisitor: 不访 map 指针)。
+pub struct NewSpaceSwitches;
+impl VisitorSwitches for NewSpaceSwitches {
+  const SHOULD_VISIT_MAP_POINTER: bool = false;
+}
+
+/// 类型分发访问者骨架 (对应 HeapVisitor<ConcreteVisitor> + 3 张 VISIT X-macro 表)。
+/// v8: src/heap/heap-visitor.h HeapVisitor
+pub trait HeapVisitorSkeleton {
+  /// 对应 VISIT(AccessorInfo)
+  fn visit_ACCESSOR_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: AccessorInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(AllocationSite)
+  fn visit_ALLOCATION_SITE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: AllocationSite BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(BigInt)
+  fn visit_BIG_INT(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: BigInt BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(BytecodeWrapper)
+  fn visit_BYTECODE_WRAPPER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: BytecodeWrapper BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(CallSiteInfo)
+  fn visit_CALL_SITE_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: CallSiteInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Cell)
+  fn visit_CELL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Cell BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(CodeWrapper)
+  fn visit_CODE_WRAPPER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: CodeWrapper BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(ConsString)
+  fn visit_CONS_STRING(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: ConsString BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Context)
+  fn visit_CONTEXT(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Context BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(ContextCell)
+  fn visit_CONTEXT_CELL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: ContextCell BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(CoverageInfo)
+  fn visit_COVERAGE_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: CoverageInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(CppGCManagedBase)
+  fn visit_CPP_GCMANAGED_BASE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: CppGCManagedBase BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(DataHandler)
+  fn visit_DATA_HANDLER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: DataHandler BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(DescriptorArray)
+  fn visit_DESCRIPTOR_ARRAY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: DescriptorArray BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(DoubleStringCache)
+  fn visit_DOUBLE_STRING_CACHE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: DoubleStringCache BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(EmbedderDataArray)
+  fn visit_EMBEDDER_DATA_ARRAY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: EmbedderDataArray BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(EphemeronHashTable)
+  fn visit_EPHEMERON_HASH_TABLE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: EphemeronHashTable BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(ExternalString)
+  fn visit_EXTERNAL_STRING(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: ExternalString BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(FeedbackCell)
+  fn visit_FEEDBACK_CELL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: FeedbackCell BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(FeedbackMetadata)
+  fn visit_FEEDBACK_METADATA(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: FeedbackMetadata BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(FeedbackVector)
+  fn visit_FEEDBACK_VECTOR(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: FeedbackVector BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Foreign)
+  fn visit_FOREIGN(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Foreign BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(FunctionTemplateInfo)
+  fn visit_FUNCTION_TEMPLATE_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: FunctionTemplateInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(HeapNumber)
+  fn visit_HEAP_NUMBER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: HeapNumber BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(UninitializedHeapNumber)
+  fn visit_UNINITIALIZED_HEAP_NUMBER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: UninitializedHeapNumber BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(HashSeedWrapper)
+  fn visit_HASH_SEED_WRAPPER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: HashSeedWrapper BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(InterceptorInfo)
+  fn visit_INTERCEPTOR_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: InterceptorInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Hole)
+  fn visit_HOLE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Hole BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Map)
+  fn visit_MAP(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Map BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(MegaDomHandler)
+  fn visit_MEGA_DOM_HANDLER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: MegaDomHandler BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(NativeContext)
+  fn visit_NATIVE_CONTEXT(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: NativeContext BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Oddball)
+  fn visit_ODDBALL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Oddball BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(OnHeapBasicBlockProfilerData)
+  fn visit_ON_HEAP_BASIC_BLOCK_PROFILER_DATA(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: OnHeapBasicBlockProfilerData BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(PreparseData)
+  fn visit_PREPARSE_DATA(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: PreparseData BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(PropertyArray)
+  fn visit_PROPERTY_ARRAY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: PropertyArray BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(PropertyCell)
+  fn visit_PROPERTY_CELL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: PropertyCell BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(JSProxy)
+  fn visit_JSPROXY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSProxy BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(PrototypeInfo)
+  fn visit_PROTOTYPE_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: PrototypeInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(PrototypeSharedClosureInfo)
+  fn visit_PROTOTYPE_SHARED_CLOSURE_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: PrototypeSharedClosureInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(RegExpBoilerplateDescription)
+  fn visit_REG_EXP_BOILERPLATE_DESCRIPTION(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: RegExpBoilerplateDescription BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(RegExpDataWrapper)
+  fn visit_REG_EXP_DATA_WRAPPER(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: RegExpDataWrapper BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(ScopeInfo)
+  fn visit_SCOPE_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: ScopeInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SeqOneByteString)
+  fn visit_SEQ_ONE_BYTE_STRING(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SeqOneByteString BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SeqTwoByteString)
+  fn visit_SEQ_TWO_BYTE_STRING(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SeqTwoByteString BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SharedFunctionInfo)
+  fn visit_SHARED_FUNCTION_INFO(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SharedFunctionInfo BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SlicedString)
+  fn visit_SLICED_STRING(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SlicedString BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SmallOrderedHashMap)
+  fn visit_SMALL_ORDERED_HASH_MAP(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SmallOrderedHashMap BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SmallOrderedHashSet)
+  fn visit_SMALL_ORDERED_HASH_SET(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SmallOrderedHashSet BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SmallOrderedNameDictionary)
+  fn visit_SMALL_ORDERED_NAME_DICTIONARY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SmallOrderedNameDictionary BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SortState)
+  fn visit_SORT_STATE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SortState BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SourceTextModule)
+  fn visit_SOURCE_TEXT_MODULE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SourceTextModule BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SwissNameDictionary)
+  fn visit_SWISS_NAME_DICTIONARY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SwissNameDictionary BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(Symbol)
+  fn visit_SYMBOL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: Symbol BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(SyntheticModule)
+  fn visit_SYNTHETIC_MODULE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: SyntheticModule BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(ThinString)
+  fn visit_THIN_STRING(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: ThinString BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TransitionArray)
+  fn visit_TRANSITION_ARRAY(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TransitionArray BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(WeakCell)
+  fn visit_WEAK_CELL(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: WeakCell BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurbofanBitsetType)
+  fn visit_TURBOFAN_BITSET_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurbofanBitsetType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurbofanHeapConstantType)
+  fn visit_TURBOFAN_HEAP_CONSTANT_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurbofanHeapConstantType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurbofanOtherNumberConstantType)
+  fn visit_TURBOFAN_OTHER_NUMBER_CONSTANT_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurbofanOtherNumberConstantType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurbofanRangeType)
+  fn visit_TURBOFAN_RANGE_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurbofanRangeType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurbofanUnionType)
+  fn visit_TURBOFAN_UNION_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurbofanUnionType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurboshaftFloat64RangeType)
+  fn visit_TURBOSHAFT_FLOAT64_RANGE_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurboshaftFloat64RangeType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurboshaftFloat64SetType)
+  fn visit_TURBOSHAFT_FLOAT64_SET_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurboshaftFloat64SetType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurboshaftWord32RangeType)
+  fn visit_TURBOSHAFT_WORD32_RANGE_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurboshaftWord32RangeType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurboshaftWord32SetType)
+  fn visit_TURBOSHAFT_WORD32_SET_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurboshaftWord32SetType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurboshaftWord64RangeType)
+  fn visit_TURBOSHAFT_WORD64_RANGE_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurboshaftWord64RangeType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT(TurboshaftWord64SetType)
+  fn visit_TURBOSHAFT_WORD64_SET_TYPE(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: TurboshaftWord64SetType BodyDescriptor 待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSArrayBuffer) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSARRAY_BUFFER_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSArrayBuffer slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSDataViewOrRabGsabDataView) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSDATA_VIEW_OR_RAB_GSAB_DATA_VIEW_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSDataViewOrRabGsabDataView slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSDate) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSDATE_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSDate slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSExternalObject) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSEXTERNAL_OBJECT_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSExternalObject slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSFinalizationRegistry) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSFINALIZATION_REGISTRY_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSFinalizationRegistry slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSFunction) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSFUNCTION_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSFunction slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSGlobalProxy) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSGLOBAL_PROXY_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSGlobalProxy slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSObject) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSOBJECT_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSObject slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSRegExp) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSREG_EXP_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSRegExp slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSSynchronizationPrimitive) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSSYNCHRONIZATION_PRIMITIVE_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSSynchronizationPrimitive slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSTypedArray) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSTYPED_ARRAY_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSTypedArray slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSWeakCollection) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSWEAK_COLLECTION_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSWeakCollection slack 访问待对象族就位");
+  }
+
+  /// 对应 VISIT_WITH_SLACK(JSWeakRef) (JSObject slack 需全量访问时 ShouldVisitFullJSObject)
+  fn visit_JSWEAK_REF_with_slack(&mut self, object: &mut ()) -> usize {
+    unimplemented!("骨架: JSWeakRef slack 访问待对象族就位");
+  }
+
+  /// 对应 Visit(map, object, size) 主入口: 按 VisitorId 分发到上表
+  fn visit(&mut self, _map: (), _object: &mut ()) -> usize {
+    unimplemented!("骨架: VisitorId 分发待 instance-type 族就位");
+  }
+}
+
+// —— X-macro 展开台账: TYPED_VISITOR_ID_LIST (68 直列 V() + 11 IF_WASM +
+// 尾部 SIMPLE_HEAP_OBJECT_LIST1 展开; 后两者条件/另席, 此处登记直列部分) ——
+pub const TYPED_VISITOR_IDS: &[&str] = &[
+  "AccessorInfo",
+  "AllocationSite",
+  "BigInt",
+  "BytecodeWrapper",
+  "CallSiteInfo",
+  "Cell",
+  "CodeWrapper",
+  "ConsString",
+  "Context",
+  "ContextCell",
+  "CoverageInfo",
+  "CppGCManagedBase",
+  "DataHandler",
+  "DescriptorArray",
+  "DoubleStringCache",
+  "EmbedderDataArray",
+  "EphemeronHashTable",
+  "ExternalString",
+  "FeedbackCell",
+  "FeedbackMetadata",
+  "FeedbackVector",
+  "Foreign",
+  "FunctionTemplateInfo",
+  "HeapNumber",
+  "UninitializedHeapNumber",
+  "HashSeedWrapper",
+  "InterceptorInfo",
+  "Hole",
+  "Map",
+  "MegaDomHandler",
+  "NativeContext",
+  "Oddball",
+  "OnHeapBasicBlockProfilerData",
+  "PreparseData",
+  "PropertyArray",
+  "PropertyCell",
+  "JSProxy",
+  "PrototypeInfo",
+  "PrototypeSharedClosureInfo",
+  "RegExpBoilerplateDescription",
+  "RegExpDataWrapper",
+  "ScopeInfo",
+  "SeqOneByteString",
+  "SeqTwoByteString",
+  "SharedFunctionInfo",
+  "SlicedString",
+  "SmallOrderedHashMap",
+  "SmallOrderedHashSet",
+  "SmallOrderedNameDictionary",
+  "SortState",
+  "SourceTextModule",
+  "SwissNameDictionary",
+  "Symbol",
+  "SyntheticModule",
+  "ThinString",
+  "TransitionArray",
+  "WeakCell",
+  "TurbofanBitsetType",
+  "TurbofanHeapConstantType",
+  "TurbofanOtherNumberConstantType",
+  "TurbofanRangeType",
+  "TurbofanUnionType",
+  "TurboshaftFloat64RangeType",
+  "TurboshaftFloat64SetType",
+  "TurboshaftWord32RangeType",
+  "TurboshaftWord32SetType",
+  "TurboshaftWord64RangeType",
+  "TurboshaftWord64SetType",
+];
+
+/// TYPED_VISITOR_WITH_SLACK_ID_LIST (13 无条件 + 6 IF_WASM)。
+pub const TYPED_VISITOR_WITH_SLACK_IDS: &[&str] = &[
+  "JSArrayBuffer",
+  "JSDataViewOrRabGsabDataView",
+  "JSDate",
+  "JSExternalObject",
+  "JSFinalizationRegistry",
+  "JSFunction",
+  "JSGlobalProxy",
+  "JSObject",
+  "JSRegExp",
+  "JSSynchronizationPrimitive",
+  "JSTypedArray",
+  "JSWeakCollection",
+  "JSWeakRef",
+];
+pub const TYPED_VISITOR_WITH_SLACK_IDS_WASM: &[&str] = &[
+  "WasmGlobalObject",
+  "WasmInstanceObject",
+  "WasmMemoryObject",
+  "WasmSuspendingObject",
+  "WasmTableObject",
+  "WasmTagObject",
+];
+/// TRUSTED_VISITOR_ID_LIST 展开于 src/objects/map.h (CONCRETE_TRUSTED_OBJECT_TYPE_LIST1),
+/// TYPED_VISITOR_ID_LIST 尾部的 SIMPLE_HEAP_OBJECT_LIST1 展开于 src/objects/object-list-macros.h,
+/// 二者均另席覆盖; IF_WASM 11 条 (typed 列表内) 随 wasm 配置启用。
+
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(TYPED_VISITOR_IDS.len(), 68);
+  assert_eq!(TYPED_VISITOR_IDS[0], "AccessorInfo");
+  assert_eq!(TYPED_VISITOR_IDS[67], "WeakCell");
+  assert_eq!(TYPED_VISITOR_WITH_SLACK_IDS.len(), 13);
+  assert_eq!(TYPED_VISITOR_WITH_SLACK_IDS_WASM.len(), 6);
+  let s = MaybeObjectSize::new(24);
+  assert_eq!(s.assume_size(), 24);
+  assert!(!s.is_none());
+  assert!(MaybeObjectSize::none().is_none());
+  assert!(DefaultSwitches::SHOULD_VISIT_MAP_POINTER);
+  assert!(!NewSpaceSwitches::SHOULD_VISIT_MAP_POINTER);
+};

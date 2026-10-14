@@ -1,0 +1,18 @@
+// 由 tool/src/base/cpu/cpu-ppc.cc.js 从 v8/src/base/cpu/cpu-ppc.cc 生成; 修订就地改, 复跑覆盖
+// PPC64 探测 (auxv 缓存行 + power 代际判别)
+
+//! v8: src/base/cpu/cpu-ppc.cc
+
+impl Cpu {
+    /// v8: cpu-ppc.cc DetectFeatures (Linux, 非模拟器)
+    /// 遍历 /proc/self/auxv 的 Elf64_auxv_t:
+    ///   AT_PLATFORM    → 字符串指针, "power11"/"power10"/"power9" → part_ = kPPCPower{11,10,9}
+    ///   AT_ICACHEBSIZE → icache_line_size_
+    ///   AT_DCACHEBSIZE → dcache_line_size_
+    ///   AT_NULL        → 终止; part_ 无匹配时 -1
+    /// AIX: _system_configuration.implementation ∈ {POWER_10, POWER_9} (0x40000/0x20000 兜底宏)
+    #[cfg(target_arch = "powerpc64")]
+    fn detect_features(&mut self) {
+        // Developer: auxv 解析循环 + part 映射
+    }
+}

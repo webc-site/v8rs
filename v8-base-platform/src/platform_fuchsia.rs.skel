@@ -1,0 +1,46 @@
+// 由 tool/src/base/platform/platform-fuchsia.js 从 v8/src/base/platform/platform-fuchsia.cc 生成; 修订就地改, 复跑覆盖
+// Fuchsia 平台面 (非目标; Zircon VMO/VMAR 内存面)
+
+/// VMO 命名 (原版 static const char kVirtualMemoryName[])
+/// v8: src/base/platform/platform-fuchsia.cc kVirtualMemoryName
+pub const VIRTUAL_MEMORY_NAME: &str = "v8-virtualmem";
+
+// —— 内存模型登记: 一切映射皆 VMO ——
+/// v8: src/base/platform/platform-fuchsia.cc OS::Initialize
+/// 取 root VMAR 基址 (ZX_INFO_VMAR) 存 g_root_vmar_base; SetVmexResource 取执行权句柄
+/// v8: src/base/platform/platform-fuchsia.cc CreateAndMapVmo
+/// zx::vmo::create → set_property(ZX_PROP_NAME) →
+/// 需执行时 zx_vmo_replace_as_executable; PlacementMode kUseHint/kAnywhere
+/// v8: src/base/platform/platform-fuchsia.cc OS::Allocate / OS::Free
+/// 文件句柄不支持 (DCHECK(!handle)); Free = UnmapVmo(root_vmar, ...)
+/// v8: src/base/platform/platform-fuchsia.cc OS::AllocateShared / OS::FreeShared
+/// SharedMemoryHandle 即 zx::vmo
+/// v8: src/base/platform/platform-fuchsia.cc OS::Release — 直通 Free
+/// v8: src/base/platform/platform-fuchsia.cc OS::SetPermissions — zx_vmar_protect
+/// v8: src/base/platform/platform-fuchsia.cc OS::SetDataReadOnly — SetPermissions(kRead)
+/// v8: src/base/platform/platform-fuchsia.cc OS::SetMemoryRegionName — ZX_PROP_NAME
+/// v8: src/base/platform/platform-fuchsia.cc OS::RecommitPages / DiscardSystemPages /
+///   DecommitPages — decommit 语义经 ZX_VMO_OP / protect 组合
+/// v8: src/base/platform/platform-fuchsia.cc OS::SealPages — 恒 false
+/// v8: src/base/platform/platform-fuchsia.cc OS::CanReserveAddressSpace — 恒 true
+/// v8: src/base/platform/platform-fuchsia.cc OS::HasLazyCommits — 恒 true
+/// v8: src/base/platform/platform-fuchsia.cc OS::CreateAddressSpaceReservation /
+///   FreeAddressSpaceReservation — 子 VMAR
+/// v8: src/base/platform/platform-fuchsia.cc OS::CreateSharedMemoryHandleForTesting /
+///   DestroySharedMemoryHandle
+/// v8: src/base/platform/platform-fuchsia.cc OS::GetUserTime — zx_info_task_stats
+/// v8: src/base/platform/platform-fuchsia.cc OS::GetSharedLibraryAddresses — 空表
+/// v8: src/base/platform/platform-fuchsia.cc OS::SignalCodeMovingGC — 空体
+/// v8: src/base/platform/platform-fuchsia.cc OS::GetFirstFreeMemoryRangeWithin — 恒 nullopt
+/// v8: src/base/platform/platform-fuchsia.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-fuchsia.cc OS::CreateTimezoneCache — PosixDefaultTimezoneCache
+
+// —— ASR 10 面登记 ——
+/// v8: src/base/platform/platform-fuchsia.cc AddressSpaceReservation
+/// CreateSubReservation/FreeSubReservation/Allocate/Free/AllocateShared/FreeShared/
+/// SetPermissions/RecommitPages/DiscardSystemPages/DecommitPages — 皆子 VMAR 操作
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(VIRTUAL_MEMORY_NAME, "v8-virtualmem");
+};

@@ -1,0 +1,54 @@
+// 由 tool/src/heap/free-list.h.js 从 v8/src/heap/free-list.h + src/heap/free-list-inl.h 生成; 修订就地改, 复跑覆盖
+// FreeList 族头台账: 类 8 + Category 成员 21 + FreeList 成员 34 + Many/Cached/FastPath 族常量表 + inl 实体 4 + 展开侧 DEBUG 剥除
+
+// ══ free-list.h:1-525 + free-list-inl.h:1-47 → v8-heap-core/src/free_list.rs ══
+// ── 票面差异申报 (实测为准, 旧叙事证伪) ──
+// 本仓 v8/src/heap/free-list.h 为 2020 重构族: FreeListCategory + FreeList + FreeListMany 族 (8 类)。
+// 票面 SpaceSpecificFreeList / EnsureStarted / Push / Pop / Advance / PadAndSetLink / ComputeRequiredWaste /
+//   CommittedLength / UncommittedLength / Mutex 静态表 — h/cc 实测 0 存在 (上列 12 条 0-检锚);
+//   该族属旧版 V8 free-list 与 cppgc 变体, 本仓 v8/src/heap/cppgc-internal/free-list.h 不存在 (ls 实测) → 不落地。
+//   票面 Push/Pop 语义等价面 = FreeListCategory::Free 头插 (cc:93) / PickNodeFromList 弹出 (cc:36);
+//   Advance/Padded 链尾语义无对应实体 → 金标准以 Free/Pick/Search 链尾边界覆盖 (见测试映射表)。
+//   锁面: 原版无任何 Mutex (FreeList::wasted_bytes_ h:283 为 std::atomic) → Rust AtomicUsize relaxed 承接,
+//   禁 parking_lot (无锁语义可承接, 票面锁叙事证伪)。
+// 类族与行号:
+//   FreeListCategory (h:44-126) / FreeList (h:135-290) / FreeListMany (h:298-350) / FreeListManyCached (h:357-417)
+//   FreeListManyCachedFastPathBase (h:438-491) / FreeListManyCachedFastPath (h:493-497)
+//   FreeListManyCachedFastPathForNewSpace (h:499-504) / FreeListManyCachedOrigin (h:514-520)
+// FreeListCategory 成员 needle 全集 (22 条, 逐锚见脚本②):
+//   void Initialize\(FreeListCategoryType type\)
+//   void Unlink\(FreeList\* owner\);
+//   void Reset\(FreeList\* owner\);
+//   void RepairFreeList\(Heap\* heap\);
+//   void Relink\(FreeList\* owner\);
+//   void Free\(const Heap\* heap, const WritableFreeSpace& writable_free_space,
+//   Tagged<FreeSpace> PickNodeFromList\(size_t minimum_size,
+//   Tagged<FreeSpace> SearchForNodeInList\(const Heap\* heap, size_t minimum_size,
+//   inline bool is_linked\(FreeList\* owner\) const;
+//   bool is_empty\(\) \{ return top\(\)\.is_null\(\); \}
+//   uint32_t available\(\) const
+//   size_t SumFreeList\(\);
+//   int FreeListLength\(\);
+//   void IterateNodesForTesting\(Callback callback\)
+//   static constexpr int kVeryLongFreeList = 500;
+//   inline void UpdateCountersAfterAllocation\(size_t allocation_size\);
+//   Tagged<FreeSpace> top\(\) \{ return top_; \}
+//   void set_top\(Tagged<FreeSpace> top\)
+//   FreeListCategory\* prev\(\)
+//   FreeListCategory\* next\(\)
+//   void set_prev\(FreeListCategory\* prev\)
+//   void set_next\(FreeListCategory\* next\)
+// inl 实体 4: is_linked inl:17-20 / UpdateCountersAfterAllocation inl:22-24 / GetPageForCategoryType inl:26-34 / IsEmpty inl:36-42
+// categories_min (h:328-330) 24 值: 24, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536
+// kFastPath 族 (h:459-464): kFastPathFirstCategory=18 / kFastPathStart=2048 / kTinyObjectMaxSize=128 / kFastPathOffset=1920 / kFastPathFallBackTiny=15; static_assert h:466-468
+// v8_flags 运行态 (h:447-449 minor_ms 分支) — v8-flags 全局单例他票 → ctor 参数注入 (同 layout 票 InstructionStream 先例)
+// 虚拟分派承接: C++ virtual Allocate/Free/AddCategory/RemoveCategory/SelectFreeListCategoryType 多态面 →
+//   Rust trait FreeList (本仓禁 dyn) + 组合结构 (base 字段链 FreeListBase) + 具体类逐 override 落地 +
+//   基类共享体 (*_impl) + 薄壳类宏转接 (forward_free_list_impl) 承接虚表回击 (申报差异)
+// 展开实测: SumFreeLists/IsVeryLong (h:243-244 #ifdef DEBUG) 与 CheckCacheIntegrity (h:391-401) 目标配置剥除 →
+//   Rust 常编 pub 承接 (debug_assert! 消费侧 release 零求值, 等价原版)
+// ── rs 侧落地锚 (HC-3 实测台账) ──
+// Landed @ v8-heap-core/src/free_list.rs: 8 类组合链 + Category 全成员 (RepairFreeList 推迟) + FreeList 基类
+//   全表结构/链手术/计数器 + Many 24 类表与 Select + Cached 缓存 25 槽与双更新 + FastPathBase 双段快速路径 +
+//   Origin 分派 + 工厂 2; 耦合面 FreeListEnv 窄 trait 10 方法 (Isolate/Heap/NormalPage/FreeSpace/SetNext-JIT 他票);
+//   推迟台账双行号见模块尾 (RepairFreeList/CanAllocateOnChunk/AvailableInFreeList DCHECK/JIT 通道/Tag 面)。

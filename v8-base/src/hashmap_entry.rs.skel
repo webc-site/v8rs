@@ -1,0 +1,33 @@
+// 由 tool/src/base/hashmap-entry.h.js 从 v8/src/base/hashmap-entry.h 生成; 修订就地改, 复跑覆盖
+// 哈希表条目 (hash 与 exists 打包进单 u32)
+
+//! v8: src/base/hashmap-entry.h
+
+// v8: struct NoHashMapValue {} — 集合 (无值) 哨兵类型, 不占条目存储
+
+/// v8: src/base/hashmap-entry.h TemplateHashMapEntry<Key, Value>
+/// 位布局: hash_and_exists_ = hash[0..31) | exists<<31 (BitField)
+///   HashField = BitField<u32, 0, 31>; ExistsField = HashField::Next<bool, 1>
+///   kHashValueMask = HashField::kMax = 0x7FFF_FFFF
+pub struct TemplateHashMapEntry<K, V> {
+    pub key: K,
+    pub value: V,
+    hash_and_exists: u32,
+}
+
+impl<K, V> TemplateHashMapEntry<K, V> {
+    /// v8: 构造 — encode(hash) | encode(true)
+    pub fn new(key: K, value: V, hash: u32) -> Self;
+    /// v8: hash() — HashField::decode (低 31 位)
+    pub fn hash(&self) -> u32;
+    /// v8: exists() — bit31
+    pub fn exists(&self) -> bool;
+    /// v8: clear() — 仅清 exists 位 (hash 保留)
+    pub fn clear(&mut self);
+}
+
+/// v8: src/base/hashmap-entry.h TemplateHashMapEntry<Key, NoHashMapValue>
+/// 无值特化: key 与空 value 共 union 不占空间; 方法面同上
+pub struct TemplateHashMapSetEntry<K> { key: K, hash_and_exists: u32 }
+
+pub const HASH_VALUE_MASK: u32 = 0x7FFF_FFFF; // v8: kHashValueMask

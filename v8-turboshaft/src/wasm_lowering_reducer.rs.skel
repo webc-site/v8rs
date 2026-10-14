@@ -1,0 +1,52 @@
+// 由 tool/src/compiler/turboshaft/wasm-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/wasm-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// wasm 降低: GC 操作到机器操作
+
+/// 原版 WasmLoweringReducer — wasm GC 全操作降低
+/// REDUCE 面 (25 个):
+/// - REDUCE(GlobalGet)
+/// - REDUCE(GlobalSet)
+/// - REDUCE(RootConstant)
+/// - REDUCE(IsRootConstant)
+/// - REDUCE(Null)
+/// - REDUCE(IsNull)
+/// - REDUCE(AssertNotNull)
+/// - REDUCE(RttCanon)
+/// - REDUCE(WasmTypeCheck)
+/// - REDUCE(WasmTypeCast)
+/// - REDUCE(AnyConvertExtern)
+/// - REDUCE(ExternConvertAny)
+/// - REDUCE(WasmTypeAnnotation)
+/// - REDUCE(StructGet)
+/// - REDUCE(StructSet)
+/// - REDUCE(StructAtomicRMW)
+/// - REDUCE(ArrayGet)
+/// - REDUCE(ArraySet)
+/// - REDUCE(ArrayAtomicRMW)
+/// - REDUCE(ArrayLength)
+/// - REDUCE(WasmAllocateArray)
+/// - REDUCE(WasmAllocateStruct)
+/// - REDUCE(WasmRefFunc)
+/// - REDUCE(StringAsWtf16)
+/// - REDUCE(StringPrepareForGetCodeUnit)
+/// 要点:
+/// - GlobalGet/Set 按 GlobalMode (Load/Store): 实例字段直载 / 反射表
+/// - 指针经 kMaybeSandboxedPointer: sandbox 开 -> SandboxedPointer,
+///   否则 UintPtr
+/// - WasmTypeCheck/Cast: null 检查 + map 判 + 子类型判组合
+/// - Struct/Array 存取: 写屏障经 wasm-assembler-helpers 换算
+/// - WasmAllocate*: Map + 长度 (kMaxUInt32 饱和) + 分配折叠友好运
+/// - StringPrepareForGetCodeUnit: 返回 (String, offset, charwidth_shift)
+///   复合结果, kIsDirectStringTag 等决策位打包
+/// v8: src/compiler/turboshaft/wasm-lowering-reducer.h
+pub struct WasmLoweringReducer;
+
+/// 原版 GlobalMode — 全局变量存取模式
+/// v8: wasm-lowering-reducer.h WasmLoweringReducer::GlobalMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum GlobalMode {
+  /// kLoad: 只读全局 (实例字段直接载入)
+  Load,
+  /// kStore: 反射表路径
+  Store,
+}

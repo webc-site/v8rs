@@ -1,0 +1,106 @@
+// 由 tool/src/compiler/zone-stats.js 从 v8/src/compiler/zone-stats.h + zone-stats.cc 生成; 修订就地改, 复跑覆盖
+// 编译期多 zone 分配记账 (Scope 借还 / StatsScope 统计)
+
+//! zone-stats — zone 生命周期与内存统计中枢
+//!
+//! Scope: 惰性 NewEmptyZone, 析构 ReturnZone (zone 复用: unused 余量
+//! <= kMaxUnusedSize 时保留); StatsScope: 记 max/current/total 三口径。
+
+/// 原版 kMaxUnusedSize — zone 复用的剩余容量阈值
+pub const K_MAX_UNUSED_SIZE: usize = 3;
+
+/// 原版 ZoneStats::Scope — 借出/归还 RAII
+pub struct ZoneScope<'s> {
+  /// zone_name_
+  pub zone_name: &'static str,
+  /// zone_stats_
+  pub zone_stats: &'s mut ZoneStats,
+  /// zone_
+  pub zone: Option<&'s mut Zone<'s>>,
+  /// support_zone_compression_
+  pub support_zone_compression: bool,
+}
+
+impl ZoneScope<'_> {
+  /// 原版 zone() — 惰性建空 zone
+  /// v8: src/compiler/zone-stats.h ZoneStats::Scope::zone
+  pub fn zone(&mut self) -> &mut Zone<'_> {
+    todo!("v8: src/compiler/zone-stats.h ZoneStats::Scope::zone")
+  }
+
+  /// 原版 Destroy — 立即归还 (析构语义)
+  /// v8: src/compiler/zone-stats.h ZoneStats::Scope::Destroy
+  pub fn destroy(&mut self) {
+    todo!("v8: src/compiler/zone-stats.cc ReturnZone 路径")
+  }
+}
+
+/// 原版 ZoneStats::StatsScope — 统计区间
+pub struct StatsScope<'s> {
+  /// zone_stats_
+  pub zone_stats: &'s mut ZoneStats,
+  /// initial_values_ — 各 zone 起始分配量
+  pub initial_values: HashMap<*mut Zone, usize>,
+  /// total_allocated_bytes_at_start_
+  pub total_allocated_bytes_at_start: usize,
+  /// max_allocated_bytes_
+  pub max_allocated_bytes: usize,
+}
+
+impl StatsScope<'_> {
+  /// 原版 GetMaxAllocatedBytes
+  /// v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::GetMaxAllocatedBytes
+  pub fn get_max_allocated_bytes(&self) -> usize {
+    self.max_allocated_bytes
+  }
+
+  /// 原版 GetCurrentAllocatedBytes — 各活 zone 当前量减起始量
+  /// v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::GetCurrentAllocatedBytes
+  pub fn get_current_allocated_bytes(&self) -> usize {
+    todo!("v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::GetCurrentAllocatedBytes")
+  }
+
+  /// 原版 GetTotalAllocatedBytes
+  /// v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::GetTotalAllocatedBytes
+  pub fn get_total_allocated_bytes(&self) -> usize {
+    todo!("v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::GetTotalAllocatedBytes")
+  }
+
+  /// 原版 ZoneReturned — zone 归还时把增量并入统计
+  /// v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::ZoneReturned
+  pub fn zone_returned(&mut self, zone: &Zone<'_>) {
+    todo!("v8: src/compiler/zone-stats.cc ZoneStats::StatsScope::ZoneReturned")
+  }
+}
+
+/// 原版 ZoneStats — zone 池 + 双计数器
+pub struct ZoneStats {
+  /// zones_
+  pub zones: Vec<*mut Zone<'static>>,
+  /// stats_
+  pub stats: Vec<*mut StatsScope<'static>>,
+  /// max_allocated_bytes_
+  pub max_allocated_bytes: usize,
+  /// total_deleted_bytes_
+  pub total_deleted_bytes: usize,
+  /// allocator_
+  pub allocator: *mut AccountingAllocator,
+}
+
+impl ZoneStats {
+  /// 原版 GetMaxAllocatedBytes / GetTotalAllocatedBytes / GetCurrentAllocatedBytes
+  /// v8: src/compiler/zone-stats.cc ZoneStats::GetMaxAllocatedBytes
+  pub fn get_max_allocated_bytes(&self) -> usize {
+    self.max_allocated_bytes
+  }
+
+  /// v8: src/compiler/zone-stats.cc ZoneStats::GetTotalAllocatedBytes
+  pub fn get_total_allocated_bytes(&self) -> usize {
+    todo!("v8: src/compiler/zone-stats.cc ZoneStats::GetTotalAllocatedBytes")
+  }
+
+  /// v8: src/compiler/zone-stats.cc ZoneStats::GetCurrentAllocatedBytes
+  pub fn get_current_allocated_bytes(&self) -> usize {
+    todo!("v8: src/compiler/zone-stats.cc ZoneStats::GetCurrentAllocatedBytes")
+  }
+}

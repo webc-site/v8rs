@@ -1,0 +1,39 @@
+// 由 tool/src/heap/cppgc-internal/member-storage.js 从 v8/src/heap/cppgc-internal/member-storage.h + src/heap/cppgc-internal/member-storage.cc 生成; 修订就地改, 复跑覆盖
+// 压缩指针笼基全局 + 调试出口
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/member-storage.h CageBaseGlobalUpdater (CPPGC_POINTER_COMPRESSION cfg)
+#[cfg(feature = "cppgc_pointer_compression")]
+pub mod cage_base_global_updater {
+    /// v8: UpdateCageBase — 写 g_base_: base | kLowerHalfWordMask (低位标签防 0 判空)
+    pub fn update_cage_base(cage_base: usize) {
+        debug_assert!(CageBaseGlobal::is_base_consistent());
+        debug_assert_eq!(0, cage_base & CageBaseGlobal::K_LOWER_HALF_WORD_MASK);
+        CageBaseGlobal::g_base().base = cage_base | CageBaseGlobal::K_LOWER_HALF_WORD_MASK;
+    }
+
+    /// v8: GetCageBase — 读 g_base_ 去标签
+    pub fn get_cage_base() -> usize {
+        debug_assert!(CageBaseGlobal::is_base_consistent());
+        CageBaseGlobal::g_base().base & !CageBaseGlobal::K_LOWER_HALF_WORD_MASK
+    }
+}
+
+/// v8: src/heap/cppgc-internal/member-storage.cc CageBaseGlobal::g_base_
+/// alignas(kCachelineSize), 初值 {kLowerHalfWordMask}。
+/// v8: src/heap/cppgc-internal/member-storage.cc _cppgc_internal_Decompress_Compressed_Pointer
+/// extern "C" 调试出口 → CompressedPointer::Decompress。
+/// v8: src/heap/cppgc-internal/member-storage.cc MemberDebugHelper::Uncompress
+/// extern "C" _cppgc_internal_Uncompress_Member → MemberBase::GetRaw。
+#[cfg(feature = "cppgc_pointer_compression")]
+pub mod debug_exports {
+    /// v8: _cppgc_internal_Decompress_Compressed_Pointer
+    pub fn decompress_compressed_pointer(cmprsd: u32) -> *mut core::ffi::c_void {
+        CompressedPointer::decompress(cmprsd)
+    }
+    /// v8: _cppgc_internal_Uncompress_Member
+    pub fn uncompress_member(m: &MemberBase) -> *mut core::ffi::c_void {
+        m.get_raw() as *mut core::ffi::c_void
+    }
+}

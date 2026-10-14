@@ -1,0 +1,40 @@
+// 由 tool/src/heap/cppgc-internal/allocation.js 从 v8/src/heap/cppgc-internal/allocation.cc 生成; 修订就地改, 复跑覆盖
+// 分配入口八重载 → ObjectAllocator::AllocateObject
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/allocation.cc MakeGarbageCollectedTraitInternal
+pub mod make_garbage_collected_trait_internal {
+    /// v8: Allocate(handle, size, index) — 基础
+    pub fn allocate(handle: &mut AllocationHandle, size: usize, index: GcInfoIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object(size, index, None, MayContainMixins::No)
+    }
+    /// v8: Allocate(handle, size, alignment, index) — 带对齐
+    pub fn allocate_aligned(handle: &mut AllocationHandle, size: usize, alignment: AlignVal, index: GcInfoIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object_aligned(size, alignment, index, None, MayContainMixins::No)
+    }
+    /// v8: Allocate(handle, size, index, space_index) — 定制空间
+    pub fn allocate_in_space(handle: &mut AllocationHandle, size: usize, index: GcInfoIndex, space_index: CustomSpaceIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object(size, index, Some(space_index), MayContainMixins::No)
+    }
+    /// v8: Allocate(handle, size, alignment, index, space_index) — 对齐 + 定制空间
+    pub fn allocate_aligned_in_space(handle: &mut AllocationHandle, size: usize, alignment: AlignVal, index: GcInfoIndex, space_index: CustomSpaceIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object_aligned(size, alignment, index, Some(space_index), MayContainMixins::No)
+    }
+    /// v8: Allocate(handle, size, index, MixinTag) — mixin
+    pub fn allocate_mixin(handle: &mut AllocationHandle, size: usize, index: GcInfoIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object(size, index, None, MayContainMixins::Yes)
+    }
+    /// v8: Allocate(handle, size, alignment, index, MixinTag) — 对齐 + mixin
+    pub fn allocate_aligned_mixin(handle: &mut AllocationHandle, size: usize, alignment: AlignVal, index: GcInfoIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object_aligned(size, alignment, index, None, MayContainMixins::Yes)
+    }
+    /// v8: Allocate(handle, size, index, space_index, MixinTag) — 定制空间 + mixin
+    pub fn allocate_in_space_mixin(handle: &mut AllocationHandle, size: usize, index: GcInfoIndex, space_index: CustomSpaceIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object(size, index, Some(space_index), MayContainMixins::Yes)
+    }
+    /// v8: Allocate(handle, size, alignment, index, space_index, MixinTag) — 全参
+    pub fn allocate_aligned_in_space_mixin(handle: &mut AllocationHandle, size: usize, alignment: AlignVal, index: GcInfoIndex, space_index: CustomSpaceIndex) -> *mut u8 {
+        object_allocator(handle).allocate_object_aligned(size, alignment, index, Some(space_index), MayContainMixins::Yes)
+    }
+}

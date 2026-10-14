@@ -1,0 +1,20 @@
+[package]
+name = "rs8-capi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+aok = "0.1.18"
+log = "0.4.34"
+rs8 = { version = "0.1.0", path = "../rs8" }
+thiserror = "2.0.21"
+v8-api = { version = "0.1.0", path = "../v8-api" }
+
+[dev-dependencies]
+ctor = "1.0.13"
+log_init = "0.1.39"

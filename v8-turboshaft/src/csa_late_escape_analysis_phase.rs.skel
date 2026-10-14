@@ -1,0 +1,32 @@
+// 由 tool/src/compiler/turboshaft/csa-late-escape-analysis-phase.h.js 从 v8/src/compiler/turboshaft/csa-late-escape-analysis-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// CsaLateEscapeAnalysisPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/csa-late-escape-analysis-phase.h CsaLateEscapeAnalysisPhase
+pub struct CsaLateEscapeAnalysisPhase;
+
+impl CsaLateEscapeAnalysisPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "CsaLateEscapeAnalysis" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftCsaLateEscapeAnalysis";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "LateEscapeAnalysisReducer",
+    "MachineOptimizationReducer",
+    "ValueNumberingReducer",
+  ];
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/csa-late-escape-analysis-phase.cc CsaLateEscapeAnalysisPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<LateEscapeAnalysisReducer, MachineOptimizationReducer, ValueNumberingReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(CsaLateEscapeAnalysisPhase::PHASE_NAME == "V8.TFTurboshaftCsaLateEscapeAnalysis");
+  assert!(CsaLateEscapeAnalysisPhase::REDUCERS.len() == 3);
+  assert!(CsaLateEscapeAnalysisPhase::REDUCERS[0] == "LateEscapeAnalysisReducer");
+};

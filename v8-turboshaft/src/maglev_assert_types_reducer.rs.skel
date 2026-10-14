@@ -1,0 +1,16 @@
+// 由 tool/src/compiler/turboshaft/maglev-assert-types-reducer.h.js 从 v8/src/compiler/turboshaft/maglev-assert-types-reducer.h 生成; 修订就地改, 复跑覆盖
+// maglev 类型断言 reducer
+
+/// v8: src/compiler/turboshaft/maglev-assert-types-reducer.h MaglevAssertTypesReducer
+/// CheckMaglevType builtin 化
+pub struct MaglevAssertTypesReducer {
+  pub placeholder: (),
+}
+
+impl MaglevAssertTypesReducer {
+  /// 原版 V<None> REDUCE(CheckMaglevType)(V<Object> input, maglev::NodeType expected_type)
+  /// v8: src/compiler/turboshaft/maglev-assert-types-reducer.h MaglevAssertTypesReducer::REDUCE(CheckMaglevType)
+  pub fn reduce_check_maglev_type(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

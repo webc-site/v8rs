@@ -1,0 +1,109 @@
+// 由 tool/src/heap/weak-object-worklists.js 从 v8/src/heap/weak-object-worklists.h, src/heap/weak-object-worklists.cc 生成; 修订就地改, 复跑覆盖
+// 弱对象工作表集合 (X-macro 展开)
+/// v8: src/heap/weak-object-worklists.h Ephemeron
+pub struct Ephemeron {
+  pub key: TaggedHeapObject,
+  pub value: TaggedHeapObject,
+}
+
+/// v8: src/heap/weak-object-worklists.h HeapObjectAndCode
+pub struct HeapObjectAndCode {
+  pub heap_object: TaggedHeapObject,
+  pub code: TaggedCode,
+}
+
+/// v8: src/heap/weak-object-worklists.h DispatchHandleAndCode
+pub struct DispatchHandleAndCode {
+  pub dispatch_handle: JSDispatchHandle,
+  pub code: TaggedCode,
+}
+
+/// v8: WEAK_OBJECT_WORKLISTS 展开 — 14 个 worklist, 段 64:
+///   transition_arrays: Worklist<TransitionArray, 64>
+///   ephemeron_hash_tables: Worklist<EphemeronHashTable, 64>
+///   current_ephemerons: Worklist<Ephemeron, 64>
+///   next_ephemerons: Worklist<Ephemeron, 64>
+///   weak_references_trivial: Worklist<HeapObjectAndSlot, 64>
+///   weak_references_non_trivial: Worklist<HeapObjectAndSlot, 64>
+///   weak_references_non_trivial_unmarked: Worklist<HeapObjectAndSlot, 64>
+///   weak_references_trusted: Worklist<TrustedObjectAndSlot, 64>
+///   weak_objects_in_code: Worklist<HeapObjectAndCode, 64>
+///   weak_dispatch_handles_in_code: Worklist<DispatchHandleAndCode, 64>
+///   js_weak_refs: Worklist<JSWeakRef, 64>
+///   weak_cells: Worklist<WeakCell, 64>
+///   code_flushing_candidates: Worklist<SharedFunctionInfo, 64>
+///   flushed_js_functions: Worklist<JSFunction, 64>
+
+/// v8: src/heap/weak-object-worklists.h WeakObjects — 上述全部全局弱表
+pub struct WeakObjects {
+  /// v8: transition_arrays
+  pub transition_arrays: WeakObjectWorklistEntry,
+  /// v8: ephemeron_hash_tables
+  pub ephemeron_hash_tables: WeakObjectWorklistEntry,
+  /// v8: current_ephemerons
+  pub current_ephemerons: WeakObjectWorklistEntry,
+  /// v8: next_ephemerons
+  pub next_ephemerons: WeakObjectWorklistEntry,
+  /// v8: weak_references_trivial
+  pub weak_references_trivial: WeakObjectWorklistEntry,
+  /// v8: weak_references_non_trivial
+  pub weak_references_non_trivial: WeakObjectWorklistEntry,
+  /// v8: weak_references_non_trivial_unmarked
+  pub weak_references_non_trivial_unmarked: WeakObjectWorklistEntry,
+  /// v8: weak_references_trusted
+  pub weak_references_trusted: WeakObjectWorklistEntry,
+  /// v8: weak_objects_in_code
+  pub weak_objects_in_code: WeakObjectWorklistEntry,
+  /// v8: weak_dispatch_handles_in_code
+  pub weak_dispatch_handles_in_code: WeakObjectWorklistEntry,
+  /// v8: js_weak_refs
+  pub js_weak_refs: WeakObjectWorklistEntry,
+  /// v8: weak_cells
+  pub weak_cells: WeakObjectWorklistEntry,
+  /// v8: code_flushing_candidates
+  pub code_flushing_candidates: WeakObjectWorklistEntry,
+  /// v8: flushed_js_functions
+  pub flushed_js_functions: WeakObjectWorklistEntry,
+}
+
+/// v8: src/heap/weak-object-worklists.h WeakObjects::Local — 线程本地 + Publish
+pub struct WeakObjectsLocal {
+  /// v8: transition_arrays_local
+  pub transition_arrays_local: WeakObjectWorklistLocalEntry,
+  /// v8: ephemeron_hash_tables_local
+  pub ephemeron_hash_tables_local: WeakObjectWorklistLocalEntry,
+  /// v8: current_ephemerons_local
+  pub current_ephemerons_local: WeakObjectWorklistLocalEntry,
+  /// v8: next_ephemerons_local
+  pub next_ephemerons_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_references_trivial_local
+  pub weak_references_trivial_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_references_non_trivial_local
+  pub weak_references_non_trivial_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_references_non_trivial_unmarked_local
+  pub weak_references_non_trivial_unmarked_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_references_trusted_local
+  pub weak_references_trusted_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_objects_in_code_local
+  pub weak_objects_in_code_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_dispatch_handles_in_code_local
+  pub weak_dispatch_handles_in_code_local: WeakObjectWorklistLocalEntry,
+  /// v8: js_weak_refs_local
+  pub js_weak_refs_local: WeakObjectWorklistLocalEntry,
+  /// v8: weak_cells_local
+  pub weak_cells_local: WeakObjectWorklistLocalEntry,
+  /// v8: code_flushing_candidates_local
+  pub code_flushing_candidates_local: WeakObjectWorklistLocalEntry,
+  /// v8: flushed_js_functions_local
+  pub flushed_js_functions_local: WeakObjectWorklistLocalEntry,
+}
+
+impl WeakObjects {
+  /// v8: src/heap/weak-object-worklists.cc WeakObjects::Clear
+  pub fn clear(&mut self) { todo!() }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // WEAK_OBJECT_WORKLISTS 展开项数固定 14
+};

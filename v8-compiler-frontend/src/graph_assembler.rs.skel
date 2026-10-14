@@ -1,0 +1,117 @@
+// 由 tool/src/compiler/graph-assembler.js 从 v8/src/compiler/graph-assembler.h + graph-assembler.cc 生成; 修订就地改, 复跑覆盖
+// 图组装器: Label 状态机 + 单例常量缓存 + JSGraphAssembler 扩展
+
+
+/// Label 类型
+/// v8: src/compiler/graph-assembler.h GraphAssemblerLabelType
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GraphAssemblerLabelType {
+    /// 延迟块 (冷路径)
+    Deferred,
+    NonDeferred,
+    /// 循环头 (需要 Phi 回边合并)
+    Loop,
+}
+
+/// 动态 (运行期才知道) 变量数哨兵
+/// v8: src/compiler/graph-assembler.h detail::kGraphAssemblerLabelDynamicCount
+pub const K_GRAPH_ASSEMBLER_LABEL_DYNAMIC_COUNT: usize = usize::MAX; // ~0u
+
+/// Label — 组装器基本块句柄 (合并 Phi + effect/control)
+/// v8: src/compiler/graph-assembler.h GraphAssemblerLabel
+pub struct GraphAssemblerLabel<const VAR_COUNT: usize = K_GRAPH_ASSEMBLER_LABEL_DYNAMIC_COUNT> {
+    ty: GraphAssemblerLabelType,
+    /// 循环嵌套层级
+    loop_nesting_level: i32,
+    merged_count: i32,
+    effect: Option<NodeRef>,
+    control: Option<NodeRef>,
+    merged_phis: [Option<NodeRef>; VAR_COUNT],
+}
+
+impl GraphAssemblerLabel {
+    /// v8: src/compiler/graph-assembler.h GraphAssemblerLabel::IsDeferred
+    pub fn is_deferred(&self) -> bool { self.ty == GraphAssemblerLabelType::Deferred }
+    /// v8: src/compiler/graph-assembler.h GraphAssemblerLabel::IsLoop
+    pub fn is_loop(&self) -> bool { self.ty == GraphAssemblerLabelType::Loop }
+}
+
+/// GraphAssembler — 在 TFGraph 上以效果/控制传递方式组装子图
+/// v8: src/compiler/graph-assembler.h GraphAssembler
+pub struct GraphAssembler {
+    pub effect: NodeRef,
+    pub control: NodeRef,
+}
+
+impl GraphAssembler {
+    /// 三工厂:
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::MakeLabel (kNonDeferred)
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::MakeLoopLabel (kLoop)
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::MakeDeferredLabel (kDeferred)
+    pub fn make_label(&mut self, reps: MachineRepresentation) -> GraphAssemblerLabel;
+    pub fn make_loop_label(&mut self, reps: MachineRepresentation) -> GraphAssemblerLabel;
+    pub fn make_deferred_label(&mut self, reps: MachineRepresentation) -> GraphAssemblerLabel;
+
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::Bind
+    pub fn bind(&mut self, label: &mut GraphAssemblerLabel);
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::Goto
+    pub fn goto_(&mut self, label: &mut GraphAssemblerLabel, vars: &[NodeRef]);
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::MergeState
+    pub fn merge_state(&mut self, label: &mut GraphAssemblerLabel, vars: &[NodeRef]);
+
+    /// LoopScope — RAII 循环域
+    /// v8: src/compiler/graph-assembler.h GraphAssembler::LoopScope
+    pub fn loop_scope(&mut self) -> LoopScope<'_>;
+}
+
+/// JS 侧扩展 — 挂 JSGraph 的 singleton 常量缓存
+/// v8: src/compiler/graph-assembler.h JSGraphAssembler
+pub struct JSGraphAssembler { inner: GraphAssembler }
+
+// —— JSGRAPH_SINGLETON_CONSTANT_LIST (23 项 + IF_WASM 2 项) ——
+// (名, 类型) 1:1:
+// AllocateInOldGenerationStub: InstructionStream /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// AllocateInYoungGenerationStub: InstructionStream /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// BigIntMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// BooleanMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// EmptyString: String /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// ExternalObjectMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// False: Boolean /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// FixedArrayMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// FixedDoubleArrayMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// WeakFixedArrayMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// ContextCellMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// HeapNumberMap: Map /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// MinusOne: Number /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// NaN: Number /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// NoContext: Object /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// Null: Null /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// One: Number /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// TheHole: Hole /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// ToNumberBuiltin: InstructionStream /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// PlainPrimitiveToNumberBuiltin: InstructionStream /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// True: Boolean /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// Undefined: Undefined /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// Zero: Number /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST
+// wasm-only (V8_ENABLE_WEBASSEMBLY):
+// WasmAllocateInYoungGenerationStub: InstructionStream
+// WasmAllocateInOldGenerationStub: InstructionStream
+
+impl JSGraphAssembler {
+    /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST AllocateInOldGenerationStub
+    pub fn allocate_in_old_generation_stub(&mut self) -> NodeRef;
+    /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST AllocateInYoungGenerationStub
+    pub fn allocate_in_young_generation_stub(&mut self) -> NodeRef;
+    /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST BigIntMap
+    pub fn big_int_map(&mut self) -> NodeRef;
+    /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST BooleanMap
+    pub fn boolean_map(&mut self) -> NodeRef;
+    /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST EmptyString
+    pub fn empty_string(&mut self) -> NodeRef;
+    /// v8: src/compiler/graph-assembler.h JSGRAPH_SINGLETON_CONSTANT_LIST ExternalObjectMap
+    pub fn external_object_map(&mut self) -> NodeRef;
+    // ... 其余 17 项同型
+}
+
+// —— 对数基准 ——
+// 单例表 23+2 (wasm) / LabelType 3 值 / cc 定义面 127

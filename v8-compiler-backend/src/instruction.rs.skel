@@ -1,0 +1,160 @@
+// 由 tool/src/compiler/backend/instruction.js 从 v8/src/compiler/backend/instruction.h + instruction.cc 生成; 修订就地改, 复跑覆盖
+// 指令序列核心数据面: 操作数族/移动/指令/常量/帧状态/序列
+
+//! 台账: InstructionOperand (Kind 6 + 位域 value_ 64 位编码 + 谓词/转型宏族)
+//!   → UnallocatedOperand (ExtendedPolicy 8 + BasicPolicy + vreg/index) /
+//!   Constant·Immediate·PendingOperand / LocationOperand (LocationKind: 寄存器/槽)
+//!   → AllocatedOperand; MoveOperands (source/destination + 消除态) + ParallelMove
+//!   (move 向量); ReferenceMap (GC 引用位图); Instruction (gap×2 + 操作数 + 位域)
+//!   GapPosition 2; RpoNumber 32 位序; Constant Type 8; StateValueKind 8 →
+//!   StateValueDescriptor/List; FrameStateDescriptor (+ JSToWasm 子类) +
+//!   DeoptimizationEntry; PhiInstruction; InstructionBlock (含 handle/phis/代码区);
+//!   InstructionSequence (常量池/指令向量/RPO 表); 末尾 Ccmp/Trap/Branch 偏移 12 常量。
+
+/// v8: InstructionOperand::Kind (位标记成员外 5 值+ALLOCATED)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum OperandKind {
+  /// kINVALID
+  INVALID = 0,
+  /// kUNALLOCATED
+  UNALLOCATED = 1,
+  /// kCONSTANT
+  CONSTANT = 2,
+  /// kIMMEDIATE
+  IMMEDIATE = 3,
+  /// kPENDING
+  PENDING = 4,
+  /// kALLOCATED
+  ALLOCATED = 5,
+}
+
+/// v8: UnallocatedOperand::ExtendedPolicy
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ExtendedPolicy {
+  /// kNONE
+  NONE = 0,
+  /// kREGISTER_OR_SLOT
+  REGISTER_OR_SLOT = 1,
+  /// kREGISTER_OR_SLOT_OR_CONSTANT
+  REGISTER_OR_SLOT_OR_CONSTANT = 2,
+  /// kFIXED_REGISTER
+  FIXED_REGISTER = 3,
+  /// kFIXED_FP_REGISTER
+  FIXED_FP_REGISTER = 4,
+  /// kMUST_HAVE_REGISTER
+  MUST_HAVE_REGISTER = 5,
+  /// kMUST_HAVE_SLOT
+  MUST_HAVE_SLOT = 6,
+  /// kSAME_AS_INPUT
+  SAME_AS_INPUT = 7,
+}
+
+/// v8: UnallocatedOperand::Lifetime (USED_AT_START/USED_AT_END)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum OperandLifetime {
+  /// kUSED_AT_START
+  USED_AT_START = 0,
+  /// kUSED_AT_END
+  USED_AT_END = 1,
+}
+
+/// v8: Instruction::GapPosition (START/END; FIRST_/LAST_ 别名)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum GapPosition {
+  /// kSTART
+  START = 0,
+  /// kEND
+  END = 1,
+}
+
+/// v8: Constant::Type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ConstantType {
+  /// kkInt32
+  kInt32 = 0,
+  /// kkInt64
+  kInt64 = 1,
+  /// kkFloat32
+  kFloat32 = 2,
+  /// kkFloat64
+  kFloat64 = 3,
+  /// kkExternalReference
+  kExternalReference = 4,
+  /// kkCompressedHeapObject
+  kCompressedHeapObject = 5,
+  /// kkHeapObject
+  kHeapObject = 6,
+  /// kkRpoNumber
+  kRpoNumber = 7,
+}
+
+/// v8: StateValueDescriptor::StateValueKind
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum StateValueKind {
+  /// kkArgumentsElements
+  kArgumentsElements = 0,
+  /// kkArgumentsLength
+  kArgumentsLength = 1,
+  /// kkRestLength
+  kRestLength = 2,
+  /// kkPlain
+  kPlain = 3,
+  /// kkOptimizedOut
+  kOptimizedOut = 4,
+  /// kkNestedObject
+  kNestedObject = 5,
+  /// kkDuplicate
+  kDuplicate = 6,
+  /// kkStringConcat
+  kStringConcat = 7,
+}
+
+/// v8: kNumCcmpOperands
+pub const NUMCCMPOPERANDS: usize = 5;
+/// v8: kCcmpOffsetOfOpcode
+pub const CCMPOFFSETOFOPCODE: usize = 0;
+/// v8: kCcmpOffsetOfLhs
+pub const CCMPOFFSETOFLHS: usize = 1;
+/// v8: kCcmpOffsetOfRhs
+pub const CCMPOFFSETOFRHS: usize = 2;
+/// v8: kCcmpOffsetOfDefaultFlags
+pub const CCMPOFFSETOFDEFAULTFLAGS: usize = 3;
+/// v8: kCcmpOffsetOfCompareCondition
+pub const CCMPOFFSETOFCOMPARECONDITION: usize = 4;
+/// v8: kConditionalTrapEndOffsetOfNumCcmps
+pub const CONDITIONALTRAPENDOFFSETOFNUMCCMPS: usize = 2;
+/// v8: kConditionalTrapEndOffsetOfCondition
+pub const CONDITIONALTRAPENDOFFSETOFCONDITION: usize = 3;
+/// v8: kBranchEndOffsetOfFalseBlock
+pub const BRANCHENDOFFSETOFFALSEBLOCK: usize = 1;
+/// v8: kBranchEndOffsetOfTrueBlock
+pub const BRANCHENDOFFSETOFTRUEBLOCK: usize = 2;
+/// v8: kConditionalBranchEndOffsetOfNumCcmps
+pub const CONDITIONALBRANCHENDOFFSETOFNUMCCMPS: usize = 3;
+/// v8: kConditionalBranchEndOffsetOfCondition
+pub const CONDITIONALBRANCHENDOFFSETOFCONDITION: usize = 4;
+
+/// v8: InstructionOperand::value_ — 64 位位域编码 (Kind + 子字段)
+// struct InstructionOperand { value_: u64 } + KindField 等 BitField 访问器
+/// v8: MoveOperands — source/destination + 消除/冗余/挂起态
+// struct MoveOperands + IsRedundant/Eliminate/IsPending/... (见 gap-resolver 台账)
+/// v8: Instruction — arch_opcode 位域指令 + parallel_moves[2] + operands + Block 变体
+// struct Instruction + FIRST/LAST_GAP_POSITION + ccmp 尾布局 (上表)
+/// v8: InstructionSequence — 虚拟寄存器→常量池 + 指令向量 + 块表 + 反汇编
+// pub struct InstructionSequence
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(OperandKind::Unallocated as u8 == 1);
+  assert!(OperandKind::Invalid as u8 == 0);
+  assert!(ExtendedPolicy::MustHaveRegister as u8 == 4);
+  assert!(GapPosition::Start as u8 == 0);
+  assert!(NUM_CCMP_OPERANDS == 5);
+  assert!(K_CCMP_OFFSET_OF_OPCODE == 0);
+};

@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  # 每日 UTC 18:00 (北京 02:00): Miri Tree Borrows 报告 + udeps
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+# 同分支新提交取消旧跑批
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # fmt + clippy 只读门禁 (sh/clippy.sh 同规则, 去掉 --fix)
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: fmt
+        run: cargo +nightly fmt --all --check
+      - name: clippy
+        run: |
+          cargo +nightly clippy -q --all-targets --all-features -- \
+            -D warnings \
+            -W clippy::absolute_paths
+
+  test:
+    name: test (${{ matrix.os }})
+    strategy:
+      # 一个平台挂不取消其余平台, 便于并行定位
+      fail-fast: false
+      matrix:
+        # 4 系统: linux x64 / linux arm64 / macos arm64 / windows x64
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      # 每次 resolve 最新 stable, 不锁小版本
+      - uses: dtolnay/rust-toolchain@stable
+
+      # 安装最新 release 的 nextest
+      - name: 安装 nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      # 按 lockfile + rustc 版本 + job 维度缓存 ~/.cargo 与 target
+      - name: 缓存
+        uses: Swatinem/rust-cache@v2
+
+      - name: 测试
+        shell: bash
+        run: cargo nextest run --all-features
+
+  # Miri 门禁: 白名单棘轮, crate 本地跑绿才加入, 只增不减 (todo.md 十三)
+  # 默认 Stacked Borrows; nextest 自动选用 .config/nextest.toml 的 default-miri profile
+  miri:
+    name: miri (${{ matrix.crate }})
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        crate: [v8-zone]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri, rust-src
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: miri
+      - name: miri setup
+        run: cargo +nightly miri setup
+      - name: miri
+        run: cargo +nightly miri nextest run -p ${{ matrix.crate }} -j4
+
+  # Tree Borrows 夜间报告, 不阻塞; SB 报错而 TB 通过 → 登记 SB 误报候选
+  miri-tb:
+    name: miri-tb (${{ matrix.crate }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        crate: [v8-zone]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      MIRIFLAGS: -Zmiri-tree-borrows
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri, rust-src
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: miri-tb
+      - run: cargo +nightly miri setup
+      - run: cargo +nightly miri nextest run -p ${{ matrix.crate }} -j4
+
+  # 冗余依赖检测 (todo.md 10.4), 夜间跑, 不阻塞 PR
+  udeps:
+    name: udeps
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-udeps
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: udeps
+      - run: cargo +nightly udeps --workspace --all-targets --all-features

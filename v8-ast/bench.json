@@ -1,0 +1,192 @@
+{
+  "crate": "v8-ast",
+  "generated_at": "2026-10-11T08:24:20.466Z",
+  "impls": [
+    "dyn-box",
+    "v8-ast"
+  ],
+  "results": [
+    {
+      "id": "v8-ast/alloc_nodes",
+      "impl": "v8-ast",
+      "op": "alloc_nodes",
+      "param": "",
+      "mean_ns": 42363.21592014342,
+      "median_ns": 40953.4588079462,
+      "std_dev_ns": 7200.7717875068265,
+      "ci95_ns": [
+        41045.05779835994,
+        43842.350844780056
+      ]
+    },
+    {
+      "id": "dyn-box/alloc_nodes",
+      "impl": "dyn-box",
+      "op": "alloc_nodes",
+      "param": "",
+      "mean_ns": 40268.03281666648,
+      "median_ns": 39421.436391320894,
+      "std_dev_ns": 3364.550043845122,
+      "ci95_ns": [
+        39680.012143674576,
+        40980.642044938766
+      ]
+    },
+    {
+      "id": "dyn-box/build_tree/6x2",
+      "impl": "dyn-box",
+      "op": "build_tree",
+      "param": "6x2",
+      "mean_ns": 1874.6864270570056,
+      "median_ns": 1797.5157342657344,
+      "std_dev_ns": 214.1798395739142,
+      "ci95_ns": [
+        1835.7802186787385,
+        1919.3591205817615
+      ]
+    },
+    {
+      "id": "v8-ast/build_tree/6x2",
+      "impl": "v8-ast",
+      "op": "build_tree",
+      "param": "6x2",
+      "mean_ns": 1782.3151091134114,
+      "median_ns": 1778.425234521576,
+      "std_dev_ns": 25.32022656050187,
+      "ci95_ns": [
+        1777.8141752625145,
+        1787.6593273162136
+      ]
+    },
+    {
+      "id": "dyn-box/build_tree/8x3",
+      "impl": "dyn-box",
+      "op": "build_tree",
+      "param": "8x3",
+      "mean_ns": 137938.82973531663,
+      "median_ns": 134471.57874665016,
+      "std_dev_ns": 17769.680830205514,
+      "ci95_ns": [
+        135018.10179374795,
+        141853.8618500062
+      ]
+    },
+    {
+      "id": "v8-ast/build_tree/8x3",
+      "impl": "v8-ast",
+      "op": "build_tree",
+      "param": "8x3",
+      "mean_ns": 6401.424132862622,
+      "median_ns": 6346.708852081502,
+      "std_dev_ns": 306.6450788286102,
+      "ci95_ns": [
+        6357.805709241542,
+        6471.398640717931
+      ]
+    },
+    {
+      "id": "dyn-box/layout_check/6x2",
+      "impl": "dyn-box",
+      "op": "layout_check",
+      "param": "6x2",
+      "mean_ns": 665.8454960392731,
+      "median_ns": 649.8629995497552,
+      "std_dev_ns": 64.42991258108998,
+      "ci95_ns": [
+        654.7136995555519,
+        679.7176138170581
+      ]
+    },
+    {
+      "id": "v8-ast/layout_check/6x2",
+      "impl": "v8-ast",
+      "op": "layout_check",
+      "param": "6x2",
+      "mean_ns": 396.86768023884565,
+      "median_ns": 396.723527192191,
+      "std_dev_ns": 1.6232103089380232,
+      "ci95_ns": [
+        396.5560904995024,
+        397.19040091690533
+      ]
+    },
+    {
+      "id": "dyn-box/layout_check/8x3",
+      "impl": "dyn-box",
+      "op": "layout_check",
+      "param": "8x3",
+      "mean_ns": 63036.91355829842,
+      "median_ns": 53191.90162907269,
+      "std_dev_ns": 19226.871735039822,
+      "ci95_ns": [
+        59466.28838429312,
+        66950.57572772841
+      ]
+    },
+    {
+      "id": "v8-ast/layout_check/8x3",
+      "impl": "v8-ast",
+      "op": "layout_check",
+      "param": "8x3",
+      "mean_ns": 1458.9927691036771,
+      "median_ns": 1459.9008970678094,
+      "std_dev_ns": 5.968193691094379,
+      "ci95_ns": [
+        1457.7510827916328,
+        1460.0866872835638
+      ]
+    },
+    {
+      "id": "dyn-box/visit_tree/6x2",
+      "impl": "dyn-box",
+      "op": "visit_tree",
+      "param": "6x2",
+      "mean_ns": 301.0249553765486,
+      "median_ns": 295.51149997455985,
+      "std_dev_ns": 24.735824025715022,
+      "ci95_ns": [
+        296.9273314878035,
+        306.4867673747906
+      ]
+    },
+    {
+      "id": "v8-ast/visit_tree/6x2",
+      "impl": "v8-ast",
+      "op": "visit_tree",
+      "param": "6x2",
+      "mean_ns": 239.4485556867287,
+      "median_ns": 239.04000146682637,
+      "std_dev_ns": 8.129976216593139,
+      "ci95_ns": [
+        238.05227305336086,
+        241.19465261083712
+      ]
+    },
+    {
+      "id": "dyn-box/visit_tree/8x3",
+      "impl": "dyn-box",
+      "op": "visit_tree",
+      "param": "8x3",
+      "mean_ns": 26193.412173262514,
+      "median_ns": 25818.059595010254,
+      "std_dev_ns": 2066.700987454069,
+      "ci95_ns": [
+        25855.598442717466,
+        26649.171614326202
+      ]
+    },
+    {
+      "id": "v8-ast/visit_tree/8x3",
+      "impl": "v8-ast",
+      "op": "visit_tree",
+      "param": "8x3",
+      "mean_ns": 1030.4152463388411,
+      "median_ns": 1027.0637515496096,
+      "std_dev_ns": 11.512289279262994,
+      "ci95_ns": [
+        1028.4859123095564,
+        1032.93272316259
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+// 由 tool/src/compiler/turboshaft/build-graph-phase.h.js 从 v8/src/compiler/turboshaft/build-graph-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// Turbofan Schedule → Turboshaft Graph 构建 phase 骨架
+
+/// v8: src/compiler/turboshaft/build-graph-phase.h BuildGraphPhase
+pub struct BuildGraphPhase;
+
+impl BuildGraphPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "BuildGraph" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftBuildGraph";
+
+  /// 原版 std::optional<BailoutReason> Run(PipelineData*, Zone*, Schedule*, Linkage*)
+  /// v8: src/compiler/turboshaft/build-graph-phase.cc BuildGraphPhase::Run
+  ///
+  /// 流程 (原版): UnparkedScopeIfNeeded → 调 BuildGraph(data, schedule,
+  /// temp_zone, linkage), 返回 bailout 即提前退出, 否则 {}。
+  pub fn run(
+    data: &mut crate::phase::PipelineData,
+    temp_zone: &mut crate::phase::Zone,
+    schedule: &mut crate::phase::Schedule,
+    linkage: &mut crate::phase::Linkage,
+  ) -> Option<crate::phase::BailoutReason> {
+    // 原版: if (auto bailout = turboshaft::BuildGraph(data, schedule, temp_zone, linkage)) return bailout;
+    unimplemented!("Developer 修订: 委托 graph-builder 的 BuildGraph")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(BuildGraphPhase::PHASE_NAME == "V8.TFTurboshaftBuildGraph");
+};

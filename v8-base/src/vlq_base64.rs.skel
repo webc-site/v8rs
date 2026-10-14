@@ -1,0 +1,57 @@
+// 由 tool/src/base/vlq-base64.h.js 从 v8/src/base/vlq-base64.h + .cc 生成; 修订就地改, 复跑覆盖
+// source map 用 VLQ-Base64 解码
+
+//! v8 侧: 查找表 128 项; 常量 3; 导出 2 (charToDigitDecodeForTesting + VLQBase64Decode)
+
+/// v8: src/base/vlq-base64.cc kCharToDigit[128]
+/// ASCII → base64 值; -1 = 非法字符 ('+'=0x3e, '/'=0x3f, '0'-'9'=0x34-0x3d,
+/// 'A'-'Z'=0x00-0x19, 'a'-'z'=0x1a-0x33)
+pub static K_CHAR_TO_DIGIT: [i8; 128] = [
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, 62, -1, -1, -1, 63,
+    52, 53, 54, 55, 56, 57, 58, 59,
+    60, 61, -1, -1, -1, -1, -1, -1,
+    -1, 0, 1, 2, 3, 4, 5, 6,
+    7, 8, 9, 10, 11, 12, 13, 14,
+    15, 16, 17, 18, 19, 20, 21, 22,
+    23, 24, 25, -1, -1, -1, -1, -1,
+    -1, 26, 27, 28, 29, 30, 31, 32,
+    33, 34, 35, 36, 37, 38, 39, 40,
+    41, 42, 43, 44, 45, 46, 47, 48,
+    49, 50, 51, -1, -1, -1, -1, -1,
+];
+
+/// v8: kContinueShift = 5 (base64 版每字节 5bit 数据)
+pub const K_CONTINUE_SHIFT: u32 = 5;
+/// v8: kContinueMask = 1 << 5
+pub const K_CONTINUE_MASK: u32 = 0x20;
+/// v8: kDataMask = kContinueMask - 1
+pub const K_DATA_MASK: u32 = 0x1f;
+
+/// v8: charToDigitDecode(c) — c >= 128 时 -1
+pub fn char_to_digit_decode(c: u8) -> i8 {
+    if c < 128 { K_CHAR_TO_DIGIT[c as usize] } else { -1 }
+}
+
+/// v8: VLQBase64Decode(start, sz, pos)
+/// 语义: do-while 读 digit; 越界/非法字符/末字节高 3 位非零 → i32::MIN (错误值);
+/// zigzag 还原: res&1 → -(res>>1)
+pub fn vlq_base64_decode(start: &[u8], pos: &mut usize) -> i32 {
+    let mut res: u32 = 0;
+    let mut shift: u32 = 0;
+    loop {
+        if *pos >= start.len() { return i32::MIN; }
+        let digit = char_to_digit_decode(start[*pos]) as i32;
+        let is_last_byte = shift + K_CONTINUE_SHIFT >= 32;
+        if digit == -1 || (is_last_byte && (digit >> 2) != 0) { return i32::MIN; }
+        res += ((digit & K_DATA_MASK as i32) as u32) << shift;
+        shift += K_CONTINUE_SHIFT;
+        *pos += 1;
+        if (digit & K_CONTINUE_MASK as i32) == 0 { break; }
+    }
+    if (res & 1) == 1 { -((res >> 1) as i32) } else { (res >> 1) as i32 }
+}

@@ -1,0 +1,19 @@
+// 由 tool/src/maglev/codegen.js 从 v8/src/maglev/maglev-assembler.h, maglev-code-generator.h, maglev-compiler.h, maglev.h, maglev-concurrent-dispatcher.h, maglev-deopt-frame-visitor.h (+.cc/-inl.h 同族) 生成; 修订就地改, 复跑覆盖
+// 代码生成总装 + 架构先行表
+
+//! 依赖: v8-maglev-frontend (Graph), v8-codegen-{x64,arm64} (MacroAssembler 底);
+//! 架构范围 (todo.md 五): x64+arm64 先行, 其余后置 feature 隔离默认关。
+
+// ── MaglevAssembler (MacroAssembler 子类; 可分配集=regalloc 真值来源) ──
+//   GetAllocatableRegisters (ARM/RISCV64/LOONG64 减 scratch/flags 特化); GetAllocatableDoubleRegisters
+//   HasZeroRegister/ZeroRegister (arm64 xzr); StoreMode/ValueIsCompressed/ValueCanBeSmi/CharCodeMaskMode
+//   MoveRepr/MemOperand 映射; Assert(cond, AbortReason) 系列
+
+// ── MaglevCodeGenerator (Assemble→Generate; EmitCode/DeferredCode/Deopts/异常桩/retained/元数据) ──
+//   stack_slot_count(+fixed_frame)/parameter_count; retained_maps_; BuildCodeObject
+
+// ── MaglevCompiler (AllStatic; Compile 任意线程 / GenerateCode 主线程; BailoutReason) ──
+//   Maglev::Compile (V8_ENABLE_MAGLEV 门下测试入口); MaglevCompilationJob + ConcurrentDispatcher
+//   DeoptFrameVisitor (反优化帧重建; frame-translation 底)
+
+// 对数: asm 12 + codegen 8 + compiler 5 + 架构 21 全过

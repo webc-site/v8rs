@@ -1,0 +1,12 @@
+// 由 tool/src/objects/trusted-pointer-inl.h.js 从 v8/src/objects/trusted-pointer-inl.h 生成; 修订就地改, 复跑覆盖
+// trusted.rs 差集骨架 (inl 语义), 合并后就地修订; -inl 骨架仅存档
+
+//! 差集骨架: TrustedPointerField/Member 实现语义 (sandbox 开为默认配置)
+
+// - 字段访问: field_address = host.address() + offset (Tagged::address 已去 kHeapObjectTag)
+// - handle 槽为 u32 原子; 空判定 handle == kNullIndirectPointerHandle; 空 → Smi::zero()
+// - load 恒 acquire / store 恒 release (上游注释: 底层间接指针本即 acquire/release)
+// - sandbox 成员读: TrustedCast<T>(table.read(handle)); 写: 存 value.self handle + ForIndirectPointer
+// - 非 sandbox 分支: 委托 TaggedMember/Base 与 TaggedField (本 crate 配置不启用, 注释留档)
+// - is_unpublished: 空 handle → false, 否则 table.IsUnpublished(handle)
+// - clear(sandbox): store kNullIndirectPointerHandle release; 非 sandbox: Base 空 tagged release 写

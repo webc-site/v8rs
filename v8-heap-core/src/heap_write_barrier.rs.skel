@@ -1,0 +1,91 @@
+// 由 tool/src/heap/heap-write-barrier.h.js 从 v8/src/heap/heap-write-barrier.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 写屏障: For* 分发台账与模式判定
+
+/// 写屏障模式 (对应 src/objects/objects.h enum WriteBarrierMode)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(u8)]
+pub enum WriteBarrierMode {
+  /// 跳过 (静态消除, 新对象场景)
+  SKIP_WRITE_BARRIER = 0,
+  /// 跳过 (运行时消除, 经 GetWriteBarrierMode 判新生代)
+  SKIP_WRITE_BARRIER_SCOPE = 1,
+  /// GC 原子停顿期跳过 (GC 自管显式屏障)
+  SKIP_WRITE_BARRIER_FOR_GC = 2,
+  /// CSA/Turbofan 内跳过 (MemoryOptimizer 验证用)
+  UNSAFE_SKIP_WRITE_BARRIER = 3,
+  /// ephemeron 键专用屏障
+  UPDATE_EPHEMERON_KEY_WRITE_BARRIER = 4,
+  /// 常规屏障
+  UPDATE_WRITE_BARRIER = 5,
+}
+
+/// 对应 IsSkipWriteBarrierMode: mode <= UNSAFE_SKIP_WRITE_BARRIER 即跳过型。
+/// (static_assert 钉死 0/1/2/3 为四个 skip 值)
+/// v8: src/heap/heap-write-barrier.h WriteBarrier::IsSkipWriteBarrierMode
+#[must_use]
+pub fn is_skip_write_barrier_mode(mode: WriteBarrierMode) -> bool {
+  mode <= WriteBarrierMode::UNSAFE_SKIP_WRITE_BARRIER
+}
+
+/// 对应 kUninterestingPagesCanBeSkipped = true:
+/// 宿主页无 PointersFromHereAreInteresting 标志时本机代码直接跳过后续处理。
+pub const K_UNINTERESTING_PAGES_CAN_BE_SKIPPED: bool = true;
+
+/// 写屏障静态类骨架 (对应 class WriteBarrier final)。
+/// v8: src/heap/heap-write-barrier.h WriteBarrier
+pub struct WriteBarrier;
+
+impl WriteBarrier {
+  /// 对应 ComputeWriteBarrierModeForObject 的四级判定:
+  /// ① disable_write_barriers → SKIP; ② 页在标记 → UPDATE;
+  /// ③ 对象在新生代 → SKIP_SCOPE; ④ 其余 → UPDATE
+  /// v8: src/heap/heap-write-barrier-inl.h WriteBarrier::ComputeWriteBarrierModeForObject
+  #[must_use]
+  pub fn compute_mode_for_object(
+    disable_write_barriers: bool,
+    chunk_is_marking: bool,
+    in_young_generation: bool,
+  ) -> WriteBarrierMode {
+    if disable_write_barriers {
+      return WriteBarrierMode::SKIP_WRITE_BARRIER;
+    }
+    if chunk_is_marking {
+      return WriteBarrierMode::UPDATE_WRITE_BARRIER;
+    }
+    if in_young_generation {
+      return WriteBarrierMode::SKIP_WRITE_BARRIER_SCOPE;
+    }
+    WriteBarrierMode::UPDATE_WRITE_BARRIER
+  }
+
+  /// 对应 ForValue/ForRelocInfo/ForArrayBufferExtension/ForExternalPointer/
+  /// ForIndirectPointer/ForProtectedPointer/ForEphemeronHashTable 分发面 —
+  /// 全部汇入 CombinedWriteBarrierInternal
+  /// v8: src/heap/heap-write-barrier-inl.h WriteBarrier::CombinedWriteBarrierInternal
+  pub fn combined_write_barrier_internal(_host: u64, _slot: u64, _value: u64) {
+    unimplemented!("骨架: marking/shared/old-to-new 分派待 GC 族就位");
+  }
+
+  /// 对应 MarkingFromCode (生成代码蹦床, 返回 barrier 语义码)
+  /// v8: src/heap/heap-write-barrier.cc WriteBarrier::MarkingFromCode
+  pub fn marking_from_code(_raw_host: u64, _raw_slot: u64) -> i32 {
+    unimplemented!("骨架: 蹦床待 isolate/marking 就位");
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(WriteBarrierMode::SKIP_WRITE_BARRIER as u8, 0);
+  assert_eq!(WriteBarrierMode::UNSAFE_SKIP_WRITE_BARRIER as u8, 3);
+  assert_eq!(WriteBarrierMode::UPDATE_EPHEMERON_KEY_WRITE_BARRIER as u8, 4);
+  assert_eq!(WriteBarrierMode::UPDATE_WRITE_BARRIER as u8, 5);
+  assert!(is_skip_write_barrier_mode(WriteBarrierMode::SKIP_WRITE_BARRIER));
+  assert!(is_skip_write_barrier_mode(WriteBarrierMode::UNSAFE_SKIP_WRITE_BARRIER));
+  assert!(!is_skip_write_barrier_mode(WriteBarrierMode::UPDATE_WRITE_BARRIER));
+  assert!(!is_skip_write_barrier_mode(WriteBarrierMode::UPDATE_EPHEMERON_KEY_WRITE_BARRIER));
+  assert_eq!(WriteBarrier::compute_mode_for_object(true, false, false), WriteBarrierMode::SKIP_WRITE_BARRIER);
+  assert_eq!(WriteBarrier::compute_mode_for_object(false, true, true), WriteBarrierMode::UPDATE_WRITE_BARRIER);
+  assert_eq!(WriteBarrier::compute_mode_for_object(false, false, true), WriteBarrierMode::SKIP_WRITE_BARRIER_SCOPE);
+  assert_eq!(WriteBarrier::compute_mode_for_object(false, false, false), WriteBarrierMode::UPDATE_WRITE_BARRIER);
+  assert!(K_UNINTERESTING_PAGES_CAN_BE_SKIPPED);
+};

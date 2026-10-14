@@ -1,0 +1,32 @@
+// 由 tool/src/base/template-utils.h.js 从 v8/src/base/template-utils.h 生成; 修订就地改, 复跑覆盖
+// 模板工具: make_array/tuple 算子/类型包元函数
+
+//! v8 侧: detail impl 6; tuple 算子 13; 类型级导出 3
+//! Rust 策略: make_array → const fn 数组推导; tuple 算子 → 元组/数组迭代适配; 类型包 → 宏展开
+
+/// v8: src/base/template-utils.h make_array<Size>(f)
+/// f(0..Size-1) 逐项填数组; constexpr 传播
+pub fn make_array<T, const N: usize>(f: impl Fn(usize) -> T) -> [T; N] {
+    core::array::from_fn(|i| f(i))
+}
+
+/// v8: pass_value_or_ref<T> — 标量/数组按值, 其余按 const 引用
+/// Rust: Copy 类型隐式按值; 非 Copy 显式 &T; 此元函数退化为文档锚
+
+/// v8: concept has_output_operator<T> — stream << t 可行
+/// Rust: core::fmt::Display bound 即判定
+
+// ---- tuple 算子 (v8 13 个) ----
+// 对账: tuple_slice_impl, tuple_for_each_impl, tuple_for_each_with_index_impl, tuple_map_impl, tuple_map2_impl, tuple_fold_impl, tuple_head, tuple_drop, tuple_for_each, tuple_for_each_with_index, tuple_map, tuple_map2, tuple_fold
+/// tuple_head<N> / tuple_drop<N>: 取前 N 项 / 去前 N 项
+/// tuple_for_each / tuple_for_each_with_index: 逐项副作用 (fold 表达式展开)
+/// tuple_map / tuple_map2: 逐项/双 zip 变换
+/// tuple_fold: 右折叠 (I 从 tuple_size-1 递归到 0)
+// Rust 落地: 运行期用 Vec/数组 + iterator; 编译期异构用宏逐项展开 — Developer 补
+
+// ---- 类型包元函数 (v8 3 个) ----
+// 对账: append_tuple_type, prepend_tuple_type, nth_type_t
+/// nth_type_t<N, Ts...>: 第 N 类型 (v8 用 __type_pack_element 内建)
+/// index_of_type_v<SearchT, Ts...>: 线性查型序号 (编译期 for)
+/// has_type_v<SearchT, Ts...>: (is_same_v || ...) 折叠
+/// append/prepend_tuple_type: 元组拼接方向

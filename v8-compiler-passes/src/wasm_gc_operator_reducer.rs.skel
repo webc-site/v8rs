@@ -1,0 +1,141 @@
+// 由 tool/src/compiler/wasm-gc-operator-reducer.js 从 v8/src/compiler/wasm-gc-operator-reducer.h + wasm-gc-operator-reducer.cc 生成; 修订就地改, 复跑覆盖
+// wasm-gc 类型检查/转换的消除与收窄
+
+//! wasm-gc-operator-reducer — 双信息源: 节点标记类型 + 控制路径类型
+//! (类型检查作分支条件时推断路径依赖类型)。
+
+/// 原版 NodeWithType — (node, wasm::TypeInModule) 状态单元
+#[derive(Clone, Copy)]
+pub struct NodeWithType {
+  /// node
+  pub node: *mut Node,
+  /// type
+  pub type_: wasm::TypeInModule,
+}
+
+impl NodeWithType {
+  /// 原版 IsSet
+  /// v8: src/compiler/wasm-gc-operator-reducer.h NodeWithType::IsSet
+  pub fn is_set(&self) -> bool {
+    !self.node.is_null()
+  }
+}
+
+/// 原版 WasmGCOperatorReducer — 控制路径状态 reducer (kMultipleInstances)
+pub struct WasmGCOperatorReducer<'z> {
+  /// mcgraph_
+  pub mcgraph: *mut MachineGraph<'z>,
+  /// gasm_
+  pub gasm: WasmGraphAssembler<'z>,
+  /// module_
+  pub module: *const wasm::WasmModule,
+  /// source_position_table_
+  pub source_position_table: *mut SourcePositionTable,
+}
+
+impl WasmGCOperatorReducer<'_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "WasmGCOperatorReducer";
+
+  /// 原版 Reduce — 分派 (13 面)
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::Reduce")
+  }
+
+  /// 原版 ReduceWasmStructOperation
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmStructOperation
+  fn reduce_wasm_struct_operation(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmStructOperation")
+  }
+
+  /// 原版 ReduceWasmArrayLength
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmArrayLength
+  fn reduce_wasm_array_length(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmArrayLength")
+  }
+
+  /// 原版 ReduceAssertNotNull
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceAssertNotNull
+  fn reduce_assert_not_null(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceAssertNotNull")
+  }
+
+  /// 原版 ReduceCheckNull
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceCheckNull
+  fn reduce_check_null(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceCheckNull")
+  }
+
+  /// 原版 ReduceWasmTypeCheck
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCheck
+  fn reduce_wasm_type_check(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCheck")
+  }
+
+  /// 原版 ReduceWasmTypeCheckAbstract
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCheckAbstract
+  fn reduce_wasm_type_check_abstract(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCheckAbstract")
+  }
+
+  /// 原版 ReduceWasmTypeCast
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCast
+  fn reduce_wasm_type_cast(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCast")
+  }
+
+  /// 原版 ReduceWasmTypeCastAbstract
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCastAbstract
+  fn reduce_wasm_type_cast_abstract(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmTypeCastAbstract")
+  }
+
+  /// 原版 ReduceTypeGuard
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceTypeGuard
+  fn reduce_type_guard(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceTypeGuard")
+  }
+
+  /// 原版 ReduceWasmAnyConvertExtern
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmAnyConvertExtern
+  fn reduce_wasm_any_convert_extern(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceWasmAnyConvertExtern")
+  }
+
+  /// 原版 ReduceMerge
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceMerge
+  fn reduce_merge(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceMerge")
+  }
+
+  /// 原版 ReduceIf
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceIf
+  fn reduce_if(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceIf")
+  }
+
+  /// 原版 ReduceStart
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceStart
+  fn reduce_start(&mut self, node: &Node /*, condition? */) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ReduceStart")
+  }
+
+  /// 原版 SetType — 节点标记类型 (不可收窄则复制新节点)
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::SetType
+  fn set_type(&mut self, node: &Node, type_: wasm::ValueType) -> *mut Node {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::SetType")
+  }
+
+  /// 原版 ObjectTypeFromContext — 节点类型 ∩ 控制路径类型
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ObjectTypeFromContext
+  fn object_type_from_context(&mut self, object: &Node, control: &Node, allow_non_wasm: bool) -> wasm::TypeInModule {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::ObjectTypeFromContext")
+  }
+
+  /// 原版 UpdateNodeAndAliasesTypes — 沿别名链更新类型
+  /// v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::UpdateNodeAndAliasesTypes
+  fn update_node_and_aliases_types(&mut self, state_owner: &Node, parent_state: ControlPathTypes, node: &Node, type_: wasm::TypeInModule, in_new_block: bool) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-operator-reducer.cc WasmGCOperatorReducer::UpdateNodeAndAliasesTypes")
+  }
+}

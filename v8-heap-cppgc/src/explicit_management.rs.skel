@@ -1,0 +1,42 @@
+// 由 tool/src/heap/cppgc-internal/explicit-management.js 从 v8/src/heap/cppgc-internal/explicit-management.cc 生成; 修订就地改, 复跑覆盖
+// 对象级手动释放/改尺寸 (GC 期间禁用)
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/explicit-management.cc InGC
+fn in_gc(heap: &HeapBase) -> bool {
+    heap.in_atomic_pause() || heap.marker().is_some() || heap.sweeper().is_sweeping_in_progress()
+}
+
+/// v8: include/cppgc/explicit-management.h ExplicitManagementImpl — 实现于本 cc
+pub mod explicit_management_impl {
+    /// v8: src/heap/cppgc-internal/explicit-management.cc FreeUnreferencedObject
+    /// GC 中 → no-op。流程: Finalize → (年轻代: remembered set 失效 + 标记字节回退) →
+    /// 大页: 摘页 + NotifyExplicitFree(PayloadSize) + Destroy;
+    /// 常规: payload_end 吻合 lab.start → LAB 回退 (清 object_start 位); 否则 NotifyExplicitFree + 入自由链。
+    pub fn free_unreferenced_object(heap_handle: &mut HeapHandle, object: *mut core::ffi::c_void) {
+        todo!("按页型分派释放")
+    }
+
+    /// v8: src/heap/cppgc-internal/explicit-management.cc Resize
+    /// 大页一律 false; new_size = RoundUp<granularity>(sizeof(HeapObjectHeader)+new_object_size);
+    /// 越界 (超 kLargeObjectSizeThreshold 或小于头) false; 大→Grow, 小→Shrink, 等→true。
+    pub fn resize(object: *mut core::ffi::c_void, new_object_size: usize) -> bool {
+        todo!("Grow/Shrink 分派")
+    }
+
+    /// v8: src/heap/cppgc-internal/explicit-management.cc Grow
+    /// 仅当 lab.start()==header.ObjectEnd() 且 lab.size()>=delta:
+    /// LAB 前移分配 delta, SetMemoryAccessible, SetAllocatedSize(new_size); (年轻代: 已标记则 IncrementMarkedBytes)
+    fn grow(header: &mut HeapObjectHeader, base_page: &mut BasePage, new_size: usize, size_delta: usize) -> bool {
+        todo!("LAB 邻接扩张")
+    }
+
+    /// v8: src/heap/cppgc-internal/explicit-management.cc Shrink
+    /// LAB 邻接 → lab.Set(free_start, size+delta) + SetMemoryInaccessible;
+    /// 否则 delta >= ObjectAllocator::kSmallestSpaceSize 才回自由链 (NotifyExplicitFree + SetBit);
+    /// (年轻代: remembered set 失效 + 已标记则 DecrementMarkedBytes)。恒返回 true (避免嵌入方搬内存)。
+    fn shrink(header: &mut HeapObjectHeader, base_page: &mut BasePage, new_size: usize, size_delta: usize) -> bool {
+        todo!("LAB 回退/自由链归还")
+    }
+}

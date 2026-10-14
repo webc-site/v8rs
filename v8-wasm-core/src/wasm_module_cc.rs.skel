@@ -1,0 +1,90 @@
+// 由 tool/src/wasm/wasm-module.cc.js 从 v8/src/wasm/wasm-module.cc 生成; 修订就地改, 复跑覆盖
+// 方法台账 + 反射 API 台账 + 内存约束合并规则
+
+//! 模块元数据层的方法台账与反射 API。
+
+/// UpdateComputedInformation: 内存尺寸钳制与边界检查策略
+/// v8: src/wasm/wasm-module.cc UpdateComputedInformation
+pub mod computed_information {
+    /// platform_max_pages = is_memory64 ? max_mem64_pages() : max_mem32_pages()
+    pub const PLATFORM_MAX_PAGES_BY_MEMORY64: bool = true;
+    /// min_memory_size = min(platform_max_pages, initial_pages) * kWasmPageSize
+    pub const MIN_SIZE_IS_MIN_OF_PLATFORM_AND_INITIAL: bool = true;
+    /// max_memory_size = min(platform_max_pages, maximum_pages) * kWasmPageSize
+    pub const MAX_SIZE_IS_MIN_OF_PLATFORM_AND_MAXIMUM: bool = true;
+    /// bounds_checks 五路分派:
+    /// 1) !wasm_bounds_checks → kNoBoundsChecks
+    /// 2) wasm_enforce_bounds_checks → kExplicitBoundsChecks
+    /// 3) memory64 且未开 wasm_memory64_trap_handling → kExplicitBoundsChecks
+    /// 4) trap handler 已启用 → kTrapHandler (32 位平台 UNREACHABLE)
+    /// 5) 兜底 → kExplicitBoundsChecks
+    pub const BOUNDS_CHECKS_DISPATCH: &[(&str, &str)] = &[
+        ("!wasm_bounds_checks", "kNoBoundsChecks"),
+        ("wasm_enforce_bounds_checks", "kExplicitBoundsChecks"),
+        ("memory64 && !wasm_memory64_trap_handling", "kExplicitBoundsChecks"),
+        ("trap_handler::IsTrapHandlerEnabled()", "kTrapHandler"),
+        ("其它", "kExplicitBoundsChecks"),
+    ];
+}
+
+/// NameMap / IndirectNameMap 的 FinishInitialization 显式实例化 (2 条)
+/// v8: src/wasm/wasm-module.cc AdaptiveMap<Value>::FinishInitialization
+#[rustfmt::skip]
+pub static NAMEMAP_INSTANTIATIONS: &[&str] = &[
+  "FinishInitialization",
+  "FinishInitialization",
+];
+
+/// 类方法定义台账 (15 条)
+/// v8: src/wasm/wasm-module.cc
+#[rustfmt::skip]
+pub static METHODS: &[(&str, &str, u32)] = &[
+  ("AdaptiveMap<Value>", "FinishInitialization", 59),
+  ("LazilyGeneratedNames", "LookupFunctionName", 81),
+  ("LazilyGeneratedNames", "Has", 93),
+  ("LazilyGeneratedNames", "AddForTesting", 149),
+  ("ModuleWireBytes", "GetNameOrNull", 156),
+  ("ModuleWireBytes", "GetNameOrNull", 164),
+  ("WasmModule", "WasmModule", 183),
+  ("WasmModule", "signature_hash", 185),
+  ("WasmModule", "EstimateStoredSize", 594),
+  ("AdaptiveMap<Value>", "EstimateCurrentMemoryConsumption", 623),
+  ("NameMap", "EstimateCurrentMemoryConsumption", 628),
+  ("LazilyGeneratedNames", "EstimateCurrentMemoryConsumption", 634),
+  ("IndirectNameMap", "EstimateCurrentMemoryConsumption", 640),
+  ("TypeFeedbackStorage", "EstimateCurrentMemoryConsumption", 654),
+  ("WasmModule", "EstimateCurrentMemoryConsumption", 673),
+];
+
+/// 自由函数台账 (18 条; 含 WebAssembly.Module 反射 API 7 条)
+/// v8: src/wasm/wasm-module.cc
+#[rustfmt::skip]
+pub static FREE_FUNCTIONS: &[(&str, u32)] = &[
+  ("UpdateComputedInformation", 27),
+  ("GetWasmFunctionOffset", 100),
+  ("GetNearestWasmFunction", 108),
+  ("GetContainingWasmFunction", 128),
+  ("GetSubtypingDepth", 142),
+  ("IsWasmCodegenAllowed", 197),
+  ("ErrorStringForCodegen", 211),
+  ("ToValueTypeString", 222),
+  ("GetTypeForFunction", 227),
+  ("GetTypeForGlobal", 272),
+  ("GetTypeForMemory", 289),
+  ("GetTypeForTable", 326),
+  ("GetImports", 364),
+  ("GetExports", 463),
+  ("GetCustomSections", 532),
+  ("GetSourcePosition", 588),
+  ("JumpTableOffset", 726),
+  ("NumFeedbackSlots", 737),
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(NAMEMAP_INSTANTIATIONS.len() == 2);
+    assert!(METHODS.len() == 15);
+    assert!(FREE_FUNCTIONS.len() == 18);
+    assert!(computed_information::MIN_SIZE_IS_MIN_OF_PLATFORM_AND_INITIAL);
+    assert!(computed_information::BOUNDS_CHECKS_DISPATCH.len() == 5);
+};

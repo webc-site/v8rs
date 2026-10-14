@@ -1,0 +1,30 @@
+// 由 tool/src/heap/parked-scope.js 从 v8/src/heap/parked-scope.h, src/heap/parked-scope-inl.h 生成; 修订就地改, 复跑覆盖
+// 驻留(parked)线程作用域与 parking 同步原语
+//! LocalHeap 驻留状态切换的 RAII 家族; 等待时驻留以让出执行权。
+//! 语义面: ParkedScope/UnparkedScope 调 LocalHeap::Park()/Unpark(),
+//! IfOnBackground 变体先判 IsBackgroundThread (inl)。
+
+/// v8: src/heap/parked-scope.h ParkedScope — 构造 Park, 析构 Unpark
+pub struct ParkedScope<'a> { pub local_heap: &'a mut LocalHeap }
+/// v8: src/heap/parked-scope.h UnparkedScope — 构造 Unpark, 析构 Park
+pub struct UnparkedScope<'a> { pub local_heap: &'a mut LocalHeap }
+/// v8: src/heap/parked-scope.h UnparkedScopeIfOnBackground — 后台线程才解驻留
+pub struct UnparkedScopeIfOnBackground<'a> { pub local_heap: &'a mut LocalHeap }
+/// v8: src/heap/parked-scope.h ParkedMutexGuard — Lock 前先 Park
+pub struct ParkedMutexGuard<'a> { pub mutex: &'a mut Mutex }
+/// v8: src/heap/parked-scope.h ParkedRecursiveMutexGuard
+pub struct ParkedRecursiveMutexGuard<'a> { pub mutex: &'a mut RecursiveMutex }
+/// v8: src/heap/parked-scope.h ParkedMutexGuardIf — 条件驻留锁
+pub struct ParkedMutexGuardIf<'a> { pub mutex: &'a mut Mutex }
+/// v8: src/heap/parked-scope.h ParkingConditionVariable — 等待前 Park, 唤醒后 Unpark
+pub struct ParkingConditionVariable { inner: ConditionVariable }
+/// v8: src/heap/parked-scope.h ParkingSemaphore — 同上语义的信号量
+pub struct ParkingSemaphore { inner: Semaphore }
+
+/// v8: src/heap/parked-scope-inl.h ParkedScope::ParkedScope / ~ParkedScope
+/// v8: src/heap/parked-scope-inl.h UnparkedScope::UnparkedScope / ~UnparkedScope
+/// v8: src/heap/parked-scope-inl.h UnparkedScopeIfOnBackground (is_background 判断)
+/// v8: src/heap/parked-scope-inl.h ParkedMutexGuard / ParkedRecursiveMutexGuard
+/// v8: src/heap/parked-scope-inl.h ParkedMutexGuardIf::{Lock,Unlock}
+/// v8: src/heap/parked-scope-inl.h ParkingConditionVariable::{Wait,WaitFor,ParkAndWait}
+/// v8: src/heap/parked-scope-inl.h ParkingSemaphore::{Wait,WaitFor,ParkedWait,ParkedWaitFor}

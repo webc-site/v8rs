@@ -1,0 +1,31 @@
+// 由 tool/src/compiler/turboshaft/call-descriptors-util.h.js 从 v8/src/compiler/turboshaft/call-descriptors-util.h 生成; 修订就地改, 复跑覆盖
+// 调用描述符构造工具: 参数编号宏机制骨架
+
+/// 原版 CallDescriptorBuilder::kMaxArgumentCount
+pub const MAX_ARGUMENT_COUNT: usize = 8;
+
+/// v8: src/compiler/turboshaft/call-descriptors-util.h IndexTag
+///
+/// 原版技巧: IndexTag<N> : IndexTag<N-1> 线性继承, 重载决议选择最大 N,
+/// 编译期数参数个数 (Rust 侧由过程宏/元组长度替代)。
+pub struct IndexTag;
+
+/// v8: src/compiler/turboshaft/call-descriptors-util.h CallDescriptorBuilder
+///
+/// ARG(type, name) 宏为每个参数生成:
+/// - 成员 V<type> name
+/// - name##_index 递增计数 (static_assert < 8)
+/// Arguments: ArgumentsBase + ARG 序列; arguments_vector_t: SmallVector<OpIndex, 8>
+pub struct CallDescriptorBuilder;
+
+impl CallDescriptorBuilder {
+  /// 原版 constexpr TSCallDescriptor 合成 operator()(callee, arguments, effects...)
+  pub fn build_call_descriptor(&self) -> &'static crate::phase::TsCallDescriptor {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(MAX_ARGUMENT_COUNT == 8);
+};

@@ -1,0 +1,51 @@
+// 由 tool/src/compiler/turboshaft/assembler.h.js 从 v8/src/compiler/turboshaft/assembler.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 汇编器接口: 迭代工具族/Label 族/REDUCE 接口面骨架
+
+/// v8: src/compiler/turboshaft/assembler.h LabelBase::Likelyness
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Likelyness {
+  /// kUnknown
+  unknown,
+  /// kLikely
+  likely,
+  /// kUnlikely
+  unlikely,
+}
+
+/// v8: src/compiler/turboshaft/assembler.h Range
+///
+/// Word32/Word64 循环区间 (begin/end/stride), 协议:
+/// Begin(assembler) / IsEnd(assembler, it) (Word32/Word64 LessThanOrEqual 分派) /
+/// Next / IsEmpty。IndexRange: OpIndex 版; Sequence: 私有继承 Range (展开列表);
+/// Zip: 多 Range 并行。
+pub struct Range<T> {
+  pub begin: T,
+  pub end: T,
+  pub stride: T,
+}
+
+/// v8: src/compiler/turboshaft/assembler.h ConditionWithHint
+/// V<Word32> 条件 + BranchHint (kNone 默认); OpIndex 隐式转换重载
+pub struct ConditionWithHint {
+  pub condition: crate::index::OpIndex,
+  pub hint: crate::operations::BranchHint,
+}
+
+/// v8: src/compiler/turboshaft/assembler.h LabelBase<loop, Ts...>
+///
+/// 值多元组: values_t = tuple<V<Ts>...>; LoopLabel(loop=true) 允许重复绑定;
+/// 析构 CheckLabelWasBound (未绑定即 bug)。BlockData: block + phi 缓冲。
+pub struct LabelBase {
+  pub is_loop: bool,
+  pub likelyness: Likelyness,
+}
+
+/// v8: src/compiler/turboshaft/assembler.h Label / LoopLabel
+pub type Label = LabelBase;
+pub type LoopLabel = LabelBase;
+
+/// v8: src/compiler/turboshaft/assembler.h AssemblerOpInterface
+///
+/// REDUCE 接口面 (9 声明): Phi / PendingLoopPhi / Goto / Branch / CatchBlockBegin / Switch / Call / FastApiCall / CheckException
+/// 宏族: TURBOSHAFT_REDUCER_BOILERPLATE / EMIT_OP / LABEL_BLOCK (生成器语法糖)。
+pub struct AssemblerOpInterface;

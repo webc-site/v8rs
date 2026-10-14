@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>v8-ast 性能评测报告</title>
+<style>
+body { font-family: system-ui, sans-serif; margin: 2rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #bbb; padding: 4px 10px; text-align: right; }
+th { background: #f0f0f0; }
+td.op, td:first-child { text-align: left; }
+td.best { color: #0a7d32; font-weight: 600; }
+caption { caption-side: top; font-weight: 600; padding: 8px; }
+footer { margin-top: 1rem; color: #777; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<h1>v8-ast 性能评测报告</h1>
+<p>v8-ast crate 的 criterion 评测: Zone 节点构造分配、enum_dispatch 派发遍历、节点尺寸/布局检查, 与等价手写 Box<dyn> 虚派发路径对比。</p>
+<p><b>enum_dispatch 相对 Box<dyn> 的收益</b>: 各对比组平均而言, v8-ast 路径比 Box<dyn> 对比实现快 13.59× </p>
+<table>
+<caption>各评测操作下参与实现的对比表</caption>
+<thead><tr><th>评测操作</th><th>实现</th><th>平均值</th><th>中位数</th><th>标准差</th><th>95% 置信区间</th><th>相对最快</th></tr></thead>
+<tbody>
+<tr><td class="op" rowspan="2">alloc_nodes — 代表性 AST 节点分配 (每轮 1000 个)</td><td>dyn-box</td><td class="best">40.27 µs</td><td>39.42 µs</td><td>3.36 µs</td><td>39.68 µs ~ 40.98 µs</td><td>1.00× (最快)</td></tr>
+<tr><td>v8-ast</td><td>42.36 µs</td><td>40.95 µs</td><td>7.20 µs</td><td>41.05 µs ~ 43.84 µs</td><td>1.05×</td></tr>
+<tr><td class="op" rowspan="2">build_tree — 合成表达式树构造 (深度×分支) (6x2)</td><td>dyn-box</td><td>1.87 µs</td><td>1.80 µs</td><td>214.18 ns</td><td>1.84 µs ~ 1.92 µs</td><td>1.05×</td></tr>
+<tr><td>v8-ast</td><td class="best">1.78 µs</td><td>1.78 µs</td><td>25.32 ns</td><td>1.78 µs ~ 1.79 µs</td><td>1.00× (最快)</td></tr>
+<tr><td class="op" rowspan="2">build_tree — 合成表达式树构造 (深度×分支) (8x3)</td><td>dyn-box</td><td>137.94 µs</td><td>134.47 µs</td><td>17.77 µs</td><td>135.02 µs ~ 141.85 µs</td><td>21.55×</td></tr>
+<tr><td>v8-ast</td><td class="best">6.40 µs</td><td>6.35 µs</td><td>306.65 ns</td><td>6.36 µs ~ 6.47 µs</td><td>1.00× (最快)</td></tr>
+<tr><td class="op" rowspan="2">layout_check — 节点类型/布局检查扫描 (6x2)</td><td>dyn-box</td><td>665.85 ns</td><td>649.86 ns</td><td>64.43 ns</td><td>654.71 ns ~ 679.72 ns</td><td>1.68×</td></tr>
+<tr><td>v8-ast</td><td class="best">396.87 ns</td><td>396.72 ns</td><td>1.62 ns</td><td>396.56 ns ~ 397.19 ns</td><td>1.00× (最快)</td></tr>
+<tr><td class="op" rowspan="2">layout_check — 节点类型/布局检查扫描 (8x3)</td><td>dyn-box</td><td>63.04 µs</td><td>53.19 µs</td><td>19.23 µs</td><td>59.47 µs ~ 66.95 µs</td><td>43.21×</td></tr>
+<tr><td>v8-ast</td><td class="best">1.46 µs</td><td>1.46 µs</td><td>5.97 ns</td><td>1.46 µs ~ 1.46 µs</td><td>1.00× (最快)</td></tr>
+<tr><td class="op" rowspan="2">visit_tree — AstVisitor 全树遍历 (6x2)</td><td>dyn-box</td><td>301.02 ns</td><td>295.51 ns</td><td>24.74 ns</td><td>296.93 ns ~ 306.49 ns</td><td>1.26×</td></tr>
+<tr><td>v8-ast</td><td class="best">239.45 ns</td><td>239.04 ns</td><td>8.13 ns</td><td>238.05 ns ~ 241.19 ns</td><td>1.00× (最快)</td></tr>
+<tr><td class="op" rowspan="2">visit_tree — AstVisitor 全树遍历 (8x3)</td><td>dyn-box</td><td>26.19 µs</td><td>25.82 µs</td><td>2.07 µs</td><td>25.86 µs ~ 26.65 µs</td><td>25.42×</td></tr>
+<tr><td>v8-ast</td><td class="best">1.03 µs</td><td>1.03 µs</td><td>11.51 ns</td><td>1.03 µs ~ 1.03 µs</td><td>1.00× (最快)</td></tr>
+</tbody>
+</table>
+<p>数值越低越好, 时间取 criterion 均值 (纳秒制, 已人性化单位)。</p>
+<footer>生成时间: 2026-10-11T08:24:20.466Z · genbench 产出链: bench.js → bench.json → table.js / md.js / svg.js · impls: dyn-box, v8-ast</footer>
+</body>
+</html>

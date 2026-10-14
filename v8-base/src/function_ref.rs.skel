@@ -1,0 +1,17 @@
+// 由 tool/src/base/functional/function-ref.h.js 从 v8/src/base/functional/function-ref.h 生成; 修订就地改, 复跑覆盖
+// 非持有可调用引用 (trivially copyable, 无空态)
+
+//! v8: src/base/functional/function-ref.h
+
+/// v8: src/base/functional/function-ref.h FunctionRef<R(Args...)>
+/// 语义: 类型擦除参数位专用 — 同步调用, 不拷贝不接管所有权;
+///       无 null 态 (默认构造 delete); 禁赋值防悬垂; LIFETIME_BOUND 注记
+/// 转换约束 (比 absl 严): 返回型可转换 (int→bool, D*→B*), 参数型必须精确 same_as;
+/// 禁止静默丢弃返回值 (absl 允许 []{return 42;} 当 void() 用, 本类拒绝)
+/// Rust 对应: &dyn Fn(Args...) -> R (引用天然非持有 + 无空态), 登记如下
+pub type FunctionRef<'a, R, A> = &'a dyn Fn(A) -> R;
+
+// v8: 兼容谓词 kCompatibleFunctor = convertible_to(RunType 的返回型, R)
+//     && same_as(RunType 参数列, TypeList<Args...>)
+//     && !is_instantiation<Functor, FunctionRef> && !is_instantiation<Functor, absl::FunctionRef>
+// v8: FunctionRef(Func* func) — 函数指针构造 (豁免生命周期分析; 成员函数指针 TODO 登记)

@@ -1,0 +1,44 @@
+// 由 tool/src/compiler/js-generic-lowering.js 从 v8/src/compiler/js-generic-lowering.h + js-generic-lowering.cc 生成; 修订就地改, 复跑覆盖
+// JS 算子通用降级: 逐 opcode 换 runtime/IC 内建调用
+
+
+/// JSGenericLowering — 把 JS 级算子降为 "generic" 情形的 runtime/IC 调用
+/// v8: src/compiler/js-generic-lowering.h JSGenericLowering
+pub struct JSGenericLowering { jsgraph: JSGraphRef, broker: JSHeapBrokerRef }
+
+impl JSGenericLowering {
+    /// 总分派 — 按 IrOpcode 逐个 Lower##x (JS_OP_LIST 全展开)
+    /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::Reduce
+    fn reduce(&mut self, node: &Node) -> Reduction;
+
+    // —— Lower* 家族: .cc 定义 83 个 (JS_OP_LIST 1:1) ——
+    // 代表 (全部 `void fn(Node* node)` 单参型):
+    // fn lower_jsasync_function_await(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSAsyncFunctionAwait
+    // fn lower_jsstrict_equal(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSStrictEqual
+    // fn lower_jsdetach_context_cell(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSDetachContextCell
+    // fn lower_jshas_property(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSHasProperty
+    // fn lower_jsload_property(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSLoadProperty
+    // fn lower_jsload_named(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSLoadNamed
+    // fn lower_jsload_named_from_super(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSLoadNamedFromSuper
+    // fn lower_jsload_global(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSLoadGlobal
+    // fn lower_jsget_iterator(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSGetIterator
+    // fn lower_jsset_keyed_property(node) /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::LowerJSSetKeyedProperty
+    // ... 其余 73 个同型
+
+    // —— 替换 helper ——
+    /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::ReplaceWithBuiltinCall
+    /// 重载 3 个: (node, Builtin) / (node, Callable, Flags) / (node, Callable, Flags, Properties)
+    fn replace_with_builtin_call(&mut self, node: &Node, builtin: Builtin /*, 重载差异 */);
+    /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::ReplaceWithRuntimeCall
+    /// 重载见 h; args = -1 表示按节点输入数
+    fn replace_with_runtime_call(&mut self, node: &Node, f: RuntimeFunctionId, args: i32);
+    /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::ReplaceUnaryOpWithBuiltinCall
+    fn replace_unary_op_with_builtin_call(&mut self, node: &Node, builtin: Builtin);
+    /// 双内建: builtin_without_feedback / builtin_with_feedback
+    /// v8: src/compiler/js-generic-lowering.cc JSGenericLowering::ReplaceBinaryOpWithBuiltinCall
+    fn replace_binary_op_with_builtin_call(&mut self, node: &Node, without_feedback: Builtin, with_feedback: Builtin);
+}
+
+// —— 对数基准 ——
+// Lower* 定义 83 / Reduce switch case 0
+// BuiltinCall 重载 3 / RuntimeCall 重载 1

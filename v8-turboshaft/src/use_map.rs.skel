@@ -1,0 +1,40 @@
+// 由 tool/src/compiler/turboshaft/use-map.h.js 从 v8/src/compiler/turboshaft/use-map.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 使用映射: OpIndex 到使用列表
+
+/// 原版 UseMap::PerOperationUses — 三态 offset 编码:
+/// - offset < 0: -offset-1 索引 saturated_uses_ (使用数溢出内联阈值)
+/// - offset = 0: 定义尚未访问
+/// - offset > 0: offset 索引 uses_ (平铺数组 + count 计数)
+/// v8: use-map.h UseMap::PerOperationUses
+#[derive(Default, Clone, Copy)]
+pub struct PerOperationUses {
+  pub offset: i32,
+  pub count: u32,
+}
+
+/// 原版 UseMap — 全操作使用计算, filter 可跳过无关操作
+/// (默认 filter 恒 false = 不过滤)。
+/// v8: use-map.{h,cc} UseMap
+pub struct UseMap {
+  pub table: Vec<PerOperationUses>,
+  pub uses: Vec<OpIndex>,
+  pub saturated_uses: Vec<Vec<OpIndex>>,
+}
+
+impl UseMap {
+  /// v8: cc UseMap::UseMap 构造 + 全图扫描 (AddUse 维护编码)
+  pub fn new(graph: &Graph, filter: UseFilter) -> Self { todo!() }
+  /// v8: cc uses — 读侧 (offset 三态解码)
+  pub fn uses(&self, index: OpIndex) -> &[OpIndex] { todo!() }
+}
+
+/// v8: use-map.cc 方法面: 构造(全图扫描), uses, AddUse
+pub type UseFilter = fn(&Graph, &Operation) -> bool;
+
+/// 原版 Simd128UseMap — 只算可重向量化 Simd128 操作的使用:
+/// filter 判定 (非 simd 输出才记):
+/// - 单输出 Simd128 -> 不滤 (记使用)
+/// - ReturnOp/FrameStateOp: 逐输入检查 simd 输出
+/// - 其余: inputs_rep 任一 Simd128 -> 滤
+/// v8: use-map.h Simd128UseMap
+pub struct Simd128UseMap(pub UseMap);

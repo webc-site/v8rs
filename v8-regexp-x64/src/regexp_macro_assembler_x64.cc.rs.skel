@@ -1,0 +1,27 @@
+// 由 tool/src/regexp/x64/regexp-macro-assembler-x64.cc.js 从 v8/src/regexp/x64/regexp-macro-assembler-x64.cc 生成; 修订就地改, 复跑覆盖
+// x64 宏汇编实现面台账: 定义全集 + 帧消费锚 + SIMD 通道常量 (帧数值同源 frame_layout.rs)
+
+//! RegExpMacroAssemblerX64 — 原生码生成器 (MacroAssembler 直发)。
+//! 帧布局数值不在此重复: 见 frame_layout.rs (本脚本已做 cc static_assert 群 ↔ rs 交叉)。
+
+/// SIMD 向量宽 (SSE, 16 字节 = 8×uc16; SkipUntil* 系 4 处)
+pub const K_VECTOR_SIZE: i32 = 16;
+/// SIMD 前瞻位置槽偏移 (=-1, kCheckPositionOffset; 4 处)
+pub const K_CHECK_POSITION_OFFSET: i32 = -1;
+/// 每次 SIMD 加载的字符数 (uc16 ×4)
+pub const K_CHARS_PER_LOAD: i32 = 4;
+/// 单步推进字符数 (SIMD advance)
+pub const CHARACTER_COUNT: i32 = 4;
+
+// ── 定义处置表 (86 顶层; 签名见 cc, 落地按 frame_layout.rs + 本表) ──
+// ctor/dtor: success_label_/backtrack_label_ 初始化 + Unuse
+// prologue (SysV): kCArgRegs[0..3] → rbp 帧槽; kRegExpStackBasePointer 存 scratch
+// 核心通道:
+// /// v8: cc AdvanceRegister/ReadCurrentPositionFromRegister/WriteCurrentPositionToRegister
+//   → rbp 相对寻址 register_location(kRegisterZeroOffset - reg*8)
+// /// v8: cc CheckPosition/CheckAtStart/CheckNotAtStart → kStringStartMinusOneOffset 比对
+// /// v8: cc Global 决胜 → kSuccessfulCapturesOffset 自增 + kNumOutputRegisters 减 1
+// /// v8: cc CheckStackGuardState/Match/Execute/GrowStack — 外部引用入口 (C ABI kCArgRegs)
+// /// v8: cc Push ×3 重载 — backtrack 栈 (rbx) 压 current_position/register/label
+// /// v8: cc Succeed → success_label_ 绑定; 失败路径 backtrack_label_/fail_label_
+// /// v8: cc static_assert(FAILURE == 0) — NativeRegExpMacroAssembler::Result 哨兵对齐

@@ -1,0 +1,100 @@
+// 由 tool/src/base/platform/platform-posix.js 从 v8/src/base/platform/platform-posix.{h,cc} 生成; 修订就地改, 复跑覆盖
+// POSIX 基座 53 OS 方法 (darwin 目标的实现底座)
+
+use crate::platform::MemoryPermission;
+
+/// Apple arm64 分配页 (原版 constexpr int kAppleArmPageSize = 1 << 14)
+/// v8: src/base/platform/platform-posix.cc kAppleArmPageSize
+pub const APPLE_ARM_PAGE_SIZE: usize = 16384;
+/// mmap fd 偏移常量 (原版 const int kMmapFdOffset = 0)
+/// v8: src/base/platform/platform-posix.cc kMmapFdOffset
+pub const MMAP_FD_OFFSET: i32 = 0;
+
+/// MemoryPermission → mmap/mprotect 保护位 (原版 GetProtectionFromMemoryPermission)
+/// v8: src/base/platform/platform-posix.cc GetProtectionFromMemoryPermission
+/// kNoAccess→PROT_NONE(0) / kRead→PROT_READ / kReadWrite→+PROT_WRITE /
+/// kReadWriteExecute→+PROT_EXEC / kReadExecute→READ|EXEC;
+/// kNoAccessWillJitLater 原版并入 kNoAccess 处理 (w^x 过渡, 见 platform.h 族)
+pub fn protection_from_memory_permission(access: MemoryPermission) -> i32 {
+  const PROT_NONE: i32 = 0;
+  const PROT_READ: i32 = 1;
+  const PROT_WRITE: i32 = 2;
+  const PROT_EXEC: i32 = 4;
+  match access {
+    MemoryPermission::NoAccess | MemoryPermission::NoAccessWillJitLater => PROT_NONE,
+    MemoryPermission::Read => PROT_READ,
+    MemoryPermission::ReadWrite => PROT_READ | PROT_WRITE,
+    MemoryPermission::ReadWriteExecute => PROT_READ | PROT_WRITE | PROT_EXEC,
+    MemoryPermission::ReadExecute => PROT_READ | PROT_EXEC,
+  }
+}
+
+/// mmap 标志组装 (原版 GetFlagsForMemoryPermission)
+/// v8: src/base/platform/platform-posix.cc GetFlagsForMemoryPermission
+/// if 链: 无句柄→MAP_ANONYMOUS; fixed→MAP_FIXED;
+/// page_type==kShared→MAP_SHARED 否则 MAP_PRIVATE;
+/// NoAccess/NoAccessWillJitLater→MAP_NORESERVE (AIX/FREEBSD/QNX 除外, QNX 用 MAP_LAZY);
+/// darwin: WillJitLater 或 ReadWriteExecute→MAP_JIT (Apple 硅硬化运行时 JIT 必需)
+pub fn flags_for_memory_permission(access: MemoryPermission, shared: bool, fixed: bool, anonymous: bool) -> i32 {
+  const MAP_PRIVATE: i32 = 0x0002;
+  const MAP_FIXED: i32 = 0x0010;
+  const MAP_ANONYMOUS: i32 = 0x1000;
+  const MAP_NORESERVE: i32 = 0x0040;
+  const MAP_SHARED: i32 = 0x0001;
+  const MAP_JIT: i32 = 0x0800;
+  let flags: i32 = 0;
+  if (anonymous) { flags |= MAP_ANONYMOUS; }
+  if (fixed) { flags |= MAP_FIXED; }
+  flags |= if shared { MAP_SHARED } else { MAP_PRIVATE };
+  if matches!(access, MemoryPermission::NoAccess | MemoryPermission::NoAccessWillJitLater) {
+    flags |= MAP_NORESERVE;
+  }
+  if matches!(access, MemoryPermission::NoAccessWillJitLater | MemoryPermission::ReadWriteExecute) {
+    flags |= MAP_JIT; // darwin 目标专用
+  }
+  flags
+}
+
+/// POSIX 公共初始化 (原版 PosixInitializeCommon)
+/// v8: src/base/platform/platform-posix.cc PosixInitializeCommon
+/// 记 g_gc_fake_mmap 供 GC 假 mmap 文件名
+pub fn posix_initialize_common(gc_fake_mmap: *const std::ffi::c_char) {
+  // 原版: g_gc_fake_mmap = gc_fake_mmap (线程安全由调用方保证)
+}
+
+/// 时区缓存基类 (原版 class PosixTimezoneCache : TimezoneCache)
+/// v8: src/base/platform/platform-posix.h PosixTimezoneCache
+/// msPerSecond = 1000; DaylightSavingsOffset 由 localtime_r tm_isdst 推导
+pub const MS_PER_SECOND: i32 = 1000;
+
+// —— OS 53 方法面登记 (供 Developer 逐项补语义; 名单取自 cc 唯一解析) ——
+/// v8: src/base/platform/platform-posix.cc 完整面 (53):
+/// Abort, ActivationFrameAlignment, Allocate, AllocatePageSize, AllocateShared, ArmUsingHardFloat, CanReserveAddressSpace, CommitPageSize, CreateAddressSpaceReservation, CreateSharedMemoryHandleForTesting, DebugBreak, DecommitPages, DestroySharedMemoryHandle, DirectorySeparator, DiscardSystemPages, EnsureAlternativeSignalStackIsAvailableForCurrentThread, ExitProcess, FOpen, FPrint, Free, FreeAddressSpaceReservation, FreeShared, GetCurrentProcessId, GetCurrentThreadId, GetCurrentThreadIdInternal, GetGCFakeMMapFile, GetLastError, GetPeakMemoryUsageKb, GetRandomMmapAddr, GetUserTime, HasLazyCommits, Initialize, IsHardwareEnforcedShadowStacksEnabled, OpenTemporaryFile, Print, PrintError, RecommitPages, Release, Remove, SNPrintF, SealPages, SetDataReadOnly, SetMemoryRegionName, SetPermissions, SetRandomMmapSeed, Sleep, StrNCpy, TimeCurrentMillis, VFPrint, VPrint, VPrintError, VSNPrintF, isDirectorySeparator
+///
+/// 分区:
+///  内存: Allocate/AllocateShared/Free/FreeShared/Release/SetPermissions/
+///        SetDataReadOnly/RecommitPages/DiscardSystemPages/DecommitPages/
+///        SealPages/CreateAddressSpaceReservation/FreeAddressSpaceReservation/
+///        CanReserveAddressSpace/SetMemoryRegionName/CreateSharedMemoryHandleForTesting/
+///        DestroySharedMemoryHandle/HasLazyCommits/GetRandomMmapAddr/SetRandomMmapSeed
+///  页尺寸: AllocatePageSize (darwin 走 kAppleArmPageSize)/CommitPageSize/
+///        ActivationFrameAlignment
+///  线程: GetCurrentThreadId(Internal)/GetCurrentProcessId/ExitProcess/
+///        GetUserTime/GetPeakMemoryUsageKb/EnsureAlternativeSignalStackIsAvailableForCurrentThread
+///  时序: Sleep/TimeCurrentMillis + PosixTimezoneCache::DaylightSavingsOffset
+///  IO/打印: FOpen/Remove/OpenTemporaryFile/LogFileOpenMode("w+")/Print/Error 系
+///        (Print/PrintError/VPrint/VPrintError/VFPrint/FPrint/SNPrintF/VSNPrintF)
+///  杂项: Initialize/Abort/DebugBreak/GetLastError/GetGCFakeMMapFile/
+///        IsHardwareEnforcedShadowStacksEnabled(恒 false)/ArmUsingHardFloat/
+///        DirectorySeparator('/')/isDirectorySeparator/StrNCpy/MemoryMappedFile
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(APPLE_ARM_PAGE_SIZE, 16384);
+  assert_eq!(MMAP_FD_OFFSET, 0);
+  assert_eq!(MS_PER_SECOND, 1000);
+  // PROT 位与 sys/mman.h 一致
+  assert_eq!(protection_from_memory_permission(MemoryPermission::NoAccess), 0);
+  assert_eq!(protection_from_memory_permission(MemoryPermission::ReadWrite), 3);
+  assert_eq!(protection_from_memory_permission(MemoryPermission::ReadWriteExecute), 7);
+};

@@ -1,0 +1,38 @@
+// 由 tool/src/base/win32-headers.h.js 从 v8/src/base/win32-headers.h 生成; 修订就地改, 复跑覆盖
+// Win32 免 windows.h 的最小类型面
+
+//! v8 侧: 精简宏 7 (含 WIN32_LEAN_AND_MEAN); typedef 12 条
+//! Rust: 仅当对接 winapi 层时需要; 类型镜像登记, 语义面就地修订
+
+/// v8: WIN32_LEAN_AND_MEAN + NOMINMAX NOKERNEL NOUSER NOSERVICE NOSOUND NOMCX
+/// 作用: 令后包含的 windows.h 裁剪 (Rust 无预处理器, 登记对账)
+pub const WIN32_LEAN_AND_MEAN_MACROS: &[&str] = &["WIN32_LEAN_AND_MEAN", "NOMINMAX", "NOKERNEL", "NOUSER", "NOSERVICE", "NOSOUND", "NOMCX"];
+
+// ---- Win 基础类型镜像 (v8 typedef 12 条) ----
+/// v8: typedef int BOOL;
+pub type BOOL = i32;
+/// v8: typedef unsigned long DWORD;
+pub type DWORD = u32;
+/// v8: typedef long LONG;
+pub type LONG = i32;
+/// v8: typedef void* LPVOID;
+pub type LPVOID = *mut core::ffi::c_void;
+/// v8: typedef void* PVOID;
+pub type PVOID = *mut core::ffi::c_void;
+/// v8: typedef void* HANDLE;
+pub type HANDLE = *mut core::ffi::c_void;
+/// v8: typedef unsigned __int64 ULONG_PTR;
+pub type ULONG_PTR = u64;
+/// v8: typedef __w64 unsigned long ULONG_PTR;
+pub type ULONG_PTR = u32;
+/// v8: typedef struct _RTL_SRWLOCK SRWLOCK;
+pub type SRWLOCK = todo!() /* v8: typedef struct _RTL_SRWLOCK */;
+/// v8: typedef struct _RTL_CONDITION_VARIABLE CONDITION_VARIABLE;
+pub type CONDITION_VARIABLE = todo!() /* v8: typedef struct _RTL_CONDITION_VARIABLE */;
+/// v8: typedef struct _RTL_CRITICAL_SECTION CRITICAL_SECTION;
+pub type CRITICAL_SECTION = todo!() /* v8: typedef struct _RTL_CRITICAL_SECTION */;
+/// v8: typedef struct _RTL_CRITICAL_SECTION_DEBUG* PRTL_CRITICAL_SECTION_DEBUG;
+pub type PRTL_CRITICAL_SECTION_DEBUG = todo!() /* v8: typedef struct _RTL_CRITICAL_SECTION_DEBUG* */;
+
+/// v8: #define WINAPI __stdcall
+/// Rust: extern "system" 调用约定即 stdcall (x64 下统一)

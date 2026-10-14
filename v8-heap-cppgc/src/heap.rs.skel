@@ -1,0 +1,88 @@
+// 由 tool/src/heap/cppgc-internal/heap.js 从 v8/src/heap/cppgc-internal/heap.h + src/heap/cppgc-internal/heap.cc 生成; 修订就地改, 复跑覆盖
+// 公开堆: GC 周期编排 + 配置级别校验
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/heap.cc CheckConfig
+/// 标记/清扫级别序: config 请求级别 ≤ 平台支持级别 (int 序比较)。
+fn check_config(config: &GcConfig, marking_support: MarkingType, sweeping_support: SweepingType) {
+    assert!((config.marking_type as i32) <= (marking_support as i32));
+    assert!((config.sweeping_type as i32) <= (sweeping_support as i32));
+}
+
+/// v8: src/heap/cppgc-internal/heap.h Heap (HeapBase + cppgc::Heap + GarbageCollector)
+pub struct Heap {
+    /// v8: HeapBase 基类子对象
+    pub base: HeapBase,
+    /// v8: config_
+    config: GcConfig,
+    /// v8: gc_invoker_ — 传入 HeapBase 构造 (引用自身)
+    gc_invoker: GcInvoker,
+    /// v8: growing_
+    growing: HeapGrowingImpl,
+    /// v8: generational_gc_enabled_
+    generational_gc_enabled: bool,
+    /// v8: epoch_
+    epoch: usize,
+    /// v8: override_stack_state_
+    override_stack_state: Option<EmbedderStackState>,
+}
+
+impl Heap {
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::Create — unique_ptr 工厂
+    pub fn create(platform: SharedPtr<Platform>, options: HeapOptions) -> Box<Self> { todo!("Heap::Heap 封箱") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::Heap
+    /// HeapBase(platform, custom_spaces, stack/marking/sweeping, gc_invoker_, stack_start_marker)
+    /// + gc_invoker_(this, platform, stack_support) + growing_(invoker, stats, constraints, …);
+    /// CHECK_IMPLIES: 非原子标记/清扫 → 前台 TaskRunner 必须存在。
+    pub fn new(platform: SharedPtr<Platform>, options: HeapOptions) -> Self { todo!("接线构造") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::~Heap
+    /// FinalizeIncrementalGarbageCollectionIfRunning(保守原子) + NoGCScope 内 sweeper.FinishIfRunning。
+    pub fn destroy(&mut self) { todo!("优雅收尾") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::CollectGarbage
+    /// StartGarbageCollection + FinalizeGarbageCollection(stack_state) + epoch_++。
+    pub fn collect_garbage(&mut self, config: GcConfig) { todo!("全量周期") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::StartIncrementalGarbageCollection
+    /// 非原子标记时增量起跳 (EnterIncrementalMarkingIfNeeded 语义), epoch_++。
+    pub fn start_incremental_garbage_collection(&mut self, config: GcConfig) { todo!("增量起跳") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::RetryAllocate — 委托 gc_invoker_
+    pub fn retry_allocate(&mut self, allocate: &mut dyn FnMut() -> bool) -> bool {
+        self.gc_invoker.impl_.retry_allocate(allocate)
+    }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::FinalizeIncrementalGarbageCollectionIfRunning
+    /// 标记中才收尾; atom pause 内三段式。
+    pub fn finalize_incremental_garbage_collection_if_running(&mut self, config: GcConfig) { todo!("条件收尾") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::StartGarbageCollection
+    /// CheckConfig → 存 config_ → (非原子) 建 Marker (EnterIncrementalMarkingIfNeeded) → 选 verifier。
+    pub fn start_garbage_collection(&mut self, config: GcConfig) { todo!("GC 开局") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::FinalizeGarbageCollectionImpl
+    /// EnterAtomicPause → (验证) → FinishMarking → CompactSpacesIfEnabled → sweeper.CompactSpace… → Sweep → 标记释放。
+    pub fn finalize_garbage_collection_impl(&mut self, _stack_state: StackState) { todo!("GC 收官") }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::EnableGenerationalGC — 委托 HeapBase::EnableGenerationalGC + 置旗
+    pub fn enable_generational_gc(&mut self) { self.generational_gc_enabled = true; }
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::DisableHeapGrowingForTesting
+    pub fn disable_heap_growing_for_testing(&mut self) { self.growing.disable_for_testing(); }
+
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::set_override_stack_state — CHECK 无既有覆盖
+    pub fn set_override_stack_state(&mut self, state: EmbedderStackState) {
+        assert!(self.override_stack_state.is_none());
+        self.override_stack_state = Some(state);
+    }
+    /// v8: src/heap/cppgc-internal/heap.cc Heap::clear_overridden_stack_state
+    pub fn clear_overridden_stack_state(&mut self) { self.override_stack_state = None; }
+    /// v8: Heap::epoch / overridden_stack_state
+    pub fn epoch(&self) -> usize { self.epoch }
+    pub fn overridden_stack_state(&self) -> Option<EmbedderStackState> { self.override_stack_state }
+}
+
+/// v8: src/heap/cppgc-internal/heap.cc Heap::ForceGarbageCollectionSlow / GetAllocationHandle / GetHeapHandle
+/// — 直发保守原子 GC + 句柄透传, 语义面留锚。

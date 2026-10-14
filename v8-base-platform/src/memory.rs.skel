@@ -1,0 +1,82 @@
+// 由 tool/src/base/platform/memory.js 从 v8/src/base/platform/memory.h 生成; 修订就地改, 复跑覆盖
+// 分配包装 (posix 直通, darwin malloc_size usable, AIX/Starboard 登记不产码)
+
+use std::ffi::c_void;
+
+/// 分配 (原版 base::Malloc; 目标分支直通 libc::malloc)
+/// v8: src/base/platform/memory.h Malloc
+/// STARBOARD→SbMemoryAllocate / AIX&&_LINUX_SOURCE_COMPAT→__linux_malloc — 非目标, 登记
+pub fn malloc(size: usize) -> *mut c_void { unsafe { libc::malloc(size) } }
+
+/// 重分配 (原版 base::Realloc)
+/// v8: src/base/platform/memory.h Realloc
+/// 不变式: size==0 禁止 (原版 CHECK_NE(0, size) — realloc(ptr,0) 行为实现定义)
+pub fn realloc(memory: *mut c_void, size: usize) -> *mut c_void {
+  assert_ne!(size, 0);
+  unsafe { libc::realloc(memory, size) }
+}
+
+/// 释放 (原版 base::Free; STARBOARD→SbMemoryDeallocate, 登记)
+/// v8: src/base/platform/memory.h Free
+pub fn free(memory: *mut c_void) { unsafe { libc::free(memory) } }
+
+/// 清零分配 (原版 base::Calloc)
+/// v8: src/base/platform/memory.h Calloc
+pub fn calloc(count: usize, size: usize) -> *mut c_void { unsafe { libc::calloc(count, size) } }
+
+/// 对齐分配 (原版 base::AlignedAlloc)
+/// v8: src/base/platform/memory.h AlignedAlloc
+/// 不变式: alignment ≥ alignof(void*), 且为 2 的幂 (原版 DCHECK×2)
+/// 分支: WIN→_aligned_malloc / BIONIC→memalign / ZOS→__aligned_malloc /
+/// POSIX (目标)→posix_memalign, 失败即 nullptr
+pub fn aligned_alloc(size: usize, alignment: usize) -> *mut c_void {
+  debug_assert!(usize::from(std::mem::align_of::<*const c_void>()) <= alignment);
+  debug_assert!(alignment.is_power_of_two());
+  let mut ptr: *mut c_void = std::ptr::null_mut();
+  let rc = unsafe { libc::posix_memalign(&mut ptr, alignment, size) };
+  if rc != 0 { std::ptr::null_mut() } else { ptr }
+}
+
+/// 对齐释放 (原版 base::AlignedFree)
+/// v8: src/base/platform/memory.h AlignedFree
+/// POSIX/BIONIC 走普通 Free; WIN→_aligned_free / ZOS→__aligned_free (登记)
+pub fn aligned_free(ptr: *mut c_void) { free(ptr) }
+
+/// malloc 可用量 (原版 base::MallocUsableSize; V8_HAS_MALLOC_USABLE_SIZE)
+/// v8: src/base/platform/memory.h MallocUsableSize
+/// darwin→malloc_size / WIN→_msize(null→0) / 其余 POSIX→malloc_usable_size
+/// 注意: 超出请求量的字节访问非 UBSan 安全 — 加量走 allocate_at_least
+pub fn malloc_usable_size(ptr: *mut c_void) -> usize {
+  extern "C" {
+    fn malloc_size(ptr: *const c_void) -> usize;
+  }
+  unsafe { malloc_size(ptr) }
+}
+
+/// 分配结果 (原版 template struct AllocationResult<Pointer>)
+/// v8: src/base/platform/memory.h AllocationResult
+/// 模拟 C++23 allocation_result / allocate_at_least: 实际可用量 ≥ 请求量
+#[derive(Debug, Clone, Copy)]
+pub struct AllocationResult<T> {
+  pub ptr: T,
+  pub count: usize,
+}
+
+/// 按需加量分配 (原版 template AllocateAtLeast<T>)
+/// v8: src/base/platform/memory.h AllocateAtLeast
+/// 无 usable_size 时退回 {Malloc(n), n}; UBSan 下 usable≠wanted 需 Realloc 收敛
+pub fn allocate_at_least<T>(n: usize) -> AllocationResult<*mut T> {
+  let wanted = n * std::mem::size_of::<T>();
+  let memory = crate::memory::malloc(wanted) as *mut T;
+  let usable = crate::memory::malloc_usable_size(memory as *mut c_void);
+  AllocationResult { ptr: memory, count: usable / std::mem::size_of::<T>().max(1) }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // 6 分配入口 + 1 条件入口
+  const ALLOC_ENTRIES: usize = 7;
+  assert!(ALLOC_ENTRIES == 7);
+  // posix_memalign 失败 → nullptr (0 == 成功)
+  assert_eq!(libc::EINVAL, 22);
+};

@@ -1,0 +1,34 @@
+// 由 tool/src/compiler/select-lowering.js 从 v8/src/compiler/select-lowering.h + select-lowering.cc 生成; 修订就地改, 复跑覆盖
+// Select 节点降低为 Branch/Diamond
+
+//! select-lowering — Select(cond,v1,v2) → 菱形 (Branch+IfTrue/IfFalse+Phi)
+//!
+//! 对 start 之后的控制流敏感: 记 start 节点, 插入位置在其后。
+
+/// 原版 SelectLowering — Reducer (图组装器 + start 锚)
+pub struct SelectLowering<'z, 'g> {
+  /// graph_assembler_
+  pub graph_assembler: &'z mut JSGraphAssembler<'z, 'g>,
+  /// start_
+  pub start: *mut Node,
+}
+
+impl SelectLowering<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "SelectLowering";
+
+  /// 原版 Reduce — 仅 IrOpcode::Select 进入 (Select 门核对)
+  /// v8: src/compiler/select-lowering.cc SelectLowering::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    if node.opcode() != IrOpcode::Select {
+      return Reduction::NoChange;
+    }
+    self.lower_select(node)
+  }
+
+  /// 原版 LowerSelect — 构造菱形并替换
+  /// v8: src/compiler/select-lowering.cc SelectLowering::LowerSelect
+  fn lower_select(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/select-lowering.cc SelectLowering::LowerSelect")
+  }
+}

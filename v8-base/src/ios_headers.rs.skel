@@ -1,0 +1,11 @@
+// 由 tool/src/base/ios-headers.h.js 从 v8/src/base/ios-headers.h 生成; 修订就地改, 复跑覆盖
+// iOS 私有 mach API 声明 (内存分配支持)
+
+//! v8: src/base/ios-headers.h — 仅 iOS 目标, 非 公共 SDK 头补声明
+
+// v8: kern_return_t mach_vm_remap(target_task, target_address, size, mask, flags,
+//     src_task, src_address, copy, cur_protection, max_protection, inheritance)
+// v8: kern_return_t mach_vm_map(target_task, address, size, mask, flags, object,
+//     offset, copy, cur_protection, max_protection, inheritance)
+// Rust: #[cfg(target_os = "ios")] extern "C" 声明, liblibc 未覆盖时 Developer 手写,
+//       非目标平台登记跳过

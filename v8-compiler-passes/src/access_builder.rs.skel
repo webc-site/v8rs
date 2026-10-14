@@ -1,0 +1,843 @@
+// 由 tool/src/compiler/access-builder.js 从 v8/src/compiler/access-builder.h + src/compiler/access-builder.cc 生成; 修订就地改, 复跑覆盖
+// AccessBuilder — 堆对象字段/元素访问描述 (FieldAccess/ElementAccess) 静态工厂, 136 签名骨架
+
+//! AccessBuilder — 全静态工厂, 无实例状态。
+//!
+//! 规则面 (本文件): 136 个 ForXxx 签名 1:1 展开。
+//! 语义面 (推迟): 每个访问的 offset / machine_type / write_barrier /
+//! 常量折叠类型 由对象布局层 (objects/) 决定, 见 .cc 各实现体。
+//! 条件编译: ForBigIntOptionalPadding(BIGINT_NEEDS_PADDING) /
+//! ForJSExternalObjectPointerHandle(V8_ENABLE_SANDBOX) /
+//! ForWasmArrayLength+ForWasmDispatchTableLength(V8_ENABLE_WEBASSEMBLY)。
+
+#![allow(dead_code, non_snake_case, unused_imports)]
+
+/// 原 FieldAccess — 字段访问描述 (simplified-operator 层类型)
+pub type FieldAccess = crate::simplified::FieldAccess;
+/// 原 ElementAccess — 元素访问描述
+pub type ElementAccess = crate::simplified::ElementAccess;
+
+/// v8: src/compiler/access-builder.h AccessBuilder
+pub struct AccessBuilder;
+
+impl AccessBuilder {
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForExternalIntPtr
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForExternalIntPtr
+  pub fn for_external_int_ptr() -> FieldAccess {
+    todo!("AccessBuilder::ForExternalIntPtr")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMap
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMap
+  /// 原默认参: write_barrier=kMapWriteBarrier, shared_base=SharedFlag{false}
+  pub fn for_map(write_barrier: WriteBarrierKind, shared_base: SharedFlag) -> FieldAccess {
+    todo!("AccessBuilder::ForMap")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForHeapNumberValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForHeapNumberValue
+  pub fn for_heap_number_value() -> FieldAccess {
+    todo!("AccessBuilder::ForHeapNumberValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextCellState
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextCellState
+  pub fn for_context_cell_state() -> FieldAccess {
+    todo!("AccessBuilder::ForContextCellState")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextCellTaggedValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextCellTaggedValue
+  pub fn for_context_cell_tagged_value() -> FieldAccess {
+    todo!("AccessBuilder::ForContextCellTaggedValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextCellInt32Value
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextCellInt32Value
+  pub fn for_context_cell_int32_value() -> FieldAccess {
+    todo!("AccessBuilder::ForContextCellInt32Value")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextCellFloat64Value
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextCellFloat64Value
+  pub fn for_context_cell_float64_value() -> FieldAccess {
+    todo!("AccessBuilder::ForContextCellFloat64Value")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForHeapNumberOrOddballValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForHeapNumberOrOddballValue
+  pub fn for_heap_number_or_oddball_value() -> FieldAccess {
+    todo!("AccessBuilder::ForHeapNumberOrOddballValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForBigIntBitfield
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForBigIntBitfield
+  pub fn for_big_int_bitfield() -> FieldAccess {
+    todo!("AccessBuilder::ForBigIntBitfield")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForBigIntOptionalPadding
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForBigIntOptionalPadding
+  pub fn for_big_int_optional_padding() -> FieldAccess {
+    todo!("AccessBuilder::ForBigIntOptionalPadding")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForBigIntLeastSignificantDigit64
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForBigIntLeastSignificantDigit64
+  pub fn for_big_int_least_significant_digit64() -> FieldAccess {
+    todo!("AccessBuilder::ForBigIntLeastSignificantDigit64")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSObjectPropertiesOrHash
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSObjectPropertiesOrHash
+  pub fn for_jsobject_properties_or_hash() -> FieldAccess {
+    todo!("AccessBuilder::ForJSObjectPropertiesOrHash")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSObjectPropertiesOrHashKnownPointer
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSObjectPropertiesOrHashKnownPointer
+  pub fn for_jsobject_properties_or_hash_known_pointer() -> FieldAccess {
+    todo!("AccessBuilder::ForJSObjectPropertiesOrHashKnownPointer")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSObjectElements
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSObjectElements
+  pub fn for_jsobject_elements() -> FieldAccess {
+    todo!("AccessBuilder::ForJSObjectElements")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSObjectInObjectProperty
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSObjectInObjectProperty
+  /// 原默认参: machine_type=MachineType::AnyTagged()
+  pub fn for_jsobject_in_object_property(map: MapRef, index: i32, machine_type: MachineType) -> FieldAccess {
+    todo!("AccessBuilder::ForJSObjectInObjectProperty")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSObjectOffset
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSObjectOffset
+  /// 原默认参: write_barrier_kind=kFullWriteBarrier
+  pub fn for_jsobject_offset(offset: i32, write_barrier_kind: WriteBarrierKind) -> FieldAccess {
+    todo!("AccessBuilder::ForJSObjectOffset")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSCollectionTable
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSCollectionTable
+  pub fn for_jscollection_table() -> FieldAccess {
+    todo!("AccessBuilder::ForJSCollectionTable")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSWeakCollectionTable
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSWeakCollectionTable
+  pub fn for_jsweak_collection_table() -> FieldAccess {
+    todo!("AccessBuilder::ForJSWeakCollectionTable")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSCollectionIteratorTable
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSCollectionIteratorTable
+  pub fn for_jscollection_iterator_table() -> FieldAccess {
+    todo!("AccessBuilder::ForJSCollectionIteratorTable")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSCollectionIteratorIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSCollectionIteratorIndex
+  pub fn for_jscollection_iterator_index() -> FieldAccess {
+    todo!("AccessBuilder::ForJSCollectionIteratorIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSExternalObjectValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSExternalObjectValue
+  pub fn for_jsexternal_object_value() -> FieldAccess {
+    todo!("AccessBuilder::ForJSExternalObjectValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSExternalObjectPointerHandle
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSExternalObjectPointerHandle
+  pub fn for_jsexternal_object_pointer_handle() -> FieldAccess {
+    todo!("AccessBuilder::ForJSExternalObjectPointerHandle")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSFunctionPrototypeOrInitialMap
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSFunctionPrototypeOrInitialMap
+  pub fn for_jsfunction_prototype_or_initial_map() -> FieldAccess {
+    todo!("AccessBuilder::ForJSFunctionPrototypeOrInitialMap")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSFunctionContext
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSFunctionContext
+  pub fn for_jsfunction_context() -> FieldAccess {
+    todo!("AccessBuilder::ForJSFunctionContext")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSFunctionSharedFunctionInfo
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSFunctionSharedFunctionInfo
+  pub fn for_jsfunction_shared_function_info() -> FieldAccess {
+    todo!("AccessBuilder::ForJSFunctionSharedFunctionInfo")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSFunctionFeedbackCell
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSFunctionFeedbackCell
+  pub fn for_jsfunction_feedback_cell() -> FieldAccess {
+    todo!("AccessBuilder::ForJSFunctionFeedbackCell")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSFunctionDispatchHandleNoWriteBarrier
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSFunctionDispatchHandleNoWriteBarrier
+  pub fn for_jsfunction_dispatch_handle_no_write_barrier() -> FieldAccess {
+    todo!("AccessBuilder::ForJSFunctionDispatchHandleNoWriteBarrier")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSBoundFunctionBoundTargetFunction
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSBoundFunctionBoundTargetFunction
+  pub fn for_jsbound_function_bound_target_function() -> FieldAccess {
+    todo!("AccessBuilder::ForJSBoundFunctionBoundTargetFunction")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSBoundFunctionBoundThis
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSBoundFunctionBoundThis
+  pub fn for_jsbound_function_bound_this() -> FieldAccess {
+    todo!("AccessBuilder::ForJSBoundFunctionBoundThis")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSBoundFunctionBoundArguments
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSBoundFunctionBoundArguments
+  pub fn for_jsbound_function_bound_arguments() -> FieldAccess {
+    todo!("AccessBuilder::ForJSBoundFunctionBoundArguments")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectContext
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectContext
+  pub fn for_jsgenerator_object_context() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectContext")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectContinuation
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectContinuation
+  pub fn for_jsgenerator_object_continuation() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectContinuation")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectInputOrDebugPos
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectInputOrDebugPos
+  pub fn for_jsgenerator_object_input_or_debug_pos() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectInputOrDebugPos")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectParametersAndRegisters
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectParametersAndRegisters
+  pub fn for_jsgenerator_object_parameters_and_registers() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectParametersAndRegisters")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectFunction
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectFunction
+  pub fn for_jsgenerator_object_function() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectFunction")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectReceiver
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectReceiver
+  pub fn for_jsgenerator_object_receiver() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectReceiver")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectResumeMode
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectResumeMode
+  pub fn for_jsgenerator_object_resume_mode() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectResumeMode")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSGeneratorObjectYieldedValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSGeneratorObjectYieldedValue
+  pub fn for_jsgenerator_object_yielded_value() -> FieldAccess {
+    todo!("AccessBuilder::ForJSGeneratorObjectYieldedValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSAsyncFunctionObjectPromise
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSAsyncFunctionObjectPromise
+  pub fn for_jsasync_function_object_promise() -> FieldAccess {
+    todo!("AccessBuilder::ForJSAsyncFunctionObjectPromise")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSAsyncFunctionObjectAwaitResolveClosure
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSAsyncFunctionObjectAwaitResolveClosure
+  pub fn for_jsasync_function_object_await_resolve_closure() -> FieldAccess {
+    todo!("AccessBuilder::ForJSAsyncFunctionObjectAwaitResolveClosure")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSAsyncFunctionObjectAwaitRejectClosure
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSAsyncFunctionObjectAwaitRejectClosure
+  pub fn for_jsasync_function_object_await_reject_closure() -> FieldAccess {
+    todo!("AccessBuilder::ForJSAsyncFunctionObjectAwaitRejectClosure")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSAsyncGeneratorObjectQueue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSAsyncGeneratorObjectQueue
+  pub fn for_jsasync_generator_object_queue() -> FieldAccess {
+    todo!("AccessBuilder::ForJSAsyncGeneratorObjectQueue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSAsyncGeneratorObjectIsAwaiting
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSAsyncGeneratorObjectIsAwaiting
+  pub fn for_jsasync_generator_object_is_awaiting() -> FieldAccess {
+    todo!("AccessBuilder::ForJSAsyncGeneratorObjectIsAwaiting")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayLength
+  pub fn for_jsarray_length(elements_kind: ElementsKind) -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayLength
+  pub fn for_jsarray_length() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayBufferBitField
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayBufferBitField
+  pub fn for_jsarray_buffer_bit_field() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayBufferBitField")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayBufferByteLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayBufferByteLength
+  pub fn for_jsarray_buffer_byte_length() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayBufferByteLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayBufferViewBuffer
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayBufferViewBuffer
+  pub fn for_jsarray_buffer_view_buffer() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayBufferViewBuffer")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayBufferViewByteLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayBufferViewByteLength
+  pub fn for_jsarray_buffer_view_byte_length() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayBufferViewByteLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayBufferViewByteOffset
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayBufferViewByteOffset
+  pub fn for_jsarray_buffer_view_byte_offset() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayBufferViewByteOffset")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayBufferViewBitField
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayBufferViewBitField
+  pub fn for_jsarray_buffer_view_bit_field() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayBufferViewBitField")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSTypedArrayByteLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSTypedArrayByteLength
+  pub fn for_jstyped_array_byte_length() -> FieldAccess {
+    todo!("AccessBuilder::ForJSTypedArrayByteLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSTypedArrayBasePointer
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSTypedArrayBasePointer
+  pub fn for_jstyped_array_base_pointer() -> FieldAccess {
+    todo!("AccessBuilder::ForJSTypedArrayBasePointer")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSTypedArrayExternalPointer
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSTypedArrayExternalPointer
+  pub fn for_jstyped_array_external_pointer() -> FieldAccess {
+    todo!("AccessBuilder::ForJSTypedArrayExternalPointer")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSDataViewDataPointer
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSDataViewDataPointer
+  pub fn for_jsdata_view_data_pointer() -> FieldAccess {
+    todo!("AccessBuilder::ForJSDataViewDataPointer")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSDataViewByteLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSDataViewByteLength
+  pub fn for_jsdata_view_byte_length() -> FieldAccess {
+    todo!("AccessBuilder::ForJSDataViewByteLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSDateValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSDateValue
+  pub fn for_jsdate_value() -> FieldAccess {
+    todo!("AccessBuilder::ForJSDateValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSDateField
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSDateField
+  pub fn for_jsdate_field(index: JSDate::FieldIndex) -> FieldAccess {
+    todo!("AccessBuilder::ForJSDateField")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSIteratorResultDone
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSIteratorResultDone
+  pub fn for_jsiterator_result_done() -> FieldAccess {
+    todo!("AccessBuilder::ForJSIteratorResultDone")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSIteratorResultValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSIteratorResultValue
+  pub fn for_jsiterator_result_value() -> FieldAccess {
+    todo!("AccessBuilder::ForJSIteratorResultValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSPrimitiveWrapperValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSPrimitiveWrapperValue
+  pub fn for_jsprimitive_wrapper_value() -> FieldAccess {
+    todo!("AccessBuilder::ForJSPrimitiveWrapperValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSRegExpData
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSRegExpData
+  pub fn for_jsreg_exp_data() -> FieldAccess {
+    todo!("AccessBuilder::ForJSRegExpData")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSRegExpFlags
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSRegExpFlags
+  pub fn for_jsreg_exp_flags() -> FieldAccess {
+    todo!("AccessBuilder::ForJSRegExpFlags")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSRegExpLastIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSRegExpLastIndex
+  pub fn for_jsreg_exp_last_index() -> FieldAccess {
+    todo!("AccessBuilder::ForJSRegExpLastIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedArrayLengthLegacy
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedArrayLengthLegacy
+  pub fn for_fixed_array_length_legacy() -> FieldAccess {
+    todo!("AccessBuilder::ForFixedArrayLengthLegacy")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedArrayLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedArrayLength
+  pub fn for_fixed_array_length() -> FieldAccess {
+    todo!("AccessBuilder::ForFixedArrayLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedArrayLengthPadding
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedArrayLengthPadding
+  pub fn for_fixed_array_length_padding() -> FieldAccess {
+    todo!("AccessBuilder::ForFixedArrayLengthPadding")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextLength
+  pub fn for_context_length() -> FieldAccess {
+    todo!("AccessBuilder::ForContextLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForWeakFixedArrayLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForWeakFixedArrayLength
+  pub fn for_weak_fixed_array_length() -> FieldAccess {
+    todo!("AccessBuilder::ForWeakFixedArrayLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSloppyArgumentsElementsContext
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSloppyArgumentsElementsContext
+  pub fn for_sloppy_arguments_elements_context() -> FieldAccess {
+    todo!("AccessBuilder::ForSloppyArgumentsElementsContext")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSloppyArgumentsElementsArguments
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSloppyArgumentsElementsArguments
+  pub fn for_sloppy_arguments_elements_arguments() -> FieldAccess {
+    todo!("AccessBuilder::ForSloppyArgumentsElementsArguments")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForPropertyArrayLengthAndHash
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForPropertyArrayLengthAndHash
+  pub fn for_property_array_length_and_hash() -> FieldAccess {
+    todo!("AccessBuilder::ForPropertyArrayLengthAndHash")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForDescriptorArrayEnumCache
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForDescriptorArrayEnumCache
+  pub fn for_descriptor_array_enum_cache() -> FieldAccess {
+    todo!("AccessBuilder::ForDescriptorArrayEnumCache")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapBitField
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapBitField
+  pub fn for_map_bit_field() -> FieldAccess {
+    todo!("AccessBuilder::ForMapBitField")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapBitField2
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapBitField2
+  pub fn for_map_bit_field2() -> FieldAccess {
+    todo!("AccessBuilder::ForMapBitField2")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapBitField3
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapBitField3
+  pub fn for_map_bit_field3() -> FieldAccess {
+    todo!("AccessBuilder::ForMapBitField3")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapDescriptors
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapDescriptors
+  pub fn for_map_descriptors() -> FieldAccess {
+    todo!("AccessBuilder::ForMapDescriptors")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapInstanceType
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapInstanceType
+  pub fn for_map_instance_type() -> FieldAccess {
+    todo!("AccessBuilder::ForMapInstanceType")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapPrototype
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapPrototype
+  pub fn for_map_prototype() -> FieldAccess {
+    todo!("AccessBuilder::ForMapPrototype")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForMapNativeContext
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForMapNativeContext
+  pub fn for_map_native_context() -> FieldAccess {
+    todo!("AccessBuilder::ForMapNativeContext")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForModuleRegularExports
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForModuleRegularExports
+  pub fn for_module_regular_exports() -> FieldAccess {
+    todo!("AccessBuilder::ForModuleRegularExports")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForModuleRegularImports
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForModuleRegularImports
+  pub fn for_module_regular_imports() -> FieldAccess {
+    todo!("AccessBuilder::ForModuleRegularImports")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForNameRawHashField
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForNameRawHashField
+  pub fn for_name_raw_hash_field() -> FieldAccess {
+    todo!("AccessBuilder::ForNameRawHashField")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForStringLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForStringLength
+  pub fn for_string_length() -> FieldAccess {
+    todo!("AccessBuilder::ForStringLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForConsStringFirst
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForConsStringFirst
+  pub fn for_cons_string_first() -> FieldAccess {
+    todo!("AccessBuilder::ForConsStringFirst")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForConsStringSecond
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForConsStringSecond
+  pub fn for_cons_string_second() -> FieldAccess {
+    todo!("AccessBuilder::ForConsStringSecond")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForThinStringActual
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForThinStringActual
+  pub fn for_thin_string_actual() -> FieldAccess {
+    todo!("AccessBuilder::ForThinStringActual")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSlicedStringOffset
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSlicedStringOffset
+  pub fn for_sliced_string_offset() -> FieldAccess {
+    todo!("AccessBuilder::ForSlicedStringOffset")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSlicedStringParent
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSlicedStringParent
+  pub fn for_sliced_string_parent() -> FieldAccess {
+    todo!("AccessBuilder::ForSlicedStringParent")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForExternalStringResourceData
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForExternalStringResourceData
+  pub fn for_external_string_resource_data() -> FieldAccess {
+    todo!("AccessBuilder::ForExternalStringResourceData")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSeqOneByteStringCharacter
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSeqOneByteStringCharacter
+  pub fn for_seq_one_byte_string_character() -> ElementAccess {
+    todo!("AccessBuilder::ForSeqOneByteStringCharacter")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSeqTwoByteStringCharacter
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSeqTwoByteStringCharacter
+  pub fn for_seq_two_byte_string_character() -> ElementAccess {
+    todo!("AccessBuilder::ForSeqTwoByteStringCharacter")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayIteratorIteratedObject
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayIteratorIteratedObject
+  pub fn for_jsarray_iterator_iterated_object() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayIteratorIteratedObject")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayIteratorNextIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayIteratorNextIndex
+  pub fn for_jsarray_iterator_next_index() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayIteratorNextIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSArrayIteratorKind
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSArrayIteratorKind
+  pub fn for_jsarray_iterator_kind() -> FieldAccess {
+    todo!("AccessBuilder::ForJSArrayIteratorKind")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSStringIteratorString
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSStringIteratorString
+  pub fn for_jsstring_iterator_string() -> FieldAccess {
+    todo!("AccessBuilder::ForJSStringIteratorString")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSStringIteratorIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSStringIteratorIndex
+  pub fn for_jsstring_iterator_index() -> FieldAccess {
+    todo!("AccessBuilder::ForJSStringIteratorIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForCellValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForCellValue
+  pub fn for_cell_value() -> FieldAccess {
+    todo!("AccessBuilder::ForCellValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForArgumentsLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForArgumentsLength
+  pub fn for_arguments_length() -> FieldAccess {
+    todo!("AccessBuilder::ForArgumentsLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForArgumentsCallee
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForArgumentsCallee
+  pub fn for_arguments_callee() -> FieldAccess {
+    todo!("AccessBuilder::ForArgumentsCallee")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedArraySlot
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedArraySlot
+  /// 原默认参: write_barrier_kind=kFullWriteBarrier
+  pub fn for_fixed_array_slot(index: usize, write_barrier_kind: WriteBarrierKind) -> FieldAccess {
+    todo!("AccessBuilder::ForFixedArraySlot")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFeedbackVectorSlot
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFeedbackVectorSlot
+  pub fn for_feedback_vector_slot(index: i32) -> FieldAccess {
+    todo!("AccessBuilder::ForFeedbackVectorSlot")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForPropertyArraySlot
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForPropertyArraySlot
+  pub fn for_property_array_slot(index: i32, representation: Representation, can_optimize_smis: bool) -> FieldAccess {
+    todo!("AccessBuilder::ForPropertyArraySlot")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForScopeInfoFlags
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForScopeInfoFlags
+  pub fn for_scope_info_flags() -> FieldAccess {
+    todo!("AccessBuilder::ForScopeInfoFlags")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextSlot
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextSlot
+  pub fn for_context_slot(index: usize) -> FieldAccess {
+    todo!("AccessBuilder::ForContextSlot")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextSlotKnownPointer
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextSlotKnownPointer
+  pub fn for_context_slot_known_pointer(index: usize) -> FieldAccess {
+    todo!("AccessBuilder::ForContextSlotKnownPointer")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextSlotSmi
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextSlotSmi
+  pub fn for_context_slot_smi(index: usize) -> FieldAccess {
+    todo!("AccessBuilder::ForContextSlotSmi")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForWeakFixedArrayElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForWeakFixedArrayElement
+  pub fn for_weak_fixed_array_element() -> ElementAccess {
+    todo!("AccessBuilder::ForWeakFixedArrayElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForWeakFixedArraySlot
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForWeakFixedArraySlot
+  pub fn for_weak_fixed_array_slot(index: i32) -> FieldAccess {
+    todo!("AccessBuilder::ForWeakFixedArraySlot")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedArrayElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedArrayElement
+  pub fn for_fixed_array_element() -> ElementAccess {
+    todo!("AccessBuilder::ForFixedArrayElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedArrayElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedArrayElement
+  pub fn for_fixed_array_element(kind: ElementsKind) -> ElementAccess {
+    todo!("AccessBuilder::ForFixedArrayElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForSloppyArgumentsElementsMappedEntry
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForSloppyArgumentsElementsMappedEntry
+  pub fn for_sloppy_arguments_elements_mapped_entry() -> ElementAccess {
+    todo!("AccessBuilder::ForSloppyArgumentsElementsMappedEntry")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFixedDoubleArrayElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFixedDoubleArrayElement
+  pub fn for_fixed_double_array_element() -> ElementAccess {
+    todo!("AccessBuilder::ForFixedDoubleArrayElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForEnumCacheKeys
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForEnumCacheKeys
+  pub fn for_enum_cache_keys() -> FieldAccess {
+    todo!("AccessBuilder::ForEnumCacheKeys")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForEnumCacheIndices
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForEnumCacheIndices
+  pub fn for_enum_cache_indices() -> FieldAccess {
+    todo!("AccessBuilder::ForEnumCacheIndices")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForTypedArrayElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForTypedArrayElement
+  pub fn for_typed_array_element(type: ExternalArrayType, is_external: bool) -> ElementAccess {
+    todo!("AccessBuilder::ForTypedArrayElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForJSForInCacheArrayElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForJSForInCacheArrayElement
+  pub fn for_jsfor_in_cache_array_element(mode: ForInMode) -> ElementAccess {
+    todo!("AccessBuilder::ForJSForInCacheArrayElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForHashTableBaseNumberOfElements
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForHashTableBaseNumberOfElements
+  pub fn for_hash_table_base_number_of_elements() -> FieldAccess {
+    todo!("AccessBuilder::ForHashTableBaseNumberOfElements")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForHashTableBaseNumberOfDeletedElement
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForHashTableBaseNumberOfDeletedElement
+  pub fn for_hash_table_base_number_of_deleted_element() -> FieldAccess {
+    todo!("AccessBuilder::ForHashTableBaseNumberOfDeletedElement")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForHashTableBaseCapacity
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForHashTableBaseCapacity
+  pub fn for_hash_table_base_capacity() -> FieldAccess {
+    todo!("AccessBuilder::ForHashTableBaseCapacity")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForOrderedHashMapOrSetNextTable
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForOrderedHashMapOrSetNextTable
+  pub fn for_ordered_hash_map_or_set_next_table() -> FieldAccess {
+    todo!("AccessBuilder::ForOrderedHashMapOrSetNextTable")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForOrderedHashMapOrSetNumberOfBuckets
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForOrderedHashMapOrSetNumberOfBuckets
+  pub fn for_ordered_hash_map_or_set_number_of_buckets() -> FieldAccess {
+    todo!("AccessBuilder::ForOrderedHashMapOrSetNumberOfBuckets")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForOrderedHashMapOrSetNumberOfElements
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForOrderedHashMapOrSetNumberOfElements
+  pub fn for_ordered_hash_map_or_set_number_of_elements() -> FieldAccess {
+    todo!("AccessBuilder::ForOrderedHashMapOrSetNumberOfElements")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForOrderedHashMapOrSetNumberOfDeletedElements
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForOrderedHashMapOrSetNumberOfDeletedElements
+  pub fn for_ordered_hash_map_or_set_number_of_deleted_elements() -> FieldAccess {
+    todo!("AccessBuilder::ForOrderedHashMapOrSetNumberOfDeletedElements")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForOrderedHashMapEntryValue
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForOrderedHashMapEntryValue
+  pub fn for_ordered_hash_map_entry_value() -> ElementAccess {
+    todo!("AccessBuilder::ForOrderedHashMapEntryValue")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForDictionaryNextEnumerationIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForDictionaryNextEnumerationIndex
+  pub fn for_dictionary_next_enumeration_index() -> FieldAccess {
+    todo!("AccessBuilder::ForDictionaryNextEnumerationIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForDictionaryObjectHashIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForDictionaryObjectHashIndex
+  pub fn for_dictionary_object_hash_index() -> FieldAccess {
+    todo!("AccessBuilder::ForDictionaryObjectHashIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForNameDictionaryFlagsIndex
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForNameDictionaryFlagsIndex
+  pub fn for_name_dictionary_flags_index() -> FieldAccess {
+    todo!("AccessBuilder::ForNameDictionaryFlagsIndex")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFeedbackCellInterruptBudget
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFeedbackCellInterruptBudget
+  pub fn for_feedback_cell_interrupt_budget() -> FieldAccess {
+    todo!("AccessBuilder::ForFeedbackCellInterruptBudget")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFeedbackCellDispatchHandleNoWriteBarrier
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFeedbackCellDispatchHandleNoWriteBarrier
+  pub fn for_feedback_cell_dispatch_handle_no_write_barrier() -> FieldAccess {
+    todo!("AccessBuilder::ForFeedbackCellDispatchHandleNoWriteBarrier")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFeedbackVectorInvocationCount
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFeedbackVectorInvocationCount
+  pub fn for_feedback_vector_invocation_count() -> FieldAccess {
+    todo!("AccessBuilder::ForFeedbackVectorInvocationCount")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFeedbackVectorFlags
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFeedbackVectorFlags
+  pub fn for_feedback_vector_flags() -> FieldAccess {
+    todo!("AccessBuilder::ForFeedbackVectorFlags")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForFeedbackVectorClosureFeedbackCellArray
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForFeedbackVectorClosureFeedbackCellArray
+  pub fn for_feedback_vector_closure_feedback_cell_array() -> FieldAccess {
+    todo!("AccessBuilder::ForFeedbackVectorClosureFeedbackCellArray")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForWasmArrayLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForWasmArrayLength
+  pub fn for_wasm_array_length() -> FieldAccess {
+    todo!("AccessBuilder::ForWasmArrayLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForWasmDispatchTableLength
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForWasmDispatchTableLength
+  pub fn for_wasm_dispatch_table_length() -> FieldAccess {
+    todo!("AccessBuilder::ForWasmDispatchTableLength")
+  }
+
+  /// v8: src/compiler/access-builder.h AccessBuilder::ForContextSideProperty
+  /// v8: src/compiler/access-builder.cc AccessBuilder::ForContextSideProperty
+  pub fn for_context_side_property() -> FieldAccess {
+    todo!("AccessBuilder::ForContextSideProperty")
+  }
+}

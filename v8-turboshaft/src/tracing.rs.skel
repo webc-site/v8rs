@@ -1,0 +1,29 @@
+// 由 tool/src/compiler/turboshaft/tracing.h.js 从 v8/src/compiler/turboshaft/tracing.h 生成; 修订就地改, 复跑覆盖
+// 追踪: --trace-turbo-json 自定义数据打印
+
+/// 原版 Tracing — ContextualClass 单例, 持 OptimizedCompilationInfo;
+/// is_enabled = info->trace_turbo_json()。
+/// v8: src/compiler/turboshaft/tracing.h Tracing
+pub struct Tracing<'i> {
+  pub info: &'i OptimizedCompilationInfo,
+}
+
+/// 原版 OperationDataPrinter — (os, graph, OpIndex) -> bool
+/// v8: tracing.h Tracing::OperationDataPrinter
+pub type OperationDataPrinter<'g> = Box<dyn FnMut(&mut dyn Write, &'g Graph, OpIndex) -> bool + '_>;
+
+/// 原版 BlockDataPrinter — (os, graph, BlockIndex) -> bool
+/// v8: tracing.h Tracing::BlockDataPrinter
+pub type BlockDataPrinter<'g> = Box<dyn FnMut(&mut dyn Write, &'g Graph, BlockIndex) -> bool + '_>;
+
+impl<'i> Tracing<'i> {
+  /// v8: tracing.h is_enabled
+  pub fn is_enabled(&self) -> bool { self.info.trace_turbo_json() }
+
+  /// v8: tracing.h PrintPerOperationData — TurboJsonFile append 模式,
+  /// PrintTurboshaftCustomDataPerOperation 逐操作落 JSON
+  pub fn print_per_operation_data(&self, data_name: &str, graph: &Graph, printer: OperationDataPrinter) { /* ... */ }
+
+  /// v8: tracing.h PrintPerBlockData — PrintTurboshaftCustomDataPerBlock
+  pub fn print_per_block_data(&self, data_name: &str, graph: &Graph, printer: BlockDataPrinter) { /* ... */ }
+}

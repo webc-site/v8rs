@@ -1,0 +1,19 @@
+// 由 tool/src/objects/js-regexp-string-iterator.tq.js 从 v8/src/objects/js-regexp-string-iterator.tq + js-regexp-string-iterator.h + -inl.h 生成; 修订就地改, 复跑覆盖
+// JSRegExpStringIterator tq 位域/槽位差集骨架
+
+//! tq 差集: 3 个 1-bit 标志 + 3 数据槽; .h/-inl.h 布局常量归
+//! tool/src/objects/js-regexp-string-iterator.h.js (产 v8-objects-strings)。
+
+// JSRegExpStringIteratorFlags (uint31; tq js-regexp-string-iterator.tq:6-10)
+pub const K_DONE_SHIFT: u32 = 0;
+pub const K_GLOBAL_SHIFT: u32 = 1;
+pub const K_UNICODE_SHIFT: u32 = 2;
+pub const K_FLAG_BITS: u32 = 1; // 每域 1 bit, 共 3 bit
+
+/// v8: src/objects/js-regexp-string-iterator.tq JSRegExpStringIterator.iterating_reg_exp ([[IteratingRegExp]])
+pub const K_ITERATING_REG_EXP_OFFSET: usize = 24;
+/// v8: src/objects/js-regexp-string-iterator.tq JSRegExpStringIterator.iterated_string ([[IteratedString]])
+pub const K_ITERATED_STRING_OFFSET: usize = 32;
+/// v8: src/objects/js-regexp-string-iterator.tq JSRegExpStringIterator.flags
+pub const K_FLAGS_OFFSET: usize = 40;
+pub const K_HEADER_SIZE: usize = 48;

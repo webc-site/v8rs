@@ -1,0 +1,20 @@
+// 由 tool/src/compiler/backend/loong64/instruction-selector-loong64.js 从 v8/src/compiler/backend/loong64/instruction-selector-loong64.cc 生成; 修订就地改, 复跑覆盖
+// loong64 指令选择: TryMatchImmediate 立即数编码 + ZeroExtends 32→64 传播
+
+//! 台账: Visit* 定义 195 (::Visit 面 208); TryMatchImmediate
+//!   (12 位有符号立即数 si12 编码, 左右操作数双向); ZeroExtendsWord32ToWord64
+//!   传播 (NoPhis 递归 projection 折叠, 免显式 uwm 指令)。
+
+/// v8: TryMatchImmediate — si12 立即数编码匹配
+// fn try_match_immediate(...)
+/// v8: InstructionSelector::ZeroExtendsWord32ToWord64NoPhis — 零扩展传播
+// fn zero_extends_word32_to_word64_no_phis(node) -> bool
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(VISIT_DEF_COUNT >= 30);
+};
+pub const VISIT_DEF_COUNT: usize = 195;
+const _: () = {
+  assert!(VISIT_DEF_COUNT == 195);
+};

@@ -1,0 +1,30 @@
+// 由 tool/src/base/strong-alias.h.js 从 v8/src/base/strong-alias.h 生成; 修订就地改, 复跑覆盖
+// 类型安全别名 (phantom tag newtype)
+
+//! v8 侧: 运算/方法面 4; 友元函数 0
+//! Rust 策略: 语言级 newtype 即零成本; TagType → 零大小 PhantomData 单元结构
+
+/// v8: src/base/strong-alias.h class StrongAlias<TagType, UnderlyingType>
+/// v8 动机: C++ 无类型安全 typedef; Rust newtype 原生解决 (Apple(2) vs Orange(2) 不同型)
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StrongAlias<Tag, Underlying> {
+    /// v8: value_
+    pub value: Underlying,
+    _tag: core::marker::PhantomData<Tag>,
+}
+
+impl<Tag, U: PartialEq> StrongAlias<Tag, U> {
+    /// v8: operator==/!= — 仅同 Tag 实例可比 (Rust 泛型参数天然区分)
+    pub fn eq(&self, o: &Self) -> bool { self.value == o.value }
+}
+
+impl<Tag, U: PartialOrd> StrongAlias<Tag, U> {
+    /// v8: operator</<=/>/>= — 有序容器用
+    pub fn lt(&self, o: &Self) -> bool { self.value < o.value }
+}
+
+// ---- v8 运算面对账 (解析 4 项) ----
+// operator->(), operator*(), value(), operator==(const
+// 语义: operator-> / operator* / value() → 直接访问 .value 字段;
+// hash_value (友元) → derive Hash; operator<< (友元) → derive Debug/Display;
+// is_null (值初始化判空) → Option<StrongAlias> 或显式判 — Developer 按用点补

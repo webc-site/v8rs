@@ -1,0 +1,37 @@
+// 由 tool/src/compiler/turboshaft/turbolev-graph-builder.h.js 从 v8/src/compiler/turboshaft/turbolev-graph-builder.{h,cc} 生成; 修订就地改, 复跑覆盖
+// Turbolev 图构建: maglev 图 -> Turboshaft 图
+
+/// 原版 TurbolevGraphBuildingPhase — maglev 图转 Turboshaft 图的总入口
+/// v8: src/compiler/turboshaft/turbolev-graph-builder.h
+pub struct TurbolevGraphBuildingPhase;
+
+impl TurbolevGraphBuildingPhase {
+  /// v8: cc Run —
+  /// - maglev::GraphProcessor<NodeProcessorBase> 驱动 ProcessGraph
+  /// - 拷贝 maglev inlined_functions 到 compilation info
+  /// - node_origins 存在时解码 maglev 外部 id 记录来源
+  /// - bailout 有值且 trace_turbo 时 Reset 图 (图可能处于非法态)
+  /// 返回 Some(BailoutReason) 表示放弃
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone,
+             maglev_graph: &mut MaglevGraph) -> Option<BailoutReason> {
+    todo!()
+  }
+}
+
+/// 原版 NodeProcessorBase — GraphBuildingNodeProcessor 的包装:
+/// 跳过 Unreachable 代码内节点 + 记录 source positions;
+/// 持 std::optional<BailoutReason>* bailout_ 外发通道。
+/// v8: turbolev-graph-builder.cc NodeProcessorBase
+pub struct NodeProcessorBase {
+  pub bailout: Option<BailoutReason>,
+}
+
+/// maglev 节点覆盖面: 289 个 Process 重载
+/// (289 个唯一 maglev 节点类型)。
+/// GraphBuildingNodeProcessor 本体还含:
+/// - 常量折叠面 (Constant/int/float 系)
+/// - 各 bytecodewise 的 state (interpreter register state)
+/// v8: turbolev-graph-builder.cc 各 maglev::ProcessResult Process(...)
+///
+/// 触发的 BailoutReason 面 (1 种):
+/// - kTooManyArguments

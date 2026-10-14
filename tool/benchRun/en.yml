@@ -1,0 +1,25 @@
+title: Benchmarks
+desc: "Full suite covering all 8 canonical workloads against official C++ V8 live benchmark:"
+env: "**Environment**: {cpu} ({core_count} Cores) | {os_name} {os_ver} ({arch}) | Native C++ V8 v{v8_ver}"
+table:
+  headers:
+    - Benchmark (v8-v7)
+    - Workload
+    - V8RS
+    - Native C++ V8
+    - Delta
+    - Latency (V8RS)
+highlights:
+  title: Key Highlights
+  startup: "- **Startup Latency**: **{v8rs_startup} ms** vs Native V8 **{cpp_startup} ms** (**{startup_speedup}x faster**, **{startup_reduction}% lower latency**)"
+  score: "- **Overall Score**: **{v8rs_score}** vs Native V8 **{cpp_score}** ({delta})"
+  binary_size: "- **Binary Footprint**: **{bin_size_mb} MB** vs Native V8 **{cpp_bin_mb} MB** (**{reduction_pct}% reduction**)"
+suites:
+  Richards: OS kernel task dispatching
+  DeltaBlue: Incremental constraint solver
+  Crypto: SHA-1/MD5 cryptographic loops
+  RayTrace: 3D ray tracer & floating-point
+  EarleyBoyer: Earley parser & Boyer rewrite
+  RegExp: Irregexp finite-state matching
+  Splay: Splay tree & high-frequency alloc
+  NavierStokes: 2D fluid dynamics PDE solver

@@ -1,0 +1,38 @@
+// 由 tool/src/compiler/turboshaft/zone-with-name.h.js 从 v8/src/compiler/turboshaft/zone-with-name.h 生成; 修订就地改, 复跑覆盖
+// 具名 zone: 类型级 zone 身份编码 (防误用)
+
+/// 原版 ZoneWithNamePointer<T, Name> — DEBUG + 类类型模板参可用时是
+/// 带 zone 名的类型化指针包装 (空基优化挂 KeyData), release 退化为 T*。
+/// Rust 侧以 newtype + phantom 承载同等身份编码:
+/// v8: src/compiler/turboshaft/zone-with-name.h ZoneWithNamePointerImpl
+#[derive(Debug)]
+pub struct ZoneWithNamePointer<T, const NAME: &'static str> {
+  pub ptr: *mut T,
+  _name: PhantomData<[(); NAME.len()]>,
+}
+
+impl<T, const NAME: &'static str> ZoneWithNamePointer<T, NAME> {
+  /// v8: operator pointer_type / get / operator* / operator->
+  pub fn get(&self) -> *mut T { self.ptr }
+}
+
+/// 原版 ZoneWithName<Name> — ZoneStats::Scope 持有真 zone;
+/// 构造时 DCHECK 传入 name 与类型名一致。
+/// 方法面: New<T>(args...) / AllocateArray<T>(len) (均返回具名指针),
+/// get/operator Zone*/operator->/Destroy()。
+/// v8: zone-with-name.h ZoneWithName
+pub struct ZoneWithName<const NAME: &'static str> {
+  /// NOTE: ZoneStats::Scope 实际分配新 zone
+  pub scope: ZoneStatsScope,
+}
+
+impl<const NAME: &'static str> ZoneWithName<NAME> {
+  /// v8: New — zone 分配 + 具名指针包装
+  pub fn new<T>(&mut self) -> ZoneWithNamePointer<T, NAME> { todo!() }
+  /// v8: AllocateArray
+  pub fn allocate_array<T>(&mut self, len: usize) -> ZoneWithNamePointer<T, NAME> { todo!() }
+  /// v8: Destroy — scope_.Destroy()
+  pub fn destroy(&mut self) { todo!() }
+}
+
+/// DEBUG 类型化面: 启用 (DEBUG && HAS_CPP_CLASS_TYPES_AS_TEMPLATE_ARGS)

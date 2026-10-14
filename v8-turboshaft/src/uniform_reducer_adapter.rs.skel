@@ -1,0 +1,22 @@
+// 由 tool/src/compiler/turboshaft/uniform-reducer-adapter.h.js 从 v8/src/compiler/turboshaft/uniform-reducer-adapter.h 生成; 修订就地改, 复跑覆盖
+// 统一适配器: 逐操作 REDUCE 汇到单一入口
+
+/// 原版 UniformReducerAdapter<Reducer, Next> — 把每个操作各自的
+/// ReduceXyz / ReduceInputGraphXyz 转发到统一的:
+///   ReduceOperation<opcode, Continuation>(args...)
+///   ReduceInputGraphOperation<Op, Continuation>(ig_index, op)
+/// 每操作生成 Reduce{op}Continuation{this_}, 提供:
+///   ReduceInputGraph(idx, op) -> this_->ReduceInputGraph{op}
+///   Reduce(args...)           -> this_->Reduce{op}
+/// 转发选择 (类注释 NOTICE):
+/// - Next::ReduceXyz  : 跳过本 reducer 的统一处理
+/// - Adapter::ReduceXyz: 也走统一 ReduceOperation
+/// v8: src/compiler/turboshaft/uniform-reducer-adapter.h UniformReducerAdapter
+pub trait UniformReducerAdapter {
+  /// v8: REDUCE 宏对 TURBOSHAFT_OPERATION_LIST 全展开 — 生成方法:
+  /// - ReduceInputGraph (每操作一份)
+  /// - ReduceInputGraph##op (每操作一份)
+  /// - Reduce##op (每操作一份)
+  fn reduce_operation(&mut self, opcode: Opcode, args: &[OpIndex]) -> OpIndex;
+  fn reduce_input_graph_operation(&mut self, idx: OpIndex, op: &Operation) -> OpIndex;
+}

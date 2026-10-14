@@ -1,0 +1,238 @@
+// 由 tool/src/compiler/access-info.js 从 v8/src/compiler/access-info.h + src/compiler/access-info.cc 生成; 修订就地改, 复跑覆盖
+// ElementAccessInfo / PropertyAccessInfo(Kind 12) / AccessInfoFactory 签名骨架
+
+//! 访问信息 — 属性/元素访问的编译期分析结果。
+//!
+//! 规则面: PropertyAccessInfo::Kind 13 变体, KeyType 2 变体, 三类方法签名。
+//! 语义面 (推迟): map 合并 / 字段索引推导 / 依赖登记 在 .cc, 依赖
+//! JSHeapBroker 对象层。
+
+#![allow(dead_code, unused_imports)]
+
+/// v8: src/compiler/access-info.h PropertyAccessInfo::Kind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PropertyAccessKind {
+  /// kInvalid
+  Invalid,
+  /// kNotFound
+  NotFound,
+  /// kDataField
+  DataField,
+  /// kFastDataConstant
+  FastDataConstant,
+  /// kDictionaryDataField
+  DictionaryDataField,
+  /// kDictionaryProtoDataConstant
+  DictionaryProtoDataConstant,
+  /// kFastAccessorConstant
+  FastAccessorConstant,
+  /// kDictionaryProtoAccessorConstant
+  DictionaryProtoAccessorConstant,
+  /// kModuleExport
+  ModuleExport,
+  /// kStringLength
+  StringLength,
+  /// kStringWrapperLength
+  StringWrapperLength,
+  /// kTypedArrayLength
+  TypedArrayLength,
+}
+
+/// v8: src/compiler/access-info.h AccessInfoFactory::KeyType
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeyType {
+  /// kString
+  String,
+  /// kIndex
+  Index,
+}
+
+/// v8: src/compiler/access-info.h ElementAccessInfo
+/// 元素访问信息: elements_kind + 查找起点 map 集 (+ Proxy-on-Prototype 特例)
+pub struct ElementAccessInfo {
+  /// 原 elements_kind_
+  pub elements_kind: crate::objects::ElementsKind,
+  /// 原 string_keys_ — Proxy trap 期望 string 键
+  pub string_keys: bool,
+  /// 原 lookup_start_object_maps_
+  pub lookup_start_object_maps: Vec<crate::heap_refs::MapRef>,
+  /// 原 transition_sources_
+  pub transition_sources: Vec<crate::heap_refs::MapRef>,
+  /// 原 accessor_ / target_ — Proxy-on-Prototype 模式
+  pub accessor: Option<crate::heap_refs::ObjectRef>,
+  pub target: Option<crate::heap_refs::ObjectRef>,
+}
+
+impl ElementAccessInfo {
+  /// v8: src/compiler/access-info.h ElementAccessInfo::AddTransitionSource
+  pub fn add_transition_source(&mut self, map: crate::heap_refs::MapRef) {
+    debug_assert_eq!(self.lookup_start_object_maps.len(), 1);
+    self.transition_sources.push(map);
+  }
+  /// v8: src/compiler/access-info.h ElementAccessInfo::is_proxy_on_prototype
+  pub fn is_proxy_on_prototype(&self) -> bool {
+    self.accessor.is_some()
+  }
+  /// v8: src/compiler/access-info.h ElementAccessInfo::string_keys
+  pub fn string_keys(&self) -> bool {
+    self.string_keys
+  }
+}
+
+/// v8: src/compiler/access-info.h PropertyAccessInfo
+/// 属性访问信息: 13 种 Kind (数据字段/字典字段/访问器/模块导出/字符串长度…)
+pub struct PropertyAccessInfo {
+  /// 原 kind_
+  pub kind: PropertyAccessKind,
+  /// 原多个静态工厂构造字段 (field_index/field_type/transition_map/…) 推迟
+  pub _semantic: (),
+}
+
+impl PropertyAccessInfo {
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::NotFound
+  pub fn not_found(/* 参数签名见 .h: NotFound */) -> Self {
+    todo!("PropertyAccessInfo::NotFound")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::DataField
+  pub fn data_field(/* 参数签名见 .h: DataField */) -> Self {
+    todo!("PropertyAccessInfo::DataField")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::FastDataConstant
+  pub fn fast_data_constant(/* 参数签名见 .h: FastDataConstant */) -> Self {
+    todo!("PropertyAccessInfo::FastDataConstant")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::FastAccessorConstant
+  pub fn fast_accessor_constant(/* 参数签名见 .h: FastAccessorConstant */) -> Self {
+    todo!("PropertyAccessInfo::FastAccessorConstant")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::ModuleExport
+  pub fn module_export(/* 参数签名见 .h: ModuleExport */) -> Self {
+    todo!("PropertyAccessInfo::ModuleExport")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::StringLength
+  pub fn string_length(/* 参数签名见 .h: StringLength */) -> Self {
+    todo!("PropertyAccessInfo::StringLength")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::StringWrapperLength
+  pub fn string_wrapper_length(/* 参数签名见 .h: StringWrapperLength */) -> Self {
+    todo!("PropertyAccessInfo::StringWrapperLength")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::TypedArrayLength
+  pub fn typed_array_length(/* 参数签名见 .h: TypedArrayLength */) -> Self {
+    todo!("PropertyAccessInfo::TypedArrayLength")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::Invalid
+  pub fn invalid(/* 参数签名见 .h: Invalid */) -> Self {
+    todo!("PropertyAccessInfo::Invalid")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::DictionaryDataField
+  pub fn dictionary_data_field(/* 参数签名见 .h: DictionaryDataField */) -> Self {
+    todo!("PropertyAccessInfo::DictionaryDataField")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::DictionaryProtoDataConstant
+  pub fn dictionary_proto_data_constant(/* 参数签名见 .h: DictionaryProtoDataConstant */) -> Self {
+    todo!("PropertyAccessInfo::DictionaryProtoDataConstant")
+  }
+  /// v8: src/compiler/access-info.h PropertyAccessInfo::DictionaryProtoAccessorConstant
+  pub fn dictionary_proto_accessor_constant(/* 参数签名见 .h: DictionaryProtoAccessorConstant */) -> Self {
+    todo!("PropertyAccessInfo::DictionaryProtoAccessorConstant")
+  }
+}
+
+/// v8: src/compiler/access-info.h AccessInfoFactory
+pub struct AccessInfoFactory {
+  /// 原 broker_
+  pub broker: *mut crate::broker::JSHeapBroker,
+  /// 原 type_cache_
+  pub type_cache: *const crate::type_cache::TypeCache,
+  /// 原 zone_
+  pub zone: *mut crate::zone::Zone,
+}
+
+impl AccessInfoFactory {
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ComputeElementAccessInfo
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ComputeElementAccessInfo
+  pub fn compute_element_access_info(&self /* 参数签名见 .h: ComputeElementAccessInfo */) {
+    todo!("AccessInfoFactory::ComputeElementAccessInfo")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ComputeElementAccessInfos
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ComputeElementAccessInfos
+  pub fn compute_element_access_infos(&self /* 参数签名见 .h: ComputeElementAccessInfos */) {
+    todo!("AccessInfoFactory::ComputeElementAccessInfos")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ComputePropertyAccessInfo
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ComputePropertyAccessInfo
+  pub fn compute_property_access_info(&self /* 参数签名见 .h: ComputePropertyAccessInfo */) {
+    todo!("AccessInfoFactory::ComputePropertyAccessInfo")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ComputeDictionaryProtoAccessInfo
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ComputeDictionaryProtoAccessInfo
+  pub fn compute_dictionary_proto_access_info(&self /* 参数签名见 .h: ComputeDictionaryProtoAccessInfo */) {
+    todo!("AccessInfoFactory::ComputeDictionaryProtoAccessInfo")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::FinalizePropertyAccessInfos
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::FinalizePropertyAccessInfos
+  pub fn finalize_property_access_infos(&self /* 参数签名见 .h: FinalizePropertyAccessInfos */) {
+    todo!("AccessInfoFactory::FinalizePropertyAccessInfos")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::FinalizePropertyAccessInfosAsOne
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::FinalizePropertyAccessInfosAsOne
+  pub fn finalize_property_access_infos_as_one(&self /* 参数签名见 .h: FinalizePropertyAccessInfosAsOne */) {
+    todo!("AccessInfoFactory::FinalizePropertyAccessInfosAsOne")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ConsolidateElementLoad
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ConsolidateElementLoad
+  pub fn consolidate_element_load(&self /* 参数签名见 .h: ConsolidateElementLoad */) {
+    todo!("AccessInfoFactory::ConsolidateElementLoad")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::LookupSpecialFieldAccessor
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::LookupSpecialFieldAccessor
+  pub fn lookup_special_field_accessor(&self /* 参数签名见 .h: LookupSpecialFieldAccessor */) {
+    todo!("AccessInfoFactory::LookupSpecialFieldAccessor")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::LookupSpecialFieldAccessorInHolder
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::LookupSpecialFieldAccessorInHolder
+  pub fn lookup_special_field_accessor_in_holder(&self /* 参数签名见 .h: LookupSpecialFieldAccessorInHolder */) {
+    todo!("AccessInfoFactory::LookupSpecialFieldAccessorInHolder")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::LookupTransition
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::LookupTransition
+  pub fn lookup_transition(&self /* 参数签名见 .h: LookupTransition */) {
+    todo!("AccessInfoFactory::LookupTransition")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ComputeDataFieldAccessInfo
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ComputeDataFieldAccessInfo
+  pub fn compute_data_field_access_info(&self /* 参数签名见 .h: ComputeDataFieldAccessInfo */) {
+    todo!("AccessInfoFactory::ComputeDataFieldAccessInfo")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ComputeAccessorDescriptorAccessInfo
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ComputeAccessorDescriptorAccessInfo
+  pub fn compute_accessor_descriptor_access_info(&self /* 参数签名见 .h: ComputeAccessorDescriptorAccessInfo */) {
+    todo!("AccessInfoFactory::ComputeAccessorDescriptorAccessInfo")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::MergePropertyAccessInfos
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::MergePropertyAccessInfos
+  pub fn merge_property_access_infos(&self /* 参数签名见 .h: MergePropertyAccessInfos */) {
+    todo!("AccessInfoFactory::MergePropertyAccessInfos")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::TryLoadPropertyDetails
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::TryLoadPropertyDetails
+  pub fn try_load_property_details(&self /* 参数签名见 .h: TryLoadPropertyDetails */) {
+    todo!("AccessInfoFactory::TryLoadPropertyDetails")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ObjectMayHaveElements
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ObjectMayHaveElements
+  pub fn object_may_have_elements(&self /* 参数签名见 .h: ObjectMayHaveElements */) {
+    todo!("AccessInfoFactory::ObjectMayHaveElements")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ObjectMayHaveOwnProperties
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ObjectMayHaveOwnProperties
+  pub fn object_may_have_own_properties(&self /* 参数签名见 .h: ObjectMayHaveOwnProperties */) {
+    todo!("AccessInfoFactory::ObjectMayHaveOwnProperties")
+  }
+  /// v8: src/compiler/access-info.h AccessInfoFactory::ObjectIsSuitableProxyTarget
+  /// v8: src/compiler/access-info.cc AccessInfoFactory::ObjectIsSuitableProxyTarget
+  pub fn object_is_suitable_proxy_target(&self /* 参数签名见 .h: ObjectIsSuitableProxyTarget */) {
+    todo!("AccessInfoFactory::ObjectIsSuitableProxyTarget")
+  }
+}

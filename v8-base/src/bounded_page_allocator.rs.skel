@@ -1,0 +1,97 @@
+// 由 tool/src/base/bounded-page-allocator.h.js 从 v8/src/base/bounded-page-allocator.h + src/base/bounded-page-allocator.cc 生成; 修订就地改, 复跑覆盖
+// 预预留区域内受限页分配器 (线程安全)
+
+//! v8: src/base/bounded-page-allocator.h/.cc
+
+/// v8: src/base/bounded-page-allocator.h PageInitializationMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PageInitializationMode {
+    /// 已提交页在 Free/Release 时 decommit, 保证下次分配清零
+    KAllocatedPagesMustBeZeroInitialized,
+    /// 不清零, Free/Release 仅改不可访问, 略快
+    KAllocatedPagesCanBeUninitialized,
+    /// 假定页已 discarded 且权限正确; 须配 PageFreeingMode::KDiscard
+    KRecommitOnly,
+}
+
+/// v8: src/base/bounded-page-allocator.h PageFreeingMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PageFreeingMode {
+    /// 释放 = 权限改 kNoAccess (常规平台首选)
+    KMakeInaccessible,
+    /// 释放 = DiscardSystemPages (macOS ARM64 不许改 RWX 权限时用; 与 kAllocatedPagesMustBeZeroInitialized 不兼容)
+    KDiscard,
+}
+
+/// v8: src/base/bounded-page-allocator.h BoundedPageAllocator::AllocationStatus
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum AllocationStatus {
+    #[default]
+    KSuccess,
+    KFailedToCommit,
+    KRanOutOfReservation,
+    KHintedAddressTakenOrNotFound,
+}
+
+impl AllocationStatus {
+    /// v8: src/base/bounded-page-allocator.cc AllocationStatusToString
+    /// v8: src/base/bounded-page-allocator.h ToString — 字符串表 1:1 展开
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::KSuccess => "success",
+            Self::KFailedToCommit => "failed to commit",
+            Self::KRanOutOfReservation => "ran out of reservation",
+            Self::KHintedAddressTakenOrNotFound => "hinted address taken or not found",
+        }
+    }
+}
+
+/// v8: src/base/bounded-page-allocator.h BoundedPageAllocator::Stats
+#[derive(Debug, Default)]
+pub struct Stats {
+    pub free_size: usize,
+    pub largest_free_region: usize,
+    pub allocation_status: AllocationStatus,
+}
+
+/// v8: src/base/bounded-page-allocator.h BoundedPageAllocator
+/// 字段: mutex_, allocate_page_size_, commit_page_size_, page_allocator_,
+///        region_allocator_, page_initialization_mode_, page_freeing_mode_, allocation_status_
+/// 用途: 指针压缩 cage / 可执行页分配 (PC 相对 32 位位移)
+/// v8: 构造器要求 allocate_page_size 对齐 commit_page_size (cc L24 DCHECK)
+pub struct BoundedPageAllocator { /* Developer: RegionAllocator + Mutex 组合 */ }
+
+impl BoundedPageAllocator {
+    /// v8: bounded-page-allocator.cc begin
+    pub fn begin(&self) -> Address;
+    /// v8: bounded-page-allocator.cc size
+    pub fn size(&self) -> usize;
+    /// v8: bounded-page-allocator.h contains — 委托 region_allocator_.contains
+    pub fn contains(&self, address: Address) -> bool;
+    /// v8: bounded-page-allocator.cc AllocatePages(void* hint, ...) — 随机/提示地址分配
+    pub fn allocate_pages(&mut self, hint: Option<Address>, size: usize, alignment: usize, access: Permission) -> Option<Address>;
+    /// v8: bounded-page-allocator.cc AllocatePagesAt — 指定地址分配, 成功返回 true
+    pub fn allocate_pages_at(&mut self, address: Address, size: usize, access: Permission) -> bool;
+    /// v8: bounded-page-allocator.cc ResizeAllocationAt — old/new_size 均须 commit 页对齐
+    pub fn resize_allocation_at(&mut self, address: Address, old_size: usize, new_size: usize, access: Permission) -> bool;
+    /// v8: bounded-page-allocator.cc ReserveForSharedMemoryMapping
+    pub fn reserve_for_shared_memory_mapping(&mut self, address: Address, size: usize) -> bool;
+    /// v8: bounded-page-allocator.cc FreePages — 按初始化/释放模式 decommit 或改权限
+    pub fn free_pages(&mut self, address: Address, size: usize) -> bool;
+    /// v8: bounded-page-allocator.cc ReleasePages — 释放尾部 (size-new_size 须 commit 页对齐)
+    pub fn release_pages(&mut self, address: Address, size: usize, new_size: usize) -> bool;
+    /// v8: bounded-page-allocator.cc SetPermissions
+    pub fn set_permissions(&mut self, address: Address, size: usize, access: Permission) -> bool;
+    /// v8: bounded-page-allocator.cc RecommitPages
+    pub fn recommit_pages(&mut self, address: Address, size: usize, access: Permission) -> bool;
+    /// v8: bounded-page-allocator.cc DiscardSystemPages
+    pub fn discard_system_pages(&mut self, address: Address, size: usize) -> bool;
+    /// v8: bounded-page-allocator.cc DecommitPages
+    pub fn decommit_pages(&mut self, address: Address, size: usize) -> bool;
+    /// v8: bounded-page-allocator.cc SealPages
+    pub fn seal_pages(&mut self, address: Address, size: usize) -> bool;
+    /// v8: bounded-page-allocator.h get_last_allocation_status
+    pub fn last_allocation_status(&self) -> AllocationStatus;
+    /// v8: bounded-page-allocator.cc RecordStats
+    pub fn record_stats(&self) -> Stats;
+}

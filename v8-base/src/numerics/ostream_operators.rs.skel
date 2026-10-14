@@ -1,0 +1,26 @@
+// 由 tool/src/base/numerics/ostream_operators.h.js 从 v8/src/base/numerics/ostream_operators.h 生成; 修订就地改, 复跑覆盖
+// Strict/ClampedNumeric 流输出 (Rust 映射为 Display)
+
+//! v8 侧前置声明 2 个, operator<< 重载 2 个
+//! C++ ostream → Rust core::fmt::Display; 数值裸出 (os << static_cast<T>(value))
+
+use core::fmt;
+
+/// v8: src/base/numerics/ostream_operators.h operator<<(std::ostream&, const StrictNumeric<T>&)
+/// 语义: 输出 static_cast<T>(value) 的裸数值
+impl<T: fmt::Display> fmt::Display for super::safe_conversions::StrictNumeric<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // 语义: write!(f, "{}", T::from(self.clone())) — 就地修订
+        todo!()
+    }
+}
+
+/// v8: src/base/numerics/ostream_operators.h operator<<(std::ostream&, const ClampedNumeric<T>&)
+/// 语义: 输出 static_cast<T>(value) 的裸数值
+impl<T: fmt::Display> fmt::Display for super::clamped_math::ClampedNumeric<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // 语义: write!(f, "{}", T::from(self.clone())) — 就地修订
+        todo!()
+    }
+}
+

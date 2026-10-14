@@ -1,0 +1,54 @@
+// 由 tool/src/base/string-format.h.js 从 v8/src/base/string-format.h 生成; 修订就地改, 复跑覆盖
+// 零分配格式化字符串 (FormattedString) 与 JSON 转义
+
+//! v8 侧: impl 结构 2 特化; 转义对 7; 长度上限 128
+//! Rust 策略: const 泛型数组 + format! 宏; kFormat 静态拼接 → 编译期 &str
+
+/// v8: impl::FormattedStringPart<I> — 整型特化
+/// kMaxLen = (64bit ? 20 : 10) + (signed ? 1 : 0)
+/// kFormatPart: %u32/%d32/%u64/%d64 (PRI 宏)
+/// Rust: i32/u32/i64/u64 的 itoa 上界即该公式; 格式串由 format! 自动推导
+
+/// v8: impl::FormattedStringPart<S> — 定长字符串特化
+/// kMaxLen = N-1; kFormatPart = "%s"; 静态断言 1 <= N <= 128
+
+/// v8: impl::JoinedStringViews — 编译期 string_view 拼接进静态数组
+/// Rust: concat! / const fn 拼接等价
+
+/// v8: class FormattedString<Ts...>
+/// operator<< 右值追加 (trivial Part 元组); PrintToArray → SNPrintF 进栈上数组
+/// 语义: 无动态内存, OOM/致命错误路径可用
+pub struct FormattedString<const N: usize> {
+    /// v8: parts_ (std::tuple<Part<Ts>...>, trivial)
+    buf: [u8; N],
+    len: usize,
+}
+
+impl<const N: usize> FormattedString<N> {
+    /// v8: PrintToArray() — CHECK(characters < kMaxLen), 静态上限 128
+    pub fn print_to_array(&self) -> [u8; N] { self.buf }
+}
+
+/// v8: class JSONEscaped — operator<< 逐字符管道
+/// 转义对 (v8 原文 7 条):
+///   '"' → "\\\""
+///   '\\' → "\\\\"
+///   '\b' → "\\b"
+///   '\f' → "\\f"
+///   '\n' → "\\n"
+///   '\r' → "\\r"
+///   '\t' → "\\t"
+pub fn json_escape(s: &str, out: &mut String) {
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\b' => out.push_str("\\b"),
+            '\f' => out.push_str("\\f"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            _ => out.push(c),
+        }
+    }
+}

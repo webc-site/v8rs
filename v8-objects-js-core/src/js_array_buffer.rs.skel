@@ -1,0 +1,100 @@
+// 由 tool/src/objects/js-array-buffer.h.js 从 v8/src/objects/js-array-buffer.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSArrayBuffer 族位标志/布局/TypedArray 元素表骨架
+
+//! 差集骨架: JSArrayBuffer / JSArrayBufferView / JSTypedArray / JSDataView 族。
+//! 配置: 64 位非压缩 (kTaggedSize=8, 无 sandbox → extension_/backing_store_ 为原生指针)。
+
+// ── JSArrayBufferFlags (JSArrayBuffer.bit_field_, uint32) ──
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::IsExternalBit
+pub const K_IS_EXTERNAL_MASK: u32 = 0x1;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::IsDetachableBit
+pub const K_IS_DETACHABLE_MASK: u32 = 0x2;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::WasDetachedBit
+pub const K_WAS_DETACHED_MASK: u32 = 0x4;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::IsSharedBit
+pub const K_IS_SHARED_MASK: u32 = 0x8;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::IsResizableByJsBit
+pub const K_IS_RESIZABLE_BY_JS_MASK: u32 = 0x10;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::IsImmutableBit
+pub const K_IS_IMMUTABLE_MASK: u32 = 0x20;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::kFlagCount
+pub const K_AB_FLAG_COUNT: u32 = 6;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::NotValidMask(kWrite) = WasDetached|IsImmutable
+pub const K_NOT_VALID_WRITE_MASK: u32 = K_WAS_DETACHED_MASK | K_IS_IMMUTABLE_MASK;
+
+// ── JSArrayBufferViewFlags (JSArrayBufferView.bit_field_, uint32) ──
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::IsLengthTrackingBit
+pub const K_IS_LENGTH_TRACKING_MASK: u32 = 0x1;
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::IsBackedByRabBit
+pub const K_IS_BACKED_BY_RAB_MASK: u32 = 0x2;
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::kFlagCount
+pub const K_VIEW_FLAG_COUNT: u32 = 2;
+
+// ── 常量 ──
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::kMaxByteLength (非 sandbox 64 位 = kMaxSafeInteger)
+pub const K_MAX_BYTE_LENGTH: usize = 9007199254740991;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::kNoView (Smi 0)
+pub const K_NO_VIEW: i32 = 0;
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::kManyViews (Smi 1)
+pub const K_MANY_VIEWS: i32 = 1;
+/// v8: src/objects/js-array-buffer.h JSTypedArray::kMaxSizeInHeap
+pub const K_MAX_SIZE_IN_HEAP: usize = 64;
+
+/// v8: src/objects/js-array-buffer.h ArrayBufferExtension::Age
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Age { Young = 0, Old = 1 }
+
+/// v8: src/objects/js-array-buffer.h ArrayBufferExtension::GcState
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GcState { Dead = 0, Copied = 1, Promoted = 2 }
+
+/// v8: src/objects/js-array-buffer.h ArrayBufferExtension AgeField: bit0=Age, [1..63]=accounting_length
+pub mod accounting_state {
+    pub const AGE_MASK: u64 = 1;
+    pub const LENGTH_SHIFT: u32 = 1;
+    pub const LENGTH_BITS: u32 = 63;
+}
+
+// ── 64 位非压缩布局 (embedder 槽不计, 在 in-object 尾) ──
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::views_or_detach_key_ offset=24 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::raw_byte_length_ offset=32 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::raw_max_byte_length_ offset=40 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::backing_store_ offset=48 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::extension_ offset=56 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::bit_field_ offset=64 size=4
+/// v8: src/objects/js-array-buffer.h JSArrayBuffer::optional_padding_ offset=68 size=4
+pub const K_JS_ARRAY_BUFFER_HEADER_SIZE: usize = 72;
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::buffer_ offset=24 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::bit_field_ offset=32 size=4
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::optional_padding_ offset=36 size=4
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::raw_byte_offset_ offset=40 size=8
+/// v8: src/objects/js-array-buffer.h JSArrayBufferView::raw_byte_length_ offset=48 size=8
+pub const K_JS_ARRAY_BUFFER_VIEW_HEADER_SIZE: usize = 56;
+/// v8: src/objects/js-array-buffer.h JSTypedArray::raw_length_ offset=56 size=8
+/// v8: src/objects/js-array-buffer.h JSTypedArray::external_pointer_ offset=64 size=8
+/// v8: src/objects/js-array-buffer.h JSTypedArray::base_pointer_ offset=72 size=8
+pub const K_JS_TYPED_ARRAY_HEADER_SIZE: usize = 80;
+/// v8: src/objects/js-array-buffer.h JSDataViewOrRabGsabDataView::data_pointer_ offset=56 size=8
+pub const K_JS_DATA_VIEW_HEADER_SIZE: usize = 64;
+
+/// v8: src/objects/js-array-buffer-inl.h JSTypedArray::TypeAndElementSizeFor
+/// X-macro 展开 (TYPED_ARRAYS + RAB_GSAB_TYPED_ARRAYS_WITH_TYPED_ARRAY_TYPE):
+/// ElementsKind → (ExternalArrayType, element_size); 语义面留 Developer 修订。
+pub fn type_and_element_size_for(_kind: u8) -> (u8, usize) { todo!() }
+
+/// v8: src/objects/js-array-buffer.h 末尾 13 个 *TypedArrayConstructor (JSFunctionWithPrototype 视图)
+pub const TYPED_ARRAY_CONSTRUCTORS: &[&str] = &[
+    "TypedArrayConstructor",
+    "Uint8TypedArrayConstructor",
+    "Int8TypedArrayConstructor",
+    "Uint16TypedArrayConstructor",
+    "Int16TypedArrayConstructor",
+    "Uint32TypedArrayConstructor",
+    "Int32TypedArrayConstructor",
+    "Float16TypedArrayConstructor",
+    "Float32TypedArrayConstructor",
+    "Float64TypedArrayConstructor",
+    "Uint8ClampedTypedArrayConstructor",
+    "Biguint64TypedArrayConstructor",
+    "Bigint64TypedArrayConstructor",
+];

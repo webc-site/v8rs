@@ -1,0 +1,39 @@
+// 由 tool/src/objects/trusted-object.h.js 从 v8/src/objects/trusted-object.h 生成; 修订就地改, 复跑覆盖
+// trusted.rs 差集骨架 (trusted-object.h 部分), 合并后就地修订
+
+//! 差集骨架: TrustedObject / ExposedTrustedObject 基座
+// V8_IT_ABSTRACT x2: Rust 以 trait TrustedPointee 约束表达"抽象基类不可实例化指向"
+
+#[repr(transparent)]
+pub struct TrustedObject {
+  pub map: Tagged<Map>,
+}
+impl TrustedObject {
+  pub const K_HEADER_SIZE: usize = size_of::<HeapObject>(); // kHeaderSize = sizeof(HeapObject)
+}
+impl Tagged<TrustedObject> {
+  // 受保护指针字段 (Read/Write/Is/Clear x{2} 重载 + Raw x2 + Verify, VERIFY_HEAP 推迟)
+  pub unsafe fn read_protected_pointer_field<T>(this: &Self, offset: usize) -> Tagged<T>;
+  pub unsafe fn read_protected_pointer_field_acquire<T>(this: &Self, offset: usize, acquire: AcquireLoadTag) -> Tagged<T>;
+  pub unsafe fn write_protected_pointer_field(this: &Self, offset: usize, value: Tagged<TrustedObject>);
+  pub unsafe fn write_protected_pointer_field_release(this: &Self, offset: usize, value: Tagged<TrustedObject>, release: ReleaseStoreTag);
+  pub unsafe fn is_protected_pointer_field_empty(this: &Self, offset: usize) -> bool;
+  pub unsafe fn is_protected_pointer_field_empty_acquire(this: &Self, offset: usize, acquire: AcquireLoadTag) -> bool;
+  pub unsafe fn clear_protected_pointer_field(this: &Self, offset: usize);
+  pub unsafe fn clear_protected_pointer_field_release(this: &Self, offset: usize, release: ReleaseStoreTag);
+  pub fn raw_protected_pointer_field(this: &Self, byte_offset: usize) -> ProtectedPointerSlot;
+  pub fn raw_protected_maybe_object_field(this: &Self, byte_offset: usize) -> ProtectedMaybeObjectSlot;
+}
+
+#[repr(C)]
+pub struct ExposedTrustedObject {
+  pub trusted: TrustedObject,
+  pub self_indirect_pointer: AtomicU32, // std::atomic<IndirectPointerHandle>, 初值 kNullIndirectPointerHandle
+}
+impl ExposedTrustedObject {
+  pub const K_HEADER_SIZE: usize = size_of::<ExposedTrustedObject>();
+  pub fn self_indirect_pointer_handle(&self) -> IndirectPointerHandle;
+  // InitAndPublish/InitDontPublish/Publish/Unpublish/InitSelfIndirectPointerField:
+  //   依赖 TPT 表项分配与 TrustedPointerPublishingScope → 推迟登记 (v8-sandbox L3)
+  // IsPublished: 经 IsTrustedPointerFieldUnpublished 表达 (本 crate 可落地)
+}

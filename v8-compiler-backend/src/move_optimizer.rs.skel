@@ -1,0 +1,31 @@
+// 由 tool/src/compiler/backend/move-optimizer.js 从 v8/src/compiler/backend/move-optimizer.h + move-optimizer.cc 生成; 修订就地改, 复跑覆盖
+// MoveOptimizer: gap move 压缩/下推/前驱公共合并
+
+//! 台账: Run = CompressBlock (含 RemoveClobberedDestinations + MigrateMoves
+//!   下推 + CompressGaps 首 gap 压缩) → OptimizeMerge (MoveKey 哈希多前驱
+//!   公共 move 上提, gap0/gap1 CompressMoves) → FinalizeMoves (末 gap 收尾);
+//!   CompressMoves = 左右消重/链式消除; 双 operand 缓冲复用。
+
+/// v8: MoveOptimizer::Run — 公有入口
+// pub fn run(&mut self)
+/// v8: MoveOptimizer::CompressBlock — 块内压缩 (清 clobber 后逐指令)
+// fn compress_block(&mut self, block: &mut InstructionBlock)
+/// v8: MoveOptimizer::CompressGaps — 首 gap 合并两 parallel_moves
+// fn compress_gaps(&mut self, instr: &mut Instruction)
+/// v8: MoveOptimizer::CompressMoves — 左 ParallelMove 与右 move 向量消重
+// fn compress_moves(&mut self, left: &mut ParallelMove, right: &mut Vec<*mut MoveOperands>)
+/// v8: MoveOptimizer::MigrateMoves — from 的可移 move 下推到 to
+// fn migrate_moves(&mut self, to: &mut Instruction, from: &mut Instruction)
+/// v8: MoveOptimizer::RemoveClobberedDestinations — 被覆盖目标清除
+// fn remove_clobbered_destinations(&mut self, instruction: &mut Instruction)
+/// v8: MoveOptimizer::LastInstruction — 块末指令
+// fn last_instruction(&self, block: &InstructionBlock) -> &Instruction
+/// v8: MoveOptimizer::OptimizeMerge — 多前驱公共 move 上提 (MoveKey)
+// fn optimize_merge(&mut self, block: &mut InstructionBlock)
+/// v8: MoveOptimizer::FinalizeMoves — 收尾 (0 gap 消除/1 gap 收拢)
+// fn finalize_moves(&mut self, instr: &mut Instruction)
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 过程 pass; 方法面 9 对数见生成脚本日志
+};

@@ -1,0 +1,57 @@
+// 由 tool/src/wasm/baseline/parallel-move.js 从 v8/src/wasm/baseline/parallel-move.cc 生成; 修订就地改, 复跑覆盖
+// TransferToStack/ExecuteMoves/ExecuteLoads 三方法分派台账 (枚举在 parallel_move.rs)
+
+//! ParallelMove 执行阶段的两张分派表与环路处理语义。
+
+/// TransferToStack: VarState loc 三路分派 (3 路)
+/// v8: src/wasm/baseline/parallel-move.cc ParallelMove::TransferToStack
+#[rustfmt::skip]
+pub static TRANSFER_TO_STACK_DISPATCH: &[(&str, &str)] = &[
+  ("Stack", "MoveStackValue(dst, src.offset, src.kind); 同偏移直接 return"),
+  ("Register", "Spill(dst, src.reg, src.kind)"),
+  ("IntConst", "Spill(dst, src.constant)"),
+];
+
+/// ExecuteLoads: RegisterLoad load_kind 五路分派 (5 路)
+/// v8: src/wasm/baseline/parallel-move.cc ParallelMove::ExecuteLoads
+#[rustfmt::skip]
+pub static EXECUTE_LOADS_DISPATCH: &[(&str, &str)] = &[
+  ("Nop", "无动作"),
+  ("Constant", "LoadConstant; kind==i64 时按 int64 加载, 否则 int32"),
+  ("Stack", "Fill(dst, value, kind); s128 且需寄存器对时 Fill 到 fp pair"),
+  ("LowHalfStack", "FillI64Half(dst.gp, value, LowWord)"),
+  ("HighHalfStack", "FillI64Half(dst.gp, value, HighWord)"),
+];
+
+/// ExecuteLoads 末尾清空 load 目标寄存器集合
+/// v8: src/wasm/baseline/parallel-move.cc ParallelMove::ExecuteLoads
+pub const EXECUTE_LOADS_CLEARS_DST_SET: bool = true;
+
+/// ExecuteMoves 两阶段语义
+/// v8: src/wasm/baseline/parallel-move.cc ParallelMove::ExecuteMoves
+pub mod execute_moves {
+    /// 阶段 1: 先执行所有 dst 不再被用作 src 的搬移 (src 引用计数归零时传递执行)
+    pub const PHASE1_INDEPENDENT_FIRST: bool = true;
+    /// 阶段 2: 剩余搬移构成环; 环上第一个 dst 的 src 溢出到
+    /// last_spill_offset_ + SlotSizeForType(kind), 并登记为之后重新装载
+    pub const PHASE2_CYCLE_SPILL_RELOAD: bool = true;
+    /// 环路溢出偏移步进 = LiftoffAssembler::SlotSizeForType(move->kind)
+    pub const CYCLE_SPILL_SLOT_SIZE_FOR_TYPE: bool = true;
+}
+
+/// ParallelMove 方法台账 (3 条, .cc 侧)
+/// v8: src/wasm/baseline/parallel-move.cc
+#[rustfmt::skip]
+pub static METHODS: &[(&str, u32)] = &[
+  ("ParallelMove::TransferToStack", 11),
+  ("ParallelMove::ExecuteMoves", 46),
+  ("ParallelMove::ExecuteLoads", 72),
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(TRANSFER_TO_STACK_DISPATCH.len() == 3);
+    assert!(EXECUTE_LOADS_DISPATCH.len() == 5);
+    assert!(METHODS.len() == 3);
+    assert!(!METHODS.is_empty());
+};

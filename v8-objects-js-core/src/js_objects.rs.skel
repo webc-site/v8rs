@@ -1,0 +1,31 @@
+// 由 tool/src/objects/js-objects.cc.js 从 v8/src/objects/js-objects.tq + js-objects.cc 生成; 修订就地改, 复跑覆盖
+// JSObject 族 tq 布局 (15 类) + cc 方法对数差集骨架
+
+//! tq 差集: JSReceiver/JSObject 直系 15 类布局; .h/-inl.h 常量归
+//! tool/src/objects/js-objects.h.js (JSReceiver::kHeaderSize=16, JSObject::kHeaderSize=24 非压缩)。
+
+// 继承骨架 (tq @abstract: JSReceiver/JSSpecialObject/JSCustomElementsObject/JSAPIObjectWithEmbedderSlots):
+//   HeapObject → JSReceiver → JSObject → {JSExternalObject, JSObjectWithEmbedderSlots,
+//   JSAPIObjectWithEmbedderSlots(+cpp_heap_wrappable), JSCustomElementsObject → JSSpecialObject
+//   (+cpp_heap_wrappable) → {JSGlobalProxy, JSGlobalObject}, JSPrimitiveWrapper, JSMessageObject,
+//   JSDate, JSAsyncFromSyncIterator, JSStringIterator, JSValidIteratorWrapper}
+/// v8: src/objects/js-objects.tq JSObject @apiExposedInstanceTypeValue(0x421)
+pub const K_JS_OBJECT_API_INSTANCE_TYPE: u16 = 0x421;
+
+// JSGlobalObject: 2 tagged 槽
+/// v8: src/objects/js-objects.tq JSGlobalObject.global_proxy
+pub const K_GLOBAL_PROXY_OFFSET: usize = 24;
+/// v8: src/objects/js-objects.tq JSGlobalObject.global_proxy_for_api
+pub const K_GLOBAL_PROXY_FOR_API_OFFSET: usize = 32;
+// JSPrimitiveWrapper: value@24
+// JSMessageObject: 9 槽 (message_type..error_level) @24..88
+// JSDate: value f64 @24 + year..cache_stamp 8 Smi|NaN 槽 @32..88
+//   (NaN 缓存语义: date_cache_stamp 失配即失效, js-objects.cc:5936)
+// JSAsyncFromSyncIterator: sync_iterator@24, next@32
+// JSStringIterator: string@24, index@32
+// JSValidIteratorWrapper: underlying (iterator::IteratorRecord)@24
+
+// cc 方法映射: 140 个定义 (SlowReverseLookup/UpdateAllocationSite/RawFastPropertyAtCompareAndSwap/
+//   NonAPIInstanceTypeToString/ApplyAttributesToDictionary/... ) — 语义推迟到 objects 层实现
+// tq macro: NewJSObject/GetDerivedMap/GetDerivedRabGsabTypedArrayMap/AllocateFastOrSlowJSObjectFromMap +
+//   extern AllocateJSObjectFromMap x3 重载

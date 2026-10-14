@@ -1,0 +1,51 @@
+// 由 tool/src/compiler/turboshaft/snapshot-table.h.js 从 v8/src/compiler/turboshaft/snapshot-table.h 生成; 修订就地改, 复跑覆盖
+// 快照表: 可回滚键值表 (SSA 重命名基座)
+
+/// 原版快照表常量 (小端无关, 数值即语义):
+/// - kNoMergeOffset = kNoMergedPredecessor = u32::MAX (Entry 与表两处声明)
+/// - kInvalidOffset = usize::MAX (SnapshotData::log_begin 未设)
+/// v8: src/compiler/turboshaft/snapshot-table.h
+pub const NO_MERGE_OFFSET: u32 = u32::MAX;
+pub const NO_MERGED_PREDECESSOR: u32 = u32::MAX;
+pub const INVALID_OFFSET: usize = usize::MAX;
+
+/// 原版 SnapshotTableEntry — value + merge_offset + last_merged_predecessor
+/// (KeyData 经 EBO 放基类)
+/// v8: snapshot-table.h SnapshotTableEntry
+pub struct SnapshotTableEntry<V, D> {
+  pub value: V,
+  pub merge_offset: u32,
+  pub last_merged_predecessor: u32,
+  pub data: D,
+}
+
+/// 原版 SnapshotTable — Key 是表内指针 (指针大小, 廉价拷贝);
+/// LogEntry 记 (table_entry, old_value, new_value) 三元组。
+/// 方法面:
+/// - StartNewSnapshot
+/// - Seal
+/// - Set
+/// - Get
+/// - GetPredecessorValue
+/// - NewKey
+/// - IsSealed
+/// - RevertCurrentSnapshot
+/// - ReplaySnapshot
+/// - MergePredecessors
+/// - CurrentSnapshot
+/// - StartNewSnapshot(predecessors, merge_fun): 单前驱=精确回滚,
+///   多前驱走 merge_values_
+/// - Seal / RevertCurrentSnapshot (逆序回放 log) / ReplaySnapshot (正放)
+/// - MergePredecessors: RecordMergeValue 记每前驱末值后合并
+/// v8: snapshot-table.h SnapshotTable
+pub struct SnapshotTable<V, D = ()> {
+  pub log: Vec<LogEntry<V>>,
+}
+
+/// 原版 ChangeTrackingSnapshotTable — 回调 OnNewKey/OnValueChange
+/// v8: snapshot-table.h ChangeTrackingSnapshotTable
+pub trait ChangeCallback<V, D> {
+  /// v8: NoChangeCallback 为默认空实现
+  fn on_new_key(&mut self, key: Key, value: V);
+  fn on_value_change(&mut self, key: Key, old: V, new: V);
+}

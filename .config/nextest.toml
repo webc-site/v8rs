@@ -1,0 +1,11 @@
+[profile.default]
+slow-timeout = { period = "30s", terminate-after = 1 }
+
+[[profile.default.overrides]]
+filter = 'package(v8-benchmarks) | package(v8-bigint)'
+slow-timeout = { period = "120s", terminate-after = 1 }
+
+# cargo miri nextest run 自动选用此 profile; Miri 慢 100~1000 倍, 放宽超时
+[profile.default-miri]
+slow-timeout = { period = "120s", terminate-after = 5 }
+fail-fast = false

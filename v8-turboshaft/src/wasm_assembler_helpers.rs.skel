@@ -1,0 +1,24 @@
+// 由 tool/src/compiler/turboshaft/wasm-assembler-helpers.h.js 从 v8/src/compiler/turboshaft/wasm-assembler-helpers.h 生成; 修订就地改, 复跑覆盖
+// wasm 汇编 helper: 实例字段载入宏与写屏障换算
+
+/// 原版 4 个 LOAD 宏 — 从 WasmTrustedInstanceData 载字段:
+/// - LOAD_INSTANCE_FIELD(instance, name, representation): __ Load + representation (TaggedBase()), 偏移 WasmTrustedInstanceData::k<name>Offset
+/// - LOAD_PROTECTED_INSTANCE_FIELD(instance, name, type): LoadProtectedPointerField + V<type>::Cast (TaggedBase()), 偏移 WasmTrustedInstanceData::kProtected<name>Offset
+/// - LOAD_IMMUTABLE_PROTECTED_INSTANCE_FIELD(instance, name, type): LoadProtectedPointerField + V<type>::Cast (TaggedBase().Immutable()), 偏移 WasmTrustedInstanceData::kProtected<name>Offset
+/// - LOAD_IMMUTABLE_INSTANCE_FIELD(instance, name, representation): __ Load + representation (TaggedBase().Immutable()), 偏移 WasmTrustedInstanceData::k<name>Offset
+/// Rust 侧以泛型函数替代宏拼接。
+/// v8: src/compiler/turboshaft/wasm-assembler-helpers.h
+pub fn load_instance_field<T: InstanceField>(
+  asm: &mut Assembler, instance: V<WasmTrustedInstanceData>, name: T,
+) -> V<T::Repr> { todo!() }
+pub fn load_protected_instance_field<T: InstanceField>(
+  asm: &mut Assembler, instance: V<WasmTrustedInstanceData>, name: T,
+) -> V<T::Repr> { todo!() }
+
+/// 原版 (namespace v8::internal::wasm):
+/// - ArrayIndexImmediateToWriteBarrier(array) — 数组元素写屏障判定
+/// - FieldImmediateToWriteBarrier(field) — 结构字段写屏障判定
+/// 由 wasm 管线与 wasm-in-JS 内联共用。
+/// v8: wasm-assembler-helpers.h (wasm 命名空间)
+pub fn array_index_immediate_to_write_barrier(array: &ArrayIndexImmediate) -> WriteBarrierKind { todo!() }
+pub fn field_immediate_to_write_barrier(field: &FieldImmediate) -> WriteBarrierKind { todo!() }

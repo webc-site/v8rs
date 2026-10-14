@@ -1,0 +1,21 @@
+// 由 tool/src/heap/stress-scavenge-observer.js 从 v8/src/heap/stress-scavenge-observer.h, src/heap/stress-scavenge-observer.cc 生成; 修订就地改, 复跑覆盖
+// 压力 scavenge 观察者: 随机百分比限幅触发小 GC
+/// v8: src/heap/stress-scavenge-observer.h StressScavengeObserver (AllocationObserver)
+pub struct StressScavengeObserver<'a> {
+  /// v8: heap_
+  pub heap: &'a mut Heap,
+  /// v8: limit_percentage_ — NextLimit() 随机重抽
+  pub limit_percentage: i32,
+  /// v8: has_requested_gc_
+  pub has_requested_gc: bool,
+  /// v8: max_new_space_size_reached_ — fuzzer-gc-analysis 统计
+  pub max_new_space_size_reached: f64,
+}
+
+impl StressScavengeObserver<'_> {
+  /// v8: StressScavengeObserver::Step — 越限则 RequestGC, trace 输出
+  pub fn step(&mut self, bytes_allocated: i32, soon_object: Address, size: usize) { todo!() }
+  /// v8: HasRequestedGC / RequestedGCDone
+  /// v8: MaxNewSpaceSizeReached
+  /// v8: NextLimit(min = 0) — flag:stress-scavenge 随机 [min, 100]
+  /// v8: 构造: limit_percentage_ = NextLimit() + trace 输出 "[StressScavenge] %d%% ..."

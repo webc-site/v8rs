@@ -1,0 +1,66 @@
+// 由 tool/src/compiler/backend/register-allocator-verifier.js 从 v8/src/compiler/backend/register-allocator-verifier.h + register-allocator-verifier.cc 生成; 修订就地改, 复跑覆盖
+// RegisterAllocatorVerifier: 分配正确性验证 (Assessment 约束/位图模型)
+
+//! 台账: VerifyAssignment (预分配约束表比对) + VerifyGapMoves (块间 Assessment
+//!   传播验证); AssessmentKind Final/Pending; BlockAssessments: OperandMap +
+//!   map_for_moves_ + stale_ref_stack_slots_ (引用图陈旧槽检测) + CopyFrom/DropRegisters;
+//!   DelayedAssessments 环回头延迟验证; ConstraintType 12 值实测。
+
+/// v8: AssessmentKind — Final(已定 vreg)/Pending(多前驱待定)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum AssessmentKind { Final = 0, Pending = 1 }
+
+/// v8: RegisterAllocatorVerifier::ConstraintType — 操作数约束类 (实测 13)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+#[rustfmt::skip]
+pub enum ConstraintType {
+  /// kConstant
+  Constant,
+  /// kImmediate
+  Immediate,
+  /// kRegister
+  Register,
+  /// kFixedRegister
+  FixedRegister,
+  /// kFPRegister
+  FPRegister,
+  /// kFixedFPRegister
+  FixedFPRegister,
+  /// kSlot
+  Slot,
+  /// kFixedSlot
+  FixedSlot,
+  /// kRegisterOrSlot
+  RegisterOrSlot,
+  /// kRegisterOrSlotFP
+  RegisterOrSlotFP,
+  /// kRegisterOrSlotOrConstant
+  RegisterOrSlotOrConstant,
+  /// kSameAsInput
+  SameAsInput,
+  /// kRegisterAndSlot
+  RegisterAndSlot,
+}
+
+/// v8: RegisterAllocatorVerifier::VerifyAssignment — 预分配约束 vs 实分配
+// pub fn verify_assignment(&mut self, caller_info: &str)
+/// v8: RegisterAllocatorVerifier::VerifyGapMoves — 块间移动 Assessment 验证
+// pub fn verify_gap_moves(&mut self)
+/// v8: RegisterAllocatorVerifier::ValidatePendingAssessment — 别名证明
+// fn validate_pending_assessment(&mut self, block: RpoNumber, assessment: &PendingAssessment, vreg: i32)
+/// v8: RegisterAllocatorVerifier::ValidateUse — 使用点验证
+// fn validate_use(&mut self, block: RpoNumber, current: &mut BlockAssessments, op: InstructionOperand, vreg: i32)
+/// v8: RegisterAllocatorVerifier::CreateForBlock — 块初始 Assessment (前驱合并)
+// fn create_for_block(&mut self, block: &InstructionBlock) -> BlockAssessments
+/// v8: BlockAssessments::PerformParallelMoves — 并行移动按 GapResolver 序应用
+// BlockAssessments::perform_parallel_moves / perform_moves / check_reference_map
+
+pub const CONSTRAINT_TYPE_COUNT: usize = 13;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(AssessmentKind::Pending as u8 == 1);
+  assert!(CONSTRAINT_TYPE_COUNT == 13);
+};

@@ -1,0 +1,58 @@
+// 由 tool/src/compiler/turboshaft/wasm-wrappers.h.js 从 v8/src/compiler/turboshaft/wasm-wrappers.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// wasm 包装器: JS<->wasm 入口图构建
+
+/// 原版 WasmInlinedFunctionData — wasm-in-JS 内联所需元数据
+/// v8: wasm-wrappers.h WasmInlinedFunctionData
+pub struct WasmInlinedFunctionData {
+  /// 原版  wasm::NativeModule* native_module
+  pub native_module: ,
+  /// 原版 uint32_t function_index
+  pub function_index: uint32_t,
+  /// 原版 V<EagerFrameState> js_caller_frame_state
+  pub js_caller_frame_state: V<EagerFrameState>,
+  /// 原版 Handle<SharedFunctionInfo> shared_fct_info
+  pub shared_fct_info: Handle<SharedFunctionInfo>,
+  /// 原版 SourcePosition call_pos
+  pub call_pos: SourcePosition,
+}
+
+/// 原版 WasmBodyInliningResult — 内联成败 + 结果值
+/// v8: wasm-wrappers.h WasmBodyInliningResult
+pub struct WasmBodyInliningResult {
+  pub success: bool,
+  pub result: OptionalV<Any>,
+}
+
+/// 原版 WasmWrapperTSGraphBuilder<Assembler> — 继承
+/// wasm::WasmGraphBuilderBase<Assembler>; 头文件声明面 (8 个 Build)。
+/// Build 族实现面 (-inl.h, 9 个):
+/// - BuildChangeInt32ToNumber
+/// - BuildToJSFunctionRef
+/// - BuildCallWasmFromWrapper
+/// - BuildJSToWasmWrapper
+/// - BuildWasmToJSWrapper
+/// - BuildWasmStackEntryWrapper
+/// - BuildCapiCallWrapper
+/// - BuildCWasmEntryWrapper
+/// - BuildJSFastApiCallWrapper
+/// BuildJSToWasmWrapper 有内联重载 (js_closure, js_context, args,
+/// inlined_function_data) 与独立编译重载两版。
+/// v8: wasm-wrappers.{h,-inl.h}
+pub struct WasmWrapperTSGraphBuilder;
+
+/// 原版 BuildWasmWrapper 分派 (cc):
+/// - CodeKind::JS_TO_WASM_FUNCTION -> BuildJSToWasmWrapper
+/// - CodeKind::WASM_TO_CAPI_FUNCTION -> BuildCapiCallWrapper
+/// - CodeKind::C_WASM_ENTRY -> BuildCWasmEntryWrapper
+/// - CodeKind::WASM_STACK_ENTRY -> BuildWasmStackEntryWrapper
+/// - CodeKind::WASM_TO_JS_FUNCTION: import_kind == kWasmToJSFastApi 时
+///   BuildJSFastApiCallWrapper(callable), 否则 BuildWasmToJSWrapper(
+///   import_kind, expected_arity, suspend); default: UNREACHABLE
+/// v8: wasm-wrappers.cc BuildWasmWrapper
+///
+/// WrapperAssembler 栈: Assembler<SelectLoweringReducer, DataViewLoweringReducer, FastApiCallLoweringReducer, VariableReducer>
+/// 另有 cc GetBuiltinCallDescriptor(name, zone) — Linkage 装配 stub 描述符。
+///
+/// -inl.h 其余方法面 (13 个): AbortIfNot, BuildChangeInt32ToNumber, BuildToJSFunctionRef, CheckAndConvertSharedString, ToJS, BuildCallWasmFromWrapper, ConvertWasmResultsToJS, BuildJSToWasmWrapper, BuildWasmToJSWrapper, BuildWasmStackEntryWrapper, BuildCapiCallWrapper, BuildCWasmEntryWrapper, BuildJSFastApiCallWrapper
+pub fn build_wasm_wrapper(data: &mut PipelineData, sig: &CanonicalSig,
+                          info: WrapperCompilationInfo) { todo!() }

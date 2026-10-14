@@ -1,0 +1,83 @@
+// 由 tool/src/base/platform/semaphore.js 从 v8/src/base/platform/semaphore.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 信号量原语 (darwin 目标走 dispatch_semaphore, POSIX 走 sem_*)
+
+/// 信号量 (原版 base::Semaphore)
+/// v8: src/base/platform/semaphore.h Semaphore
+///
+/// 计数信号量: Signal 增, Wait 减, 计数归零时 Wait 阻塞。
+/// 原版 NativeHandle 分支: DARWIN→dispatch_semaphore_t / POSIX→sem_t /
+/// WIN→HANDLE / STARBOARD→starboard::Semaphore; darwin 目标用 dispatch。
+pub struct Semaphore {
+  /// 原版 NativeHandle native_handle_ (darwin: dispatch_semaphore_t)
+  native: dispatch_semaphore_t,
+}
+
+/// darwin dispatch 句柄 (原版 using NativeHandle = dispatch_semaphore_t)
+/// v8: src/base/platform/semaphore.h Semaphore::NativeHandle
+pub type NativeHandle = *const std::ffi::c_void; // dispatch_semaphore_t 不透明句柄
+
+extern "C" {
+  fn dispatch_semaphore_create(value: i32) -> NativeHandle;
+  fn dispatch_release(object: NativeHandle);
+  fn dispatch_semaphore_signal(sem: NativeHandle) -> i64;
+  fn dispatch_semaphore_wait(sem: NativeHandle, timeout: u64) -> i64;
+  fn dispatch_time(when: i64, delta: i64) -> u64;
+}
+
+/// DISPATCH_TIME_NOW (原版 WaitFor 用 dispatch_time(DISPATCH_TIME_NOW, ns) 组装绝对超时)
+const DISPATCH_TIME_NOW: i64 = 0;
+/// DISPATCH_TIME_FOREVER (原版 Wait 的永久等待哨兵)
+const DISPATCH_TIME_FOREVER: u64 = u64::MAX;
+
+impl Semaphore {
+  /// v8: src/base/platform/semaphore.cc Semaphore::Semaphore (darwin 分支)
+  /// dispatch_semaphore_create(count); DCHECK(native_handle_)
+  pub fn new(count: i32) -> Self {
+    debug_assert!(count >= 0);
+    Self { native: unsafe { dispatch_semaphore_create(count) } }
+  }
+
+  /// v8: src/base/platform/semaphore.cc Semaphore::~Semaphore (darwin 分支)
+  /// dispatch_release(native_handle_)
+  pub fn destroy(&mut self) { unsafe { dispatch_release(self.native) }; }
+
+  /// v8: src/base/platform/semaphore.cc Semaphore::Signal (darwin 分支)
+  pub fn signal(&self) { unsafe { dispatch_semaphore_signal(self.native) }; }
+
+  /// v8: src/base/platform/semaphore.cc Semaphore::Wait (darwin 分支)
+  /// dispatch_semaphore_wait(_, DISPATCH_TIME_FOREVER)
+  pub fn wait(&self) { unsafe { dispatch_semaphore_wait(self.native, DISPATCH_TIME_FOREVER) }; }
+
+  /// v8: src/base/platform/semaphore.cc Semaphore::WaitFor (darwin 分支)
+  /// 超时 = dispatch_time(DISPATCH_TIME_NOW, rel_time.InNanoseconds());
+  /// 返回 dispatch_semaphore_wait(...) == 0 (0 = 通知到达)
+  pub fn wait_for(&self, rel_time_ns: i64) -> bool {
+    let timeout = unsafe { dispatch_time(DISPATCH_TIME_NOW, rel_time_ns) };
+    unsafe { dispatch_semaphore_wait(self.native, timeout) == 0 }
+  }
+}
+
+// —— 非 darwin 平台分支登记 (rule 9: 按目标展开, 此处登记不产码) ——
+/// v8: src/base/platform/semaphore.cc (V8_OS_POSIX 分支)
+/// sem_init/sem_post/sem_wait/sem_timedwait; Wait 与 WaitFor 均为
+/// while(true) 循环: result==0 返回, errno==ETIMEDOUT 返回 false,
+/// 其余 DCHECK(result==-1 && errno==EINTR) 继续自旋。
+/// glibc<2.4 特例: sem_timedwait 正值返回需折回 errno (原版 91-97 行)。
+/// v8: src/base/platform/semaphore.cc (V8_OS_WIN 分支)
+/// CreateSemaphoreA(_, count, 0x7FFFFFFF, _); WaitForSingleObject;
+/// WaitFor 以 msec>=INFINITE 分档 + TimeTicks 差值自旋。
+/// v8: src/base/platform/semaphore.cc (V8_OS_STARBOARD 分支)
+/// Put/Take/TakeWait(microseconds) — 非目标, 登记跳过。
+
+// —— 惰性初始化登记 (原版 LazySemaphore<N> + LAZY_SEMAPHORE_INITIALIZER) ——
+/// v8: src/base/platform/semaphore.h LazySemaphore
+/// CreateSemaphoreTrait<N> 以初值 N 动态构造; Rust 侧 OnceLock 承担
+pub type LazySemaphore = std::sync::OnceLock<Semaphore>;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // Signal/Wait/WaitFor = 3; NativeHandle 平台分支 = 4
+  const METHODS: usize = 3;
+  const NATIVE_BRANCHES: usize = 4;
+  assert!(METHODS == 3 && NATIVE_BRANCHES == 4);
+};

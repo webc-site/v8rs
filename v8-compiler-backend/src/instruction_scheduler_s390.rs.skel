@@ -1,0 +1,15 @@
+// 由 tool/src/compiler/backend/s390/instruction-scheduler-s390.js 从 v8/src/compiler/backend/s390/instruction-scheduler-s390.cc 生成; 修订就地改, 复跑覆盖
+// s390 调度架构面: GetTargetInstructionFlags (390 case)
+
+//! 台账: SchedulerSupported()=true; GetTargetInstructionFlags case kS390 ×390。
+
+/// v8: InstructionScheduler::GetTargetInstructionFlags (s390)
+// pub fn get_target_instruction_flags(instr: &Instruction) -> i32
+pub const SCHEDULER_SUPPORTED: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(SCHEDULER_SUPPORTED);
+  assert!(TARGET_CASE_COUNT == 390);
+};
+pub const TARGET_CASE_COUNT: usize = 390;

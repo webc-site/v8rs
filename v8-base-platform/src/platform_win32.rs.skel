@@ -1,0 +1,68 @@
+// 由 tool/src/base/platform/platform-win32.js 从 v8/src/base/platform/platform-win32.{h,cc} 生成; 修订就地改, 复跑覆盖
+// win32 平台面 (非目标; 时间常量换算 + OS 58 方法登记)
+
+// —— Windows 时间换算常量 (原版 WindowsTimezoneCache 私有面) ——
+/// Windows epoch (1601) 相对 Unix epoch (1970) 的 100ns 计数
+/// v8: src/base/platform/platform-win32.cc kTimeEpoc
+pub const TIME_EPOC: i64 = 116444736000000000;
+/// 100ns → μs 缩放 (1 μs = 10 × 100ns)
+/// v8: src/base/platform/platform-win32.cc kTimeScaler
+pub const TIME_SCALER: i64 = 10000;
+/// 每分钟毫秒数 (原版 kMsPerMinute)
+/// v8: src/base/platform/platform-win32.cc kMsPerMinute
+pub const MS_PER_MINUTE: i64 = 60000;
+/// 每秒 100ns 数 (原版 kHundredNanosecondsPerSecond)
+/// v8: src/base/platform/platform-win32.cc kHundredNanosecondsPerSecond
+pub const HUNDRED_NANOSECONDS_PER_SECOND: i64 = 10000000;
+/// 时钟重同步窗口 (原版 kMaxClockElapsedTime = 60×上式, 1 分钟)
+/// v8: src/base/platform/platform-win32.cc kMaxClockElapsedTime
+pub const MAX_CLOCK_ELAPSED_TIME: i64 = 60 * HUNDRED_NANOSECONDS_PER_SECOND;
+/// 时区名缓冲 (原版 kTzNameSize)
+/// v8: src/base/platform/platform-win32.cc kTzNameSize
+pub const TZ_NAME_SIZE: usize = 128;
+/// 用长时区名 (原版 kShortTzNames = false)
+/// v8: src/base/platform/platform-win32.cc kShortTzNames
+pub const SHORT_TZ_NAMES: bool = false;
+
+/// 高精度睡 (原版 class PreciseSleepTimer)
+/// v8: src/base/platform/platform-win32.h PreciseSleepTimer
+/// CreateWaitableTimerExW(WAITABLETIMER_HIGH_RESOLUTION) — Win10 1803+;
+/// TryInit 失败静默, IsInitialized 探测; Sleep 需先初始化且单线程使用
+pub struct PreciseSleepTimer {
+  timer: *mut core::ffi::c_void,
+}
+
+// —— OS 58 方法登记 (win32 非目标; 面清单取自 cc 唯一解析, 供映射审计) ——
+/// v8: src/base/platform/platform-win32.cc 完整面 (58):
+/// 内存: Allocate (VirtualAllocWrapper: 有 VirtualAlloc2 (kernelbase 动态解析) 走
+///   带句柄形态, 否则 VirtualAlloc; 常规路径 MEM_RESERVE 或 MEM_RESERVE|MEM_COMMIT,
+///   占位符路径 MEM_RESERVE|MEM_RESERVE_PLACEHOLDER + PAGE_NOACCESS)/
+///   AllocateShared/Free/FreeShared/Release/SetPermissions (VirtualProtect)/
+///   SetDataReadOnly/SetMemoryRegionName/RecommitPages/DiscardSystemPages/
+///   DecommitPages/SealPages/CanReserveAddressSpace/CreateAddressSpaceReservation/
+///   FreeAddressSpaceReservation/CreateSharedMemoryHandleForTesting/
+///   DestroySharedMemoryHandle/HasLazyCommits/GetRandomMmapAddr/SetRandomMmapSeed/
+///   AllocatePageSize/CommitPageSize/EnsureWin32MemoryAPILoaded
+/// ASR 12 面: CreateSubReservation/FreeSubReservation/SplitPlaceholder/
+///   MergePlaceholders/Allocate/Free/AllocateShared/FreeShared/SetPermissions/
+///   RecommitPages/DiscardSystemPages/DecommitPages
+/// 栈 5 面: ObtainCurrentThreadStackStart/ObtainCurrentThreadStackReservedLimit/
+///   SetCurrentThreadStackBounds/GetCommittedStackLimit/GetCurrentStackPosition
+/// 线程/进程: GetCurrentThreadId(Internal)/GetCurrentProcessId/ExitProcess/
+///   GetUserTime/GetPeakMemoryUsageKb/EnsureAlternativeSignalStackIsAvailableForCurrentThread
+/// 时间: TimeCurrentMillis/Sleep (+RolloverProtectedNow 见 time 族)
+/// IO/打印: FOpen(UTF16 转换 ConvertUtf8StringToUtf16)/Remove/OpenTemporaryFile/
+///   Print 族/SNPrintF/VSNPrintF/StrNCpy/DirectorySeparator('\\')/isDirectorySeparator
+/// 杂项: Initialize/Abort/DebugBreak/GetLastError/AdjustSchedulingParams/
+///   SignalCodeMovingGC/GetFirstFreeMemoryRangeWithin/CreateTimezoneCache(注册表)/
+///   IsHardwareEnforcedShadowStacksEnabled
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(TIME_EPOC, 116444736000000000);
+  assert_eq!(TIME_EPOC / 10, 11644473600000000); // 与 time.cc kTimeToEpochInMicroseconds 一致
+  assert_eq!(TIME_SCALER, 10000);
+  assert_eq!(MAX_CLOCK_ELAPSED_TIME, 600000000);
+  assert_eq!(TZ_NAME_SIZE, 128);
+  assert!(!SHORT_TZ_NAMES);
+};

@@ -1,0 +1,52 @@
+// 由 tool/src/objects/fixed-primitive-array-inl.h.js 从 v8/src/objects/fixed-primitive-array-inl.h 生成; 修订就地改, 复跑覆盖
+// -inl 合并指引; Rust 无 inl, 语义并入 primitive_array.rs 就地修订
+
+//! -inl 合并指引 (33 个定义, C++ 行内 → Rust 常规实现, 内联由编译器决定)
+//!
+//! 命名映射: 方法名 snake_case; tag 重载用后缀区分:
+//!   length()/length(AcquireLoadTag)/length(RelaxedLoadTag) → length()/length_acquire()/length_relaxed()
+//!   set_length(v, ReleaseStoreTag) → set_length_release(v); capacity 族同理。
+//! 语义要点:
+//!   1. IsInBounds: (index as u32) < ulength() — 负下标转 u32 回绕自然判负
+//!   2. AllocatedSize: SizeFor(length_acquire()) — right-trimming 并发访问须 acquire
+//!   3. FixedDoubleArray::set: NaN 输入 → 静默化为 canonical quiet NaN (0x7FF8000000000000)
+//!   4. set_the_hole/is_the_hole: 位级比较 K_HOLE_NAN_INT64 (globals.rs 已导出)
+//!   5. set_undefined/is_undefined: V8_ENABLE_UNDEFINED_DOUBLE 关 → 裁剪不落地 (偏差登记)
+//!   6. MoveElements: ptr::copy (MemMove 等价, 允许重叠)
+//!   7. ByteArray/TrustedByteArray::New: 安装后 memset 尾部 SizeFor-OffsetOfElementAt 字节
+//!   8. get_int/set_int: 非对齐 u32 读写 (read_unaligned/write_unaligned)
+//!   9. FixedIntegerArrayBase::New: length*sizeof(T) u32 溢出检查 (CheckedNumeric → Option/Result)
+//!  10. Allocate/New(isolate): factory 未落地, 以 install(map, length, buffer) 表达 (票单申报)
+// PrimitiveArrayBase::IsInBounds → primitivearraybase__is_in_bounds (_is_in_bounds)
+// PrimitiveArrayBase::get → primitivearraybase_get (get)
+// PrimitiveArrayBase::set → primitivearraybase_set (set)
+// PrimitiveArrayBase::AllocatedSize → primitivearraybase__allocated_size (_allocated_size)
+// PrimitiveArrayBase::begin → primitivearraybase_begin (begin)
+// PrimitiveArrayBase::end → primitivearraybase_end (end)
+// PrimitiveArrayBase::DataSize → primitivearraybase__data_size (_data_size)
+// PrimitiveArrayBase::FromAddressOfFirstElement → primitivearraybase__from_address_of_first_element (_from_address_of_first_element)
+// PrimitiveArrayBase::Allocate → primitivearraybase_Allocate (Allocate)
+// FixedDoubleArray::New → fixeddoublearray_New (New)
+// FixedDoubleArray::get_scalar → fixeddoublearray_get_scalar (get_scalar)
+// FixedDoubleArray::get_representation → fixeddoublearray_get_representation (get_representation)
+// FixedDoubleArray::get → fixeddoublearray_get (get)
+// FixedDoubleArray::set → fixeddoublearray_set (set)
+// FixedDoubleArray::set_raw → fixeddoublearray_set_raw (set_raw)
+// FixedDoubleArray::set_undefined → fixeddoublearray_set_undefined (set_undefined)
+// FixedDoubleArray::is_undefined → fixeddoublearray_is_undefined (is_undefined)
+// FixedDoubleArray::set_the_hole → fixeddoublearray_set_the_hole (set_the_hole)
+// FixedDoubleArray::is_the_hole → fixeddoublearray_is_the_hole (is_the_hole)
+// FixedDoubleArray::MoveElements → fixeddoublearray__move_elements (_move_elements)
+// FixedDoubleArray::FillWithHoles → fixeddoublearray__fill_with_holes (_fill_with_holes)
+// ByteArray::New → bytearray_New (New)
+// ByteArray::get_int → bytearray_get_int (get_int)
+// ByteArray::set_int → bytearray_set_int (set_int)
+// TrustedByteArray::New → trustedbytearray_New (New)
+// TrustedByteArray::get_int → trustedbytearray_get_int (get_int)
+// TrustedByteArray::set_int → trustedbytearray_set_int (set_int)
+// TrustedFixedAddressArray::New → trustedfixedaddressarray_New (New)
+// FixedIntegerArrayBase::New → fixedintegerarraybase_New (New)
+// FixedIntegerArrayBase::get_element_address → fixedintegerarraybase_get_element_address (get_element_address)
+// FixedIntegerArrayBase::get → fixedintegerarraybase_get (get)
+// FixedIntegerArrayBase::set → fixedintegerarraybase_set (set)
+// FixedIntegerArrayBase::length → fixedintegerarraybase_length (length)

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1630" height="774" viewBox="0 0 1630 774">
+  <rect width="1630" height="774" fill="#ffffff"/>
+  <text x="100" y="28" font-size="20" fill="#222222">v8-flags 评测报告 — mean (log scale)</text>
+  <line x1="100" y1="584" x2="1600" y2="584" stroke="#999999"/>
+  <rect x="100" y="28" width="16" height="16" fill="#4c78a8"/><text x="124" y="41" font-size="15" fill="#333333">v8rs-phf</text>
+  <rect x="290" y="28" width="16" height="16" fill="#f58518"/><text x="314" y="41" font-size="15" fill="#333333">std-hashmap</text>
+  <line x1="100" y1="407.0" x2="1600" y2="407.0" stroke="#dddddd"/>
+  <text x="90" y="411.0" font-size="12" text-anchor="end" fill="#666666">1.00 µs</text>
+  <line x1="100" y1="64.4" x2="1600" y2="64.4" stroke="#dddddd"/>
+  <text x="90" y="68.4" font-size="12" text-anchor="end" fill="#666666">10.00 µs</text>
+  <rect x="119.5" y="149.6" width="49.5" height="434.4" fill="#4c78a8"/>
+    <text x="144.3" y="143.6" font-size="13" text-anchor="middle" fill="#333">5.64 µs</text>
+  <text x="175.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 175.0 602)" fill="#333">batch_set</text>
+  <rect x="269.5" y="307.9" width="49.5" height="276.1" fill="#4c78a8"/>
+    <text x="294.3" y="301.9" font-size="13" text-anchor="middle" fill="#333">1.95 µs</text>
+  <rect x="325.0" y="407.8" width="49.5" height="176.2" fill="#f58518"/>
+    <text x="349.8" y="401.8" font-size="13" text-anchor="middle" fill="#333">994.4 ns</text>
+  <text x="325.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 325.0 602)" fill="#333">lookup_hit</text>
+  <rect x="419.5" y="353.1" width="49.5" height="230.9" fill="#4c78a8"/>
+    <text x="444.3" y="347.1" font-size="13" text-anchor="middle" fill="#333">1.44 µs</text>
+  <rect x="475.0" y="455.2" width="49.5" height="128.8" fill="#f58518"/>
+    <text x="499.8" y="449.2" font-size="13" text-anchor="middle" fill="#333">723.2 ns</text>
+  <text x="475.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 475.0 602)" fill="#333">lookup_miss</text>
+  <rect x="569.5" y="445.9" width="49.5" height="138.1" fill="#4c78a8"/>
+    <text x="594.3" y="439.9" font-size="13" text-anchor="middle" fill="#333">769.6 ns</text>
+  <text x="625.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 625.0 602)" fill="#333">parse_bool</text>
+  <rect x="719.5" y="464.1" width="49.5" height="119.9" fill="#4c78a8"/>
+    <text x="744.3" y="458.1" font-size="13" text-anchor="middle" fill="#333">681.0 ns</text>
+  <text x="775.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 775.0 602)" fill="#333">parse_kv</text>
+  <rect x="869.5" y="398.9" width="49.5" height="185.1" fill="#4c78a8"/>
+    <text x="894.3" y="392.9" font-size="13" text-anchor="middle" fill="#333">1.06 µs</text>
+  <text x="925.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 925.0 602)" fill="#333">parse_multi</text>
+  <rect x="1019.5" y="463.9" width="49.5" height="120.1" fill="#4c78a8"/>
+    <text x="1044.3" y="457.9" font-size="13" text-anchor="middle" fill="#333">682.1 ns</text>
+  <text x="1075.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 1075.0 602)" fill="#333">parse_neg</text>
+  <rect x="1169.5" y="358.4" width="49.5" height="225.6" fill="#4c78a8"/>
+    <text x="1194.3" y="352.4" font-size="13" text-anchor="middle" fill="#333">1.39 µs</text>
+  <text x="1225.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 1225.0 602)" fill="#333">parse_str_kv</text>
+  <rect x="1319.5" y="444.2" width="49.5" height="139.8" fill="#4c78a8"/>
+    <text x="1344.3" y="438.2" font-size="13" text-anchor="middle" fill="#333">778.5 ns</text>
+  <text x="1375.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 1375.0 602)" fill="#333">parse_unknown</text>
+  <rect x="1469.5" y="246.7" width="49.5" height="337.3" fill="#4c78a8"/>
+    <text x="1494.3" y="240.7" font-size="13" text-anchor="middle" fill="#333">2.94 µs</text>
+  <text x="1525.0" y="602" font-size="15" text-anchor="end" transform="rotate(-45 1525.0 602)" fill="#333">reset_default</text>
+</svg>

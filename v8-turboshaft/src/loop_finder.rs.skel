@@ -1,0 +1,60 @@
+// 由 tool/src/compiler/turboshaft/loop-finder.h.js 从 v8/src/compiler/turboshaft/loop-finder.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 环发现: 逆序 O(blocks) 双遍环归属分析骨架
+
+/// v8: src/compiler/turboshaft/loop-finder.h LoopFinder::ConfigFlags
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConfigFlags {
+  /// kFindCalls — 统计环内是否有 Call
+  findCalls,
+}
+
+/// v8: src/compiler/turboshaft/loop-finder.h LoopFinder::LoopInfo
+pub struct LoopInfo<'a> {
+  /// start / end: 环块区间 (按 BlockIndex)
+  pub start: Option<&'a crate::graph::Block>,
+  pub end: Option<&'a crate::graph::Block>,
+  /// has_inner_loops
+  pub has_inner_loops: bool,
+  /// block_count (不含内环)
+  pub block_count: usize,
+  /// op_count 上界 (end-begin 逐块累计, 大操作如 Call/FrameState 会高估)
+  pub op_count: usize,
+  /// has_any_call (kFindCalls 下)
+  pub has_any_call: bool,
+}
+
+/// v8: src/compiler/turboshaft/loop-finder.h LoopFinder
+///
+/// 算法 (原版注释保留): Run 逆序遍历块, 遇 LoopHeader 调 VisitLoop;
+/// VisitLoop 从回边逆序走到环头, 无 parent_loops_ 的块归属本环;
+/// 逆序保证内环先于外环访问 (parent_loops_ 侧表 + loop_headers_ 表)。
+pub struct LoopFinder<'a> {
+  /// parent_loops_: 块 → 所属环头
+  pub parent_loops: Vec<Option<crate::index::BlockIndex>>,
+  /// loop_headers_: 环头 → LoopInfo
+  pub loop_headers: std::collections::HashMap<crate::index::BlockIndex, LoopInfo<'a>>,
+}
+
+impl<'a> LoopFinder<'a> {
+  /// 原版 void Run() — v8: src/compiler/turboshaft/loop-finder.cc LoopFinder::Run
+  pub fn run(&mut self) {
+    unimplemented!("Developer 修订")
+  }
+  /// 原版 void VisitLoop(const Block* header)
+  pub fn visit_loop(&mut self, header: &'a crate::graph::Block) {
+    unimplemented!("Developer 修订")
+  }
+  /// 原版 void CollectLoopInfo(const Block* block, LoopInfo* info)
+  pub fn collect_loop_info(&mut self, block: &'a crate::graph::Block) {
+    unimplemented!("Developer 修订")
+  }
+  /// 原版 LoopInfo GetLoopInfo(const Block* block) const
+  pub fn get_loop_info(&self, block: &crate::graph::Block) -> &LoopInfo<'a> {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // ConfigFlags 唯一成员
+};

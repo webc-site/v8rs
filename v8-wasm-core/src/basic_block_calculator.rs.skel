@@ -1,0 +1,59 @@
+// 由 tool/src/wasm/basic-block-calculator.h.js 从 v8/src/wasm/basic-block-calculator.{h,cc} 生成; 修订就地改, 复跑覆盖
+// BasicBlockCalculator 块终结/分裂 opcode 判定表
+
+//! 基本块切分规则 (原版 ComputeBasicBlocks 的 switch 展开)。
+/// v8: src/wasm/basic-block-calculator.cc ComputeBasicBlocks
+
+/// 未开始时的 current_basic_block_ 哨兵
+pub const NO_CURRENT_BLOCK: i32 = -1;
+
+/// 是否为"终结当前块且下一指令开新块"的 opcode
+/// (原版 switch default 之外的 case 集合, 共 26 个)
+pub fn opcode_ends_basic_block(op: Opcode) -> bool {
+    matches!(
+        op,
+        Opcode::end
+            | Opcode::if
+            | Opcode::else
+            | Opcode::unreachable
+            | Opcode::br
+            | Opcode::brtable
+            | Opcode::return
+            | Opcode::delegate
+            | Opcode::rethrow
+            | Opcode::throw
+            | Opcode::throwref
+            | Opcode::catch
+            | Opcode::catchall
+            | Opcode::brif
+            | Opcode::bronnull
+            | Opcode::bronnonnull
+            | Opcode::broncast
+            | Opcode::broncastfail
+            | Opcode::broncastdesceq
+            | Opcode::broncastdesceqfail
+            | Opcode::returncall
+            | Opcode::returncallindirect
+            | Opcode::returncallref
+            | Opcode::callfunction
+            | Opcode::callindirect
+            | Opcode::callref
+    )
+}
+
+/// loop 特殊: 先封当前区间 (position-1) 再原地开新块
+/// v8: src/wasm/basic-block-calculator.cc case kExprLoop
+pub fn opcode_splits_basic_block(op: Opcode) -> bool {
+    matches!(op, Opcode::loop)
+}
+
+/// 块区间右端点公式: 结束指令最后字节 = position + OpcodeLength - 1
+/// v8: src/wasm/basic-block-calculator.cc EndCurrentBlock
+pub fn block_end(first_byte_of_next: u32, final_instr_len: u32) -> u32 {
+    first_byte_of_next + final_instr_len - 1
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(NO_CURRENT_BLOCK == -1);
+};

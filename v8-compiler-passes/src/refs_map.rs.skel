@@ -1,0 +1,52 @@
+// 由 tool/src/compiler/refs-map.js 从 v8/src/compiler/refs-map.h + refs-map.cc 生成; 修订就地改, 复跑覆盖
+// 规范 Address → ObjectData 映射 (JSHeapBroker refs 与 PerIsolateCompilerCache snapshot 共用)
+
+//! refs-map — 自研哈希表 (廉价拷贝: broker refs map ↔ compiler cache snapshot)
+//!
+//! 底层 base::TemplateHashMapImpl; Rust 侧以 RapidHashMap + 显式 Entry
+//! 迭代重建。Hash = base::hash64 截断 u32 (handle 位置指针对齐, 线性探测
+//! 退化 → 用全 64 位散列; cc 注释已核对)。
+
+/// 原版 AddressMatcher — 地址判等 (裸 ==)
+#[derive(Default)]
+pub struct AddressMatcher;
+
+/// 原版 RefsMap — Address → ObjectData* 映射
+pub struct RefsMap<'z> {
+  /// 底层表 (capacity 起始可指定; Rust 侧 RapidHashMap)
+  pub map: RapidHashMap<u64, *mut ObjectData>,
+  /// zone (entry 分配)
+  pub zone: &'z Zone<'z>,
+}
+
+impl RefsMap<'_> {
+  /// 原版 Hash — Address → u32 = (u32)base::hash64(addr)
+  /// v8: src/compiler/refs-map.cc RefsMap::Hash (base::hash64(addr))
+  pub fn hash(addr: u64) -> u32 {
+    v8_base::hashing::hash64(addr) as u32
+  }
+
+  /// 原版 IsEmpty — occupancy == 0
+  /// v8: src/compiler/refs-map.h RefsMap::IsEmpty
+  pub fn is_empty(&self) -> bool {
+    self.map.is_empty()
+  }
+
+  /// 原版 Lookup — 查 entry (不存在返回 None)
+  /// v8: src/compiler/refs-map.cc RefsMap::Lookup
+  pub fn lookup(&self, key: u64) -> Option<&mut ObjectData> {
+    todo!("v8: src/compiler/refs-map.cc RefsMap::Lookup")
+  }
+
+  /// 原版 InsertNew — 插入空 entry 并返回
+  /// v8: src/compiler/refs-map.cc RefsMap::InsertNew
+  pub fn insert_new(&mut self, key: u64) -> &mut ObjectData {
+    todo!("v8: src/compiler/refs-map.cc RefsMap::InsertNew")
+  }
+
+  /// 原版 Remove — 移除并返回旧值
+  /// v8: src/compiler/refs-map.cc RefsMap::Remove
+  pub fn remove(&mut self, key: u64) -> Option<*mut ObjectData> {
+    todo!("v8: src/compiler/refs-map.cc RefsMap::Remove")
+  }
+}

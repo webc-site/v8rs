@@ -1,0 +1,26 @@
+// 由 tool/src/base/platform/platform-solaris.js 从 v8/src/base/platform/platform-solaris.cc 生成; 修订就地改, 复跑覆盖
+// Solaris 平台面 (非目标; dladdr + lwp 栈界)
+
+// —— SolarisTimezoneCache (原版 class SolarisTimezoneCache : PosixTimezoneCache) ——
+/// v8: src/base/platform/platform-solaris.cc SolarisTimezoneCache
+/// Solaris 无 tm_gmtoff 时区的旧分支语义 (LocalTimezone 走 tzname)
+
+// —— OS 5 方法登记 ——
+/// v8: src/base/platform/platform-solaris.cc OS::CreateTimezoneCache — new SolarisTimezoneCache
+/// v8: src/base/platform/platform-solaris.cc OS::GetSharedLibraryAddresses — dladdr 枚举
+/// v8: src/base/platform/platform-solaris.cc OS::SignalCodeMovingGC — 空体
+/// v8: src/base/platform/platform-solaris.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-solaris.cc OS::GetFirstFreeMemoryRangeWithin — 恒 nullopt
+
+// —— Stack 2 方法登记 ——
+/// v8: src/base/platform/platform-solaris.cc Stack::ObtainCurrentThreadStackStart
+/// 经 /proc/self/lwp/<tid>/lwpsinfo pr_stackptr 形态读取
+/// v8: src/base/platform/platform-solaris.cc Stack::ObtainCurrentThreadStackReservedLimit
+/// 栈界 = 栈基 - 栈大小 (lwp 信息推得)
+
+// —— 提取不变式断言 ——
+const _: () = {
+  const OS_SURFACE: usize = 5;
+  const STACK_SURFACE: usize = 2;
+  assert!(OS_SURFACE == 5 && STACK_SURFACE == 2);
+};

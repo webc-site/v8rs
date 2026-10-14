@@ -1,0 +1,23 @@
+// 由 tool/src/maglev/regalloc.js 从 v8/src/maglev/maglev-regalloc.h, src/maglev/maglev-regalloc.cc, src/maglev/maglev-regalloc-data.h, src/maglev/maglev-regalloc-node-info.h, src/maglev/maglev-register-frame-array.h, src/maglev/maglev-code-gen-state.h, src/maglev/maglev-code-gen-state-inl.h 生成; 修订就地改, 复跑覆盖
+// 寄存器分配规则先行: 四态机 + merge 位 + 帧蝴蝶指针
+
+//! 四态机 (修订禁改语义): Free+unblocked=完全空闲; Used+unblocked=可溢出;
+//!   Used+blocked=当前分配输入; Free+blocked=保留临时/clobber。
+//! 溢出 hint 面: RegallocLoopInfo.reload_hints_/spill_hints_ (循环头重载/溢出)。
+
+// ── RegisterFrameState<RegisterT> (Register/DoubleRegister 双实例; AllocatableRegisters 特化) ──
+//   free_/blocked_ 双位集; unblocked_free=free_-blocked_; SetValue(阻塞)/SetValueWithoutBlocking
+//   FreeRegistersUsedBy(node); ForEachUsedRegister; Used=Allocatable^free_
+
+// ── RegisterStateFlags (2 位: kIsMergeShift=0/kIsInitializedShift=1; PointerWithPayload) ──
+//   RegisterMerge{node; operands 跟体分配}; LoadMergeState 双重载 (merge/直值二态)
+
+// ── RegallocNodeInfo (NodeIdT=u32; kInvalid=0/kFirst=1; LiveRange 起止闭区间) ──
+//   ValueLocation(SetUnallocated/SetAllocated/SetConstant/InjectLocation/Cloberred=USED_AT_START)
+//   InputLocation.next_use_id_; GetRegisterHint (fixed-register 策略→no_reg 兜底)
+
+// ── RegisterFrameArray (蝴蝶指针: 参数负索引—未优化帧头—局部零起; CopyFrom 按活跃集) ──
+
+// ── MaglevCodeGenState + DeferredCodeInfo (延迟代码块; ToRegister/ToMemOperand 映射) ──
+
+// 对数: 状态机 8 + 数据面 8 + 节点面 8 + 帧面 3 + cgstate 3 全过

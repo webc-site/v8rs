@@ -1,0 +1,15 @@
+// 由 tool/src/heap/cppgc-internal/logging.js 从 v8/src/heap/cppgc-internal/logging.cc 生成; 修订就地改, 复跑覆盖
+// cppgc 断言/致命错误出口
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/logging.cc DCheckImpl
+pub fn d_check_impl(message: &str, loc: SourceLocation) {
+    v8_base_logging::v8_dcheck(loc, message);
+}
+
+/// v8: src/heap/cppgc-internal/logging.cc FatalImpl
+/// C++ 侧 V8_LOGGING_LEVEL == 0 时打印 "ignored"; Rust 侧以 cfg(feature) 呈现, 语义留锚。
+pub fn fatal_impl(message: &str, loc: SourceLocation) {
+    v8_base_logging::fatal_with_loc(loc, format_args!("Check failed: {message}."), &format_args!("ignored"));
+}

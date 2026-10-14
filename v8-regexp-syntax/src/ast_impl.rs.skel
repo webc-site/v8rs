@@ -1,0 +1,60 @@
+// 由 tool/src/regexp/regexp-ast.cc.js 从 v8/src/regexp/regexp-ast.cc 生成; 复跑覆盖本骨架
+// 签名骨架基线 (审计专用): 逐项 1:1 登记; 落地以 ast_impl.rs 就地修订版为准 (Developer 收编)
+
+//! 原版三大 X-macro 展开面处置表 (regexp-ast.cc:14-31):
+//! - MAKE_ACCEPT: 14 种树的 Accept → visitor 双分派 → ast.rs Tree::accept (enum 分发, 不需宏)
+//! - 基类 TYPE_CASE: Tree::AsXxx/IsXxx 默认 false/nullptr → ast.rs Tree::kind/as_xxx/is_xxx
+//! - 派生 TYPE_CASE: 各子类 As/Is 返回自身 → enum 变体直取
+//! 已落地面 (非本骨架 todo, 见 ast.rs): Text::StartsWithAtom (cc:247-248), Text::FirstAtom (cc:252),
+//! ClassSetExpression::Empty (cc:237-245), StackLimiter 慢路径栈探测 (cc:33-38, 预算近似, 推迟台账见 readme/zh.md)
+
+// pub const XMACRO_TREE_KINDS: [&str; 14] — cc:18/24/30 FOR_EACH_REG_EXP_TREE_TYPE 展开全集
+// pub mod rules — 就地规则锚 (K_INFINITY_CAP cc:173-179 / K_CLASS_SET_EMPTY_MIN_MAX cc:200-201 /
+//   K_CLASS_SET_NONEMPTY_MIN_MAX cc:202-204 / K_NEGATED_MAX_MATCH cc:227 / K_BMP_THRESHOLD cc:267)
+
+// ── CaptureRegisters 签名骨架 (cc:40-80, 6 类覆写 + 列表助手 cc:47-54) ──
+// pub fn capture_registers_group(body: &Tree, limiter: StackLimiter) -> Interval
+//   cc:40-43: 溢出返 Invalid; body 递归 budget-1
+// pub(crate) fn list_capture_registers(limiter: StackLimiter, children: &[Tree]) -> Interval
+//   cc:47-54: 溢出返 Invalid; 逐项 Union(child.CaptureRegisters(budget-1))
+// pub fn capture_registers_alternative(nodes: &[Tree], limiter: StackLimiter) -> Interval
+//   cc:58-60: list(limiter - 1, nodes)
+// pub fn capture_registers_disjunction(alternatives: &[Tree], limiter: StackLimiter) -> Interval
+//   cc:62-64: list(limiter - 1, alternatives)
+// pub fn capture_registers_lookaround(body: &Tree, limiter: StackLimiter) -> Interval
+//   cc:66-69: 溢出返 Invalid; body 递归 budget-1
+// pub fn capture_registers_capture(index: i32, body: &Tree, limiter: StackLimiter) -> Interval
+//   cc:71-75: 溢出返 Invalid; [StartRegister, EndRegister] ∪ body 递归 budget-1
+// pub fn capture_registers_quantifier(body: &Tree, limiter: StackLimiter) -> Interval
+//   cc:77-80: 溢出返 Invalid; body 递归 budget-1
+
+// ── IsCertainlyAnchored 签名骨架 (cc:82-156, Start 5 类 + End 4 类; 基类默认 false h:243-244) ──
+// pub fn anchored_assertion(assertion_type: AssertionType, at_start: bool) -> bool
+//   cc:82-88: Start 仅 START_OF_INPUT / End 仅 END_OF_INPUT; 原版无 budget 检查
+// pub fn anchored_alternative(nodes: &[Tree], at_start: bool, budget: i32) -> bool
+//   cc:90-118: budget<0 返 false; Start 正序 / End 逆序; 命中即真, max_match>0 即假
+// pub fn anchored_disjunction(alternatives: &[Tree], at_start: bool, budget: i32) -> bool
+//   cc:120-140: budget<0 返 false; 全部分支锚定才锚定
+// pub fn anchored_lookaround_at_start(is_positive: bool, lookaround_type: LookaroundType,
+//   body: &Tree, budget: i32) -> bool
+//   cc:142-146: 仅正向前瞻传递起始锚定; End 无覆写 (基类 false)
+// pub fn anchored_capture(body: &Tree, at_start: bool, budget: i32) -> bool
+//   cc:148-156: Start/End 同型透传 body
+// pub fn anchored_group(body: &Tree, at_start: bool, budget: i32) -> bool
+//   h:700-707 (Group 头文件内联覆写, Start/End 同型透传)
+
+// ── 构造器骨架 (cc:158-276) ──
+// pub fn ctor_disjunction(alternatives: &[Tree]) -> (i32, i32)
+//   cc:158-169: min 取分支最小, max 取分支最大 (首分支起算, 1 起循环)
+// pub(crate) fn increase_by(previous: i32, increase: i32) -> i32
+//   cc:173-179: kInfinity - previous < increase 时封顶 kInfinity
+// pub fn ctor_alternative(nodes: &[Tree]) -> (i32, i32)
+//   cc:183-194: min/max 逐节点 IncreaseBy 累加 (0 起算)
+// pub fn ctor_class_set_operand(ranges: &[CharacterRange],
+//   strings: Option<&CharacterClassStrings>) -> (i32, i32)
+//   cc:196-212: 非空 ranges (1,2); 有 strings 时 min 取小 / max 取大
+// pub fn ctor_class_set_expression(is_negated: bool, operands: &[Tree]) -> i32
+//   cc:214-234: 取反 max=2; 否则 operands max 取大 (0 起算)
+// pub fn ctor_class_ranges(ranges: Vec<CharacterRange>, flags: ClassRangesFlags)
+//   -> (Vec<CharacterRange>, ClassRangesFlags)
+//   cc:254-276: 空集补 Everything 并翻转 NEGATED; 未取反且已免折叠时全 ≥0x10000 置两码点

@@ -1,0 +1,64 @@
+// 由 tool/src/compiler/simplified-operator-reducer.js 从 v8/src/compiler/simplified-operator-reducer.h + simplified-operator-reducer.cc 生成; 修订就地改, 复跑覆盖
+// 简化算子的常量折叠与布尔化简
+
+//! simplified-operator-reducer — 常量输入的直接折叠
+//!
+//! BranchSemantics 决定 Boolean 化简语义 (kJS vs kMachine);
+//! Replace* 工厂把标量包回图常量。
+
+/// 原版 SimplifiedOperatorReducer — AdvancedReducer
+pub struct SimplifiedOperatorReducer<'z, 'g> {
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// broker_
+  pub broker: *mut JSHeapBroker,
+  /// branch_semantics_
+  pub branch_semantics: BranchSemantics,
+}
+
+impl SimplifiedOperatorReducer<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "SimplifiedOperatorReducer";
+
+  /// 原版 Reduce — 28 个 opcode 分派 (BooleanNot, ChangeBitToTagged, ChangeTaggedToBit, ChangeFloat64ToTagged, ChangeFloat64OrUndefinedToTagged, ChangeInt31ToTaggedSigned, ChangeInt32ToTagged, ChangeTaggedToFloat64, TruncateTaggedToFloat64, ChangeTaggedSignedToInt32, ChangeTaggedToInt32, ChangeTaggedToUint32, ChangeUint32ToTagged, TruncateNumberOrOddballToWord32, CheckedFloat64ToInt32, CheckedInt32ToUint64, CheckedInt64ToUint64, CheckedFloat64ToUint64, CheckedTaggedToUint64, CheckIf, CheckedTaggedSignedToInt32, CheckedTaggedToTaggedPointer, CheckHeapObject, CheckSmi, ObjectIsSmi, NumberAbs, ReferenceEqual, CheckedInt32Add)
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::Reduce")
+  }
+
+  /// 原版 Change — 换 operator 保持输入
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::Change
+  fn change(&mut self, node: &Node, op: &Operator, a: &Node) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::Change")
+  }
+
+  /// 原版 ReplaceBoolean — 折叠为 Boolean 常量节点
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceBoolean
+  fn replace_boolean(&mut self, /* value */) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceBoolean")
+  }
+
+  /// 原版 ReplaceFloat64 — 折叠为 Float64 常量节点
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceFloat64
+  fn replace_float64(&mut self, /* value */) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceFloat64")
+  }
+
+  /// 原版 ReplaceInt32 — 折叠为 Int32 常量节点
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceInt32
+  fn replace_int32(&mut self, /* value */) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceInt32")
+  }
+
+  /// 原版 ReplaceUint32 — 折叠为 Uint32 常量节点
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceUint32
+  fn replace_uint32(&mut self, /* value */) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceUint32")
+  }
+
+  /// 原版 ReplaceNumber — 折叠为 Number 常量节点
+  /// v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceNumber
+  fn replace_number(&mut self, /* value */) -> Reduction {
+    todo!("v8: src/compiler/simplified-operator-reducer.cc SimplifiedOperatorReducer::ReplaceNumber")
+  }
+}

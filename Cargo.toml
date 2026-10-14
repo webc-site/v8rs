@@ -1,0 +1,108 @@
+[workspace]
+resolver = "3"
+members = [
+  "v8-debug",
+  "v8-common",
+  "v8-torque",
+  "v8-base",
+  "v8-base-platform",
+  "v8-zone",
+  "v8-flags",
+  "v8-bigint",
+  "v8-logging",
+  "v8-utils",
+  "v8-tasks",
+  "v8-tracing",
+  "v8-numbers",
+  "v8-strings",
+  "v8-date",
+  "v8-ast",
+  "v8-parsing",
+  "v8-regexp-syntax",
+  "v8-objects-core",
+  "v8-handles",
+  "v8-heap-base",
+  "v8-wasm-core",
+  "v8-trap-handler",
+  "v8-sandbox",
+  "v8-objects-strings",
+  "v8-compiler-graph",
+  "v8-objects-arrays",
+  "v8-objects-maps",
+  "v8-objects-collections",
+  "v8-regexp-exec",
+  "v8-objects-js-core",
+  "v8-compiler-ops",
+  "v8-objects-js-func",
+  "v8-libplatform",
+  "v8-json",
+  "v8-codegen-core",
+  "v8-objects-rest",
+  "v8-heap-core",
+  "v8-objects-js-async",
+  "v8-compiler-broker",
+  "v8-roots",
+  "v8-builtins-core",
+  "v8-builtins-array",
+  "v8-builtins-string",
+  "v8-builtins-typedarray",
+  "v8-builtins-promise",
+  "v8-builtins-collections",
+  "v8-builtins-proxy-reflect",
+  "v8-builtins-regexp",
+  "v8-builtins-misc",
+  "v8-builtins-x64",
+  "v8-builtins-arm64",
+  "v8-codegen-x64",
+  "v8-codegen-arm64",
+  "v8-regexp-compiler",
+  "v8-diagnostics",
+  "v8-interpreter",
+  "v8rs",
+  "rs8",
+  "v8-api",
+  "v8-baseline",
+  "v8-compiler-backend",
+  "v8-compiler-dispatcher",
+  "v8-compiler-frontend",
+  "v8-compiler-passes",
+  "v8-deoptimizer",
+  "v8-dumpling",
+  "v8-extensions",
+  "v8-fuzzilli",
+  "v8-heap-cppgc",
+  "v8-heap-gc",
+  "v8-init",
+  "v8-regexp-arm64",
+  "v8-regexp-x64",
+  "v8-snapshot",
+  "v8-turboshaft",
+  "v8-wasm-interp",
+  "v8-wasm-js",
+  "v8-wasm-liftoff",
+  "v8-wasm-objects",
+  "v8-wasm-turbofan", "v8-maglev-ir", "v8-maglev-frontend", "v8-maglev-backend", "v8-execution-isolate", "v8-execution-frames", "v8-execution-messages", "v8-execution-simulator", "v8-ic", "v8-runtime", "v8-codegen-csa", "v8-profiler", "v8-inspector", "rs8-capi",
+  "v8-benchmarks",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/webc-site/v8rs"
+
+[workspace.dependencies]
+rusty_alloc-api = "2.2.6"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+overflow-checks = false
+
+[profile.bench]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

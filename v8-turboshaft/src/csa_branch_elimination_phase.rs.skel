@@ -1,0 +1,32 @@
+// 由 tool/src/compiler/turboshaft/csa-branch-elimination-phase.h.js 从 v8/src/compiler/turboshaft/csa-branch-elimination-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// CsaBranchEliminationPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/csa-branch-elimination-phase.h CsaBranchEliminationPhase
+pub struct CsaBranchEliminationPhase;
+
+impl CsaBranchEliminationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "CsaBranchElimination" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftCsaBranchElimination";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "MachineOptimizationReducer",
+    "BranchEliminationReducer",
+    "ValueNumberingReducer",
+  ];
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/csa-branch-elimination-phase.cc CsaBranchEliminationPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<MachineOptimizationReducer, BranchEliminationReducer, ValueNumberingReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(CsaBranchEliminationPhase::PHASE_NAME == "V8.TFTurboshaftCsaBranchElimination");
+  assert!(CsaBranchEliminationPhase::REDUCERS.len() == 3);
+  assert!(CsaBranchEliminationPhase::REDUCERS[0] == "MachineOptimizationReducer");
+};

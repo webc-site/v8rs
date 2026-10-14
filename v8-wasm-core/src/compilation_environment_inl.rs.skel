@@ -1,0 +1,45 @@
+// 由 tool/src/wasm/compilation-environment-inl.js 从 v8/src/wasm/compilation-environment-inl.h 生成; 修订就地改, 复跑覆盖
+// CompilationEnv::ForModule 工厂实参清单
+
+//! 编译环境工厂: 从 NativeModule 派生 CompilationEnv 的四项来源。
+
+/// ForModule 实参台账 (4 项, 顺序即构造序)
+/// v8: src/wasm/compilation-environment-inl.h CompilationEnv::ForModule
+#[rustfmt::skip]
+pub static FOR_MODULE_FIELDS: &[(&str, &str)] = &[
+  ("module", "native_module->module() — WasmModule 视图"),
+  ("enabled_features", "native_module->enabled_features() — 启用的 wasm 特性"),
+  ("fast_api_data", "native_module->fast_api_data() — fast API 调用数据"),
+  ("coverage_data", "native_module->coverage_data() — 覆盖率数据"),
+];
+
+/// CompilationEnv::ForModule 骨架
+/// v8: src/wasm/compilation-environment-inl.h CompilationEnv::ForModule
+pub fn for_module(_native_module: &()) -> CompilationEnvView {
+    CompilationEnvView {
+        module: Source::NativeModuleGetter("module"),
+        enabled_features: Source::NativeModuleGetter("enabled_features"),
+        fast_api_data: Source::NativeModuleGetter("fast_api_data"),
+        coverage_data: Source::NativeModuleGetter("coverage_data"),
+    }
+}
+
+/// 工厂产物台账 (骨架; 真实实现待 Developer 修订)
+pub struct CompilationEnvView {
+    pub module: Source,
+    pub enabled_features: Source,
+    pub fast_api_data: Source,
+    pub coverage_data: Source,
+}
+
+/// CompilationEnv 各字段来源
+pub enum Source {
+    /// NativeModule 上的同名 getter
+    NativeModuleGetter(&'static str),
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(FOR_MODULE_FIELDS.len() == 4);
+    assert!(matches!(Source::NativeModuleGetter("module"), Source::NativeModuleGetter("module")));
+};

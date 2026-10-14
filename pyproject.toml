@@ -1,0 +1,15 @@
+[project]
+name = "v8rs-audit"
+version = "0.1.0"
+description = "V8RS Topology, Pipeline Linkage and Grounding Verification Suite"
+readme = "readme/zh.md"
+requires-python = ">=3.10"
+dependencies = [
+    "networkx>=3.0",
+    "tabulate>=0.9.0",
+    "rich>=13.0",
+    "reverify",
+]
+
+[tool.uv.sources]
+reverify = { path = "git/reverify", editable = true }

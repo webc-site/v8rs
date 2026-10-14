@@ -1,0 +1,32 @@
+// 由 tool/src/heap/mark-sweep-utilities.js 从 v8/src/heap/mark-sweep-utilities.h, src/heap/mark-sweep-utilities.cc 生成; 修订就地改, 复跑覆盖
+// 标记校验器与字符串表清理公共件
+#![cfg(verify_heap)] // 原文 #ifdef VERIFY_HEAP
+
+/// v8: src/heap/mark-sweep-utilities.h MarkingVerifierBase (仅 VERIFY_HEAP 构建)
+/// 虚方法面: Run / bitmap / VerifyMap / VerifyPointers(ObjectSlot|MaybeObjectSlot) /
+///           VerifyCodePointer / VerifyRootPointers / IsMarked
+/// VisitPointers → VerifyPointers 转发 (h 内联), VisitMapPointer 见 cc。
+pub trait MarkingVerifierBase {
+  fn run(&mut self);
+  fn bitmap(&self, chunk: &MutablePage) -> &MarkingBitmap;
+  fn verify_map(&mut self, map: TaggedMap);
+  fn verify_pointers(&mut self, start: ObjectSlot, end: ObjectSlot);
+  fn verify_code_pointer(&mut self, slot: InstructionStreamSlot);
+  fn verify_root_pointers(&mut self, start: FullObjectSlot, end: FullObjectSlot);
+  fn is_marked(&self, object: TaggedHeapObject) -> bool;
+
+  /// v8: MarkingVerifierBase::VerifyRoots
+  /// v8: MarkingVerifierBase::VerifyMarkingOnPage — 页区间逐对象校验
+  /// v8: MarkingVerifierBase::VerifyMarking(NewSpace|PagedSpaceBase|LargeObjectSpace)
+}
+
+/// v8: src/heap/mark-sweep-utilities.h ExternalStringTableCleanerVisitor
+/// 根 visitor: 外部字符串表清年龄/清表; VisitRootPointers 实现在 cc。
+pub struct ExternalStringTableCleanerVisitor<'a> {
+  /// v8: heap_
+  pub heap: &'a mut Heap,
+}
+
+/// v8: src/heap/mark-sweep-utilities.h StringForwardingTableCleanerBase
+/// 及其 StringForwardingTableCleaner / SharedStringForwardingTableCleaner (cc)
+/// v8: src/heap/mark-sweep-utilities.cc 各 cleaner 的 VisitRootPointers 语义体

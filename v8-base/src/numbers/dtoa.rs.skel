@@ -1,0 +1,32 @@
+// 由 tool/src/base/numbers/dtoa.h.js 从 v8/src/base/numbers/dtoa.h + src/base/numbers/dtoa.cc 生成; 修订就地改, 复跑覆盖
+// double→ASCII 总入口 (快路优先, bignum 兜底)
+
+//! v8: src/base/numbers/dtoa.h/.cc
+
+/// v8: dtoa.h DtoaMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DtoaMode {
+    /// 最短正确表示 (等距半数远离 0 进位)
+    Shortest,
+    /// 定点小数位 (半数向 ±Inf)
+    Fixed,
+    /// 定精度有效位 (半数远离 0)
+    Precision,
+}
+
+/// v8: dtoa.h kBase10MaximalLength = 17 — 不含符号/小数点/指数;
+/// buffer 至少 17+1 (NUL)
+pub const BASE10_MAXIMAL_LENGTH: usize = 17;
+
+/// v8: dtoa.cc DoubleToAscii(v, mode, requested_digits) → (sign, digits, point)
+/// 值语义: v = sign × digits × 10^(point - digits.len());
+/// 前置: v 非 NaN/Inf (DCHECK); 非 SHORTEST 时 requested_digits >= 0
+/// 流程: 剥符号 → v==0 快答 ("0", point=1) → PRECISION&&0 位空串 →
+///       快路分派 (SHORTEST/PRECISION→FastDtoa, FIXED→FastFixedDtoa) →
+///       失败回退 BignumDtoa (模式 1:1 映射) 并补 NUL
+pub fn double_to_ascii(v: f64, mode: DtoaMode, requested_digits: i32) -> (i32, Vec<u8>, i32);
+
+// v8: dtoa.cc 模式映射 (1:1):
+//   DTOA_SHORTEST=BIGNUM_DTOA_SHORTEST
+//   DTOA_FIXED=BIGNUM_DTOA_FIXED
+//   DTOA_PRECISION=BIGNUM_DTOA_PRECISION

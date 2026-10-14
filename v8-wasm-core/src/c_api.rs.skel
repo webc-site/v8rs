@@ -1,0 +1,74 @@
+// 由 tool/src/wasm/c-api.h.js 从 v8/src/wasm/c-api.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm-c-api 实现层 (StoreImpl 与 implement 模板面)
+
+//! wasm-api (third_party/wasm-api) 的 V8 实现层。
+/// v8: src/wasm/c-api.h StoreImpl
+
+/// 静态链接标志 (非共享构建时置 1)
+/// v8: src/wasm/c-api.h LIBWASM_STATIC
+pub const LIBWASM_STATIC: bool = true;
+
+/// StoreImpl 状态 (一 Store 一 isolate 一 Eternal context)
+/// v8: src/wasm/c-api.h StoreImpl
+pub struct StoreImpl {
+    /// v8: v8::Isolate::CreateParams create_params_
+    pub create_params: IsolateCreateParams,
+    /// v8: v8::Isolate* isolate_
+    pub isolate: Option<*mut Isolate>,
+    /// v8: v8::Eternal<v8::Context> context_
+    pub context: Eternal<Context>,
+    /// v8: host_info_map_ — host 数据挂 JSWeakMap (GetHostInfo 需 no_gc 域)
+    pub host_info_map: IndirectHandle<JSWeakMap>,
+}
+
+/// implement<T> 特化面 (wasm-api 对象 → V8 内部表示)
+/// v8: src/wasm/c-api.cc implement<Config/Engine/Store/ValType/...>
+pub const IMPLEMENT_SPECIALIZATIONS: &[&str] = &[
+    "Config",
+    "Engine",
+    "Store",
+    "ValType",
+    "ExternType",
+    "FuncType",
+    "GlobalType",
+    "TableType",
+    "MemoryType",
+    "ImportType",
+    "ExportType",
+    "Ref",
+    "Frame",
+    "Trap",
+    "Foreign",
+    "Module",
+    "Extern",
+    "Func",
+    "Global",
+    "Table",
+    "Memory",
+    "Instance",
+];
+
+/// Counter 名字/值盒尺寸 (指标盒固定缓冲)
+/// v8: src/wasm/c-api.cc EngineImpl
+pub const COUNTER_NAME_BOX_SIZE: usize = 64;
+pub const COUNTER_VALUE_BOX_SIZE: usize = 13;
+
+/// 嵌套实例化深度上限
+/// v8: src/wasm/c-api.cc kStackLimit
+pub const STACK_LIMIT: usize = 10;
+
+/// ManagedData 模板携带类型 id (外部对象身份)
+/// v8: src/wasm/c-api.cc ManagedData::kTypeID
+pub const MANAGED_DATA_HAS_TYPE_ID: bool = true;
+
+/// Ref<->JS 对象通用包装 (RefImpl<C, JSType>)
+/// v8: src/wasm/c-api.cc RefImpl
+pub const GENERIC_REF_IMPL: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(COUNTER_NAME_BOX_SIZE, 64);
+    assert_eq!(COUNTER_VALUE_BOX_SIZE, 13);
+    assert_eq!(STACK_LIMIT, 10);
+    assert!(IMPLEMENT_SPECIALIZATIONS.len() >= 10);
+};

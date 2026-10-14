@@ -1,0 +1,167 @@
+// 由 tool/src/base/numerics/byte_conversions.h.js 从 v8/src/base/numerics/byte_conversions.h + byte_conversions_unittest.cc 生成; 修订就地改, 复跑覆盖
+// 字节序换算 API 矩阵 (10 类型 × 3 端序 × 双向)
+
+//! v8 侧 From*Endian 30 个 + To*Endian 30 个 = 60 函数
+//! 类型 10 种: U8, U16, U32, U64, I8, I16, I32, I64, Float, Double; 端序 3 种: Native/Little/Big
+//! unittest: 6 个 TEST 用例 (迁移对数基准)
+//! Rust 策略: Native → to_ne_bytes; Little → to_le_bytes; Big → to_be_bytes; Float/Double 经 bitcast
+
+// ---- U8 (u8, 1 字节) ----
+/// v8: src/base/numerics/byte_conversions.h U8FromNativeEndian
+pub fn u8_from_native_endian(bytes: [u8; 1]) -> u8 { u8::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U8FromLittleEndian
+pub fn u8_from_little_endian(bytes: [u8; 1]) -> u8 { u8::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U8FromBigEndian
+pub fn u8_from_big_endian(bytes: [u8; 1]) -> u8 { u8::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U8ToNativeEndian
+pub fn u8_to_native_endian(val: u8) -> [u8; 1] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U8ToLittleEndian
+pub fn u8_to_little_endian(val: u8) -> [u8; 1] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U8ToBigEndian
+pub fn u8_to_big_endian(val: u8) -> [u8; 1] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- U16 (u16, 2 字节) ----
+/// v8: src/base/numerics/byte_conversions.h U16FromNativeEndian
+pub fn u16_from_native_endian(bytes: [u8; 2]) -> u16 { u16::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U16FromLittleEndian
+pub fn u16_from_little_endian(bytes: [u8; 2]) -> u16 { u16::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U16FromBigEndian
+pub fn u16_from_big_endian(bytes: [u8; 2]) -> u16 { u16::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U16ToNativeEndian
+pub fn u16_to_native_endian(val: u16) -> [u8; 2] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U16ToLittleEndian
+pub fn u16_to_little_endian(val: u16) -> [u8; 2] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U16ToBigEndian
+pub fn u16_to_big_endian(val: u16) -> [u8; 2] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- U32 (u32, 4 字节) ----
+/// v8: src/base/numerics/byte_conversions.h U32FromNativeEndian
+pub fn u32_from_native_endian(bytes: [u8; 4]) -> u32 { u32::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U32FromLittleEndian
+pub fn u32_from_little_endian(bytes: [u8; 4]) -> u32 { u32::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U32FromBigEndian
+pub fn u32_from_big_endian(bytes: [u8; 4]) -> u32 { u32::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U32ToNativeEndian
+pub fn u32_to_native_endian(val: u32) -> [u8; 4] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U32ToLittleEndian
+pub fn u32_to_little_endian(val: u32) -> [u8; 4] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U32ToBigEndian
+pub fn u32_to_big_endian(val: u32) -> [u8; 4] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- U64 (u64, 8 字节) ----
+/// v8: src/base/numerics/byte_conversions.h U64FromNativeEndian
+pub fn u64_from_native_endian(bytes: [u8; 8]) -> u64 { u64::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U64FromLittleEndian
+pub fn u64_from_little_endian(bytes: [u8; 8]) -> u64 { u64::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U64FromBigEndian
+pub fn u64_from_big_endian(bytes: [u8; 8]) -> u64 { u64::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h U64ToNativeEndian
+pub fn u64_to_native_endian(val: u64) -> [u8; 8] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U64ToLittleEndian
+pub fn u64_to_little_endian(val: u64) -> [u8; 8] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h U64ToBigEndian
+pub fn u64_to_big_endian(val: u64) -> [u8; 8] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- I8 (i8, 1 字节) ----
+/// v8: src/base/numerics/byte_conversions.h I8FromNativeEndian
+pub fn i8_from_native_endian(bytes: [u8; 1]) -> i8 { i8::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I8FromLittleEndian
+pub fn i8_from_little_endian(bytes: [u8; 1]) -> i8 { i8::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I8FromBigEndian
+pub fn i8_from_big_endian(bytes: [u8; 1]) -> i8 { i8::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I8ToNativeEndian
+pub fn i8_to_native_endian(val: i8) -> [u8; 1] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I8ToLittleEndian
+pub fn i8_to_little_endian(val: i8) -> [u8; 1] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I8ToBigEndian
+pub fn i8_to_big_endian(val: i8) -> [u8; 1] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- I16 (i16, 2 字节) ----
+/// v8: src/base/numerics/byte_conversions.h I16FromNativeEndian
+pub fn i16_from_native_endian(bytes: [u8; 2]) -> i16 { i16::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I16FromLittleEndian
+pub fn i16_from_little_endian(bytes: [u8; 2]) -> i16 { i16::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I16FromBigEndian
+pub fn i16_from_big_endian(bytes: [u8; 2]) -> i16 { i16::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I16ToNativeEndian
+pub fn i16_to_native_endian(val: i16) -> [u8; 2] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I16ToLittleEndian
+pub fn i16_to_little_endian(val: i16) -> [u8; 2] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I16ToBigEndian
+pub fn i16_to_big_endian(val: i16) -> [u8; 2] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- I32 (i32, 4 字节) ----
+/// v8: src/base/numerics/byte_conversions.h I32FromNativeEndian
+pub fn i32_from_native_endian(bytes: [u8; 4]) -> i32 { i32::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I32FromLittleEndian
+pub fn i32_from_little_endian(bytes: [u8; 4]) -> i32 { i32::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I32FromBigEndian
+pub fn i32_from_big_endian(bytes: [u8; 4]) -> i32 { i32::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I32ToNativeEndian
+pub fn i32_to_native_endian(val: i32) -> [u8; 4] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I32ToLittleEndian
+pub fn i32_to_little_endian(val: i32) -> [u8; 4] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I32ToBigEndian
+pub fn i32_to_big_endian(val: i32) -> [u8; 4] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- I64 (i64, 8 字节) ----
+/// v8: src/base/numerics/byte_conversions.h I64FromNativeEndian
+pub fn i64_from_native_endian(bytes: [u8; 8]) -> i64 { i64::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I64FromLittleEndian
+pub fn i64_from_little_endian(bytes: [u8; 8]) -> i64 { i64::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I64FromBigEndian
+pub fn i64_from_big_endian(bytes: [u8; 8]) -> i64 { i64::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h I64ToNativeEndian
+pub fn i64_to_native_endian(val: i64) -> [u8; 8] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I64ToLittleEndian
+pub fn i64_to_little_endian(val: i64) -> [u8; 8] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h I64ToBigEndian
+pub fn i64_to_big_endian(val: i64) -> [u8; 8] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- Float (f32, 4 字节) ----
+/// v8: src/base/numerics/byte_conversions.h FloatFromNativeEndian
+pub fn float_from_native_endian(bytes: [u8; 4]) -> f32 { f32::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h FloatFromLittleEndian
+pub fn float_from_little_endian(bytes: [u8; 4]) -> f32 { f32::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h FloatFromBigEndian
+pub fn float_from_big_endian(bytes: [u8; 4]) -> f32 { f32::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h FloatToNativeEndian
+pub fn float_to_native_endian(val: f32) -> [u8; 4] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h FloatToLittleEndian
+pub fn float_to_little_endian(val: f32) -> [u8; 4] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h FloatToBigEndian
+pub fn float_to_big_endian(val: f32) -> [u8; 4] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+
+
+// ---- Double (f64, 8 字节) ----
+/// v8: src/base/numerics/byte_conversions.h DoubleFromNativeEndian
+pub fn double_from_native_endian(bytes: [u8; 8]) -> f64 { f64::from_ne_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h DoubleFromLittleEndian
+pub fn double_from_little_endian(bytes: [u8; 8]) -> f64 { f64::from_le_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h DoubleFromBigEndian
+pub fn double_from_big_endian(bytes: [u8; 8]) -> f64 { f64::from_be_bytes(bytes) }
+/// v8: src/base/numerics/byte_conversions.h DoubleToNativeEndian
+pub fn double_to_native_endian(val: f64) -> [u8; 8] { val.to_ne_bytes() }
+/// v8: src/base/numerics/byte_conversions.h DoubleToLittleEndian
+pub fn double_to_little_endian(val: f64) -> [u8; 8] { val.to_le_bytes() }
+/// v8: src/base/numerics/byte_conversions.h DoubleToBigEndian
+pub fn double_to_big_endian(val: f64) -> [u8; 8] { val.to_be_bytes() }
+/// Float/Double 走 bitcast (f32 ↔ u32, f64 ↔ u64) 再换端序 — Developer 补
+

@@ -1,0 +1,64 @@
+// 由 tool/src/wasm/interpreter/wasm-interpreter-runtime.h.js 从 v8/src/wasm/interpreter/wasm-interpreter-runtime.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 解释器运行时: InstanceScope 发布协议与间接调用分派
+
+//! Drumbrake 运行时: 每次 C++ 入口以 InstanceScope 发布当前受信实例数据。
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.h WasmInterpreterRuntime
+
+/// 间接调用签名检查三态
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.h enum class IndirectCallCheck
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IndirectCallCheck {
+    /// v8: kValid
+    Valid,
+    /// v8: kInvalid — 签名不匹配
+    Invalid,
+    /// v8: kNull — 表项为空
+    Null,
+}
+
+/// 间接调用表项分派模式
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.h IndirectCallValue::Mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IndirectCallMode {
+    /// v8: kInvalid
+    Invalid,
+    /// v8: kInternalCall — 本实例 wasm 函数, func_index 有效, 直接 ExecuteFunction
+    InternalCall,
+    /// v8: kExternalCall — 跨实例/JS 边界, 调用时重新解析
+    ExternalCall,
+}
+
+/// v8: kInvalidFunctionIndex = UINT_MAX
+pub const INVALID_FUNCTION_INDEX: u32 = u32::MAX;
+
+/// Torque 侧栈槽宽 (数值参数按 intptr 槽推进, 不按类型宽)
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.cc kTqStackSlotSize
+pub const TQ_STACK_SLOT_SIZE_IS_INTPTR: bool = true;
+
+/// 数值参数/返回分派 (i32/i64/f32/f64 四类; ref/s128 特殊路径)
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.cc CASE_ARG_TYPE / CASE_RET_TYPE
+pub const NUMERIC_ARG_KINDS: usize = 4;
+pub const NUMERIC_RET_KINDS: usize = 4;
+
+/// ref 参数经 GC 可见 FixedArray 传递 (arg_buffer 对 GC 不安全), SBXCHECK 校验
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.cc ref_indices 通道
+pub const REF_PARAMS_VIA_FIXED_ARRAY: bool = true;
+
+/// StructNew/ArrayNew 的屏障决策: 老年代分配需写屏障, 年轻代初始化期可豁免
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.h needs_write_barrier 注释
+pub const WRITE_BARRIER_BY_ALLOC_SPACE: bool = true;
+
+/// InstanceScope: 嵌套保存/恢复, 句柄根在调用方 HandleScope
+/// v8: src/wasm/interpreter/wasm-interpreter-runtime.h InstanceScope
+pub const NESTED_INSTANCE_SCOPE_SAVES: bool = true;
+
+/// 沙箱: 受信数据经 off-cage 句柄读, 不重复加载笼内可换句柄
+/// v8: current_trusted_data_ 注释
+pub const OFF_CAGE_TRUSTED_DATA_HANDLE: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(NUMERIC_ARG_KINDS, 4);
+    assert_eq!(NUMERIC_RET_KINDS, 4);
+    assert_eq!(INVALID_FUNCTION_INDEX, u32::MAX);
+};

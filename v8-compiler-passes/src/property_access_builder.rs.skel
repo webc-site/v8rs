@@ -1,0 +1,83 @@
+// 由 tool/src/compiler/property-access-builder.js 从 v8/src/compiler/property-access-builder.h + property-access-builder.cc 生成; 修订就地改, 复跑覆盖
+// 命名属性访问的检查/加载节点构建
+
+//! property-access-builder — 依 PropertyAccessInfo 建图
+//!
+//! map 族判定: HasOnlyStringMaps / HasOnlyStringWrapperMaps / HasOnlyNonResizableTypedArrayMaps;
+//! ConvertRepresentation 映射 (4 case): Smi, Double, HeapObject, Tagged。
+
+/// 原版 PropertyAccessBuilder — 构建器
+pub struct PropertyAccessBuilder<'z, 'g> {
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// broker_
+  pub broker: &'g mut JSHeapBroker<'z>,
+}
+
+impl PropertyAccessBuilder<'_, '_> {
+  /// 原版 TryBuildStringCheck — 全 string map 时建 String 检查
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::TryBuildStringCheck
+  pub fn try_build_string_check(&mut self, broker: &JSHeapBroker, maps: &[MapRef], receiver: &mut *mut Node, effect: &mut *mut Node, control: *mut Node) -> bool {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::TryBuildStringCheck")
+  }
+
+  /// 原版 TryBuildNumberCheck — 全 number map 时建 Number 检查
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::TryBuildNumberCheck
+  pub fn try_build_number_check(&mut self, broker: &JSHeapBroker, maps: &[MapRef], receiver: &mut *mut Node, effect: &mut *mut Node, control: *mut Node) -> bool {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::TryBuildNumberCheck")
+  }
+
+  /// 原版 BuildCheckMaps — 依 map 集建 CheckMaps (含迁移分支)
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildCheckMaps
+  pub fn build_check_maps(&mut self, object: &Node, effect: &mut *mut Node, control: *mut Node, maps: &[MapRef], has_deprecated_map_without_migration_target: bool) {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildCheckMaps")
+  }
+
+  /// 原版 BuildCheckValue — 常量receiver检查
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildCheckValue
+  pub fn build_check_value(&mut self, receiver: &Node, effect: &mut *mut Node, control: *mut Node, value: ObjectRef) -> *mut Node {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildCheckValue")
+  }
+
+  /// 原版 BuildLoadDataField — data-field/constant-field 加载
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildLoadDataField
+  pub fn build_load_data_field(&mut self, name: &NameRef, access_info: &PropertyAccessInfo, lookup_start_object: &Node, effect: &mut *mut Node, control: &mut *mut Node) -> *mut Node {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildLoadDataField")
+  }
+
+  /// 原版 FoldLoadDictPrototypeConstant — 原型字典常量折叠
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::FoldLoadDictPrototypeConstant
+  pub fn fold_load_dict_prototype_constant(&mut self, access_info: &PropertyAccessInfo) -> Option<*mut Node> {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::FoldLoadDictPrototypeConstant")
+  }
+
+  /// 原版 BuildLoadDictionaryField — 字典字段加载
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildLoadDictionaryField
+  pub fn build_load_dictionary_field(&mut self, name: &NameRef, access_info: &PropertyAccessInfo, lookup_start_object: &Node, receiver: &Node, effect: &mut *mut Node, control: &mut *mut Node, source: &FeedbackSource, context: &Node, frame_state: &Node) -> *mut Node {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::BuildLoadDictionaryField")
+  }
+
+  /// 原版 ConvertRepresentation — Representation → MachineRepresentation
+  /// v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::ConvertRepresentation (Smi/Double/HeapObject/Tagged）
+  pub fn convert_representation(representation: Representation) -> MachineRepresentation {
+    todo!("v8: src/compiler/property-access-builder.cc PropertyAccessBuilder::ConvertRepresentation")
+  }
+}
+
+/// 原版 HasOnlyStringMaps
+/// v8: src/compiler/property-access-builder.cc HasOnlyStringMaps
+pub fn has_only_string_maps(broker: &JSHeapBroker, maps: &[MapRef]) -> bool {
+  todo!("v8: src/compiler/property-access-builder.cc HasOnlyStringMaps")
+}
+
+/// 原版 HasOnlyStringWrapperMaps
+/// v8: src/compiler/property-access-builder.cc HasOnlyStringWrapperMaps
+pub fn has_only_string_wrapper_maps(broker: &JSHeapBroker, maps: &[MapRef]) -> bool {
+  todo!("v8: src/compiler/property-access-builder.cc HasOnlyStringWrapperMaps")
+}
+
+/// 原版 HasOnlyNonResizableTypedArrayMaps
+/// v8: src/compiler/property-access-builder.cc HasOnlyNonResizableTypedArrayMaps
+pub fn has_only_non_resizable_typed_array_maps(broker: &JSHeapBroker, maps: &[MapRef]) -> bool {
+  todo!("v8: src/compiler/property-access-builder.cc HasOnlyNonResizableTypedArrayMaps")
+}

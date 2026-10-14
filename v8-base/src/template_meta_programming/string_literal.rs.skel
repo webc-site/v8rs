@@ -1,0 +1,22 @@
+// 由 tool/src/base/template-meta-programming/string-literal.h.js 从 v8/src/base/template-meta-programming/string-literal.h 生成; 修订就地改, 复跑覆盖
+// 编译期字符串字面量 (结构类型传模板参数)
+
+//! v8 侧: 方法 2; 条件开关 HAS_CPP_CLASS_TYPES_AS_TEMPLATE_ARGS=true
+//! Rust 策略: &'static str 常量即结构化; const 泛型数组 [u8; N] 等价 StringLiteral
+
+/// v8: src/base/template-meta-programming/string-literal.h StringLiteral<N>
+/// data_ 为 public 成员 (结构类型要求); 以 '\0' 结尾
+#[derive(Clone, Copy)]
+pub struct StringLiteral<const N: usize> {
+    /// v8: data_ (std::array<char, N>, 不含结尾 '\0' 的 size = N-1)
+    pub data: [u8; N],
+}
+
+impl<const N: usize> StringLiteral<N> {
+    /// v8: StringLiteral(const char (&s)[N]) — DCHECK 尾部 '\0'
+    pub const fn new(s: &[u8; N]) -> Self { Self { data: *s } }
+    /// v8: size() — 不含 '\0'
+    pub const fn size(&self) -> usize { N - 1 }
+    /// v8: c_str()
+    pub const fn c_str(&self) -> &[u8] { &self.data }
+}
