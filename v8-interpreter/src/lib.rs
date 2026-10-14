@@ -38,7 +38,8 @@ pub use bytecode_array_iterator::BytecodeArrayIterator;
 pub use bytecode_array_writer::*;
 pub use bytecode_decoder::*;
 pub use bytecode_dispatcher::{
-  BytecodeDispatcher, NativeFn, TIME_KEY, TIMESTAMP_KEY, Value, execute_bytecode,
+  BytecodeDispatcher, GlobalsTable, NativeFn, TIME_KEY, TIMESTAMP_KEY, Value, execute_bytecode,
+  fits_smi,
 };
 pub use bytecode_flags_and_tokens::*;
 pub use bytecode_generator::{

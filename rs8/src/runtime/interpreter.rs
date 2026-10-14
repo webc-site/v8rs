@@ -121,6 +121,22 @@ impl Interpreter {
     }
   }
 
+  /// 跨界调用 (字节码引擎回调宿主函数) 专用的轻量执行态
+  ///
+  /// 被调函数的变量解析只走 `FunctionData.closure` 派生出的激活记录, `self.global` 仅在
+  /// `run()`/`dispatch()` 顶层使用, 所以这里必须跳过 `init_builtins`: 重放整段内建预置脚本
+  /// (词法分析 + 语法分析 + 求值近千行) 曾是每次跨界调用的固定开销 (战役 A 欠账 1)。
+  /// 若日后让语句求值依赖 `self.global`, 此构造函数必须改为接收真实全局环境。
+  #[must_use]
+  pub fn for_cross_engine_call() -> Self {
+    Self {
+      global: Arc::new(Environment::new()),
+      call_stack: Vec::new(),
+      mode: ExecMode::AstOnly,
+      stats: ExecStats::default(),
+    }
+  }
+
   fn init_builtins(env: &Arc<Environment>) {
     // 全局基础字面量与数学极值
     env.define("undefined".to_string(), JsValue::Undefined);

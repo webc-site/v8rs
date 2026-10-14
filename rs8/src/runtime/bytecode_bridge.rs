@@ -19,8 +19,8 @@ use v8_ast::{
   value::{AstRawString, AstValue},
 };
 use v8_interpreter::{
-  BytecodeDispatcher, BytecodeGenerator, Error as V8InterpreterError, NativeFn as InterpNativeFn,
-  Value as InterpreterValue,
+  BytecodeDispatcher, BytecodeGenerator, Error as V8InterpreterError, GlobalsTable,
+  NativeFn as InterpNativeFn, Value as InterpreterValue, fits_smi,
 };
 
 use crate::{
@@ -135,7 +135,7 @@ pub fn expr_to_v8_ast_scoped(
   match expr {
     Expr::Literal(val) => match val {
       JsValue::Number(n) => {
-        if n.fract() == 0.0 && *n >= (i32::MIN as f64) && *n <= (i32::MAX as f64) {
+        if fits_smi(*n) {
           Some(AstNode::Literal(AstNodeFactory::new_literal(
             0,
             AstValue::Smi(*n as i32),
@@ -821,27 +821,31 @@ impl From<InterpreterValue> for JsValue {
 }
 
 /// 将解释器原生值转换为 JsValue (带防环与深度预算保护)
+///
+/// 无执行上下文可用, 因此转换出的字节码函数只挂一张私有空表; 由字节码运行回写宿主的转换
+/// 必须走 `interpreter_value_to_js_value_with_globals`, 否则函数回调时看不到全局
 #[must_use]
 pub fn interpreter_value_to_js_value(val: &InterpreterValue) -> JsValue {
-  match val {
-    InterpreterValue::Undefined | InterpreterValue::TheHole => JsValue::Undefined,
-    InterpreterValue::Null => JsValue::Null,
-    InterpreterValue::Boolean(b) => JsValue::Boolean(*b),
-    InterpreterValue::Smi(n) => JsValue::Number(*n as f64),
-    InterpreterValue::Number(n) => JsValue::Number(*n),
-    InterpreterValue::String(s) => JsValue::String(s.clone()),
-    InterpreterValue::BigInt(s) => JsValue::String(s.clone()),
-    _ => {
-      let mut visited = HashSet::default();
-      interp_to_js_with_visited(val, &mut visited, 0)
-    }
-  }
+  let detached = GlobalsTable::default();
+  interpreter_value_to_js_value_with_globals(val, &detached)
+}
+
+/// 同上, 并让转换出的字节码函数携带其所属全局表句柄 (对标原版 JSFunction 自带 NativeContext)
+#[must_use]
+pub fn interpreter_value_to_js_value_with_globals(
+  val: &InterpreterValue,
+  globals: &GlobalsTable,
+) -> JsValue {
+  // 空 HashSet 不分配, 因此无需为标量另开快路径
+  let mut visited = HashSet::default();
+  interp_to_js_with_visited(val, &mut visited, 0, globals)
 }
 
 fn interp_to_js_with_visited(
   val: &InterpreterValue,
   visited: &mut HashSet<usize>,
   depth: usize,
+  globals: &GlobalsTable,
 ) -> JsValue {
   if depth > 16 {
     return JsValue::Undefined;
@@ -862,7 +866,7 @@ fn interp_to_js_with_visited(
       let guard = arr.read();
       let mut list = Vec::with_capacity(guard.len());
       for item in guard.iter() {
-        list.push(interp_to_js_with_visited(item, visited, depth + 1));
+        list.push(interp_to_js_with_visited(item, visited, depth + 1, globals));
       }
       visited.remove(&ptr);
       JsValue::new_array(list)
@@ -875,7 +879,7 @@ fn interp_to_js_with_visited(
       let guard = obj.read();
       let js_obj = JsValue::new_object();
       for (k, v) in guard.iter() {
-        let _ = js_obj.set_property(k, interp_to_js_with_visited(v, visited, depth + 1));
+        let _ = js_obj.set_property(k, interp_to_js_with_visited(v, visited, depth + 1, globals));
       }
       visited.remove(&ptr);
       js_obj
@@ -892,6 +896,7 @@ fn interp_to_js_with_visited(
           None,
           Vec::new(),
           entries,
+          globals,
           visited,
           depth,
         )
@@ -900,13 +905,17 @@ fn interp_to_js_with_visited(
     InterpreterValue::Function(func, props) => {
       let entries = detach_props(props);
       if entries.is_empty() {
-        JsValue::Native(NativeFn::InterpFunction(Arc::clone(func)))
+        JsValue::Native(NativeFn::InterpFunction(
+          Arc::clone(func),
+          Arc::clone(globals),
+        ))
       } else {
         interp_callable_to_js(
-          NativeFn::InterpFunction(Arc::clone(func)),
+          NativeFn::InterpFunction(Arc::clone(func), Arc::clone(globals)),
           func.name.clone(),
           func.params.clone(),
           entries,
+          globals,
           visited,
           depth,
         )
@@ -932,12 +941,18 @@ fn interp_callable_to_js(
   name: Option<String>,
   params: Vec<String>,
   entries: Vec<(String, InterpreterValue)>,
+  globals: &GlobalsTable,
   visited: &mut HashSet<usize>,
   depth: usize,
 ) -> JsValue {
   let properties: HashMap<String, JsValue> = entries
     .into_iter()
-    .map(|(k, v)| (k, interp_to_js_with_visited(&v, visited, depth + 1)))
+    .map(|(k, v)| {
+      (
+        k,
+        interp_to_js_with_visited(&v, visited, depth + 1, globals),
+      )
+    })
     .collect();
   JsValue::Function(Arc::new(FunctionData {
     shared: Arc::new(SharedFunctionInfo::new(name, params, Vec::new())),
@@ -955,7 +970,7 @@ pub fn js_value_to_interpreter_value(val: &JsValue) -> Option<InterpreterValue> 
     JsValue::Null => Some(InterpreterValue::Null),
     JsValue::Boolean(b) => Some(InterpreterValue::Boolean(*b)),
     JsValue::Number(n) => {
-      if n.fract() == 0.0 && *n >= (i32::MIN as f64) && *n <= (i32::MAX as f64) {
+      if fits_smi(*n) {
         Some(InterpreterValue::Smi(*n as i32))
       } else {
         Some(InterpreterValue::Number(*n))
@@ -989,7 +1004,7 @@ fn js_value_to_interp_with_visited(
     JsValue::Null => Some(InterpreterValue::Null),
     JsValue::Boolean(b) => Some(InterpreterValue::Boolean(*b)),
     JsValue::Number(n) => {
-      if n.fract() == 0.0 && *n >= (i32::MIN as f64) && *n <= (i32::MAX as f64) {
+      if fits_smi(*n) {
         Some(InterpreterValue::Smi(*n as i32))
       } else {
         Some(InterpreterValue::Number(*n))
@@ -1042,7 +1057,7 @@ fn js_value_to_interp_with_visited(
       if let NativeFn::InterpNative(orig) = native {
         return Some(InterpreterValue::new_native(orig.clone()));
       }
-      if let NativeFn::InterpFunction(func) = native {
+      if let NativeFn::InterpFunction(func, _) = native {
         return Some(InterpreterValue::Function(
           Arc::clone(func),
           Arc::new(RwLock::new(HashMap::default())),
@@ -1093,7 +1108,7 @@ fn js_value_to_interp_with_visited(
         let func_data_clone = Arc::clone(func_data);
         let interp_fn = InterpNativeFn::from_context(func_data_clone, |func_data_clone, args| {
           let js_args: Vec<JsValue> = args.iter().map(JsValue::from).collect();
-          let mut interp = Interpreter::new();
+          let mut interp = Interpreter::for_cross_engine_call();
           match interp.invoke_function(
             &JsValue::Function(Arc::clone(func_data_clone)),
             None,
@@ -1307,7 +1322,7 @@ pub fn try_execute_with_bytecode_and_env(
     while let Some(curr) = curr_env {
       let guard = curr.values.read();
       for (k, v) in guard.iter() {
-        if dispatcher.get_global(k).is_none()
+        if !dispatcher.has_global(k)
           && let Some(interp_val) = js_value_to_interpreter_value(v)
         {
           dispatcher.set_global(k.clone(), interp_val);
@@ -1317,7 +1332,7 @@ pub fn try_execute_with_bytecode_and_env(
     }
   }
 
-  if let Some(re) = dispatcher.get_global("RegExp").cloned() {
+  if let Some(re) = dispatcher.get_global("RegExp") {
     dispatcher.set_global("$$RegExp", re);
   }
 
@@ -1349,14 +1364,26 @@ pub fn try_execute_with_bytecode_and_env(
 
   match dispatcher.execute(&bytecode) {
     Ok(val) => {
-      // 执行成功后，若有新全局变量写入，同步写回宿主环境 (单次写锁批处理，消除逐键竞争)
+      let table = dispatcher.global_table();
+      // 执行成功后，若有新全局变量写入，同步写回宿主环境 (先脱锁复制再批处理写,
+      // 免得持宿主写锁期间做深转换; 函数值必须带上这张表, 宿主回调它时才看得见全局)
       if let Some(env) = global_env {
+        let snapshot: Vec<(String, JsValue)> = table
+          .read()
+          .iter()
+          .map(|(k, v)| {
+            (
+              k.clone(),
+              interpreter_value_to_js_value_with_globals(v, table),
+            )
+          })
+          .collect();
         let mut guard = env.values.write();
-        for (k, v) in dispatcher.globals() {
-          guard.insert(k.clone(), JsValue::from(v));
+        for (k, v) in snapshot {
+          guard.insert(k, v);
         }
       }
-      Some(Ok(JsValue::from(val)))
+      Some(Ok(interpreter_value_to_js_value_with_globals(&val, table)))
     }
     Err(e) => Some(Err(Error::RuntimeError(e.to_string()))),
   }

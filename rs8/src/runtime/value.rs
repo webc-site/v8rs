@@ -9,14 +9,17 @@ use fancy_regex::Regex;
 use gxhash::HashMap;
 use itoa::Buffer;
 use parking_lot::RwLock;
-use v8_interpreter::{BytecodeDispatcher, TIME_KEY, TIMESTAMP_KEY, Value};
+use v8_interpreter::{BytecodeDispatcher, GlobalsTable, TIME_KEY, TIMESTAMP_KEY, Value};
 use v8_numbers::{double_to_int32, double_to_uint32};
 
 use crate::{
   error::{Error, Result},
   runtime::{
     ast::{Expr, Stmt},
-    bytecode_bridge::{interpreter_value_to_js_value, js_value_to_interpreter_value},
+    bytecode_bridge::{
+      interpreter_value_to_js_value, interpreter_value_to_js_value_with_globals,
+      js_value_to_interpreter_value,
+    },
     environment::Environment,
   },
 };
@@ -63,7 +66,10 @@ impl Drop for NativeContext {
 #[derive(Clone)]
 pub enum NativeFn {
   Ptr(fn(&[JsValue]) -> Result<JsValue>),
-  ErrorCtor { proto: Box<JsValue>, name: String },
+  ErrorCtor {
+    proto: Box<JsValue>,
+    name: String,
+  },
   ConsoleTime(Arc<RwLock<HashMap<String, Instant>>>),
   ConsoleTimeEnd(Arc<RwLock<HashMap<String, Instant>>>),
   BoxedValueOf(Box<JsValue>),
@@ -101,7 +107,10 @@ pub enum NativeFn {
   RegExpTest(Arc<RegExpData>),
   RegExpExec(Arc<RegExpData>),
   InterpNative(v8_interpreter::NativeFn),
-  InterpFunction(Arc<v8_interpreter::InterpFunction>),
+  /// 字节码函数 + 其所属全局表句柄。句柄必须随值一起带出: `NativeFn::call` 拿不到调用方
+  /// 的执行态, 若只带 `Arc<InterpFunction>` 就只能在被调点重建一张空表, 被调函数将看不见
+  /// 宿主全局 (对标原版: JSFunction 自带 NativeContext)
+  InterpFunction(Arc<v8_interpreter::InterpFunction>, GlobalsTable),
   Context(Arc<NativeContext>),
 }
 
@@ -568,8 +577,9 @@ impl NativeFn {
           Err(e) => Err(Error::RuntimeError(e.to_string())),
         }
       }
-      Self::InterpFunction(func) => {
-        let mut d = BytecodeDispatcher::new();
+      Self::InterpFunction(func, globals) => {
+        // 复用产生该函数的那张全局表, 不在调用点重建执行态
+        let mut d = BytecodeDispatcher::with_globals(Arc::clone(globals));
         let interp_args: Vec<v8_interpreter::Value> = args
           .iter()
           .map(|a| js_value_to_interpreter_value(a).unwrap_or(Value::Undefined))
@@ -579,7 +589,7 @@ impl NativeFn {
           &Value::Undefined,
           &interp_args,
         ) {
-          Ok(res) => Ok(interpreter_value_to_js_value(&res)),
+          Ok(res) => Ok(interpreter_value_to_js_value_with_globals(&res, globals)),
           Err(e) => Err(Error::RuntimeError(e.to_string())),
         }
       }
@@ -626,7 +636,8 @@ impl PartialEq for NativeFn {
         Arc::ptr_eq(a, b)
       }
       (Self::InterpNative(a), Self::InterpNative(b)) => a == b,
-      (Self::InterpFunction(a), Self::InterpFunction(b)) => Arc::ptr_eq(a, b),
+      // 同一字节码函数在双向转换中往返会携带不同的表句柄副本, 身份只看函数本体
+      (Self::InterpFunction(a, _), Self::InterpFunction(b, _)) => Arc::ptr_eq(a, b),
       (Self::Context(a), Self::Context(b)) => Arc::ptr_eq(a, b),
       _ => false,
     }

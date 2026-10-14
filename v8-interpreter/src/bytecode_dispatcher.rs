@@ -8,7 +8,7 @@ use std::{
 
 use gxhash::HashMap;
 use itoa::Buffer as ItoaBuffer;
-use parking_lot::{RwLock, RwLockReadGuard};
+use parking_lot::RwLock;
 use v8_numbers::{double_to_int32, double_to_uint32};
 
 use crate::{
@@ -126,6 +126,12 @@ pub enum NativeFn {
   ArraySlice(Arc<RwLock<Vec<Value>>>),
   ArrayJoin(Arc<RwLock<Vec<Value>>>),
   ArrayIndexOf(Arc<RwLock<Vec<Value>>>),
+  ArraySplice(Arc<RwLock<Vec<Value>>>),
+  ArrayReverse(Arc<RwLock<Vec<Value>>>),
+  ArrayIncludes(Arc<RwLock<Vec<Value>>>),
+  ArrayConcat(Arc<RwLock<Vec<Value>>>),
+  /// 排序需要回调比较器, 只能在 `call_function` 里截获 (对标 FunctionCall/FunctionApply 标记)
+  ArraySort(Arc<RwLock<Vec<Value>>>),
   StringCharCodeAt(String),
   StringCharAt(String),
   StringIndexOf(String),
@@ -154,6 +160,11 @@ impl PartialEq for NativeFn {
       | (Self::ArrayShift(a), Self::ArrayShift(b))
       | (Self::ArraySlice(a), Self::ArraySlice(b))
       | (Self::ArrayJoin(a), Self::ArrayJoin(b))
+      | (Self::ArraySplice(a), Self::ArraySplice(b))
+      | (Self::ArrayReverse(a), Self::ArrayReverse(b))
+      | (Self::ArrayIncludes(a), Self::ArrayIncludes(b))
+      | (Self::ArrayConcat(a), Self::ArrayConcat(b))
+      | (Self::ArraySort(a), Self::ArraySort(b))
       | (Self::ArrayIndexOf(a), Self::ArrayIndexOf(b)) => Arc::ptr_eq(a, b),
       (Self::StringCharCodeAt(a), Self::StringCharCodeAt(b))
       | (Self::StringCharAt(a), Self::StringCharAt(b))
@@ -428,6 +439,19 @@ pub enum Value {
   Object(Arc<RwLock<HashMap<String, Value>>>),
   Function(Arc<InterpFunction>, Arc<RwLock<HashMap<String, Value>>>),
   Native(NativeFn, Arc<RwLock<HashMap<String, Value>>>),
+}
+
+/// 该数值能否折叠成 `Value::Smi`
+///
+/// 只排除负零: 原版把 -0 作为 ReadOnlyRoots 里的规范 HeapNumber (static-roots-*.h 的
+/// kMinusZero), 从不落成 Smi; 一旦被归一化成 Smi(0), `1 / -0 === -Infinity` 与
+/// `SameValue(+0, -0) === false` 这类语义会全部失真。其余整数值 (含负数) 照旧走 Smi。
+#[must_use]
+pub fn fits_smi(n: f64) -> bool {
+  !(n == 0.0 && n.is_sign_negative())
+    && n.fract() == 0.0
+    && n >= (i32::MIN as f64)
+    && n <= (i32::MAX as f64)
 }
 
 impl PartialEq for Value {
@@ -1459,12 +1483,23 @@ impl BytecodeDispatcher {
   }
 
   /// 复用既有全局表构造分发器 (跨界调用入口: 被调函数必须看见调用方的全局绑定)
+  ///
+  /// 寄存器栈按需用 `set_register` 扩容, 此处不预分配, 免得每次跨界都付一次大 Vec 的分配
   #[inline]
   #[must_use]
   pub fn with_globals(globals: GlobalsTable) -> Self {
     Self {
+      accumulator: Value::Undefined,
+      reg_stack: Vec::new(),
+      param_stack: Vec::new(),
+      frame_reg_base: 0,
+      frame_param_base: 0,
+      frame_param_len: 0,
+      call_stack: Vec::new(),
+      feedback_vector: Vec::new(),
+      arguments_materialized: false,
+      saved_arguments: None,
       globals,
-      ..Self::new()
     }
   }
 
@@ -1484,21 +1519,30 @@ impl BytecodeDispatcher {
     }
   }
 
+  /// 全局表句柄, 供宿主在跨界值转换时随函数一起带出
   #[inline]
   #[must_use]
-  pub fn globals(&self) -> &HashMap<String, Value> {
+  pub fn global_table(&self) -> &GlobalsTable {
     &self.globals
   }
 
   #[inline]
   pub fn set_global(&mut self, name: impl Into<String>, val: Value) {
-    self.globals.insert(name.into(), val);
+    self.globals.write().insert(name.into(), val);
   }
 
+  /// 表是共享句柄, 无法向外借出引用, 因此按值返回
   #[inline]
   #[must_use]
-  pub fn get_global(&self, name: &str) -> Option<&Value> {
-    self.globals.get(name)
+  pub fn get_global(&self, name: &str) -> Option<Value> {
+    self.globals.read().get(name).cloned()
+  }
+
+  /// 只做存在性判断, 避免注入侧为检查而克隆整个值
+  #[inline]
+  #[must_use]
+  pub fn has_global(&self, name: &str) -> bool {
+    self.globals.read().contains_key(name)
   }
 
   #[inline]
@@ -1623,7 +1667,7 @@ impl BytecodeDispatcher {
 
   /// 读取全局内建构造函数的 prototype 对象
   fn global_proto(&self, ctor_name: &str) -> Option<Value> {
-    let ctor = self.globals.get(ctor_name)?;
+    let ctor = self.globals.read().get(ctor_name)?.clone();
     ctor.get_property(PROTOTYPE_KEY).ok()
   }
 
@@ -1810,7 +1854,7 @@ impl BytecodeDispatcher {
           func
             .captured_locals
             .iter()
-            .map(|p| (p.clone(), self.globals.get(p).cloned()))
+            .map(|p| (p.clone(), self.globals.read().get(p).cloned()))
             .collect()
         };
 
@@ -1818,15 +1862,16 @@ impl BytecodeDispatcher {
 
         for (p_name, old_val) in saved_param_globals {
           if let Some(old) = old_val {
-            self.globals.insert(p_name, old);
+            self.globals.write().insert(p_name, old);
           }
         }
 
         if self.arguments_materialized {
+          let mut table = self.globals.write();
           if let Some(old) = self.saved_arguments.take() {
-            self.globals.insert("arguments".to_string(), old);
+            table.insert("arguments".to_string(), old);
           } else {
-            self.globals.remove("arguments");
+            table.remove("arguments");
           }
         }
         self.arguments_materialized = saved_arguments_materialized;
@@ -1991,11 +2036,12 @@ impl BytecodeDispatcher {
               let arguments_val = Value::new_array_with_elements(args_slice.to_vec());
               self.saved_arguments = self
                 .globals
+                .write()
                 .insert("arguments".to_string(), arguments_val.clone());
               self.arguments_materialized = true;
               self.accumulator = arguments_val;
-            } else if let Some(val) = self.globals.get(name) {
-              self.accumulator = val.clone();
+            } else if let Some(val) = self.globals.read().get(name).cloned() {
+              self.accumulator = val;
             } else if throws_if_absent {
               return Err(Error::ExecutionError(format!(
                 "ReferenceError: {name} is not defined"
@@ -2012,7 +2058,10 @@ impl BytecodeDispatcher {
           let idx = it.get_unsigned_operand(0)? as usize;
           let _slot = it.get_unsigned_operand(1)?;
           if let Some(ConstantPoolEntry::String(name)) = bytecode_array.constants().get(idx) {
-            self.globals.insert(name.clone(), self.accumulator.clone());
+            self
+              .globals
+              .write()
+              .insert(name.clone(), self.accumulator.clone());
             it.advance();
           } else {
             return Err(Error::ConstantPoolOutOfBounds(idx));

@@ -21,6 +21,7 @@ use crate::{
   bytecode_array_builder::{
     BytecodeArray, BytecodeArrayBuilder, ConstantPoolEntry, InterpFunction, ToBooleanMode,
   },
+  bytecode_dispatcher::fits_smi,
   bytecode_label::{BytecodeLabel, BytecodeLoopHeader},
   bytecode_register::Register,
   error::{Error, Result},
@@ -703,7 +704,7 @@ impl BytecodeGenerator {
     match &lit.value {
       AstValue::Smi(val) => self.builder.load_literal_smi(*val)?,
       AstValue::Number(num) => {
-        if num.fract() == 0.0 && *num >= (i32::MIN as f64) && *num <= (i32::MAX as f64) {
+        if fits_smi(*num) {
           self.builder.load_literal_smi(*num as i32)?;
         } else {
           self
