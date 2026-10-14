@@ -1,5 +1,6 @@
 use std::{
   borrow::Cow,
+  cmp::Ordering,
   fmt,
   mem::{replace, take},
   ptr::fn_addr_eq,
@@ -326,6 +327,71 @@ impl NativeFn {
           .unwrap_or(-1);
         Ok(Value::Smi(idx))
       }
+      // 变更型方法必须就地改这张表: 预置脚本里的 Array.prototype.splice 拿到的是接收者副本,
+      // 改完即丢, 所以 战役 C 值模型合一之前变更型一律走引擎内建
+      Self::ArraySplice(arr) => {
+        let mut guard = arr.write();
+        let len = guard.len();
+        let start = match args.first() {
+          Some(s) => {
+            let n = s.to_i32();
+            if n < 0 {
+              (len as i32 + n).max(0) as usize
+            } else {
+              (n as usize).min(len)
+            }
+          }
+          None => 0,
+        };
+        let delete_count = match args.get(1) {
+          Some(d) => {
+            let n = d.to_i32();
+            if n < 0 {
+              0
+            } else {
+              (n as usize).min(len - start)
+            }
+          }
+          None => len - start,
+        };
+        // 只有显式给了删除数才接受插入项: [1,2,3].splice(1) 是删到尾, 不是原地插入
+        let inserted: Vec<Value> =
+          if args.len() > 2 { args[2..].to_vec() } else { Vec::new() };
+        let removed: Vec<Value> =
+          guard.splice(start..start + delete_count, inserted).collect();
+        drop(guard);
+        Ok(Value::new_array_with_elements(removed))
+      }
+      Self::ArrayReverse(arr) => {
+        arr.write().reverse();
+        Ok(Value::Array(Arc::clone(arr)))
+      }
+      Self::ArrayIncludes(arr) => {
+        // SameValueZero = 严格相等 + NaN 自等 (+0/-0 在 === 下本就相等)
+        let target = args.first().unwrap_or(&Value::Undefined);
+        let target_is_nan = matches!(target, Value::Number(n) if n.is_nan());
+        let guard = arr.read();
+        Ok(Value::Boolean(guard.iter().any(|v| {
+          if target_is_nan {
+            matches!(v, Value::Number(n) if n.is_nan())
+          } else {
+            v.test_equal_strict(target)
+          }
+        })))
+      }
+      Self::ArrayConcat(arr) => {
+        let mut out = arr.read().clone();
+        for arg in args {
+          match arg {
+            Value::Array(other) => out.extend(other.read().iter().cloned()),
+            _ => out.push(arg.clone()),
+          }
+        }
+        Ok(Value::new_array_with_elements(out))
+      }
+      Self::ArraySort(_) => Err(Error::ExecutionError(
+        "sort 需要比较器回调, 只能经 call_function 截获".to_string(),
+      )),
       Self::StringCharCodeAt(string) => {
         let idx = args.first().map(|v| v.to_u32() as usize).unwrap_or(0);
         let code = if string.is_ascii() {
@@ -845,6 +911,19 @@ impl Value {
           // Array.prototype.toString === join(",")，缺这一步会掉到 Object.prototype.toString
           "toString" => Ok(Self::new_native_bare(NativeFn::ArrayJoin(Arc::clone(arr)))),
           "indexOf" => Ok(Self::new_native_bare(NativeFn::ArrayIndexOf(Arc::clone(
+            arr,
+          )))),
+          "splice" => Ok(Self::new_native_bare(NativeFn::ArraySplice(Arc::clone(
+            arr,
+          )))),
+          "reverse" => Ok(Self::new_native_bare(NativeFn::ArrayReverse(Arc::clone(
+            arr,
+          )))),
+          "sort" => Ok(Self::new_native_bare(NativeFn::ArraySort(Arc::clone(arr)))),
+          "includes" => Ok(Self::new_native_bare(NativeFn::ArrayIncludes(Arc::clone(
+            arr,
+          )))),
+          "concat" => Ok(Self::new_native_bare(NativeFn::ArrayConcat(Arc::clone(
             arr,
           )))),
           _ => Ok(Self::Undefined),
@@ -1796,6 +1875,61 @@ impl BytecodeDispatcher {
     false
   }
 
+  /// Array.prototype.sort: 就地排序后返回接收者本身
+  ///
+  /// 无比较器按 ToString 的码点序比较 (ECMA-262: undefined 恒排末尾且不参与比较, 空位一并
+  /// 跳过); 有比较器时逐项回调用户函数。比较器抛错没法中断 Rust 的稳定排序, 因此记录首个
+  /// 错误、排序返回后再传播 —— 规范本就允许数组停留在半排序状态
+  fn array_sort(&mut self, arr: &Arc<RwLock<Vec<Value>>>, comparator: Option<&Value>) -> Result<Value> {
+    // 排序过程中会回调用户代码, 先脱锁取快照, 免得重入写同一张表自堵
+    let (mut sorted, trailing) = {
+      let guard = arr.read();
+      let defined: Vec<Value> = guard
+        .iter()
+        .filter(|v| !matches!(v, Value::Undefined | Value::TheHole))
+        .cloned()
+        .collect();
+      let skipped = guard.len() - defined.len();
+      (defined, skipped)
+    };
+    match comparator {
+      None => sorted.sort_by(|a, b| a.to_str_lossy().cmp(&b.to_str_lossy())),
+      Some(cb) => {
+        let cb = cb.clone();
+        let mut failure: Option<String> = None;
+        sorted.sort_by(|a, b| {
+          if failure.is_some() {
+            return Ordering::Equal;
+          }
+          match self.call_function(&cb, &Value::Undefined, &[a.clone(), b.clone()]) {
+            Ok(v) => {
+              let n = v.to_number();
+              if n < 0.0 {
+                Ordering::Less
+              } else if n > 0.0 {
+                Ordering::Greater
+              } else {
+                Ordering::Equal
+              }
+            }
+            Err(e) => {
+              failure = Some(e.to_string());
+              Ordering::Equal
+            }
+          }
+        });
+        if let Some(msg) = failure {
+          return Err(Error::ExecutionError(msg));
+        }
+      }
+    }
+    for _ in 0..trailing {
+      sorted.push(Value::Undefined);
+    }
+    *arr.write() = sorted;
+    Ok(Value::Array(Arc::clone(arr)))
+  }
+
   /// 函数调用通用入口
   pub fn call_function(
     &mut self,
@@ -1817,6 +1951,10 @@ impl BytecodeDispatcher {
         return self.call_function(target_fn, target_receiver, &guard);
       }
       return self.call_function(target_fn, target_receiver, &[]);
+    }
+    // sort 的比较器是用户函数, 只有持有分发器就地排序时才能回调
+    if let Value::Native(NativeFn::ArraySort(arr), _) = callable {
+      return self.array_sort(arr, args.first());
     }
     match callable {
       Value::Native(nat, _) => nat.call(args),
