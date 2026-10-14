@@ -572,7 +572,9 @@ impl NativeFn {
           .iter()
           .map(|a| js_value_to_interpreter_value(a).unwrap_or(Value::Undefined))
           .collect();
-        match native.call(&interp_args) {
+        // 宿主侧 NativeFn::call 没有 receiver 形参, 这里只能先传 Undefined;
+        // 真正打通要等 战役 C 把两套值模型/两套 NativeFn 合一
+        match native.call(&Value::Undefined, &interp_args) {
           Ok(res) => Ok(interpreter_value_to_js_value(&res)),
           Err(e) => Err(Error::RuntimeError(e.to_string())),
         }

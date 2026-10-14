@@ -11,8 +11,8 @@ use v8_ast::{
     BinaryOperation, Block, Call, CallNew, CompareOperation, CompoundAssignment, Conditional,
     CountOperation, DoWhileStatement, ForInStatement, ForStatement, FunctionDeclaration,
     FunctionLiteral, IfStatement, Literal, NaryOperation, ObjectLiteral, Property, ReturnStatement,
-    SwitchStatement, ThisExpression, Throw, TryCatchStatement, UnaryOperation, VariableDeclaration,
-    VariableProxy, WhileStatement,
+    SwitchStatement, ThisExpression, Throw, TryCatchStatement, TryFinallyStatement,
+    UnaryOperation, VariableDeclaration, VariableProxy, WhileStatement,
   },
   value::AstValue,
 };
@@ -235,6 +235,14 @@ fn collect_nested_functions<'a>(node: &'a AstNode, funcs: &mut Vec<&'a FunctionL
         collect_nested_functions(stmt, funcs);
       }
     }
+    AstNode::TryFinallyStatement(s) => {
+      for stmt in &s.try_block.statements {
+        collect_nested_functions(stmt, funcs);
+      }
+      for stmt in &s.finally_block.statements {
+        collect_nested_functions(stmt, funcs);
+      }
+    }
     AstNode::Throw(t) => collect_nested_functions(&t.exception, funcs),
     _ => {}
   }
@@ -293,6 +301,14 @@ fn collect_local_defs(node: &AstNode, defs: &mut HashSet<String>) {
         collect_local_defs(stmt, defs);
       }
       for stmt in &s.catch_block.statements {
+        collect_local_defs(stmt, defs);
+      }
+    }
+    AstNode::TryFinallyStatement(s) => {
+      for stmt in &s.try_block.statements {
+        collect_local_defs(stmt, defs);
+      }
+      for stmt in &s.finally_block.statements {
         collect_local_defs(stmt, defs);
       }
     }
@@ -444,6 +460,14 @@ fn collect_var_refs(node: &AstNode, refs: &mut HashSet<String>) {
         collect_var_refs(stmt, refs);
       }
     }
+    AstNode::TryFinallyStatement(s) => {
+      for stmt in &s.try_block.statements {
+        collect_var_refs(stmt, refs);
+      }
+      for stmt in &s.finally_block.statements {
+        collect_var_refs(stmt, refs);
+      }
+    }
     AstNode::Throw(t) => collect_var_refs(&t.exception, refs),
     _ => {}
   }
@@ -480,6 +504,7 @@ impl BytecodeGenerator {
   pub fn generate(ast: &AstNode) -> Result<BytecodeArray> {
     let mut generator = Self::new(0, 0, true, HashSet::default());
     if let AstNode::Block(b) = ast {
+      generator.hoist_global_vars(&b.statements)?;
       generator.hoist_declarations(&b.statements)?;
       for stmt in &b.statements {
         generator.visit_node(stmt)?;
@@ -606,9 +631,43 @@ impl BytecodeGenerator {
       AstNode::SwitchStatement(s) => self.visit_switch_statement(s),
       AstNode::ForInStatement(s) => self.visit_for_in_statement(s),
       AstNode::TryCatchStatement(s) => self.visit_try_catch_statement(s),
+      AstNode::TryFinallyStatement(s) => self.visit_try_finally_statement(s),
       AstNode::Throw(t) => self.visit_throw(t),
       _ => Ok(()),
     }
+  }
+
+  /// 顶层 var 提升: 把尚未存在的全局补成 undefined
+  ///
+  /// 对标原版 GlobalDeclarationInstantiation 的 "属性已存在则跳过": 宿主预置内建和上一段脚本
+  /// 写入的全局不能被 `var` 重新声明抹掉, 所以只在取值为 undefined 时写入 (此时写入是 no-op
+  /// 或补建)。函数作用域不需要这一步 —— 寄存器栈本就整片预置为 Undefined
+  fn hoist_global_vars(&mut self, stmts: &[AstNode]) -> Result<()> {
+    let mut defs = HashSet::default();
+    for stmt in stmts {
+      collect_local_defs(stmt, &mut defs);
+    }
+    // 函数声明名由 declare_function 直接落值, 不能再被 undefined 抢先占位
+    for stmt in stmts {
+      if let AstNode::FunctionDeclaration(decl) = stmt
+        && let Some(fun) = &decl.fun
+        && let Some(name) = &fun.name
+      {
+        defs.remove(&name.to_string_lossy());
+      }
+    }
+    for name in defs {
+      self.builder.load_global_inside_typeof(&name, 0)?;
+      let declare = self.builder.new_label();
+      let skip = self.builder.new_label();
+      self.builder.jump_if_undefined(declare)?;
+      self.builder.jump(skip)?;
+      self.builder.bind(declare);
+      self.builder.load_undefined()?;
+      self.builder.store_global(&name, 0)?;
+      self.builder.bind(skip);
+    }
+    Ok(())
   }
 
   fn hoist_declarations(&mut self, stmts: &[AstNode]) -> Result<()> {
@@ -1504,6 +1563,46 @@ impl BytecodeGenerator {
     }
 
     self.builder.bind(exit_label);
+    Ok(())
+  }
+
+  /// try/finally: 以两份 finally 字节码实现原版 finalization block
+  ///
+  /// 原版用 token/result 续体寄存器 (JumpContinuation) 让正常与异常两条路径共用一份 finally;
+  /// 现阶段没有续体寄存器, 所以各发射一份 —— 单次执行只走其一, 语义等价。异常入口先把累加器里的
+  /// 待抛值存入私有寄存器, 跑完 finally 再 Load + Throw 原样上抛, 使 `try { throw x } finally {}`
+  /// 与外层 catch 都能拿到原值。遗留边界: try 体内的 `return` 仍直接离开帧, 不经 finally。
+  fn visit_try_finally_statement(&mut self, stmt: &TryFinallyStatement) -> Result<()> {
+    let try_start = self.builder.current_bytecode_offset();
+
+    for s in &stmt.try_block.statements {
+      self.visit_node(s)?;
+    }
+    let try_end = self.builder.current_bytecode_offset();
+
+    // 正常路径要落进 finally (而不是像 catch 那样跳过), 所以跳转目标是 finally 的正常入口
+    let normal_entry = self.builder.new_label();
+    self.builder.jump(normal_entry)?;
+
+    let handler_target = self.builder.current_bytecode_offset();
+    if try_end > try_start {
+      self
+        .builder
+        .mark_handler_entry(try_start, try_end, handler_target);
+    }
+    let pending_reg = self.builder.allocate_register();
+    self.builder.store_accumulator_in_register(pending_reg)?;
+    for s in &stmt.finally_block.statements {
+      self.visit_node(s)?;
+    }
+    self.builder.load_accumulator_with_register(pending_reg)?;
+    self.builder.throw_op()?;
+    self.builder.free_register(pending_reg);
+
+    self.builder.bind(normal_entry);
+    for s in &stmt.finally_block.statements {
+      self.visit_node(s)?;
+    }
     Ok(())
   }
 

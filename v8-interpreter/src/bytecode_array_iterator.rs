@@ -206,7 +206,7 @@ impl<'a> BytecodeArrayIterator<'a> {
         return Bytecode::Illegal;
       }
     }
-    Bytecode::from_byte(byte).unwrap_or(Bytecode::Illegal)
+    Bytecode::decode(byte)
   }
 
   pub fn reset(&mut self) {
@@ -286,10 +286,7 @@ impl<'a> BytecodeArrayIterator<'a> {
       self.prefix_size = 0;
     }
 
-    self.current_bytecode = match Bytecode::from_byte(byte) {
-      Some(bc) => bc,
-      None => Bytecode::Illegal,
-    };
+    self.current_bytecode = Bytecode::decode(byte);
   }
 
   fn read_operand_bytes(

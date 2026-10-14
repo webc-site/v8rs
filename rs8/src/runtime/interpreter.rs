@@ -13,14 +13,14 @@ use std::{
 use gxhash::HashMap;
 use itoa::Buffer;
 use parking_lot::RwLock;
-use v8_interpreter::{TIME_KEY, TIMESTAMP_KEY};
+use v8_interpreter::{GlobalsTable, TIME_KEY, TIMESTAMP_KEY};
 use v8_numbers::{double_to_int32, double_to_uint32};
 
 use crate::{
   error::{Error, Result},
   runtime::{
     ast::*,
-    bytecode_bridge::try_execute_with_bytecode_and_env,
+    bytecode_bridge::try_execute_with_bytecode_in,
     environment::{ActivationScopeInit, Environment},
     lexer::Lexer,
     parser::Parser,
@@ -64,11 +64,12 @@ impl From<ExecSignal> for Error {
 /// 执行路径选择模式
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum ExecMode {
-  /// 强制 AST 求值器。当前默认: 字节码引擎尚有 4 类结构性缺口 (见 todo.md 三·战役 A 的欠账清单),
-  /// 翻转默认值的前提是 `./test.sh` 在 BytecodeFirst 下全绿
-  #[default]
+  /// 强制 AST 求值器
   AstOnly,
-  /// 优先走 V8 Ignition 字节码引擎, 桥接层执行前判定不支持的构造回落 AST 求值器
+  /// 优先走 V8 Ignition 字节码引擎, 桥接层执行前判定不支持的构造回落 AST 求值器。
+  /// 当前默认: 字节码引擎尚有结构性缺口 (见 todo.md 三·战役 A 的欠账清单),
+  /// 若 `./test.sh` 在本模式下出现回归, 先回退默认值再补欠账
+  #[default]
   BytecodeFirst,
   /// 只允许字节码引擎, 不支持即报错, 用于战役 A 收官门禁
   BytecodeOnly,
@@ -98,6 +99,14 @@ impl ExecStats {
 
 pub struct Interpreter {
   pub global: Arc<Environment>,
+  /// 字节码引擎的全局表, 与 `global` 一一对应但在整个解释器生命周期内常驻
+  ///
+  /// 对标原版 NativeContext.global_dictionary: 段与段之间共享同一张表, 既免去每次把上千
+  /// 内建深转换一遍, 也让函数/对象的引用身份跨段保持 (每次重建表会让
+  /// `thrown.constructor === ErrCtor` 这类比较必然为 false)。
+  /// 表优先于 `global`: 脚本写过的绑定以本表为准, 宿主侧 `global.define` 只对表里没有的
+  /// 名字生效, 因此运行中途把 ExecMode 从 BytecodeFirst 切到 AstOnly 会读到旧值。
+  pub interp_globals: GlobalsTable,
   pub call_stack: Vec<String>,
   pub mode: ExecMode,
   pub stats: ExecStats,
@@ -114,6 +123,7 @@ impl Interpreter {
     let global = Arc::new(Environment::new());
     Self::init_builtins(&global);
     Self {
+      interp_globals: GlobalsTable::default(),
       global,
       call_stack: Vec::new(),
       mode: ExecMode::default(),
@@ -123,13 +133,14 @@ impl Interpreter {
 
   /// 跨界调用 (字节码引擎回调宿主函数) 专用的轻量执行态
   ///
-  /// 被调函数的变量解析只走 `FunctionData.closure` 派生出的激活记录, `self.global` 仅在
+  /// 被调函数的变量解析只走 `FunctionData.closure` 派生的激活记录, `self.global` 仅在
   /// `run()`/`dispatch()` 顶层使用, 所以这里必须跳过 `init_builtins`: 重放整段内建预置脚本
   /// (词法分析 + 语法分析 + 求值近千行) 曾是每次跨界调用的固定开销 (战役 A 欠账 1)。
   /// 若日后让语句求值依赖 `self.global`, 此构造函数必须改为接收真实全局环境。
   #[must_use]
   pub fn for_cross_engine_call() -> Self {
     Self {
+      interp_globals: GlobalsTable::default(),
       global: Arc::new(Environment::new()),
       call_stack: Vec::new(),
       mode: ExecMode::AstOnly,
@@ -900,6 +911,8 @@ impl Interpreter {
         Self::hoist_declarations(&stmts, env);
         let mut interp = Interpreter {
           global: Arc::clone(env),
+          // 预置走 AstOnly, 这张表只是结构体占位, 不会被桥接层读到
+          interp_globals: GlobalsTable::default(),
           call_stack: Vec::new(),
           // 内建预置引导必须走 AST: 此时全局作用域尚未建完, 字节码桥会反向依赖它
           mode: ExecMode::AstOnly,
@@ -950,7 +963,7 @@ impl Interpreter {
     if self.mode == ExecMode::AstOnly {
       return self.execute(stmts);
     }
-    match try_execute_with_bytecode_and_env(stmts, Some(&self.global)) {
+    match try_execute_with_bytecode_in(stmts, Some(&self.global), &self.interp_globals) {
       Some(Ok(val)) => {
         self.stats.bytecode += 1;
         Ok(val)

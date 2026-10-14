@@ -7,7 +7,7 @@ use std::{
   sync::{Arc, LazyLock},
 };
 
-use gxhash::HashMap;
+use gxhash::{HashMap, HashSet};
 use itoa::Buffer as ItoaBuffer;
 use parking_lot::RwLock;
 use v8_numbers::{double_to_int32, double_to_uint32};
@@ -22,6 +22,7 @@ use crate::{
 
 pub const PROTO_KEY: &str = "__proto__";
 pub const PROTOTYPE_KEY: &str = "prototype";
+pub const CONSTRUCTOR_KEY: &str = "constructor";
 pub const LENGTH_KEY: &str = "length";
 pub const NAME_KEY: &str = "name";
 pub const CALL_KEY: &str = "call";
@@ -101,7 +102,7 @@ fn char_count(s: &str) -> usize {
 /// 原生上下文状态载荷 (零 dyn 泛型擦除，极速函数指针分派)
 pub struct NativeContext {
   payload: *const (),
-  call_fn: fn(*const (), &[Value]) -> Result<Value>,
+  call_fn: fn(*const (), &Value, &[Value]) -> Result<Value>,
   drop_fn: fn(*const ()),
 }
 
@@ -117,7 +118,7 @@ impl Drop for NativeContext {
 /// 原生函数句柄枚举分发 (纯 Enum Dispatch，杜绝 dyn 虚表与闭包堆分配)
 #[derive(Clone)]
 pub enum NativeFn {
-  Ptr(fn(&[Value]) -> Result<Value>),
+  Ptr(fn(&Value, &[Value]) -> Result<Value>),
   Noop,
   FunctionCall,
   FunctionApply,
@@ -144,6 +145,8 @@ pub enum NativeFn {
   StringToUpperCase(String),
   NumberToString(f64),
   ConstString(String),
+  /// 装箱原始值 (new Boolean/new Number/new String) 的 valueOf: 原样回吐预置的原始值
+  Const(Box<Value>),
   Context(Arc<NativeContext>),
 }
 
@@ -156,6 +159,7 @@ impl PartialEq for NativeFn {
       (Self::FunctionApply, Self::FunctionApply) => true,
       (Self::NumberToString(a), Self::NumberToString(b)) => a == b,
       (Self::ConstString(a), Self::ConstString(b)) => a == b,
+      (Self::Const(a), Self::Const(b)) => a == b,
       (Self::ArrayPush(a), Self::ArrayPush(b))
       | (Self::ArrayPop(a), Self::ArrayPop(b))
       | (Self::ArrayShift(a), Self::ArrayShift(b))
@@ -183,18 +187,19 @@ impl PartialEq for NativeFn {
 }
 
 impl NativeFn {
+  /// 携带上下文的原生回调; `receiver` 是调用点的 this (对标原版从激活记录取 receiver)
   pub fn from_context<T: Send + Sync + 'static>(
     ctx: T,
-    func: fn(&T, &[Value]) -> Result<Value>,
+    func: fn(&T, &Value, &[Value]) -> Result<Value>,
   ) -> Self {
     struct Payload<T> {
       ctx: T,
-      func: fn(&T, &[Value]) -> Result<Value>,
+      func: fn(&T, &Value, &[Value]) -> Result<Value>,
     }
     let boxed = Box::into_raw(Box::new(Payload { ctx, func })) as *const ();
-    fn call_trampoline<T>(raw: *const (), args: &[Value]) -> Result<Value> {
+    fn call_trampoline<T>(raw: *const (), receiver: &Value, args: &[Value]) -> Result<Value> {
       let p = unsafe { &*(raw as *const Payload<T>) };
-      (p.func)(&p.ctx, args)
+      (p.func)(&p.ctx, receiver, args)
     }
     fn drop_trampoline<T>(raw: *const ()) {
       unsafe {
@@ -208,11 +213,12 @@ impl NativeFn {
     }))
   }
 
-  pub fn call(&self, args: &[Value]) -> Result<Value> {
+  pub fn call(&self, receiver: &Value, args: &[Value]) -> Result<Value> {
     match self {
-      Self::Ptr(f) => f(args),
+      Self::Ptr(f) => f(receiver, args),
       Self::Noop | Self::FunctionCall | Self::FunctionApply => Ok(Value::Undefined),
       Self::ConstString(s) => Ok(Value::String(s.clone())),
+      Self::Const(v) => Ok(v.as_ref().clone()),
       Self::NumberToString(n) => {
         if let Some(r_val) = args.first() {
           let r = r_val.to_i32();
@@ -484,7 +490,7 @@ impl NativeFn {
       Self::StringMatch(string) => Value::string_match_inlined(string, args),
       Self::StringToLowerCase(string) => Ok(Value::String(string.to_lowercase())),
       Self::StringToUpperCase(string) => Ok(Value::String(string.to_uppercase())),
-      Self::Context(ctx) => (ctx.call_fn)(ctx.payload, args),
+      Self::Context(ctx) => (ctx.call_fn)(ctx.payload, receiver, args),
     }
   }
 }
@@ -586,10 +592,14 @@ impl Value {
   #[inline]
   #[must_use]
   pub fn new_function(func: Arc<InterpFunction>) -> Self {
-    let mut props = HashMap::default();
     let proto = Self::new_object();
-    props.insert("prototype".to_string(), proto);
-    Self::Function(func, Arc::new(RwLock::new(props)))
+    let mut props = HashMap::default();
+    props.insert(PROTOTYPE_KEY.to_string(), proto.clone());
+    let func_val = Self::Function(func, Arc::new(RwLock::new(props)));
+    // 对标原版: 普通函数自带 prototype.constructor, 实例靠它回溯构造器
+    // (assert.throws 之类宿主代码读 thrown.constructor 会在此处取不到而 TypeError)
+    let _ = proto.set_property(CONSTRUCTOR_KEY, func_val.clone());
+    func_val
   }
 
   pub fn string_split_inlined(string: &str, args: &[Self]) -> Result<Self> {
@@ -598,7 +608,7 @@ impl Value {
       && let Ok(split_val) = sep.get_property(SPLIT_KEY)
       && let Self::Native(split_fn, _) = split_val
     {
-      return split_fn.call(&[
+      return split_fn.call(&Self::Undefined, &[
         Self::String(string.to_string()),
         args.get(1).cloned().unwrap_or(Self::Undefined),
       ]);
@@ -616,7 +626,7 @@ impl Value {
         if cur_search_pos > string.len() {
           break;
         }
-        let match_res = exec_fn.call(&[text_val.clone(), Self::Smi(cur_search_pos as i32)])?;
+        let match_res = exec_fn.call(&Self::Undefined, &[text_val.clone(), Self::Smi(cur_search_pos as i32)])?;
         if let Self::Array(arr) = &match_res {
           let guard = arr.read();
           let match_str = guard.first().map(Self::to_string_lossy).unwrap_or_default();
@@ -677,7 +687,7 @@ impl Value {
       && let Ok(rep_val) = pattern.get_property(REPLACE_KEY)
       && let Self::Native(rep_fn, _) = rep_val
     {
-      return rep_fn.call(&[Self::String(string.to_string()), Self::String(replacement)]);
+      return rep_fn.call(&Self::Undefined, &[Self::String(string.to_string()), Self::String(replacement)]);
     }
 
     if let Ok(exec_val) = pattern.get_property(EXEC_KEY)
@@ -699,7 +709,7 @@ impl Value {
           if cur_search_pos > string.len() {
             break;
           }
-          let match_res = exec_fn.call(&[text_val.clone(), Self::Smi(cur_search_pos as i32)])?;
+          let match_res = exec_fn.call(&Self::Undefined, &[text_val.clone(), Self::Smi(cur_search_pos as i32)])?;
           if let Self::Array(arr) = &match_res {
             let guard = arr.read();
             let match_str = guard.first().map(Self::to_string_lossy).unwrap_or_default();
@@ -731,7 +741,7 @@ impl Value {
         let _ = pattern.set_property(LAST_INDEX_KEY, Self::Smi(0));
         Ok(Self::String(out))
       } else {
-        let match_res = exec_fn.call(&[Self::String(string.to_string()), Self::Smi(0)])?;
+        let match_res = exec_fn.call(&Self::Undefined, &[Self::String(string.to_string()), Self::Smi(0)])?;
         if let Self::Array(arr) = &match_res {
           let guard = arr.read();
           let match_str = guard.first().map(Self::to_string_lossy).unwrap_or_default();
@@ -774,7 +784,7 @@ impl Value {
       && let Ok(m_val) = pat.get_property(MATCH_KEY)
       && let Self::Native(m_fn, _) = m_val
     {
-      return m_fn.call(&[Self::String(string.to_string())]);
+      return m_fn.call(&Self::Undefined, &[Self::String(string.to_string())]);
     }
     if let Ok(exec_val) = pat.get_property(EXEC_KEY)
       && let Self::Native(exec_fn, _) = exec_val
@@ -793,7 +803,7 @@ impl Value {
           if cur_search_pos > string.len() {
             break;
           }
-          let match_res = exec_fn.call(&[text_val.clone(), Self::Smi(cur_search_pos as i32)])?;
+          let match_res = exec_fn.call(&Self::Undefined, &[text_val.clone(), Self::Smi(cur_search_pos as i32)])?;
           if let Self::Array(arr) = &match_res {
             let guard = arr.read();
             let match_str = guard.first().map(Self::to_string_lossy).unwrap_or_default();
@@ -822,7 +832,7 @@ impl Value {
           Ok(Self::new_array_with_elements(results))
         }
       } else {
-        exec_fn.call(&[text_val, Self::Smi(0)])
+        exec_fn.call(&Self::Undefined, &[text_val, Self::Smi(0)])
       }
     } else {
       Ok(Self::Null)
@@ -834,6 +844,28 @@ impl Value {
     let proto = Self::new_object();
     props.insert(PROTOTYPE_KEY.to_string(), proto);
     Self::Native(native, Arc::new(RwLock::new(props)))
+  }
+
+  /// 装箱原始值: 原生构造器返回原始值时, 实例仍是对象但要能回吐该值
+  ///
+  /// 对标原版 JSReceiver 的 [[PrimValue]]。缺这一步, `new Boolean(true) + true` 会走
+  /// Object.prototype.toString 塌成 "[object Object]true", 而规范要求 2
+  #[inline]
+  #[must_use]
+  pub(crate) fn boxed_primitive(obj: Self, prim: Self) -> Self {
+    if matches!(prim, Self::Undefined | Self::Null) || prim.is_object_like() {
+      return obj;
+    }
+    let as_string = prim.to_str_lossy().to_string();
+    let _ = obj.set_property(
+      VALUE_OF_KEY,
+      Self::new_native_bare(NativeFn::Const(Box::new(prim))),
+    );
+    let _ = obj.set_property(
+      TO_STRING_KEY,
+      Self::new_native_bare(NativeFn::ConstString(as_string)),
+    );
+    obj
   }
 
   /// 构造零额外原型分配的原生函数句柄
@@ -851,6 +883,23 @@ impl Value {
     props: Arc<RwLock<HashMap<String, Value>>>,
   ) -> Self {
     Self::Native(native, props)
+  }
+
+  /// 是否为需要 ToPrimitive 的对象侧操作数
+  #[inline]
+  #[must_use]
+  pub(crate) fn is_object_like(&self) -> bool {
+    matches!(
+      self,
+      Self::Object(_) | Self::Array(_) | Self::Function(..) | Self::Native(..)
+    )
+  }
+
+  /// 两个操作数都已经是原始值 (算术 opcode 的快路径判据)
+  #[inline]
+  #[must_use]
+  pub(crate) fn both_primitive(lhs: &Self, rhs: &Self) -> bool {
+    !lhs.is_object_like() && !rhs.is_object_like()
   }
 
   /// 获取 JavaScript typeof 字符串
@@ -1001,21 +1050,31 @@ impl Value {
         Ok(Self::Undefined)
       }
       Self::Smi(n) => {
-        if prop == TO_STRING_KEY || prop == VALUE_OF_KEY {
+        if prop == VALUE_OF_KEY {
+          Ok(Self::new_native_bare(NativeFn::Const(Box::new(Self::Smi(*n)))))
+        } else if prop == TO_STRING_KEY {
           Ok(Self::new_native_bare(NativeFn::NumberToString(*n as f64)))
         } else {
           Ok(Self::Undefined)
         }
       }
       Self::Number(n) => {
-        if prop == TO_STRING_KEY || prop == VALUE_OF_KEY {
+        if prop == VALUE_OF_KEY {
+          Ok(Self::new_native_bare(NativeFn::Const(Box::new(Self::Number(
+            *n,
+          )))))
+        } else if prop == TO_STRING_KEY {
           Ok(Self::new_native_bare(NativeFn::NumberToString(*n)))
         } else {
           Ok(Self::Undefined)
         }
       }
       Self::Boolean(b) => {
-        if prop == TO_STRING_KEY || prop == VALUE_OF_KEY {
+        if prop == VALUE_OF_KEY {
+          Ok(Self::new_native_bare(NativeFn::Const(Box::new(Self::Boolean(
+            *b,
+          )))))
+        } else if prop == TO_STRING_KEY {
           let s = if *b { "true" } else { "false" };
           Ok(Self::new_native_bare(NativeFn::ConstString(s.to_string())))
         } else {
@@ -1534,12 +1593,22 @@ pub struct BytecodeDispatcher {
   frame_reg_base: usize,
   frame_param_base: usize,
   frame_param_len: usize,
+  /// 当前帧正在执行的字节码偏移, 供异常展开时查询本帧 HandlerTable
+  frame_offset: usize,
+  /// `throw` 抛出的原值; `Error` 只带字符串, 所以待抛值必须挂在执行态上随展开传递
+  pending_exception: Option<Value>,
   call_stack: Vec<String>,
   #[allow(dead_code)]
   feedback_vector: Vec<FeedbackSlot>,
   arguments_materialized: bool,
   saved_arguments: Option<Value>,
   globals: GlobalsTable,
+  /// 本次执行中被 StaGlobal 写过的名字
+  ///
+  /// 宿主 (rs8) 的全局环境是另一套值模型, 每次执行后必须把新写入的全局同步过去。若整表回写,
+  /// 每次都要对上千个内建做一遍深转换, 且会把函数/对象换成新的副本、抹掉引用身份。原版
+  /// GlobalDictionary 只在 property 实际变更时才标记, 这里同构: 只暴露脏名给宿主。
+  dirty_globals: HashSet<String>,
 }
 
 impl BytecodeDispatcher {
@@ -1553,11 +1622,14 @@ impl BytecodeDispatcher {
       frame_reg_base: 0,
       frame_param_base: 0,
       frame_param_len: 0,
+      frame_offset: 0,
+      pending_exception: None,
       call_stack: Vec::with_capacity(64),
       feedback_vector: Vec::with_capacity(256),
       arguments_materialized: false,
       saved_arguments: None,
       globals: GlobalsTable::default(),
+      dirty_globals: HashSet::default(),
     }
   }
 
@@ -1574,12 +1646,22 @@ impl BytecodeDispatcher {
       frame_reg_base: 0,
       frame_param_base: 0,
       frame_param_len: 0,
+      frame_offset: 0,
+      pending_exception: None,
       call_stack: Vec::new(),
       feedback_vector: Vec::new(),
       arguments_materialized: false,
       saved_arguments: None,
       globals,
+      dirty_globals: HashSet::default(),
     }
+  }
+
+  /// 本次执行写过的全局名, 宿主据此只同步真正变更的绑定
+  #[inline]
+  #[must_use]
+  pub fn dirty_globals(&self) -> &HashSet<String> {
+    &self.dirty_globals
   }
 
   #[inline]
@@ -1605,9 +1687,18 @@ impl BytecodeDispatcher {
     &self.globals
   }
 
+  /// 写入全局绑定: 键已存在就地覆值, 只有首次落键才分配 String
+  ///
+  /// `insert` 会换成一个新 key 并丢弃旧的, 循环里的 `StaGlobal` 于是每次都要 malloc/free 一次
+  /// 变量名; 原版全局写入是 property 数组的原位更新, 这里用 get_mut 复现同一效果。
   #[inline]
-  pub fn set_global(&mut self, name: impl Into<String>, val: Value) {
-    self.globals.write().insert(name.into(), val);
+  pub fn set_global(&mut self, name: &str, val: Value) {
+    let mut table = self.globals.write();
+    if let Some(slot) = table.get_mut(name) {
+      *slot = val;
+    } else {
+      table.insert(name.to_string(), val);
+    }
   }
 
   /// 表是共享句柄, 无法向外借出引用, 因此按值返回
@@ -1683,39 +1774,153 @@ impl BytecodeDispatcher {
     }
   }
 
-  /// 在异常表中寻找当前偏移处最内层的 catch 目标
+  /// 属性读写前的 receiver 校验 (对标原版 ToObject: 在 null/undefined 上取或设属性抛 TypeError)
+  ///
+  /// 只做在 opcode 侧而不是 `Value::get_property` 里: 原型回溯、`in`、typeof 之类内部查找必须
+  /// 容忍空值, 否则 `typeof x.y` 与 `("x" in obj)` 的语义会一起坏掉
   #[inline]
-  #[must_use]
-  pub fn find_catch_handler(bytecode_array: &BytecodeArray, offset: usize) -> Option<usize> {
-    bytecode_array.find_catch_handler(offset)
+  fn check_property_receiver(obj: &Value, key: &str, writing: bool) -> Result<()> {
+    if !matches!(obj, Value::Undefined | Value::Null) {
+      return Ok(());
+    }
+    let (action, detail) = if writing {
+      ("set", format!("setting '{key}')"))
+    } else {
+      ("read", format!("reading '{key}')"))
+    };
+    Err(Error::ExecutionError(format!(
+      "TypeError: Cannot {action} properties of {} ({detail}",
+      obj.to_str_lossy()
+    )))
   }
 
-  #[inline]
-  fn handle_call_result(
-    &mut self,
-    res: Result<Value>,
-    it: &mut BytecodeArrayIterator,
-    bytecode_array: &BytecodeArray,
-  ) -> Result<()> {
-    match res {
-      Ok(val) => {
-        self.accumulator = val;
-        it.advance();
-        Ok(())
+  /// 引擎内部错误 → ECMAScript 异常对象
+  ///
+  /// 对标原版: 跨越 catch 边界的运行时错误必须是 Error 实例 (name/message 齐备, 原型指向对应内建
+  /// 构造函数), 否则 `assert.throws(TypeError, f)` 与 `e instanceof TypeError` 整类断言失效。
+  /// 消息前缀 "XxxError: " 决定挂哪个原型; ExecutionError 只取内层文本, 否则会带上 Rust 的包装
+  fn error_object(&self, err: &Error) -> Value {
+    let raw = match err {
+      Error::ExecutionError(msg) => msg.clone(),
+      other => other.to_string(),
+    };
+    let (name, message) = match raw.split_once(": ") {
+      Some((head, tail)) if head.ends_with("Error") => (head.to_string(), tail.to_string()),
+      _ => ("Error".to_string(), raw),
+    };
+    let obj = Value::new_object();
+    let _ = obj.set_property(NAME_KEY, Value::String(name.clone()));
+    let _ = obj.set_property("message", Value::String(message));
+    if let Some(proto) = self.global_proto(&name) {
+      let _ = obj.set_property(PROTO_KEY, proto);
+    }
+    obj
+  }
+
+  /// ToPrimitive: hint_number 决定 hook 顺序, 对象侧先 valueOf, 结果仍是对象再 toString
+  ///
+  /// 对标原版 Add / 比较等运算的前置步骤: 数组、装箱对象直接 to_number 会塌成 NaN, 而规范
+  /// 要求 [1, 2] + [3, 4] === "1,23,4"、d2 - d1 是毫秒差。原始值原样返回, 因此非对象侧零成本。
+  /// Date 在本模型里没有 [[DateValue]] 内部槽, 用 __timestamp__ 槽表达 (与宿主 AST 求值器同序)
+  fn to_primitive(&mut self, val: &Value, hint_number: bool) -> Result<Value> {
+    if !val.is_object_like() {
+      return Ok(val.clone());
+    }
+    let mut date_slot = None;
+    let mut is_date = false;
+    if let Value::Object(o) = val {
+      let guard = o.read();
+      if let Some(ts) = guard.get(TIMESTAMP_KEY).or_else(|| guard.get(TIME_KEY)) {
+        is_date = true;
+        date_slot = Some(ts.clone());
       }
-      Err(err) => {
-        let current_offset = it.current_offset();
-        if let Some(target) = Self::find_catch_handler(bytecode_array, current_offset) {
-          if let Error::ExecutionError(msg) = &err {
-            self.accumulator = Value::String(msg.clone());
-          } else {
-            self.accumulator = Value::String(err.to_string());
-          }
-          it.set_offset(target)
-        } else {
-          Err(err)
-        }
+    }
+    if hint_number && is_date {
+      if let Some(ts) = date_slot {
+        return Ok(ts);
       }
+    }
+    // 与宿主 to_primitive 一致: Date 的 default hint 也优先 toString
+    let hooks: [&str; 2] = if is_date {
+      [TO_STRING_KEY, VALUE_OF_KEY]
+    } else {
+      [VALUE_OF_KEY, TO_STRING_KEY]
+    };
+    for hook in hooks {
+      let callee = self.get_property_resolved(val, hook)?;
+      if !matches!(callee, Value::Function(..) | Value::Native(..)) {
+        continue;
+      }
+      let primitive = self.call_function(&callee, val, &[])?;
+      if !primitive.is_object_like() {
+        return Ok(primitive);
+      }
+    }
+    Err(Error::ExecutionError(
+      "TypeError: cannot convert object to primitive value".to_string(),
+    ))
+  }
+
+  /// 只对对象侧付 ToPrimitive 的代价, 标量侧原样透传
+  #[inline(always)]
+  fn to_primitive_if_obj(&mut self, val: &Value, hint_number: bool) -> Result<Value> {
+    if val.is_object_like() {
+      self.to_primitive(val, hint_number)
+    } else {
+      Ok(val.clone())
+    }
+  }
+
+  /// 算术 opcode 的统一外壳: 标量对零克隆直读, 对象侧先各走一次 ToPrimitive
+  ///
+  /// 原版在 kAdd/kSub/... 之前都有 ToPrimitive; 判定留在 opcode 侧而不是 Value 里, 因为
+  /// Value 拿不到 dispatcher 就无法调用 valueOf/toString。规范里的数组拼接
+  /// ([1,2] + [3,4])、装箱对象 ([{valueOf:1}] * 2) 全靠这一层。
+  /// op 用泛型闭包而非函数指针: 每个 opcode 单态化后可直接内联 Value 的运算实现
+  #[inline(always)]
+  fn numeric_bin_op<F>(&mut self, lhs_reg: Register, hint_number: bool, op: F) -> Result<()>
+  where
+    F: Fn(&Value, &Value) -> Value,
+  {
+    let lhs = self.get_register_ref(lhs_reg)?;
+    if Value::both_primitive(lhs, &self.accumulator) {
+      self.accumulator = op(lhs, &self.accumulator);
+      return Ok(());
+    }
+    let lhs_val = lhs.clone();
+    let rhs_val = take(&mut self.accumulator);
+    let primitive_lhs = self.to_primitive_if_obj(&lhs_val, hint_number)?;
+    let primitive_rhs = self.to_primitive_if_obj(&rhs_val, hint_number)?;
+    self.accumulator = op(&primitive_lhs, &primitive_rhs);
+    Ok(())
+  }
+
+  /// 比较 opcode 的统一外壳, 语义同 numeric_bin_op
+  #[inline(always)]
+  fn compare_bin_op<F>(&mut self, lhs_reg: Register, hint_number: bool, op: F) -> Result<()>
+  where
+    F: Fn(&Value, &Value) -> bool,
+  {
+    let lhs = self.get_register_ref(lhs_reg)?;
+    if Value::both_primitive(lhs, &self.accumulator) {
+      self.accumulator = Value::Boolean(op(lhs, &self.accumulator));
+      return Ok(());
+    }
+    let lhs_val = lhs.clone();
+    let rhs_val = take(&mut self.accumulator);
+    let primitive_lhs = self.to_primitive_if_obj(&lhs_val, hint_number)?;
+    let primitive_rhs = self.to_primitive_if_obj(&rhs_val, hint_number)?;
+    self.accumulator = Value::Boolean(op(&primitive_lhs, &primitive_rhs));
+    Ok(())
+  }
+
+  /// 一元运算前置: 累加器是对象才付 ToPrimitive 的调用代价
+  fn acc_primitive(&mut self) -> Result<Value> {
+    let val = take(&mut self.accumulator);
+    if val.is_object_like() {
+      self.to_primitive(&val, true)
+    } else {
+      Ok(val)
     }
   }
 
@@ -1957,7 +2162,7 @@ impl BytecodeDispatcher {
       return self.array_sort(arr, args.first());
     }
     match callable {
-      Value::Native(nat, _) => nat.call(args),
+      Value::Native(nat, _) => nat.call(receiver, args),
       Value::Function(func, _) => {
         let fn_name = func.name.clone().unwrap_or_else(|| "anonymous".to_string());
         self.call_stack.push(fn_name);
@@ -1966,6 +2171,7 @@ impl BytecodeDispatcher {
         let saved_reg_base = self.frame_reg_base;
         let saved_param_base = self.frame_param_base;
         let saved_param_len = self.frame_param_len;
+        let saved_frame_offset = self.frame_offset;
 
         let reg_count = func.bytecode_array.register_count();
         let new_reg_base = self.reg_stack.len();
@@ -2020,13 +2226,14 @@ impl BytecodeDispatcher {
         self.frame_reg_base = saved_reg_base;
         self.frame_param_base = saved_param_base;
         self.frame_param_len = saved_param_len;
+        self.frame_offset = saved_frame_offset;
 
         self.accumulator = old_acc;
         self.call_stack.pop();
         res
       }
       other => Err(Error::ExecutionError(format!(
-        "{other:?} is not callable (receiver: {receiver:?})"
+        "TypeError: {other:?} is not callable (receiver: {receiver:?})"
       ))),
     }
   }
@@ -2043,11 +2250,12 @@ impl BytecodeDispatcher {
           let _ = new_obj.set_property(PROTO_KEY, proto.clone());
         }
         drop(guard);
-        let res = nat.call(args)?;
+        // 原生构造器一律新建对象, 不读 receiver
+        let res = nat.call(&Value::Undefined, args)?;
         if matches!(res, Value::Object(_) | Value::Array(_)) {
           Ok(res)
         } else {
-          Ok(new_obj)
+          Ok(Value::boxed_primitive(new_obj, res))
         }
       }
       Value::Function(_func, _) => {
@@ -2104,12 +2312,44 @@ impl BytecodeDispatcher {
     self.frame_reg_base = 0;
     self.frame_param_base = 0;
     self.frame_param_len = args.len() + 1;
+    self.pending_exception = None;
     self.run_bytecode_array(bytecode_array)
   }
 
+  /// 执行一帧字节码, 并在异常完成时按原版语义沿本帧 HandlerTable 展开
+  ///
+  /// 对标原版: 任何异常完成 (不区分 call 类指令、`throw`、属性缺失) 都要经过栈展开;
+  /// 指令分派本身不做跳转, 因此生成器不必为每种错误各写一遍查表逻辑
   fn run_bytecode_array(&mut self, bytecode_array: &BytecodeArray) -> Result<Value> {
+    let mut offset = 0;
+    loop {
+      match self.run_from(bytecode_array, offset) {
+        Ok(val) => return Ok(val),
+        Err(err) => {
+          let Some(target) = bytecode_array.find_catch_handler(self.frame_offset) else {
+            // 本帧无处理程序: 待抛值原样留给外层帧, 由宿主收到最终 Err
+            return Err(err);
+          };
+          // 引擎自身 raised 的错误也必须落成 Error 实例, 否则 catch 到的是裸字符串
+          self.accumulator = match self.pending_exception.take() {
+            Some(thrown) => thrown,
+            None => self.error_object(&err),
+          };
+          offset = target;
+        }
+      }
+    }
+  }
+
+  /// 从 `start_offset` 起分派字节码, 正常完成时返回累加器
+  #[inline(never)]
+  fn run_from(&mut self, bytecode_array: &BytecodeArray, start_offset: usize) -> Result<Value> {
     let mut it = BytecodeArrayIterator::new(bytecode_array.bytecodes());
+    if start_offset > 0 {
+      it.set_offset(start_offset)?;
+    }
     while !it.done() {
+      self.frame_offset = it.current_offset();
       let bc = it.current_bytecode();
       match bc {
         Bytecode::LdaZero => {
@@ -2196,10 +2436,11 @@ impl BytecodeDispatcher {
           let idx = it.get_unsigned_operand(0)? as usize;
           let _slot = it.get_unsigned_operand(1)?;
           if let Some(ConstantPoolEntry::String(name)) = bytecode_array.constants().get(idx) {
-            self
-              .globals
-              .write()
-              .insert(name.clone(), self.accumulator.clone());
+            self.set_global(name, self.accumulator.clone());
+            // 同一个全局在循环里被反复写: 已登记就跳过, 免得每次再多付一次 String 分配
+            if !self.dirty_globals.contains(name.as_str()) {
+              self.dirty_globals.insert(name.clone());
+            }
             it.advance();
           } else {
             return Err(Error::ConstantPoolOutOfBounds(idx));
@@ -2233,6 +2474,7 @@ impl BytecodeDispatcher {
           let slot = it.get_unsigned_operand(2)? as usize;
           let obj = self.get_register(obj_reg)?;
           if let Some(ConstantPoolEntry::String(name)) = bytecode_array.constants().get(idx) {
+            Self::check_property_receiver(&obj, name, false)?;
             let obj_ptr = match &obj {
               Value::Object(o) => Arc::as_ptr(o) as usize,
               Value::Function(_, props) | Value::Native(_, props) => Arc::as_ptr(props) as usize,
@@ -2274,6 +2516,7 @@ impl BytecodeDispatcher {
           let slot = it.get_unsigned_operand(2)? as usize;
           let obj = self.get_register(obj_reg)?;
           if let Some(ConstantPoolEntry::String(name)) = bytecode_array.constants().get(idx) {
+            Self::check_property_receiver(&obj, name, true)?;
             let obj_ptr = match &obj {
               Value::Object(o) => Arc::as_ptr(o) as usize,
               Value::Function(_, props) | Value::Native(_, props) => Arc::as_ptr(props) as usize,
@@ -2306,6 +2549,7 @@ impl BytecodeDispatcher {
             }
           }
           let key = self.accumulator.to_str_lossy();
+          Self::check_property_receiver(&obj, &key, false)?;
           self.accumulator = self.get_property_resolved(&obj, &key)?;
           it.advance();
         }
@@ -2332,6 +2576,7 @@ impl BytecodeDispatcher {
             }
           }
           let key_str = key.to_str_lossy();
+          Self::check_property_receiver(&obj, &key_str, true)?;
           obj.set_property(&key_str, self.accumulator.clone())?;
           it.advance();
         }
@@ -2359,7 +2604,8 @@ impl BytecodeDispatcher {
           let callable = self.get_register(callable_reg)?;
           let receiver = self.get_register(receiver_reg)?;
           let res = self.call_function(&callable, &receiver, &[]);
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallProperty1 => {
           let callable_reg = it.get_register_operand(0)?;
@@ -2370,7 +2616,8 @@ impl BytecodeDispatcher {
           let receiver = self.get_register(receiver_reg)?;
           let arg0 = self.get_register(arg0_reg)?;
           let res = self.call_function(&callable, &receiver, &[arg0]);
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallProperty2 => {
           let callable_reg = it.get_register_operand(0)?;
@@ -2383,7 +2630,8 @@ impl BytecodeDispatcher {
           let arg0 = self.get_register(arg0_reg)?;
           let arg1 = self.get_register(arg1_reg)?;
           let res = self.call_function(&callable, &receiver, &[arg0, arg1]);
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallProperty => {
           let callable_reg = it.get_register_operand(0)?;
@@ -2412,14 +2660,16 @@ impl BytecodeDispatcher {
             }
             self.call_function(&callable, &receiver, &call_args)
           };
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallUndefinedReceiver0 => {
           let callable_reg = it.get_register_operand(0)?;
           let _slot = it.get_unsigned_operand(1)?;
           let callable = self.get_register(callable_reg)?;
           let res = self.call_function(&callable, &Value::Undefined, &[]);
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallUndefinedReceiver1 => {
           let callable_reg = it.get_register_operand(0)?;
@@ -2428,7 +2678,8 @@ impl BytecodeDispatcher {
           let callable = self.get_register(callable_reg)?;
           let arg0 = self.get_register(arg0_reg)?;
           let res = self.call_function(&callable, &Value::Undefined, &[arg0]);
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallUndefinedReceiver2 => {
           let callable_reg = it.get_register_operand(0)?;
@@ -2439,7 +2690,8 @@ impl BytecodeDispatcher {
           let arg0 = self.get_register(arg0_reg)?;
           let arg1 = self.get_register(arg1_reg)?;
           let res = self.call_function(&callable, &Value::Undefined, &[arg0, arg1]);
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CallUndefinedReceiver => {
           let callable_reg = it.get_register_operand(0)?;
@@ -2462,7 +2714,8 @@ impl BytecodeDispatcher {
             }
             self.call_function(&callable, &Value::Undefined, &call_args)
           };
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::Construct => {
           let ctor_reg = it.get_register_operand(0)?;
@@ -2485,7 +2738,8 @@ impl BytecodeDispatcher {
             }
             self.construct(&ctor, &ctor_args)
           };
-          self.handle_call_result(res, &mut it, bytecode_array)?;
+          self.accumulator = res?;
+          it.advance();
         }
         Bytecode::CreateArrayLiteral => {
           let _entry = it.get_unsigned_operand(0)?;
@@ -2512,74 +2766,63 @@ impl BytecodeDispatcher {
         }
         Bytecode::Add => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.add(&self.accumulator);
+          // Add 的 hint 是 default (Date 因此走 toString), 其余算术是 number
+          self.numeric_bin_op(reg, false, Value::add)?;
           it.advance();
         }
         Bytecode::Sub => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.sub(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::sub)?;
           it.advance();
         }
         Bytecode::Mul => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.mul(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::mul)?;
           it.advance();
         }
         Bytecode::Div => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.div(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::div)?;
           it.advance();
         }
         Bytecode::Mod => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.mod_op(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::mod_op)?;
           it.advance();
         }
         Bytecode::Exp => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.exp(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::exp)?;
           it.advance();
         }
         Bytecode::BitwiseOr => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.bitwise_or(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::bitwise_or)?;
           it.advance();
         }
         Bytecode::BitwiseAnd => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.bitwise_and(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::bitwise_and)?;
           it.advance();
         }
         Bytecode::BitwiseXor => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.bitwise_xor(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::bitwise_xor)?;
           it.advance();
         }
         Bytecode::ShiftLeft => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.shift_left(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::shift_left)?;
           it.advance();
         }
         Bytecode::ShiftRight => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.shift_right(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::shift_right)?;
           it.advance();
         }
         Bytecode::ShiftRightLogical => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = lhs.shift_right_logical(&self.accumulator);
+          self.numeric_bin_op(reg, true, Value::shift_right_logical)?;
           it.advance();
         }
         Bytecode::Inc => {
@@ -2591,11 +2834,13 @@ impl BytecodeDispatcher {
           it.advance();
         }
         Bytecode::Negate => {
-          self.accumulator = self.accumulator.negate();
+          let primitive = self.acc_primitive()?;
+          self.accumulator = primitive.negate();
           it.advance();
         }
         Bytecode::BitwiseNot => {
-          self.accumulator = self.accumulator.bitwise_not();
+          let primitive = self.acc_primitive()?;
+          self.accumulator = primitive.bitwise_not();
           it.advance();
         }
         Bytecode::LogicalNot | Bytecode::ToBooleanLogicalNot => {
@@ -2607,13 +2852,23 @@ impl BytecodeDispatcher {
           it.advance();
         }
         Bytecode::ToNumber => {
-          self.accumulator = Value::Number(self.accumulator.to_number());
+          let primitive = self.acc_primitive()?;
+          self.accumulator = Value::Number(primitive.to_number());
           it.advance();
         }
         Bytecode::TestEqual => {
           let reg = it.get_register_operand(0)?;
+          // 规范 IsLooselyEqual 在 ToPrimitive 之前先对 null/undefined 短路。`x == null` 是
+          // 解释器循环里最高频的比较之一, 若先去转换, 每次 valueOf/toString 属性回溯会把整段循环拖死
           let lhs = self.get_register_ref(reg)?;
-          self.accumulator = Value::Boolean(lhs.test_equal(&self.accumulator));
+          if matches!(lhs, Value::Null | Value::Undefined)
+            || matches!(self.accumulator, Value::Null | Value::Undefined)
+          {
+            self.accumulator = Value::Boolean(lhs.test_equal(&self.accumulator));
+            it.advance();
+            continue;
+          }
+          self.compare_bin_op(reg, false, Value::test_equal)?;
           it.advance();
         }
         Bytecode::TestEqualStrict => {
@@ -2624,26 +2879,22 @@ impl BytecodeDispatcher {
         }
         Bytecode::TestLessThan => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = Value::Boolean(lhs.test_less_than(&self.accumulator));
+          self.compare_bin_op(reg, true, Value::test_less_than)?;
           it.advance();
         }
         Bytecode::TestGreaterThan => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = Value::Boolean(lhs.test_greater_than(&self.accumulator));
+          self.compare_bin_op(reg, true, Value::test_greater_than)?;
           it.advance();
         }
         Bytecode::TestLessThanOrEqual => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = Value::Boolean(lhs.test_less_than_or_equal(&self.accumulator));
+          self.compare_bin_op(reg, true, Value::test_less_than_or_equal)?;
           it.advance();
         }
         Bytecode::TestGreaterThanOrEqual => {
           let reg = it.get_register_operand(0)?;
-          let lhs = self.get_register_ref(reg)?;
-          self.accumulator = Value::Boolean(lhs.test_greater_than_or_equal(&self.accumulator));
+          self.compare_bin_op(reg, true, Value::test_greater_than_or_equal)?;
           it.advance();
         }
         Bytecode::TestInstanceOf => {
@@ -2734,22 +2985,20 @@ impl BytecodeDispatcher {
           it.advance();
         }
         Bytecode::Throw | Bytecode::ReThrow => {
-          let current_offset = it.current_offset();
-          if let Some(target) = Self::find_catch_handler(bytecode_array, current_offset) {
-            it.set_offset(target)?;
-          } else {
-            let msg = if let Value::Object(ref o) = self.accumulator {
+          // 只记录待抛值并终止本帧, 由 run_bytecode_array 统一查 HandlerTable 展开
+          let thrown = take(&mut self.accumulator);
+          let msg = match &thrown {
+            Value::Object(o) => {
               let g = o.read();
-              if let Some(m) = g.get("message") {
-                format!("Error: {}", m.to_string_lossy())
-              } else {
-                format!("{:?}", g)
+              match g.get("message") {
+                Some(m) => format!("Error: {}", m.to_string_lossy()),
+                None => format!("{:?}", g),
               }
-            } else {
-              self.accumulator.to_string_lossy()
-            };
-            return Err(Error::ExecutionError(msg));
-          }
+            }
+            other => other.to_string_lossy(),
+          };
+          self.pending_exception = Some(thrown);
+          return Err(Error::ExecutionError(msg));
         }
         Bytecode::ForInEnumerate => {
           let receiver_reg = it.get_register_operand(0)?;

@@ -768,7 +768,7 @@ pub fn stmt_to_v8_ast_scoped(
       block,
       catch_param,
       catch_block,
-      finally_block: _,
+      finally_block,
     } => {
       let mut try_stmts = Vec::with_capacity(block.len());
       for s in block {
@@ -776,24 +776,44 @@ pub fn stmt_to_v8_ast_scoped(
       }
       let try_block = AstNodeFactory::new_block(0, try_stmts, false);
 
-      let mut catch_stmts = Vec::new();
-      if let Some(cb) = catch_block {
-        catch_stmts.reserve(cb.len());
-        for s in cb {
-          catch_stmts.push(stmt_to_v8_ast_scoped(s, locals, globals)?);
-        }
-      }
-      let catch_b = AstNodeFactory::new_block(0, catch_stmts, false);
-
       let var = catch_param.as_deref().map(AstRawString::from_utf8);
 
-      Some(AstNode::TryCatchStatement(
-        AstNodeFactory::new_try_catch_statement(
+      let core = match catch_block {
+        Some(cb) => {
+          let mut catch_stmts = Vec::with_capacity(cb.len());
+          for s in cb {
+            catch_stmts.push(stmt_to_v8_ast_scoped(s, locals, globals)?);
+          }
+          let catch_b = AstNodeFactory::new_block(0, catch_stmts, false);
+          AstNode::TryCatchStatement(AstNodeFactory::new_try_catch_statement(
+            0,
+            try_block,
+            catch_b,
+            var,
+            CatchPrediction::Caught,
+          ))
+        }
+        // 无 catch 时不能凭空造一个空的 TryCatch: 空 catch 会把异常吃掉, 让 finally 之外
+        // 的处理器永远收不到它 (对标原版: try/finally 直接生成 TryFinallyStatement)
+        None => AstNode::Block(try_block),
+      };
+
+      let fin_stmts = match finally_block {
+        Some(fb) if !fb.is_empty() => {
+          let mut v = Vec::with_capacity(fb.len());
+          for s in fb {
+            v.push(stmt_to_v8_ast_scoped(s, locals, globals)?);
+          }
+          v
+        }
+        _ => return Some(core),
+      };
+
+      Some(AstNode::TryFinallyStatement(
+        AstNodeFactory::new_try_finally_statement(
           0,
-          try_block,
-          catch_b,
-          var,
-          CatchPrediction::Caught,
+          AstNodeFactory::new_block(0, vec![core], false),
+          AstNodeFactory::new_block(0, fin_stmts, false),
         ),
       ))
     }
@@ -1043,9 +1063,8 @@ fn js_value_to_interp_with_visited(
       let guard = obj.read();
       let mut map = HashMap::default();
       for (k, v) in guard.iter() {
-        if k == "__proto__" || k == "constructor" || k == "prototype" {
-          continue;
-        }
+        // __proto__/constructor/prototype 必须一并带过去: 宿主 Error.prototype 上的 constructor
+        // 一旦被丢, `thrown.constructor.name` 这类规范要求的反射就全塌 (visited 集合保证成环链终止)
         if let Some(iv) = js_value_to_interp_with_visited(v, visited, depth + 1) {
           map.insert(k.clone(), iv);
         }
@@ -1064,7 +1083,7 @@ fn js_value_to_interp_with_visited(
         ));
       }
       let native_clone = native.clone();
-      let interp_fn = InterpNativeFn::from_context(native_clone, |nat, args| {
+      let interp_fn = InterpNativeFn::from_context(native_clone, |nat, _receiver, args| {
         let js_args: Vec<JsValue> = args.iter().map(JsValue::from).collect();
         match nat.call(&js_args) {
           Ok(ret) => Ok(js_value_to_interpreter_value(&ret).unwrap_or(InterpreterValue::Undefined)),
@@ -1091,7 +1110,7 @@ fn js_value_to_interp_with_visited(
           orig.clone()
         } else {
           let native_clone = native.clone();
-          InterpNativeFn::from_context(native_clone, |nat, args| {
+          InterpNativeFn::from_context(native_clone, |nat, _receiver, args| {
             let js_args: Vec<JsValue> = args.iter().map(JsValue::from).collect();
             match nat.call(&js_args) {
               Ok(ret) => {
@@ -1106,12 +1125,18 @@ fn js_value_to_interp_with_visited(
         ))
       } else {
         let func_data_clone = Arc::clone(func_data);
-        let interp_fn = InterpNativeFn::from_context(func_data_clone, |func_data_clone, args| {
+        let interp_fn = InterpNativeFn::from_context(func_data_clone, |func_data_clone, receiver, args| {
           let js_args: Vec<JsValue> = args.iter().map(JsValue::from).collect();
+          // 调用点的 this 必须带过去: 宿主预置脚本里的 Object.prototype.toString 这类方法只靠
+          // receiver 取接收者。receiver 为 Undefined 时保留 None, 沿用宿主自身的 this 解析
+          let this_opt = match receiver {
+            InterpreterValue::Undefined => None,
+            other => Some(JsValue::from(other)),
+          };
           let mut interp = Interpreter::for_cross_engine_call();
           match interp.invoke_function(
             &JsValue::Function(Arc::clone(func_data_clone)),
-            None,
+            this_opt,
             &js_args,
           ) {
             Ok(ret) => {
@@ -1132,7 +1157,7 @@ fn js_value_to_interp_with_visited(
       let _ = obj.set_property(GLOBAL_KEY, InterpreterValue::Boolean(re.global));
       let _ = obj.set_property(LAST_INDEX_KEY, InterpreterValue::Smi(0));
       let re_clone = Arc::clone(re);
-      let exec_fn = InterpNativeFn::from_context(re_clone, |re_clone, args| {
+      let exec_fn = InterpNativeFn::from_context(re_clone, |re_clone, _receiver, args| {
         let text_cow = match args.first() {
           Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
           Some(other) => Cow::Owned(other.to_string_lossy()),
@@ -1183,7 +1208,7 @@ fn js_value_to_interp_with_visited(
       let _ = obj.set_property(EXEC_KEY, InterpreterValue::new_native(exec_fn));
 
       let re_rep = Arc::clone(re);
-      let replace_fn = InterpNativeFn::from_context(re_rep, |re_rep, args| {
+      let replace_fn = InterpNativeFn::from_context(re_rep, |re_rep, _receiver, args| {
         let text_cow = match args.first() {
           Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
           Some(other) => Cow::Owned(other.to_string_lossy()),
@@ -1206,7 +1231,7 @@ fn js_value_to_interp_with_visited(
       let _ = obj.set_property(REPLACE_KEY, InterpreterValue::new_native(replace_fn));
 
       let re_split = Arc::clone(re);
-      let split_fn = InterpNativeFn::from_context(re_split, |re_split, args| {
+      let split_fn = InterpNativeFn::from_context(re_split, |re_split, _receiver, args| {
         let text_cow = match args.first() {
           Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
           Some(other) => Cow::Owned(other.to_string_lossy()),
@@ -1241,7 +1266,7 @@ fn js_value_to_interp_with_visited(
       let _ = obj.set_property(SPLIT_KEY, InterpreterValue::new_native(split_fn));
 
       let re_match = Arc::clone(re);
-      let match_fn = InterpNativeFn::from_context(re_match, |re_match, args| {
+      let match_fn = InterpNativeFn::from_context(re_match, |re_match, _receiver, args| {
         let text_cow = match args.first() {
           Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
           Some(other) => Cow::Owned(other.to_string_lossy()),
@@ -1288,7 +1313,7 @@ fn js_value_to_interp_with_visited(
       let _ = obj.set_property(MATCH_KEY, InterpreterValue::new_native(match_fn));
 
       let re_test = Arc::clone(re);
-      let test_fn = InterpNativeFn::from_context(re_test, |re_test, args| {
+      let test_fn = InterpNativeFn::from_context(re_test, |re_test, _receiver, args| {
         let text_cow = match args.first() {
           Some(InterpreterValue::String(s)) => Cow::Borrowed(s.as_str()),
           Some(other) => Cow::Owned(other.to_string_lossy()),
@@ -1307,14 +1332,30 @@ fn js_value_to_interp_with_visited(
 }
 
 /// 尝试以 Ignition 扁平字节码数组流调度执行语句序列 (支持外部全局环境双向同步)
+///
+/// 自建一张空全局表, 用于一次性执行与单元测试; 常驻执行请用
+/// [`try_execute_with_bytecode_in`], 由调用方持有表以复用绑定与引用身份。
+#[inline]
 pub fn try_execute_with_bytecode_and_env(
   stmts: &[Stmt],
   global_env: Option<&Environment>,
 ) -> Option<Result<JsValue>> {
+  try_execute_with_bytecode_in(stmts, global_env, &GlobalsTable::default())
+}
+
+/// 在全局表 `globals` 上执行语句序列
+///
+/// 表常驻 = 原版的 NativeContext: 段与段之间不再把上千个内建深转换一遍, 函数/对象也不会
+/// 因往返宿主而换成新副本 (`thrown.constructor === ErrCtor` 这类身份比较全靠它)。
+pub fn try_execute_with_bytecode_in(
+  stmts: &[Stmt],
+  global_env: Option<&Environment>,
+  globals: &GlobalsTable,
+) -> Option<Result<JsValue>> {
   let mut locals = HashSet::default();
   collect_stmts_vars(stmts, &mut locals);
 
-  let mut dispatcher = BytecodeDispatcher::new();
+  let mut dispatcher = BytecodeDispatcher::with_globals(Arc::clone(globals));
 
   // 若传入外部词法环境，将其中标量与对象全局变量注入字节码全局表 (逐层回溯父作用域，确保 arguments 与闭包变量完整导入)
   if let Some(env) = global_env {
@@ -1325,7 +1366,7 @@ pub fn try_execute_with_bytecode_and_env(
         if !dispatcher.has_global(k)
           && let Some(interp_val) = js_value_to_interpreter_value(v)
         {
-          dispatcher.set_global(k.clone(), interp_val);
+          dispatcher.set_global(k, interp_val);
         }
       }
       curr_env = curr.parent.as_deref();
@@ -1365,21 +1406,23 @@ pub fn try_execute_with_bytecode_and_env(
   match dispatcher.execute(&bytecode) {
     Ok(val) => {
       let table = dispatcher.global_table();
-      // 执行成功后，若有新全局变量写入，同步写回宿主环境 (先脱锁复制再批处理写,
+      // 执行成功后，把本次变更的全局同步写回宿主环境 (先脱锁复制再批处理写,
       // 免得持宿主写锁期间做深转换; 函数值必须带上这张表, 宿主回调它时才看得见全局)
       if let Some(env) = global_env {
-        let snapshot: Vec<(String, JsValue)> = table
-          .read()
-          .iter()
-          .map(|(k, v)| {
-            (
-              k.clone(),
-              interpreter_value_to_js_value_with_globals(v, table),
-            )
-          })
-          .collect();
+        let mut batch: Vec<(String, JsValue)> = Vec::new();
+        {
+          let guard = table.read();
+          for k in dispatcher.dirty_globals() {
+            if let Some(v) = guard.get(k) {
+              batch.push((
+                k.clone(),
+                interpreter_value_to_js_value_with_globals(v, table),
+              ));
+            }
+          }
+        }
         let mut guard = env.values.write();
-        for (k, v) in snapshot {
+        for (k, v) in batch {
           guard.insert(k, v);
         }
       }

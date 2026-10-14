@@ -265,7 +265,9 @@ fn test_real_test262_official_cases() -> Void {
 
   for case_path in cases {
     if let Ok(src) = fs::read_to_string(&case_path) {
-      run_with_harness(&src)?;
+      // 失败必须带上用例名: 官方用例只留断言文本时无法定位是哪个文件红了
+      run_with_harness(&src)
+        .map_err(|e| rs8::Error::RuntimeError(format!("{case_path}: {e}")))?;
     }
   }
 

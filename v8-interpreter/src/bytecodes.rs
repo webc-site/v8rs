@@ -751,9 +751,28 @@ impl Bytecode {
     BYTECODE_SIZES[scale.as_index()][self as usize] as usize
   }
 
+  /// u8 → 指令反查表
+  ///
+  /// `from_repr` 是 217 条分支的 match, 而取指是解释循环最热的一步, 每条指令都要重走;
+  /// 这里一次数组读搞定, 表外字节和原版 static_cast 一样落成 kIllegal。
+  pub const BYTE_DECODE: [Self; 256] = {
+    let mut table = [Self::Illegal; 256];
+    let mut i = 0usize;
+    while i < BYTECODE_COUNT {
+      match Self::from_repr(i as u8) {
+        Some(bc) => table[i] = bc,
+        None => {}
+      }
+      i += 1;
+    }
+    table
+  };
+
+  /// 取指 (原版 `static_cast<Bytecodes>(byte)`)
   #[inline]
-  pub fn from_byte(v: u8) -> Option<Self> {
-    Self::from_repr(v)
+  #[must_use]
+  pub const fn decode(v: u8) -> Self {
+    Self::BYTE_DECODE[v as usize]
   }
 
   #[inline]
