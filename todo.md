@@ -3,7 +3,7 @@
 ## 〇、口径
 
 - 原版: `v8/src` 约 187 万行 C++/Torque, 48 个一级代码目录
-- Rust 侧现状: 90 个 crate, `src/` 实测 410,787 行 (原版的 22%)；其中 rs8 依赖闭包内 160k 行, 闭包外 250k 行 (61%)
+- Rust 侧现状: 93 个 crate, `src/` 实测 410,787 行 (原版的 22%)；其中 rs8 依赖闭包内 20 个 crate / 16.0 万行, 闭包外 72 个 crate / 25.08 万行 (61%)
 - 方法: `.agents/skills/transpile` 五步流; 规范: `.agents/skills/rust_review`; 审查: [review.md](review.md); 验收: [docs/verification_workflow.md](docs/verification_workflow.md)
 - 符号理解: Rust 侧 `codegraph explore "<符号>"` (v8/ 已 includeIgnored); 原版直接读源码 + `BUILD.gn` deps
 - 状态: `- [x]` 已冻结 / `- [ ]` 未冻结; 进行中在行尾标 `(开发中)` / `(审查环中)`
@@ -27,7 +27,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 | 实际执行 | `rs8/src/runtime/interpreter.rs:878` `run()` → `:886` `execute()` → `:1184` `eval_stmt()` / `:1464` `eval_expr()` | 自有 Lexer/Parser/AST 递归求值 |
 | 真引擎 | `v8-interpreter` 14,234 行、0 桩, 入口 `BytecodeGenerator::generate` + `BytecodeDispatcher::execute` | 完整, 但无人驱动 |
 | 唯一字节码通路 | `rs8/src/runtime/interpreter.rs:2452` `run_bytecode()` → `rs8/src/runtime/bytecode_bridge.rs:1235` | 生产调用点仅 `v8-benchmarks/src/lib.rs:248` 与 `rs8/tests/bytecode_test.rs`; CLI 不调 |
-| 静默降级 | `interpreter.rs:2459-2461` bridge 返回 `None` 即回落 `interpreter.execute()`; `bytecode_bridge.rs` 有 8 处 `return None` | 走没走字节码不可观测, 违反"拒绝声明假象" |
+| 静默降级 | `interpreter.rs:2459-2461` — bridge 返回 `None` 即回落 `interpreter.execute()`; `bytecode_bridge.rs` 内 30 处 `?` 早退 + 2 处 `=> None` 兜底臂 | **降级是整程序粒度**: 任一 AST 节点转换失败, 整个脚本退回简易解释器, 且不可观测 |
 
 结论: **链路断在 `main.rs` → `run()` 这一层**。`v8-interpreter` / `v8-objects-maps` / `v8-ic` / `v8-runtime` / `v8-heap-*` 五段 V8 运行时段落在链路外空转。
 
@@ -95,10 +95,10 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 
 | 项 | 数量 | 说明 |
 | --- | --- | --- |
-| 未用 pub 符号 | 87 处 / 30 文件 / 23 crate | `v8-codegen-arm64/instructions.rs` 8 处、`v8-compiler-frontend/graph_assembler.rs` 9 处最集中 |
+| 未用 pub 符号 | 87 处 / 31 文件 / 23 crate | 一半集中在链路外 crate: `v8-maglev-frontend/src/graph.rs` 32 处、`v8-compiler-frontend/src/graph_assembler.rs` 10 处、`v8-codegen-arm64/src/instructions.rs` 8 处; 链路内的关键信号是 `v8-execution-isolate/src/lib.rs` 3 处与 `v8-interpreter/src/lib.rs` 2 处 |
 | 冗余/错放依赖 | 34 处 | 未用 `log` 17、错放 `log` 5、未用 `humansize` 6、未用 `libc` 2, 另有 `unicode-normalization` `unicode-ident` `criterion` `rusty_alloc-api` 各 1 |
 | `todo!()` / `unimplemented!()` 残留 | 410 处 / 23 crate | 详见 四 各行; 大头 `v8-heap-core` 70、`v8-wasm-core` 52、`v8-objects-js-async` 43、`v8-objects-collections` 32 |
-| rs8 依赖闭包 | 20 / 90 crate | 闭包外 250,796 行 (61%) |
+| rs8 依赖闭包 | 20 / 93 crate (含 rs8 自身) | 闭包外 72 个 crate, `src/` 250,796 行 (占 61%) |
 
 待处置 (下一轮清账, 按 2.2 分类):
 
@@ -116,7 +116,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 
 - `rs8/src/main.rs:60,72` 与 `rs8/src/d8.rs:261` 的入口从 `run_js` / `Interpreter::run` 切到 `run_bytecode`
 - 删除 `interpreter.rs:2459-2461` 的静默回落, 未覆盖改为显式 `Err(Unsupported)` 冒泡到 CLI 报错
-- `bytecode_bridge.rs` 8 处 `return None` 逐个补或逐个变成硬错误
+- `bytecode_bridge.rs` 的 30 处 `?` 早退与 2 处 `=> None` 逐个补齐, 补不了的变成硬 `Err(Unsupported)`, 不许再返回 `None`
 - 加覆盖率可观测: 输出 `--print-bytecode-coverage`, 报告实际走字节码的语句数/总数
 - 准入: test262 与 `./test.sh` 全绿 + `node ./tool/benchRun.js` 不快于 AST 版则先补 bridge 缺口
 
@@ -164,9 +164,9 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 - `v8-maglev-*` 试点真实指令选择与 regalloc, 再推 `v8-turboshaft` + `v8-compiler-backend` (两者现状 5.4k/2.6k, 原版 87k/58k, 需按原版重建)
 - 发布构建按 [docs/pgo.md](docs/pgo.md) 串联真实负载训练
 
-### 16.x 旧"四大瓶颈"条目消账
+### 3.1 旧「四大瓶颈」条目消账
 
-旧 十六 的四条根因 (寄存器堆分配 / HashMap 属性 / 无 IC / 无 JIT) 已并入上面 A→H; "跑错引擎"这一条旧文档未列, 实为最重的一条, 见 1.1。
+上一版看板 十六 的四条根因 (寄存器堆分配 / HashMap 属性 / 无 IC / 无 JIT) 已并入上面 A→H; "跑错引擎"这一条旧文档未列, 实为最重的一条, 见 1.1。
 
 ---
 
@@ -206,7 +206,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 ### L3 对象与内存层
 
 - `- [x]` v8-objects-strings | 9 | 5.6 | 0 | 闭包 | StringShape/Flat/哈希
-- `- [ ]` v8-objects-arrays | 6k? | 6.3 | 13 | 外 | 13 桩; FixedArray 族 (战役 C 的 PropertyArray 底座)
+- `- [ ]` v8-objects-arrays | — | 6.3 | 13 | 外 | 13 桩; FixedArray 族 (战役 C 的 PropertyArray 底座)
 - `- [ ]` v8-objects-maps | 15 | 5.5 | 0 | 外 | 桩 78→0; **隐藏类无运行时消费者** → 战役 C
 - `- [ ]` v8-objects-collections | 15 | 6.9 | 32 | 外 | 32 桩
 - `- [x]` v8-objects-js-core | 25 | 1.8 | 0 | 外 | 冻结但仅剩骨架 (7%), JSObject 未接运行时 → 战役 C/F
@@ -289,7 +289,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 - `- [x]` v8-dumpling | 1 | 0.9 | 0 | 外 | —
 - `- [x]` v8-fuzzilli | 0.8 | 0.6 | 0 | 外 | fuzzing 集成, 不阻塞
 - `- [ ]` rs8 | 15 | 9.1 | 0 | — | 9,062 行, 内含简易前端与求值器 → 战役 A/B/C 主战场
-- `- [ ]` rs8-capi | 10 | 0.7 | 0 | 外 | 仅封装简易解释器, 无 1:1 C ABI 面 (旧 九)
+- `- [ ]` rs8-capi | 10 | 0.7 | 0 | 外 | 仅封装简易解释器, 无 1:1 C ABI 面
 - `- [ ]` v8-benchmarks | — | 0.5 | 0 | — | 评测 harness, 非引擎; `run_bytecode` 当前唯一生产调用点
 
 ---
@@ -318,7 +318,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 
 - 内建与字节码分派器依赖编译器后端: `codegen/code-stub-assembler.h` include `src/compiler/code-assembler.h`; Ignition handler 由 `interpreter-generator*.cc` 经 CSA/TSA 生成 → CSA 内建与 handler 都要 L5 后端才能出机器码
 - 快照在启动关键路径: V8 无"无快照"模式, 构建期 mksnapshot 生成 embedded blob → v8-snapshot + v8-init 必须在引擎引导前就位
-- objects 与 heap 循环依赖: C++ 同属 `v8_base_without_compiler` 一个 target (objects 120 文件引 heap, heap 98 引 objects, 41 头引 `execution/isolate`); Rust 破环策略见 七
+- objects 与 heap 循环依赖: C++ 同属 `v8_base_without_compiler` 一个 target (objects 120 文件引 heap, heap 98 引 objects, 41 头引 `execution/isolate`); Rust 破环策略见 十三
 
 规模实测 (原版): codegen/x64 18.3k + diagnostics/x64 3.8k; codegen/arm64 26.8k + diagnostics/arm64 5.0k; turboshaft 87k; builtins 全目录 135k; wasm/interpreter 29k; heap/cppgc-internal 15.9k + cppgc-js 3.2k
 
@@ -411,13 +411,15 @@ PR 必过 lint + test + miri + audit; 每日/每周 job 失败自动开 issue �
 
 ## 八、开源库复用策略
 
+### 8.1 三档原则与 SIMD
+
 原则: 语义绑定处 (JS 可见行为) 一律自研转写; 非语义绑定处 (平台/诊断/工具/纯算法内核) 用高性能成熟库。新依赖 `cargo add` 且必须登记本章, Reviewer 按 8.3 核对。
 
 三档: 直接用 (库即最终实现) | 内核用 (库做核心算法, 外层语义自写) | 仅 oracle (不进产品代码, 只作差分对照)。
 
 SIMD 统一 `fearless_simd` (Linebender): 运行时分发 SSE4.2/AVX2/AVX-512/NEON, 一套代码覆盖 x64+arm64; 禁 `safe_arch`/`wide`/`std::simd`。
 
-分包映射:
+### 8.2 分包映射
 
 - v8-base — `fastrand`+`getrandom` (仅种子源, 引擎内 XorShift128+ 自研) / `parking_lot` / `coarsetime` / `crossbeam-deque` / `fearless_simd`
 - v8-base-platform — `rustix` 或 `libc` / `memmap2`
@@ -444,9 +446,13 @@ SIMD 统一 `fearless_simd` (Linebender): 运行时分发 SSE4.2/AVX2/AVX-512/NE
 - `fearless_simd` 位点: CopyChars/UTF 转码/大块比较 + scanner 空白批量 + json 扫描 + builtins 字符串搜索 (memcpy 类交编译器自动向量化)
 - asmkit `jit` allocator 不采用: V8 代码内存是 code range cage 体系一部分, 独立 JIT 堆语义不匹配; W^X/双映射思路仅参考, 落地在 v8-heap-core 自研
 
-禁用清单: Math.random (XorShift128+ 1:1, 禁 rand 替换) | Number→String / parseFloat / parseInt (zmij/itoa 只作内核) | BigInt (asIntN/布局/wasm 绑定) | 字符串 hash 与 identity hash (seed 与迭代序语义绑定) | JSON.parse/stringify (转义/代理对/数字格式/键序是 ECMAScript 语义) | RegExp (回溯 + lastIndex) | String 布局 (Seq/Sliced/Cons/Thin 是 snapshot 兼容前提, 禁 hipstr 进引擎字符串层) | GC/heap/sandbox (禁带全局分配器或线程假设的库)
+### 8.3 禁用清单
 
-引入流程: `cargo add` (dev 用 `-D`) → 登记 8.2 → Reviewer 核 8.3 → `cargo udeps` + `cargo shear` 无冗余。白名单外的库须在审查环给出依据 (性能数据 / 替代了哪段自研 / 语义边界)。
+Math.random (XorShift128+ 1:1, 禁 rand 替换) | Number→String / parseFloat / parseInt (zmij/itoa 只作内核) | BigInt (asIntN/布局/wasm 绑定) | 字符串 hash 与 identity hash (seed 与迭代序语义绑定) | JSON.parse/stringify (转义/代理对/数字格式/键序是 ECMAScript 语义) | RegExp (回溯 + lastIndex) | String 布局 (Seq/Sliced/Cons/Thin 是 snapshot 兼容前提, 禁 hipstr 进引擎字符串层) | GC/heap/sandbox (禁带全局分配器或线程假设的库)
+
+### 8.4 引入流程
+
+`cargo add` (dev 用 `-D`) → 登记 8.2 → Reviewer 核 8.3 → `cargo udeps` + `cargo shear` 无冗余。白名单外的库须在审查环给出依据 (性能数据 / 替代了哪段自研 / 语义边界)。
 
 ---
 
@@ -506,7 +512,7 @@ SIMD 统一 `fearless_simd` (Linebender): 运行时分发 SSE4.2/AVX2/AVX-512/NE
 - `- [ ]` 11.10 函数反射 (built-ins/Function): call/apply/bind; arguments 长度、索引映射与迭代特性
 - `- [ ]` 11.11 核心内建 (Array/String/Number/Boolean/Symbol/BigInt): 原型方法与规范一致
 
-门禁: 每个套件先研读 `v8/src` 对应 C++ 实现 → `./tool/test262/v8rs.py` 目标目录 100% → `./test.sh` 无回归 → 子代理读 `.agents/skills/rust_review` 审查。**注意**: 当前 `rs8` 跑的是简易解释器, 战役 A 前修的都是将被删除的副本, 修前须确认该项是否在 bridge 的 8 个降级点上。
+门禁: 每个套件先研读 `v8/src` 对应 C++ 实现 → `./tool/test262/v8rs.py` 目标目录 100% → `./test.sh` 无回归 → 子代理读 `.agents/skills/rust_review` 审查。**注意**: 当前 `rs8` 跑的是简易解释器, 战役 A 前修的都是将被删除的副本; 每个套件开工前先跑 `--print-bytecode-coverage` (该开关由战役 A 引入) 确认该目录没整段落回 AST 路径, 否则修的是副本而不是引擎。
 
 ---
 

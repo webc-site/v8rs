@@ -12,6 +12,7 @@ use std::{
 
 use gxhash::HashMap;
 use itoa::Buffer;
+use log::debug;
 use parking_lot::RwLock;
 use v8_numbers::{double_to_int32, double_to_uint32};
 
@@ -61,9 +62,47 @@ impl From<ExecSignal> for Error {
   }
 }
 
+/// 执行路径选择模式
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+pub enum ExecMode {
+  /// 优先走 V8 Ignition 字节码引擎, 不支持的构造回落 AST 求值器
+  #[default]
+  BytecodeFirst,
+  /// 强制 AST 求值器, 用于差分对照与回归定位
+  AstOnly,
+  /// 只允许字节码引擎, 不支持即报错, 用于战役 A 收官门禁
+  BytecodeOnly,
+}
+
+/// 执行路径计数, 用于量化主链路真实打通比例
+#[derive(Debug, Default, Clone, Copy)]
+pub struct ExecStats {
+  /// 进入调度的程序 (脚本片段) 总数
+  pub total: usize,
+  /// 由字节码引擎完成的次数
+  pub bytecode: usize,
+  /// 桥接层不支持而回落 AST 的次数
+  pub fallback: usize,
+  /// 字节码执行报错后被回落吞掉的次数 (引擎缺陷信号, 应为 0)
+  pub err_fallback: usize,
+}
+
+impl ExecStats {
+  /// 字节码路径占比, 战役 A 的准入门禁读数
+  pub fn coverage(&self) -> f64 {
+    if self.total == 0 {
+      0.0
+    } else {
+      self.bytecode as f64 / self.total as f64
+    }
+  }
+}
+
 pub struct Interpreter {
   pub global: Arc<Environment>,
   pub call_stack: Vec<String>,
+  pub mode: ExecMode,
+  pub stats: ExecStats,
 }
 
 impl Default for Interpreter {
@@ -79,6 +118,8 @@ impl Interpreter {
     Self {
       global,
       call_stack: Vec::new(),
+      mode: ExecMode::default(),
+      stats: ExecStats::default(),
     }
   }
 
@@ -846,6 +887,9 @@ impl Interpreter {
         let mut interp = Interpreter {
           global: Arc::clone(env),
           call_stack: Vec::new(),
+          // 内建预置引导必须走 AST: 此时全局作用域尚未建完, 字节码桥会反向依赖它
+          mode: ExecMode::AstOnly,
+          stats: ExecStats::default(),
         };
         for s in &stmts {
           let _ = interp.eval_stmt(s, env);
@@ -874,13 +918,52 @@ impl Interpreter {
     }
   }
 
-  /// 执行代码片段
+  /// 执行代码片段: 先词法语法, 再按 mode 选执行路径
   pub fn run(&mut self, source: &str) -> Result<JsValue> {
     let mut lexer = Lexer::new(source);
     let tokens = lexer.tokenize_all()?;
     let mut parser = Parser::new(tokens);
     let program = parser.parse_program()?;
-    self.execute(&program)
+    self.dispatch(&program)
+  }
+
+  /// 按 ExecMode 调度执行, 并把每条程序的实测走向计入 stats
+  pub fn dispatch(&mut self, stmts: &[Stmt]) -> Result<JsValue> {
+    self.stats.total += 1;
+    if self.mode == ExecMode::AstOnly {
+      return self.execute(stmts);
+    }
+    match try_execute_with_bytecode_and_env(stmts, Some(&self.global)) {
+      Some(Ok(val)) => {
+        self.stats.bytecode += 1;
+        Ok(val)
+      }
+      Some(Err(err)) if self.mode == ExecMode::BytecodeFirst => {
+        // 回落会掩盖引擎缺陷, 只在 BytecodeFirst 下允许, 且必须留下计数
+        self.stats.err_fallback += 1;
+        debug!("字节码执行失败, 回落 AST: {err}");
+        self.execute(stmts)
+      }
+      Some(Err(err)) => Err(err),
+      None if self.mode == ExecMode::BytecodeFirst => {
+        self.stats.fallback += 1;
+        self.execute(stmts)
+      }
+      None => Err(Error::Unsupported("该脚本无法由字节码引擎执行".to_string())),
+    }
+  }
+
+  /// 输出主链路覆盖率读数
+  pub fn print_coverage(&self) {
+    let s = self.stats;
+    println!(
+      "bytecode-coverage: {:.1}% (total={} bytecode={} ast_fallback={} err_fallback={})",
+      s.coverage() * 100.0,
+      s.total,
+      s.bytecode,
+      s.fallback,
+      s.err_fallback
+    );
   }
 
   pub fn execute(&mut self, stmts: &[Stmt]) -> Result<JsValue> {
@@ -2438,25 +2521,19 @@ impl Interpreter {
   }
 }
 
-/// 执行一段完整的 JavaScript 源码并返回最终计算值
+/// 执行一段完整的 JavaScript 源码: 字节码引擎优先, 不支持的构造回落 AST
 pub fn run_js(source: &str) -> Result<JsValue> {
-  let mut lexer = Lexer::new(source);
-  let tokens = lexer.tokenize_all()?;
-  let mut parser = Parser::new(tokens);
-  let program = parser.parse_program()?;
-  let mut interpreter = Interpreter::new();
-  interpreter.execute(&program)
+  Interpreter::new().run(source)
 }
 
-/// 优先以 V8 Ignition 扁平字节码与寄存器虚拟机调度执行 JavaScript 源码
+/// 与 run_js 同路径, 保留给基准与既有调用方
 pub fn run_bytecode(source: &str) -> Result<JsValue> {
-  let mut lexer = Lexer::new(source);
-  let tokens = lexer.tokenize_all()?;
-  let mut parser = Parser::new(tokens);
-  let program = parser.parse_program()?;
-  let mut interpreter = Interpreter::new();
-  if let Some(Ok(res)) = try_execute_with_bytecode_and_env(&program, Some(&interpreter.global)) {
-    return Ok(res);
-  }
-  interpreter.execute(&program)
+  run_js(source)
+}
+
+/// 只允许 Ignition 字节码引擎执行, 不支持即报错, 战役 A 收官门禁用
+pub fn run_strict_bytecode(source: &str) -> Result<JsValue> {
+  let mut interp = Interpreter::new();
+  interp.mode = ExecMode::BytecodeOnly;
+  interp.run(source)
 }

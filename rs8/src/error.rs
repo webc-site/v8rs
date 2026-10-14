@@ -16,6 +16,8 @@ pub enum Error {
   TypeError(String),
   #[error("JS 抛出异常: {0}")]
   Thrown(JsValue),
+  #[error("字节码链路不支持的构造: {0}")]
+  Unsupported(String),
   #[error(transparent)]
   IoError(#[from] io::Error),
 }

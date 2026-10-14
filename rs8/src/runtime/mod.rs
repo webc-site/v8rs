@@ -10,5 +10,7 @@ pub mod value;
 
 pub use bytecode_bridge::try_execute_with_bytecode;
 pub use environment::Environment;
-pub use interpreter::{Interpreter, run_bytecode, run_js};
+pub use interpreter::{
+  ExecMode, ExecStats, Interpreter, run_bytecode, run_js, run_strict_bytecode,
+};
 pub use value::JsValue;
