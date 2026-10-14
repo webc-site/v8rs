@@ -18,7 +18,7 @@ fn print_help() {
   println!("  --help, -h         Print this help message and exit");
   println!("  --shell            Run interactive shell");
   println!("  --print-bytecode-coverage  打印主链路 (Ignition 字节码) 实测覆盖率");
-  println!("  --no-bytecode      强制走 AST 求值器, 用于差分对照");
+  println!("  --bytecode-first   优先走 Ignition 字节码引擎, 不支持的构造回落 AST 求值器");
   println!("  --bytecode-only    只允许字节码引擎, 不支持即报错");
 }
 
@@ -53,7 +53,7 @@ fn main() {
         }
       }
       "--print-bytecode-coverage" => print_coverage = true,
-      "--no-bytecode" => mode = ExecMode::AstOnly,
+      "--bytecode-first" => mode = ExecMode::BytecodeFirst,
       "--bytecode-only" => mode = ExecMode::BytecodeOnly,
       arg if arg.starts_with('-') => {
         // 忽略其他 V8 旗标，如 --expose-gc, --predictable 等
@@ -73,11 +73,11 @@ fn main() {
   let mut interp = Interpreter::new();
   interp.mode = mode;
 
-  if let Some(code) = eval_code {
-    if let Err(err) = interp.run(code) {
-      eprintln!("rs8: {err}");
-      exit(1);
-    }
+  if let Some(code) = eval_code
+    && let Err(err) = interp.run(code)
+  {
+    eprintln!("rs8: {err}");
+    exit(1);
   }
 
   for path in &script_paths {

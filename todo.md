@@ -8,7 +8,7 @@
 - 符号理解: Rust 侧 `codegraph explore "<符号>"` (v8/ 已 includeIgnored); 原版直接读源码 + `BUILD.gn` deps
 - 状态: `- [x]` 已冻结 / `- [ ]` 未冻结; 进行中在行尾标 `(开发中)` / `(审查环中)`
 - 开发日志: 每 crate 一篇 `log/<crate名>.md` (约定, 表内不再逐个列链接); 编排全局 `log/orchestrator.md`; Wave 1-12 派发台账 `log/waves.md`; 转换脚本覆盖基线 `golden/tool-coverage.json`
-- 测试基线: `./test.sh` 2898 项 100% 绿 (上一轮实测)
+- 测试基线: `./test.sh` 2898 项 100% 绿 (默认 `AstOnly`); 同口径切 `--bytecode-first` 为 2885 绿 / 13 红, 13 项根因见 三·战役 A 欠账清单
 - 本文档只留当前有效结论。历史基线数字、每轮收敛计数一律沉到 `log/`, 看板不重复记载
 
 > 绿灯只证明各 crate 自洽, 不证明引擎能跑。**当前 2898 项测试没有一项走通 CLI → V8 引擎主链路**, 详见 一。
@@ -23,13 +23,15 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 
 | 环节 | 证据 | 事实 |
 | --- | --- | --- |
-| CLI 入口 | `rs8/src/main.rs:60` `rs8/src/main.rs:72`、`rs8/src/d8.rs:261` | 调 `run_js()` / `Interpreter::run()` |
-| 实际执行 | `rs8/src/runtime/interpreter.rs:878` `run()` → `:886` `execute()` → `:1184` `eval_stmt()` / `:1464` `eval_expr()` | 自有 Lexer/Parser/AST 递归求值 |
-| 真引擎 | `v8-interpreter` 14,234 行、0 桩, 入口 `BytecodeGenerator::generate` + `BytecodeDispatcher::execute` | 完整, 但无人驱动 |
-| 唯一字节码通路 | `rs8/src/runtime/interpreter.rs:2452` `run_bytecode()` → `rs8/src/runtime/bytecode_bridge.rs:1235` | 生产调用点仅 `v8-benchmarks/src/lib.rs:248` 与 `rs8/tests/bytecode_test.rs`; CLI 不调 |
-| 静默降级 | `interpreter.rs:2459-2461` — bridge 返回 `None` 即回落 `interpreter.execute()`; `bytecode_bridge.rs` 内 30 处 `?` 早退 + 2 处 `=> None` 兜底臂 | **降级是整程序粒度**: 任一 AST 节点转换失败, 整个脚本退回简易解释器, 且不可观测 |
+| CLI 入口 | `rs8/src/main.rs` `interp.run()`、`rs8/src/d8.rs` `run_js()` | 单一 Interpreter 实例贯穿 `-e` 与全部脚本 |
+| 实际执行 | `interpreter.rs` `run()` → `dispatch()` → `execute()` → `eval_stmt()` / `eval_expr()` | AstOnly 下仍是自有 Lexer/Parser/AST 递归求值 |
+| 真引擎 | `v8-interpreter` 14,234 行、0 桩, 入口 `BytecodeGenerator::generate` + `BytecodeDispatcher::execute` | 已被 `dispatch()` 驱动, 但默认模式仍是 AST (欠账见 三·战役 A) |
+| 字节码通路 | `interpreter.rs` `dispatch()` → `bytecode_bridge.rs` `try_execute_with_bytecode_and_env()` | CLI `-e` / 多脚本 / 库入口共用一条通路, `--bytecode-first` `--bytecode-only` 可切换 |
+| 降级可观测性 | `ExecStats{total, bytecode, fallback}` + `--print-bytecode-coverage` | 降级只剩执行前的 `None` (转换不支持) 一种, 计入 `fallback`; 执行中的错误一律传播, 不再重放 |
 
 结论: **链路断在 `main.rs` → `run()` 这一层**。`v8-interpreter` / `v8-objects-maps` / `v8-ic` / `v8-runtime` / `v8-heap-*` 五段 V8 运行时段落在链路外空转。
+
+> 本节是断点定位依据, 保留原文。链路已按 三·战役 A 接通并加了实测计数; 默认执行态仍为 AST 求值器, 翻转条件见 三·战役 A 的欠账清单与准入。
 
 ### 1.2 三套并行重复实现 (拆分复用清单)
 
@@ -41,13 +43,14 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 
 ### 1.3 结构性性能根因 (慢 99% 不是"循环没优化")
 
-1. 跑错引擎: CLI 用递归树遍历, V8 的字节码寄存器机闲置
+1. 跑错引擎: CLI 用递归树遍历, V8 的字节码寄存器机闲置 (战役 A 已接通可实测, 默认翻转待欠账收口)
 2. 桥接固定税: `try_execute_with_bytecode_and_env` 每次调用按父作用域链逐层 `read()` 锁 + 全量 clone 全局表注入 dispatcher (`bytecode_bridge.rs:1243-1260`), 执行后再全量 `write()` 写回 (`:1294-1299`) — 开销与 JS 负载无关, 与全局变量数成正比
 3. AST→v8_ast 转换每条语句现场做, 无缓存; 每次 `run` 重新生成字节码
 4. 属性读写 = 读写锁原子争用 + 字符串哈希 + 冲突探测; 无 Map 快照、无 IC、无 FeedbackVector
 5. 函数帧 `vec![Value::Undefined; n]` 反复堆分配; `arguments` 无条件实例化并插全局哈希表
 6. 无堆 cage / 无写屏障 / 无 GC 参与: 对象靠 `Arc` + `rusty_alloc` 全局分配器; `v8-execution-isolate/src/isolate.rs:16-31` 的 `Isolate` 结构体根本没有 `Heap` 字段, 只有两处常量薄桥 (`lib.rs:25-42`)
 7. 无 JIT: 全部留在解释分派循环
+8. 跨引擎调用重建执行态: 宿主调解释器函数走 `rs8/src/runtime/value.rs:572` 每次 `BytecodeDispatcher::new()` (空全局表), 解释器调宿主 JS 函数走 `rs8/src/runtime/bytecode_bridge.rs:1036` 每次 `Interpreter::new()` —— 每次跨界调用都新建一套执行环境, 既是最贵的固定开销, 也是闭包/全局在跨界后不可见的根因 (战役 A 欠账 1)
 
 ### 1.4 "桩 0" 不等于"已实现" (看板读法警告)
 
@@ -105,6 +108,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 - [ ] D1 依赖清账: 删 34 处 shear 命中; 特别核对 `rusty_alloc-api` 被报未用与 十二.1 "全工作区接入" 的矛盾 (若确实只在 bench 二进制生效, 移到对应 crate)
 - [ ] D2 未用 pub 87 处分诊: 属 2.2 白名单的登记豁免; 属战役排期的挂战役号; 其余删除
 - [ ] D3 重复实现三份副本按 1.2 清单收敛, 计入 三 战役 A/B/C 的删除量
+- [ ] D4 战役 A 默认翻转: 收掉 三·战役 A 欠账 1-4, `./test.sh` 在 `--bytecode-first` 下全绿, 即把 `ExecMode::default()` 由 `AstOnly` 翻到 `BytecodeFirst`
 
 ---
 
@@ -114,16 +118,44 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 
 ### 战役 A: CLI 改驱真引擎 (先换驱动, 不加功能)
 
-- `rs8/src/main.rs:60,72` 与 `rs8/src/d8.rs:261` 的入口从 `run_js` / `Interpreter::run` 切到 `run_bytecode`
-- 删除 `interpreter.rs:2459-2461` 的静默回落, 未覆盖改为显式 `Err(Unsupported)` 冒泡到 CLI 报错
-- `bytecode_bridge.rs` 的 30 处 `?` 早退与 2 处 `=> None` 逐个补齐, 补不了的变成硬 `Err(Unsupported)`, 不许再返回 `None`
-- 加覆盖率可观测: 输出 `--print-bytecode-coverage`, 报告实际走字节码的语句数/总数
-- 准入: test262 与 `./test.sh` 全绿 + `node ./tool/benchRun.js` 不快于 AST 版则先补 bridge 缺口
+**已落地 (实测, 非计划)**
 
-### 战役 B: 前端合一, 删 rs8 自带词法/语法
+- 入口改为模式化调度: `ExecMode{AstOnly | BytecodeFirst | BytecodeOnly}` + `Interpreter::dispatch()` + `ExecStats` 计数; CLI 旗标 `--bytecode-first` / `--bytecode-only` / `--print-bytecode-coverage`; 单个 Interpreter 贯穿 `-e` 与多脚本, 全局作用域与 d8 一致
+- 根除"报错回退整段重放": 实测 `try_execute_with_bytecode_and_env` 的 `None` 全部产生于 `dispatcher.execute()` **之前** (转换期 `?`), `Some(Err)` 全在执行之后; 原 `BytecodeFirst` 分支在执行失败后重跑 AST, 把 print/赋值等副作用跑两遍。现规则: `None` → 回落并计数, `Some(Err)` → 直接传播
+- 补齐 `v8-interpreter` 六处语义缺口 (均以 `--no-bytecode` 为对照实测出来, 不是推断):
+  - `LdaGlobal` 读未声明名改抛 `ReferenceError` (原静默 `Undefined` → 拼写错误被吞成 NaN)
+  - 补 `LdaGlobalInsideTypeof` 全管道 (原版 37 号 opcode 此前只在枚举里声明, 生成器不发、分派器不收): `typeof 未声明名` 必须得 `"undefined"`
+  - `ArrayJoin` 对 `null/undefined/hole` 拼空串, 不再走 ToString (原得 `undefined-null-1`)
+  - 数组属性表补 `toString` (=`join(",")`), 否则落到 `Object.prototype.toString`
+  - `Value::to_number` 对对象走 ToPrimitive (时间戳槽 → `valueOf`), 原 `d2 - d1` 恒为 NaN
+  - `get_property_resolved` 先回溯接收者**自身**原型 (`Array/String/Number/Boolean.prototype`), 原来只回溯 `Object.prototype`, 预置脚本注入的 `Array.prototype.*` 全部丢失
+- 桥接层回写宿主不再丢函数自有属性: `interp_to_js` 原把带 props 的函数映射成无属性槽的 `JsValue::Native`, 现落成 `JsValue::Function(FunctionData)`, 测试框架 `assert.sameValue` / `assert.throws` 得以跨程序存活
+
+**当前默认仍是 `AstOnly`** —— 翻转的前提是下面 4 类欠账收掉且 `./test.sh` 在 `--bytecode-first` 下全绿。实测: 默认 AstOnly 时 2898/2898 绿; 切 BytecodeFirst 时 13 红 (2885 绿)。这 13 项在旧代码里同样跑不通, 只是被静默回落掩盖成"绿"。
+
+**战役 A 欠账清单 (4 类根因, 按修复收益排序)**
+
+1. **跨引擎调用丢执行上下文** — `value.rs:572` 每次调用新建 `BytecodeDispatcher::new()` (空全局表), `bytecode_bridge.rs:1036` 每次调用新建 `Interpreter::new()`。被调函数看不到宿主全局与闭包。修法: 把当前 dispatcher/environment 随 `NativeFn` 一起下传, 禁止在调用点重建执行态。占 9/13
+2. **无词法 Context 槽位** — 生成器用 `store_global` 模拟捕获 (`bytecode_generator.rs:1040,1057-1065`), 内层函数写外层 `var` 不生效 (期望 60 实测 55)。归 战役 D, 战役 A 先补 `captured_locals` 的真实上下文槽
+3. **`try/finally` 尾块未执行** — `catch` 已生效, `finally` 被跳过 (期望 16 实测 11)
+4. **`Value::Array` 无属性槽** — `set_property` 对非索引非 `length` 键静默 `Ok(())` (`bytecode_dispatcher.rs:957`), 数组上的具名属性写不进; 原型回溯已能救方法调用, 具名属性仍缺
+
+**准入**: `./test.sh` 在 `--bytecode-first` 下全绿 + `node ./tool/benchRun.js` 不快于 AST 版则先收上面 1-4, 不许把 `None` 再当成合法返回 (逐项转成真实实现或显式 `Err(Unsupported)`)。
+
+### 战役 B: 前端合一, 删 rs8 自带词法/语法 — **优先级提到 bridge 之前**
+
+实测依据 (200 个 `v8/test/mjsunit/*.js`, 同一口径三模式对照):
+
+| 模式 | 跑通 | 失败集 |
+| --- | --- | --- |
+| AST (默认) | 5/200 | 与下行仅差 1 个文件 |
+| `--bytecode-only` | 5/200 | 同上 |
+
+失败分类两模式一致: 语法解析 93 例 (`Unexpected prefix token Percent` 58 + 反引号 11 + `RParen` 9 + `Comma` 8 + `Colon` 7 等), 缺 mjsunit 测试前置库 56 例 (`assertEquals`/`assertTrue`/`assertFalse` not defined), 引擎相关仅 5 例。**通量的瓶颈是 rs8 自带词法/语法, 不是字节码桥** —— 原以为要先补 bridge, 数据推翻了这个排序。mjsunit 跑通率要动, 必须先换 `v8-parsing`+`v8-ast`。
 
 - rs8 的 `lexer.rs`+`parser.rs`+`ast.rs` (1,883 行) 由 `v8-parsing`+`v8-ast` (10,858 行) 取代
 - `bytecode_bridge.rs` 的 AST 转换层 (约 1,300 行) 随之整体删除
+- 前置库缺口另立子项: mjsunit 需要 `test/mjsunit/mjsunit.js` 作脚本前置, 当前 CLI 无 `--file` 前置机制 (对应 `tool/test262/v8rs.py` 口径)
 - 准入: `rs8/tests/*` + test262 全绿; `grep -rn 'eval_stmt\|eval_expr' rs8/src` 为空
 
 ### 战役 C: 值模型合一 + 属性接隐藏类
@@ -290,7 +322,7 @@ CLI 执行的是一台内置的简易 AST 树遍历解释器, 不是已转写完
 - `- [x]` v8-fuzzilli | 0.8 | 0.6 | 0 | 外 | fuzzing 集成, 不阻塞
 - `- [ ]` rs8 | 15 | 9.1 | 0 | — | 9,062 行, 内含简易前端与求值器 → 战役 A/B/C 主战场
 - `- [ ]` rs8-capi | 10 | 0.7 | 0 | 外 | 仅封装简易解释器, 无 1:1 C ABI 面
-- `- [ ]` v8-benchmarks | — | 0.5 | 0 | — | 评测 harness, 非引擎; `run_bytecode` 当前唯一生产调用点
+- `- [ ]` v8-benchmarks | — | 0.5 | 0 | — | 评测 harness, 非引擎; 走 `run_bytecode` (字节码优先), 与 CLI 默认模式不同 → 对比数字须同模式重测
 
 ---
 

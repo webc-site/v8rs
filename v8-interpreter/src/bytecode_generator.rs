@@ -1019,6 +1019,17 @@ impl BytecodeGenerator {
       self.builder.load_undefined()?;
       return Ok(());
     }
+    // typeof 的自由变量走 LdaGlobalInsideTypeof: 未声明名要得到 "undefined" 而非 ReferenceError
+    if unop.op == AstUnaryOp::TypeOf
+      && let AstNode::VariableProxy(ref vp) = *unop.expression
+    {
+      let name = vp.name.to_string_lossy();
+      if !self.locals.contains_key(&name) {
+        self.builder.load_global_inside_typeof(name, 0)?;
+        self.builder.type_of(0)?;
+        return Ok(());
+      }
+    }
     self.visit_node(&unop.expression)?;
     if unop.op == AstUnaryOp::TypeOf {
       self.builder.type_of(0)?;

@@ -9,7 +9,7 @@ use fancy_regex::Regex;
 use gxhash::HashMap;
 use itoa::Buffer;
 use parking_lot::RwLock;
-use v8_interpreter::{BytecodeDispatcher, Value};
+use v8_interpreter::{BytecodeDispatcher, TIME_KEY, TIMESTAMP_KEY, Value};
 use v8_numbers::{double_to_int32, double_to_uint32};
 
 use crate::{
@@ -1105,8 +1105,6 @@ pub const GET_SYM_TO_PRIMITIVE: &str = "@@get:@@symbol:Symbol.toPrimitive";
 pub const PROTO_KEY: &str = "__proto__";
 /// 原型链属性键
 pub const PROTOTYPE_KEY: &str = "prototype";
-/// 时间戳属性键
-pub const TIMESTAMP_KEY: &str = "__timestamp__";
 /// 符号内部前缀
 pub const SYMBOL_PREFIX: &str = "@@symbol:";
 /// Getter 内部前缀
@@ -1655,7 +1653,7 @@ impl JsValue {
       Self::Object(obj) => {
         let guard = obj.read();
         if (hint == PreferredType::Number || hint == PreferredType::Default)
-          && let Some(v) = guard.get(TIMESTAMP_KEY).or_else(|| guard.get("time"))
+          && let Some(v) = guard.get(TIMESTAMP_KEY).or_else(|| guard.get(TIME_KEY))
         {
           return v.clone();
         }
@@ -1768,7 +1766,7 @@ impl JsValue {
       }
       Self::Object(obj) => {
         let guard = obj.read();
-        if let Some(v) = guard.get("__timestamp__").or_else(|| guard.get("time")) {
+        if let Some(v) = guard.get(TIMESTAMP_KEY).or_else(|| guard.get(TIME_KEY)) {
           v.to_number()
         } else {
           f64::NAN

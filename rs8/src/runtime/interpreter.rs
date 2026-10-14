@@ -12,8 +12,8 @@ use std::{
 
 use gxhash::HashMap;
 use itoa::Buffer;
-use log::debug;
 use parking_lot::RwLock;
+use v8_interpreter::{TIME_KEY, TIMESTAMP_KEY};
 use v8_numbers::{double_to_int32, double_to_uint32};
 
 use crate::{
@@ -26,9 +26,8 @@ use crate::{
     parser::Parser,
     value::{
       CONSTRUCTOR_KEY, FunctionData, GET_SYM_TO_PRIMITIVE, GETTER_PREFIX, JsValue, MESSAGE_KEY,
-      NAME_KEY, NativeFn, PROTO_KEY, PROTOTYPE_KEY, PreferredType, SYM_TO_PRIMITIVE, TIMESTAMP_KEY,
-      TO_STRING_KEY, VALUE_OF_KEY, char_count, collect_hoisted, format_getter_key,
-      format_symbol_key,
+      NAME_KEY, NativeFn, PROTO_KEY, PROTOTYPE_KEY, PreferredType, SYM_TO_PRIMITIVE, TO_STRING_KEY,
+      VALUE_OF_KEY, char_count, collect_hoisted, format_getter_key, format_symbol_key,
     },
   },
 };
@@ -65,11 +64,12 @@ impl From<ExecSignal> for Error {
 /// 执行路径选择模式
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum ExecMode {
-  /// 优先走 V8 Ignition 字节码引擎, 不支持的构造回落 AST 求值器
+  /// 强制 AST 求值器。当前默认: 字节码引擎尚有 4 类结构性缺口 (见 todo.md 三·战役 A 的欠账清单),
+  /// 翻转默认值的前提是 `./test.sh` 在 BytecodeFirst 下全绿
   #[default]
-  BytecodeFirst,
-  /// 强制 AST 求值器, 用于差分对照与回归定位
   AstOnly,
+  /// 优先走 V8 Ignition 字节码引擎, 桥接层执行前判定不支持的构造回落 AST 求值器
+  BytecodeFirst,
   /// 只允许字节码引擎, 不支持即报错, 用于战役 A 收官门禁
   BytecodeOnly,
 }
@@ -81,10 +81,8 @@ pub struct ExecStats {
   pub total: usize,
   /// 由字节码引擎完成的次数
   pub bytecode: usize,
-  /// 桥接层不支持而回落 AST 的次数
+  /// 桥接层不支持该构造而回落 AST 的次数 (仅在执行开始前判定, 无副作用重放)
   pub fallback: usize,
-  /// 字节码执行报错后被回落吞掉的次数 (引擎缺陷信号, 应为 0)
-  pub err_fallback: usize,
 }
 
 impl ExecStats {
@@ -424,7 +422,7 @@ impl Interpreter {
         .unwrap_or(0.0);
       let obj = JsValue::new_object();
       let _ = obj.set_property(TIMESTAMP_KEY, JsValue::Number(ms));
-      let _ = obj.set_property("time", JsValue::Number(ms));
+      let _ = obj.set_property(TIME_KEY, JsValue::Number(ms));
       Ok(obj)
     });
     let date_data = FunctionData::new_native(Some("Date".to_string()), Arc::clone(env), date_ctor);
@@ -928,6 +926,9 @@ impl Interpreter {
   }
 
   /// 按 ExecMode 调度执行, 并把每条程序的实测走向计入 stats
+  ///
+  /// 回落只允许发生在 `None` (桥接层在执行前就判定不支持); 字节码一旦开跑,
+  /// 其错误必须直接传播 —— 重放整段程序会把 print/赋值等副作用执行两遍。
   pub fn dispatch(&mut self, stmts: &[Stmt]) -> Result<JsValue> {
     self.stats.total += 1;
     if self.mode == ExecMode::AstOnly {
@@ -937,12 +938,6 @@ impl Interpreter {
       Some(Ok(val)) => {
         self.stats.bytecode += 1;
         Ok(val)
-      }
-      Some(Err(err)) if self.mode == ExecMode::BytecodeFirst => {
-        // 回落会掩盖引擎缺陷, 只在 BytecodeFirst 下允许, 且必须留下计数
-        self.stats.err_fallback += 1;
-        debug!("字节码执行失败, 回落 AST: {err}");
-        self.execute(stmts)
       }
       Some(Err(err)) => Err(err),
       None if self.mode == ExecMode::BytecodeFirst => {
@@ -957,12 +952,11 @@ impl Interpreter {
   pub fn print_coverage(&self) {
     let s = self.stats;
     println!(
-      "bytecode-coverage: {:.1}% (total={} bytecode={} ast_fallback={} err_fallback={})",
+      "bytecode-coverage: {:.1}% (total={} bytecode={} ast_fallback={})",
       s.coverage() * 100.0,
       s.total,
       s.bytecode,
-      s.fallback,
-      s.err_fallback
+      s.fallback
     );
   }
 
@@ -2521,19 +2515,24 @@ impl Interpreter {
   }
 }
 
-/// 执行一段完整的 JavaScript 源码: 字节码引擎优先, 不支持的构造回落 AST
+/// 执行一段完整的 JavaScript 源码, 走 Interpreter 的默认模式 (当前为 AST 求值器)
 pub fn run_js(source: &str) -> Result<JsValue> {
   Interpreter::new().run(source)
 }
 
-/// 与 run_js 同路径, 保留给基准与既有调用方
+/// 以指定执行模式运行源码
+fn run_with(source: &str, mode: ExecMode) -> Result<JsValue> {
+  let mut interp = Interpreter::new();
+  interp.mode = mode;
+  interp.run(source)
+}
+
+/// 字节码引擎优先执行, 桥接层执行前判定不支持的构造回落 AST; 基准与差分对照入口
 pub fn run_bytecode(source: &str) -> Result<JsValue> {
-  run_js(source)
+  run_with(source, ExecMode::BytecodeFirst)
 }
 
 /// 只允许 Ignition 字节码引擎执行, 不支持即报错, 战役 A 收官门禁用
 pub fn run_strict_bytecode(source: &str) -> Result<JsValue> {
-  let mut interp = Interpreter::new();
-  interp.mode = ExecMode::BytecodeOnly;
-  interp.run(source)
+  run_with(source, ExecMode::BytecodeOnly)
 }

@@ -355,6 +355,23 @@ impl BytecodeArrayBuilder {
     Ok(())
   }
 
+  /// 在 typeof 上下文内加载全局变量 (LdaGlobalInsideTypeof)
+  ///
+  /// 原版单列此 opcode: `typeof 未声明名` 必须返回 "undefined" 而不是抛 ReferenceError
+  pub fn load_global_inside_typeof(
+    &mut self,
+    name: impl AsRef<str>,
+    feedback_slot: usize,
+  ) -> Result<()> {
+    let idx = self.get_or_insert_string(name.as_ref());
+    self.emit(BytecodeNode::with_operands(
+      Bytecode::LdaGlobalInsideTypeof,
+      &[idx as u32, feedback_slot as u32],
+      BytecodeSourceInfo::none(),
+    )?);
+    Ok(())
+  }
+
   /// 存储全局变量 (StaGlobal)
   pub fn store_global(&mut self, name: impl AsRef<str>, feedback_slot: usize) -> Result<()> {
     let idx = self.get_or_insert_string(name.as_ref());

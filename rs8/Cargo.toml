@@ -20,7 +20,6 @@ coarsetime = "0.1.38"
 fancy-regex = "0.19.2"
 gxhash = "3.5.0"
 itoa = "1.0.18"
-log = "0.4.34"
 parking_lot = "0.12.5"
 rusty_alloc-api = { workspace = true }
 thiserror = "2.0.20"

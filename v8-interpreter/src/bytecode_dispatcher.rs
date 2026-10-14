@@ -8,7 +8,7 @@ use std::{
 
 use gxhash::HashMap;
 use itoa::Buffer as ItoaBuffer;
-use parking_lot::RwLock;
+use parking_lot::{RwLock, RwLockReadGuard};
 use v8_numbers::{double_to_int32, double_to_uint32};
 
 use crate::{
@@ -45,6 +45,10 @@ pub const TO_LOWER_CASE_KEY: &str = "toLowerCase";
 pub const TO_UPPER_CASE_KEY: &str = "toUpperCase";
 pub const VALUE_OF_KEY: &str = "valueOf";
 pub const TO_STRING_KEY: &str = "toString";
+/// Date 实例的时间戳槽位键。战役 C 值模型合一后由 JSDate 的 [[DateValue]] 内部槽取代
+pub const TIMESTAMP_KEY: &str = "__timestamp__";
+/// Date 实例的时间兼容槽位键, 与 TIMESTAMP_KEY 成对写入
+pub const TIME_KEY: &str = "time";
 pub const GLOBAL_KEY: &str = "global";
 pub const LAST_INDEX_KEY: &str = "lastIndex";
 pub const SOURCE_KEY: &str = "source";
@@ -56,6 +60,20 @@ static FUNCTION_CALL: LazyLock<Value> = LazyLock::new(|| Value::new_native(Nativ
 
 static FUNCTION_APPLY: LazyLock<Value> =
   LazyLock::new(|| Value::new_native(NativeFn::FunctionApply));
+
+/// 全局对象上兜底原型链的构造函数名
+const OBJECT_CTOR: &str = "Object";
+
+/// 内建值对应的构造函数名, 供原型回溯定位其自带原型对象
+fn builtin_ctor_name(val: &Value) -> Option<&'static str> {
+  match val {
+    Value::Array(_) => Some("Array"),
+    Value::String(_) => Some("String"),
+    Value::Boolean(_) => Some("Boolean"),
+    Value::Smi(_) | Value::Number(_) => Some("Number"),
+    _ => None,
+  }
+}
 
 /// 字符索引转字节偏移 (字符边界安全，杜绝切片 panic)
 #[inline]
@@ -277,7 +295,10 @@ impl NativeFn {
           if i > 0 {
             res.push_str(&sep);
           }
-          res.push_str(&v.to_str_lossy());
+          // ECMA-262 Array.prototype.join: null/undefined/hole 一律拼空串, 不走 ToString
+          if !matches!(v, Value::Null | Value::Undefined | Value::TheHole) {
+            res.push_str(&v.to_str_lossy());
+          }
         }
         Ok(Value::String(res))
       }
@@ -797,6 +818,8 @@ impl Value {
           "shift" => Ok(Self::new_native_bare(NativeFn::ArrayShift(Arc::clone(arr)))),
           "slice" => Ok(Self::new_native_bare(NativeFn::ArraySlice(Arc::clone(arr)))),
           "join" => Ok(Self::new_native_bare(NativeFn::ArrayJoin(Arc::clone(arr)))),
+          // Array.prototype.toString === join(",")，缺这一步会掉到 Object.prototype.toString
+          "toString" => Ok(Self::new_native_bare(NativeFn::ArrayJoin(Arc::clone(arr)))),
           "indexOf" => Ok(Self::new_native_bare(NativeFn::ArrayIndexOf(Arc::clone(
             arr,
           )))),
@@ -1052,7 +1075,20 @@ impl Value {
           f64::NAN
         }
       }
-      Self::Object(_) | Self::Function(..) | Self::Native(..) => f64::NAN,
+      Self::Object(obj) => {
+        let guard = obj.read();
+        // ToPrimitive(hint=number) 与宿主 AST 求值器同序: 时间戳槽 → 兼容槽 → 原始值 valueOf
+        let primitive = guard
+          .get(TIMESTAMP_KEY)
+          .or_else(|| guard.get(TIME_KEY))
+          .or_else(|| {
+            guard
+              .get(VALUE_OF_KEY)
+              .filter(|v| !matches!(v, Self::Object(_) | Self::Function(..) | Self::Native(..)))
+          });
+        primitive.map_or(f64::NAN, Self::to_number)
+      }
+      Self::Function(..) | Self::Native(..) => f64::NAN,
     }
   }
 
@@ -1380,6 +1416,12 @@ pub struct FeedbackSlot {
   pub cached_val: Option<Value>,
 }
 
+/// 全局变量表句柄
+///
+/// 对标原版 NativeContext: 一张表被同一执行 isolate 内所有执行态共享。跨界调用只克隆句柄
+/// (一次原子加计数), 既不逐键复制整表, 也不在调用点重建空表。
+pub type GlobalsTable = Arc<RwLock<HashMap<String, Value>>>;
+
 /// 字节码分发器 / 解释执行器
 #[derive(Debug, Clone, Default)]
 pub struct BytecodeDispatcher {
@@ -1394,7 +1436,7 @@ pub struct BytecodeDispatcher {
   feedback_vector: Vec<FeedbackSlot>,
   arguments_materialized: bool,
   saved_arguments: Option<Value>,
-  globals: HashMap<String, Value>,
+  globals: GlobalsTable,
 }
 
 impl BytecodeDispatcher {
@@ -1412,7 +1454,17 @@ impl BytecodeDispatcher {
       feedback_vector: Vec::with_capacity(256),
       arguments_materialized: false,
       saved_arguments: None,
-      globals: HashMap::default(),
+      globals: GlobalsTable::default(),
+    }
+  }
+
+  /// 复用既有全局表构造分发器 (跨界调用入口: 被调函数必须看见调用方的全局绑定)
+  #[inline]
+  #[must_use]
+  pub fn with_globals(globals: GlobalsTable) -> Self {
+    Self {
+      globals,
+      ..Self::new()
     }
   }
 
@@ -1551,11 +1603,14 @@ impl BytecodeDispatcher {
     if !matches!(val, Value::Undefined) {
       return Ok(val);
     }
-    if let Some(obj_ctor) = self.globals.get("Object")
-      && let Ok(proto) = obj_ctor.get_property(PROTOTYPE_KEY)
-      && let Ok(v) = proto.get_property(prop)
-      && !matches!(v, Value::Undefined)
+    // 内建接收者先回溯自身原型: Array.prototype / String.prototype 上的方法由宿主
+    // 预置脚本注入, 只查 Object.prototype 会把它们全部丢掉
+    if let Some(ctor_name) = builtin_ctor_name(obj)
+      && let Some(v) = self.proto_prop(ctor_name, prop)
     {
+      return Ok(v);
+    }
+    if let Some(v) = self.proto_prop(OBJECT_CTOR, prop) {
       return Ok(v);
     }
     if prop == TO_STRING_KEY {
@@ -1564,6 +1619,22 @@ impl BytecodeDispatcher {
       )));
     }
     Ok(Value::Undefined)
+  }
+
+  /// 读取全局内建构造函数的 prototype 对象
+  fn global_proto(&self, ctor_name: &str) -> Option<Value> {
+    let ctor = self.globals.get(ctor_name)?;
+    ctor.get_property(PROTOTYPE_KEY).ok()
+  }
+
+  /// 读取全局内建构造函数 prototype 上的同名属性, 未命中返回 None
+  fn proto_prop(&self, ctor_name: &str, prop: &str) -> Option<Value> {
+    let v = self.global_proto(ctor_name)?.get_property(prop).ok()?;
+    if matches!(v, Value::Undefined) {
+      None
+    } else {
+      Some(v)
+    }
   }
 
   /// 检查属性是否存在于对象或其原型链中 (TestIn)
@@ -1620,8 +1691,7 @@ impl BytecodeDispatcher {
         _ => break,
       }
     }
-    if let Some(obj_ctor) = self.globals.get("Object")
-      && let Ok(proto) = obj_ctor.get_property(PROTOTYPE_KEY)
+    if let Some(proto) = self.global_proto(OBJECT_CTOR)
       && let Value::Object(proto_map) = proto
       && proto_map.read().contains_key(prop)
     {
@@ -1666,8 +1736,7 @@ impl BytecodeDispatcher {
       };
     }
 
-    if let Some(obj_ctor) = self.globals.get("Object")
-      && let Ok(obj_proto) = obj_ctor.get_property("prototype")
+    if let Some(obj_proto) = self.global_proto(OBJECT_CTOR)
       && match (&target_proto, &obj_proto) {
         (Value::Object(a), Value::Object(b)) => Arc::ptr_eq(a, b),
         _ => false,
@@ -1903,7 +1972,10 @@ impl BytecodeDispatcher {
             return Err(Error::ConstantPoolOutOfBounds(idx));
           }
         }
-        Bytecode::LdaGlobal => {
+        bc @ (Bytecode::LdaGlobal | Bytecode::LdaGlobalInsideTypeof) => {
+          // typeof 语境下未声明名解析为 Undefined, 其余读法必须抛 ReferenceError:
+          // 静默 Undefined 会把拼写错误吞成 NaN, 与宿主 AST 求值器不一致
+          let throws_if_absent = matches!(bc, Bytecode::LdaGlobal);
           let idx = it.get_unsigned_operand(0)? as usize;
           let _slot = it.get_unsigned_operand(1)?;
           if let Some(ConstantPoolEntry::String(name)) = bytecode_array.constants().get(idx) {
@@ -1924,6 +1996,10 @@ impl BytecodeDispatcher {
               self.accumulator = arguments_val;
             } else if let Some(val) = self.globals.get(name) {
               self.accumulator = val.clone();
+            } else if throws_if_absent {
+              return Err(Error::ExecutionError(format!(
+                "ReferenceError: {name} is not defined"
+              )));
             } else {
               self.accumulator = Value::Undefined;
             }

@@ -30,8 +30,8 @@ use crate::{
     environment::Environment,
     interpreter::Interpreter,
     value::{
-      EXEC_KEY, FLAGS_KEY, GLOBAL_KEY, JsValue, LAST_INDEX_KEY, MATCH_KEY, NativeFn, PROTOTYPE_KEY,
-      REPLACE_KEY, SOURCE_KEY, SPLIT_KEY, TEST_KEY,
+      EXEC_KEY, FLAGS_KEY, FunctionData, GLOBAL_KEY, JsValue, LAST_INDEX_KEY, MATCH_KEY, NativeFn,
+      PROTOTYPE_KEY, REPLACE_KEY, SOURCE_KEY, SPLIT_KEY, SharedFunctionInfo, TEST_KEY,
     },
   },
 };
@@ -880,11 +880,71 @@ fn interp_to_js_with_visited(
       visited.remove(&ptr);
       js_obj
     }
-    InterpreterValue::Native(native, _) => JsValue::Native(NativeFn::InterpNative(native.clone())),
-    InterpreterValue::Function(func, _) => {
-      JsValue::Native(NativeFn::InterpFunction(Arc::clone(func)))
+    // 带自有属性的函数必须落成 JsValue::Function: JsValue::Native 没有属性槽,
+    // 挂在函数上的方法 (如测试框架的 assert.sameValue) 会在回写宿主环境时丢失
+    InterpreterValue::Native(native, props) => {
+      let entries = detach_props(props);
+      if entries.is_empty() {
+        JsValue::Native(NativeFn::InterpNative(native.clone()))
+      } else {
+        interp_callable_to_js(
+          NativeFn::InterpNative(native.clone()),
+          None,
+          Vec::new(),
+          entries,
+          visited,
+          depth,
+        )
+      }
+    }
+    InterpreterValue::Function(func, props) => {
+      let entries = detach_props(props);
+      if entries.is_empty() {
+        JsValue::Native(NativeFn::InterpFunction(Arc::clone(func)))
+      } else {
+        interp_callable_to_js(
+          NativeFn::InterpFunction(Arc::clone(func)),
+          func.name.clone(),
+          func.params.clone(),
+          entries,
+          visited,
+          depth,
+        )
+      }
     }
   }
+}
+
+/// 属性表整体脱锁复制: 属性值可能指回本函数, 持锁递归会自堵
+fn detach_props(
+  props: &Arc<RwLock<HashMap<String, InterpreterValue>>>,
+) -> Vec<(String, InterpreterValue)> {
+  props
+    .read()
+    .iter()
+    .map(|(k, v)| (k.clone(), v.clone()))
+    .collect()
+}
+
+/// 解释器函数值 → 宿主原生支撑的函数对象, 携带其已脱锁的自有属性
+fn interp_callable_to_js(
+  native: NativeFn,
+  name: Option<String>,
+  params: Vec<String>,
+  entries: Vec<(String, InterpreterValue)>,
+  visited: &mut HashSet<usize>,
+  depth: usize,
+) -> JsValue {
+  let properties: HashMap<String, JsValue> = entries
+    .into_iter()
+    .map(|(k, v)| (k, interp_to_js_with_visited(&v, visited, depth + 1)))
+    .collect();
+  JsValue::Function(Arc::new(FunctionData {
+    shared: Arc::new(SharedFunctionInfo::new(name, params, Vec::new())),
+    closure: Arc::new(Environment::default()),
+    properties: Arc::new(RwLock::new(properties)),
+    native_impl: Some(native),
+  }))
 }
 
 /// 尝试将 JsValue 转换为解释器原生值
