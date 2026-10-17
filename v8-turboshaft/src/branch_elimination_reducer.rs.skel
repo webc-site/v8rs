@@ -1,0 +1,52 @@
+// 由 tool/src/compiler/turboshaft/branch-elimination-reducer.h.js 从 v8/src/compiler/turboshaft/branch-elimination-reducer.h 生成; 修订就地改, 复跑覆盖
+// 分支消除 reducer
+
+/// v8: src/compiler/turboshaft/branch-elimination-reducer.h KnownConditionType — 类内 enum class : uint8_t (原版 k 前缀变体)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KnownConditionType {
+  /// 原版 kInvalid
+  invalid,
+  /// 原版 kAnyNonZero
+  anyNonZero,
+  /// 原版 kExact
+  exact,
+}
+
+/// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer
+/// 条件值 LayeredHashMap 缓存 + 支配前驱合并
+pub struct BranchEliminationReducer {
+  pub placeholder: (),
+}
+
+impl BranchEliminationReducer {
+  /// 原版 V<None> REDUCE(Switch)(V<Word32> input, base::Vector<SwitchOp::Case> cases, Block* default_case, BranchHint default_hint)
+  /// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer::REDUCE(Switch)
+  pub fn reduce_switch(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Branch)(V<Word32> cond, Block* if_true, Block* if_false, BranchHint hint)
+  /// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer::REDUCE(Branch)
+  pub fn reduce_branch(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(Select)(V<Word32> cond, V<Any> vtrue, V<Any> vfalse, RegisterRepresentation rep, BranchHint hint, SelectOp::Implementation implem)
+  /// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer::REDUCE(Select)
+  pub fn reduce_select(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Goto)(Block* destination, bool is_backedge)
+  /// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer::REDUCE(Goto)
+  pub fn reduce_goto(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(DeoptimizeIf)(V<Word32> condition, V<EagerFrameState> frame_state, bool negated, const DeoptimizeParameters* parameters)
+  /// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer::REDUCE(DeoptimizeIf)
+  pub fn reduce_deoptimize_if(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(TrapIf)(V<Word32> condition, OptionalV<EagerFrameState> frame_state, bool negated, const TrapId trap_id)
+  /// v8: src/compiler/turboshaft/branch-elimination-reducer.h BranchEliminationReducer::REDUCE(TrapIf)
+  pub fn reduce_trap_if(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

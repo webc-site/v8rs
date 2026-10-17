@@ -1,0 +1,134 @@
+// 由 tool/src/wasm/wasm-external-refs.h.js 从 v8/src/wasm/wasm-external-refs.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 外部引用 (软浮点/SIMD/内存/栈切换) 清单
+
+//! 生成代码经 CSignature 调用的运行时辅助函数族。
+/// v8: src/wasm/wasm-external-refs.h wasm 命名空间
+
+/// 全部 *_wrapper 函数 (软实现入口, data 参数指向操作数块)
+/// v8: src/wasm/wasm-external-refs.h 各 _wrapper 声明
+pub const WRAPPER_FUNCTIONS: &[&str] = &[
+    "f32_trunc_wrapper",
+    "f32_floor_wrapper",
+    "f32_ceil_wrapper",
+    "f32_nearest_int_wrapper",
+    "f64_trunc_wrapper",
+    "f64_floor_wrapper",
+    "f64_ceil_wrapper",
+    "f64_nearest_int_wrapper",
+    "int64_to_float32_wrapper",
+    "uint64_to_float32_wrapper",
+    "int64_to_float64_wrapper",
+    "uint64_to_float64_wrapper",
+    "float32_to_int64_wrapper",
+    "float32_to_uint64_wrapper",
+    "float64_to_int64_wrapper",
+    "float64_to_uint64_wrapper",
+    "float32_to_int64_sat_wrapper",
+    "float32_to_uint64_sat_wrapper",
+    "float64_to_int64_sat_wrapper",
+    "float64_to_uint64_sat_wrapper",
+    "float32_to_float16_wrapper",
+    "float16_to_float32_wrapper",
+    "int64_div_wrapper",
+    "int64_mod_wrapper",
+    "uint64_div_wrapper",
+    "uint64_mod_wrapper",
+    "word32_rol_wrapper",
+    "word32_ror_wrapper",
+    "word64_rol_wrapper",
+    "word64_ror_wrapper",
+    "wasm_int128_add_wrapper",
+    "wasm_int128_sub_wrapper",
+    "wasm_int64_mul_wide_s_wrapper",
+    "wasm_int64_mul_wide_u_wrapper",
+    "float64_pow_wrapper",
+    "f64x2_ceil_wrapper",
+    "f64x2_floor_wrapper",
+    "f64x2_trunc_wrapper",
+    "f64x2_nearest_int_wrapper",
+    "f32x4_ceil_wrapper",
+    "f32x4_floor_wrapper",
+    "f32x4_trunc_wrapper",
+    "f32x4_nearest_int_wrapper",
+    "f16x8_abs_wrapper",
+    "f16x8_neg_wrapper",
+    "f16x8_sqrt_wrapper",
+    "f16x8_ceil_wrapper",
+    "f16x8_floor_wrapper",
+    "f16x8_trunc_wrapper",
+    "f16x8_nearest_int_wrapper",
+    "f16x8_eq_wrapper",
+    "f16x8_ne_wrapper",
+    "f16x8_lt_wrapper",
+    "f16x8_le_wrapper",
+    "f16x8_add_wrapper",
+    "f16x8_sub_wrapper",
+    "f16x8_mul_wrapper",
+    "f16x8_div_wrapper",
+    "f16x8_min_wrapper",
+    "f16x8_max_wrapper",
+    "f16x8_pmin_wrapper",
+    "f16x8_pmax_wrapper",
+    "i16x8_sconvert_f16x8_wrapper",
+    "i16x8_uconvert_f16x8_wrapper",
+    "f16x8_sconvert_i16x8_wrapper",
+    "f16x8_uconvert_i16x8_wrapper",
+    "f32x4_promote_low_f16x8_wrapper",
+    "f16x8_demote_f32x4_zero_wrapper",
+    "f16x8_demote_f64x2_zero_wrapper",
+    "f16x8_qfma_wrapper",
+    "f16x8_qfms_wrapper",
+    "data_drop_wrapper",
+    "memory_init_wrapper",
+    "memory_copy_wrapper",
+    "memory_fill_wrapper",
+    "array_copy_wrapper",
+    "array_fill_wrapper",
+];
+
+/// 标量取整族语义: trunc/floor/ceil 直调 libc; nearest 用 nearbyint (非 rint, 不受舍入模式影响由调用方保证)
+/// v8: src/wasm/wasm-external-refs.cc f32_nearest_int_wrapper
+pub const NEAREST_INT_USES_NEARBYINT: bool = true;
+
+/// 内存三操作返回 int32 而非 bool: 强制编译器零扩展返回寄存器
+/// v8: src/wasm/wasm-external-refs.h 注释
+pub const MEMORY_OPS_RETURN_INT32: bool = true;
+pub const MEMORY_OPERATIONS: &[&str] = &["memory_init_wrapper", "memory_copy_wrapper", "memory_fill_wrapper"];
+
+/// array_copy 前置: 区间已判界且 length > 0
+/// v8: src/wasm/wasm-external-refs.h array_copy_wrapper 注释
+pub const ARRAY_COPY_ASSUMES_INBOUNDS: bool = true;
+
+/// JSPI / WasmFX 栈切换入口 (sp/fp/pc 三元组穿梭)
+/// v8: src/wasm/wasm-external-refs.h start_stack 等
+pub const STACK_SWITCH_FUNCTIONS: &[&str] = &[
+    "start_stack",
+    "suspend_stack",
+    "resume_jspi_stack",
+    "resume_wasmfx_stack",
+    "return_jspi_stack",
+    "return_wasmfx_stack",
+    "retire_stack",
+    "suspend_wasmfx_stack",
+    "switch_wasmfx_stack",
+    "cont_bind",
+    "wasmfx_set_wasm_code",
+];
+
+/// 中心栈切换 (JS 互操作双向)
+/// v8: src/wasm/wasm-external-refs.h switch_to/from_the_central_stack
+pub const CENTRAL_STACK_SWITCH: &[&str] = &[
+    "switch_to_the_central_stack",
+    "switch_from_the_central_stack",
+    "switch_to_the_central_stack_for_js",
+    "switch_from_the_central_stack_for_js",
+    "grow_stack",
+    "shrink_stack",
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(WRAPPER_FUNCTIONS.len() >= 70);
+    assert_eq!(MEMORY_OPERATIONS.len(), 3);
+    assert_eq!(STACK_SWITCH_FUNCTIONS.len(), 7 + 4);
+};

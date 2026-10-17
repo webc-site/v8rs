@@ -1,0 +1,39 @@
+// 由 tool/src/base/debug/stack_trace_win.cc.js 从 v8/src/base/debug/stack_trace_win.cc 生成; 修订就地改, 复跑覆盖
+// Windows 后端 (dbghelp 符号化 + StackWalk64)
+
+//! v8: src/base/debug/stack_trace_win.cc — 仅 Windows 构建
+
+// v8: 全局: g_previous_filter / g_dump_stack_in_signal_handler / g_initialized_symbols / g_init_error
+
+/// v8: win StackDumpExceptionFilter — 测试进程异常过滤器:
+/// 开关开时 StackTrace(info).Print(), 链回 g_previous_filter, 否则 EXCEPTION_CONTINUE_SEARCH
+fn stack_dump_exception_filter(info: *mut EXCEPTION_POINTERS) -> i32;
+
+/// v8: win InitializeSymbols — 预载 msdia140.dll (SDK 10.0.28000+ 动态加载),
+/// SymSetOptions(DEFERRED_LOADS|UNDNAME|LOAD_LINES), SymInitialize,
+/// 搜索路径追加可执行目录 (kSymbolsArraySize=1024 wchar)
+fn initialize_symbols() -> bool;
+
+// v8: OutputTraceToStream — 每帧格式: <tab>SymbolName[0xAddr+Offset] (File:Line);
+//     kMaxNameLength=256; SYMBOL_INFO 缓冲 ULONG64 对齐; 失败帧回退地址输出
+// v8: StackTrace::InitTrace — 复制 CONTEXT (StackWalk64 就地改寄存器),
+//     machine_type 按 CPU 架构选, 循环 StackWalk64(…, SymFunctionTableAccess64,
+//     SymGetModuleBase64, …) 填 trace_ 直至 kMaxTraces
+
+impl StackTrace {
+    /// v8: win StackTrace() — 无异常捕获 (空)
+    #[cfg(windows)]
+    pub fn capture() -> Self;
+    /// v8: win StackTrace(EXCEPTION_POINTERS*) / (const CONTEXT*) — InitTrace 走 StackWalk64
+    #[cfg(windows)]
+    pub fn from_exception(info: *mut EXCEPTION_POINTERS) -> Self;
+    /// v8: win Print — OutputToStream(std::cerr)
+    #[cfg(windows)]
+    pub fn print(&self);
+    /// v8: win OutputToStream — InitializeSymbols + OutputTraceToStream
+    #[cfg(windows)]
+    pub fn output_to_stream(&self, os: &mut dyn std::io::Write);
+}
+
+// v8: win EnableInProcessStackDumping — SetUnhandledExceptionFilter + 开开关;
+//     win DisableSignalStackDump — 关开关

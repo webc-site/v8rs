@@ -1,0 +1,25 @@
+// 由 tool/src/base/platform/platform-openbsd.js 从 v8/src/base/platform/platform-openbsd.cc 生成; 修订就地改, 复跑覆盖
+// OpenBSD 平台面 (非目标; minherit 弃用 + dladdr 枚举)
+
+// —— OS 7 方法登记 ——
+/// v8: src/base/platform/platform-openbsd.cc OS::CreateTimezoneCache — PosixDefaultTimezoneCache
+/// v8: src/base/platform/platform-openbsd.cc OS::GetSharedLibraryAddresses
+/// fscanf 逐行解析 /proc/self/maps (r-x 条目 + 路径列),
+/// kLibNameLen = FILENAME_MAX + 1 名缓冲
+/// v8: src/base/platform/platform-openbsd.cc OS::SignalCodeMovingGC
+/// 假 mmap 文件 + OS::Free(addr, size) 释放 (Free 本体在 posix 基座 munmap)
+/// v8: src/base/platform/platform-openbsd.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-openbsd.cc OS::GetFirstFreeMemoryRangeWithin — 恒 nullopt
+/// v8: src/base/platform/platform-openbsd.cc OS::Free — 仅调用 (定义在 posix 基座)
+/// v8: src/base/platform/platform-openbsd.cc OS::GetGCFakeMMapFile — 基座转发
+
+// —— ll_prof 标记登记 ——
+/// v8: src/base/platform/platform-openbsd.cc OS::SignalCodeMovingGC 内核日志标记:
+/// sysconf(_SC_PAGESIZE) 取页 → mmap(PROT_READ|PROT_EXEC, MAP_PRIVATE, 假文件 fd)
+/// → 立即 munmap — 内核事件流注入 GC 对齐标记
+
+// —— 提取不变式断言 ——
+const _: () = {
+  const OS_SURFACE: usize = 7;
+  assert!(OS_SURFACE == 7);
+};

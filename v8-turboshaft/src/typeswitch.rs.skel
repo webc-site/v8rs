@@ -1,0 +1,62 @@
+// 由 tool/src/compiler/turboshaft/typeswitch.h.js 从 v8/src/compiler/turboshaft/typeswitch.h 生成; 修订就地改, 复跑覆盖
+// TYPESWITCH: 按对象类型顺序分派 (Torque 语义)
+
+/// 原版 TypeswitchBuilder::ControlState — 两遍构建状态机
+/// v8: typeswitch.h TypeswitchBuilder::ControlState
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
+pub enum ControlState {
+  /// kUninitialized
+  Uninitialized = 0,
+  /// kCollectCases: 第一遍收集 case + 分配入口块
+  CollectCases = 1,
+  /// kEmitBranches: 第二遍前段发类型检查与条件跳转
+  EmitBranches = 2,
+  /// kEmitCases: 第二遍后段绑定块, 发 case 体
+  EmitCases = 3,
+  /// kDone
+  Done = 4,
+}
+
+/// 原版 MatchState — case 间共享的缓存 (Smi case 已在外层剥离,
+/// value 恒为 HeapObject)
+/// v8: typeswitch.h MatchState
+pub struct MatchState {
+  pub value: V<HeapObject>,
+  /// map_ 惰性 LoadMapField
+  pub map: OptionV<Map>,
+  /// instance_type_ 惰性 LoadInstanceTypeField(map)
+  pub instance_type: OptionV<Word32>,
+}
+
+/// 原版 MatchCase<T> 特化面 (14 个):
+/// - MatchCase<Smi>
+/// - MatchCase<HeapNumber>
+/// - MatchCase<String>
+/// - MatchCase<Oddball>
+/// - MatchCase<JSReceiver>
+/// - MatchCase<Symbol>
+/// - MatchCase<Object>
+/// - MatchCase<Undefined>
+/// - MatchCase<Boolean>
+/// - MatchCase<Null>
+/// - MatchCase<BigInt>
+/// - MatchCase<JSCallable>
+/// - MatchCase<JSAny>
+/// - MatchCase<Union<Ts...>>
+/// 每个特化提供 static Match(Asm, state, target);
+/// Union<Ts...> 自动展开为逐成员 MatchCase。
+/// 语义: case 按定义序检查; 全不可达的 CASE 报错,
+/// 尾部宽 case (如 Object) 允许部分类型不可达。
+/// v8: src/compiler/turboshaft/typeswitch.h MatchCase
+pub trait MatchCase {
+  /// v8: typeswitch.h MatchCase<T>::Match
+  fn match(asm: &mut Assembler, state: &mut MatchState, target: Block);
+}
+
+/// 原版 TypeswitchBuilder — BeginCase 按 ControlState 三段分派;
+/// can_be_smi_ = 类型集含 Smi/Object 时设 smi_target_
+/// v8: typeswitch.h TypeswitchBuilder
+pub struct TypeswitchBuilder {
+  pub control_state: ControlState,
+}

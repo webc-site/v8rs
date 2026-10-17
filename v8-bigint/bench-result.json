@@ -1,0 +1,1042 @@
+[
+  {
+    "id": "num-bigint.add.64",
+    "impl": "num-bigint",
+    "op": "add",
+    "radix": null,
+    "bits": 64,
+    "mean_ns": 15.033,
+    "ci_low_ns": 15.011,
+    "ci_high_ns": 15.055
+  },
+  {
+    "id": "v8rs.add.64",
+    "impl": "v8rs",
+    "op": "add",
+    "radix": null,
+    "bits": 64,
+    "mean_ns": 31.43,
+    "ci_low_ns": 28.013,
+    "ci_high_ns": 35.965
+  },
+  {
+    "id": "num-bigint.add.256",
+    "impl": "num-bigint",
+    "op": "add",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 43.216,
+    "ci_low_ns": 41.389,
+    "ci_high_ns": 45.871
+  },
+  {
+    "id": "v8rs.add.256",
+    "impl": "v8rs",
+    "op": "add",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 35.665,
+    "ci_low_ns": 33.358,
+    "ci_high_ns": 38.299
+  },
+  {
+    "id": "num-bigint.add.1024",
+    "impl": "num-bigint",
+    "op": "add",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 48.304,
+    "ci_low_ns": 47.215,
+    "ci_high_ns": 49.688
+  },
+  {
+    "id": "v8rs.add.1024",
+    "impl": "v8rs",
+    "op": "add",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 35.863,
+    "ci_low_ns": 35.279,
+    "ci_high_ns": 36.626
+  },
+  {
+    "id": "num-bigint.add.4096",
+    "impl": "num-bigint",
+    "op": "add",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 110.098,
+    "ci_low_ns": 109.891,
+    "ci_high_ns": 110.326
+  },
+  {
+    "id": "v8rs.add.4096",
+    "impl": "v8rs",
+    "op": "add",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 90.906,
+    "ci_low_ns": 87.464,
+    "ci_high_ns": 95.272
+  },
+  {
+    "id": "num-bigint.add.16384",
+    "impl": "num-bigint",
+    "op": "add",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 379.44,
+    "ci_low_ns": 378.335,
+    "ci_high_ns": 380.589
+  },
+  {
+    "id": "v8rs.add.16384",
+    "impl": "v8rs",
+    "op": "add",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 338.439,
+    "ci_low_ns": 324.916,
+    "ci_high_ns": 354.648
+  },
+  {
+    "id": "num-bigint.add.65536",
+    "impl": "num-bigint",
+    "op": "add",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 1528.708,
+    "ci_low_ns": 1521.777,
+    "ci_high_ns": 1535.827
+  },
+  {
+    "id": "v8rs.add.65536",
+    "impl": "v8rs",
+    "op": "add",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 1271.182,
+    "ci_low_ns": 1268.988,
+    "ci_high_ns": 1273.247
+  },
+  {
+    "id": "num-bigint.sub.64",
+    "impl": "num-bigint",
+    "op": "sub",
+    "radix": null,
+    "bits": 64,
+    "mean_ns": 8.365,
+    "ci_low_ns": 8.132,
+    "ci_high_ns": 8.649
+  },
+  {
+    "id": "v8rs.sub.64",
+    "impl": "v8rs",
+    "op": "sub",
+    "radix": null,
+    "bits": 64,
+    "mean_ns": 25.774,
+    "ci_low_ns": 25.697,
+    "ci_high_ns": 25.85
+  },
+  {
+    "id": "num-bigint.sub.256",
+    "impl": "num-bigint",
+    "op": "sub",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 21.333,
+    "ci_low_ns": 20.405,
+    "ci_high_ns": 22.628
+  },
+  {
+    "id": "v8rs.sub.256",
+    "impl": "v8rs",
+    "op": "sub",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 29.457,
+    "ci_low_ns": 29.4,
+    "ci_high_ns": 29.509
+  },
+  {
+    "id": "num-bigint.sub.1024",
+    "impl": "num-bigint",
+    "op": "sub",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 28.211,
+    "ci_low_ns": 26.693,
+    "ci_high_ns": 30.394
+  },
+  {
+    "id": "v8rs.sub.1024",
+    "impl": "v8rs",
+    "op": "sub",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 38.341,
+    "ci_low_ns": 38.038,
+    "ci_high_ns": 38.835
+  },
+  {
+    "id": "num-bigint.sub.4096",
+    "impl": "num-bigint",
+    "op": "sub",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 57.599,
+    "ci_low_ns": 57.391,
+    "ci_high_ns": 57.891
+  },
+  {
+    "id": "v8rs.sub.4096",
+    "impl": "v8rs",
+    "op": "sub",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 101.842,
+    "ci_low_ns": 100.321,
+    "ci_high_ns": 103.788
+  },
+  {
+    "id": "num-bigint.sub.16384",
+    "impl": "num-bigint",
+    "op": "sub",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 198.213,
+    "ci_low_ns": 197.917,
+    "ci_high_ns": 198.517
+  },
+  {
+    "id": "v8rs.sub.16384",
+    "impl": "v8rs",
+    "op": "sub",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 403.08,
+    "ci_low_ns": 391.251,
+    "ci_high_ns": 417.638
+  },
+  {
+    "id": "num-bigint.sub.65536",
+    "impl": "num-bigint",
+    "op": "sub",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 738.703,
+    "ci_low_ns": 737.957,
+    "ci_high_ns": 739.499
+  },
+  {
+    "id": "v8rs.sub.65536",
+    "impl": "v8rs",
+    "op": "sub",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 1606.106,
+    "ci_low_ns": 1559.343,
+    "ci_high_ns": 1668.761
+  },
+  {
+    "id": "num-bigint.mul.64",
+    "impl": "num-bigint",
+    "op": "mul",
+    "radix": null,
+    "bits": 64,
+    "mean_ns": 14.039,
+    "ci_low_ns": 13.965,
+    "ci_high_ns": 14.131
+  },
+  {
+    "id": "v8rs.mul.64",
+    "impl": "v8rs",
+    "op": "mul",
+    "radix": null,
+    "bits": 64,
+    "mean_ns": 27.46,
+    "ci_low_ns": 27.379,
+    "ci_high_ns": 27.545
+  },
+  {
+    "id": "num-bigint.mul.256",
+    "impl": "num-bigint",
+    "op": "mul",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 33.589,
+    "ci_low_ns": 33.127,
+    "ci_high_ns": 34.165
+  },
+  {
+    "id": "v8rs.mul.256",
+    "impl": "v8rs",
+    "op": "mul",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 40.333,
+    "ci_low_ns": 40.069,
+    "ci_high_ns": 40.771
+  },
+  {
+    "id": "num-bigint.mul.1024",
+    "impl": "num-bigint",
+    "op": "mul",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 229.775,
+    "ci_low_ns": 229.199,
+    "ci_high_ns": 230.357
+  },
+  {
+    "id": "v8rs.mul.1024",
+    "impl": "v8rs",
+    "op": "mul",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 210.134,
+    "ci_low_ns": 206.198,
+    "ci_high_ns": 214.841
+  },
+  {
+    "id": "num-bigint.mul.4096",
+    "impl": "num-bigint",
+    "op": "mul",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 3000.479,
+    "ci_low_ns": 2994.617,
+    "ci_high_ns": 3006.446
+  },
+  {
+    "id": "v8rs.mul.4096",
+    "impl": "v8rs",
+    "op": "mul",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 2486.424,
+    "ci_low_ns": 2454.33,
+    "ci_high_ns": 2527.321
+  },
+  {
+    "id": "num-bigint.mul.16384",
+    "impl": "num-bigint",
+    "op": "mul",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 30465.179,
+    "ci_low_ns": 30294.136,
+    "ci_high_ns": 30710.412
+  },
+  {
+    "id": "v8rs.mul.16384",
+    "impl": "v8rs",
+    "op": "mul",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 25175.071,
+    "ci_low_ns": 24508.254,
+    "ci_high_ns": 25950.938
+  },
+  {
+    "id": "num-bigint.mul.65536",
+    "impl": "num-bigint",
+    "op": "mul",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 244718.494,
+    "ci_low_ns": 244355.539,
+    "ci_high_ns": 245113.668
+  },
+  {
+    "id": "v8rs.mul.65536",
+    "impl": "v8rs",
+    "op": "mul",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 203454.789,
+    "ci_low_ns": 202516.82,
+    "ci_high_ns": 204982.694
+  },
+  {
+    "id": "num-bigint.div.256",
+    "impl": "num-bigint",
+    "op": "div",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 69.37,
+    "ci_low_ns": 68.539,
+    "ci_high_ns": 70.423
+  },
+  {
+    "id": "v8rs.div.256",
+    "impl": "v8rs",
+    "op": "div",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 116.549,
+    "ci_low_ns": 110.075,
+    "ci_high_ns": 124.096
+  },
+  {
+    "id": "num-bigint.div.1024",
+    "impl": "num-bigint",
+    "op": "div",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 304.686,
+    "ci_low_ns": 286.261,
+    "ci_high_ns": 329.333
+  },
+  {
+    "id": "v8rs.div.1024",
+    "impl": "v8rs",
+    "op": "div",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 255.219,
+    "ci_low_ns": 253.12,
+    "ci_high_ns": 258.953
+  },
+  {
+    "id": "num-bigint.div.4096",
+    "impl": "num-bigint",
+    "op": "div",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 2247.668,
+    "ci_low_ns": 2236.329,
+    "ci_high_ns": 2260.934
+  },
+  {
+    "id": "v8rs.div.4096",
+    "impl": "v8rs",
+    "op": "div",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 2572.385,
+    "ci_low_ns": 2537.191,
+    "ci_high_ns": 2615.456
+  },
+  {
+    "id": "num-bigint.div.16384",
+    "impl": "num-bigint",
+    "op": "div",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 22317.619,
+    "ci_low_ns": 22275.76,
+    "ci_high_ns": 22362.301
+  },
+  {
+    "id": "v8rs.div.16384",
+    "impl": "v8rs",
+    "op": "div",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 20860.241,
+    "ci_low_ns": 20225.809,
+    "ci_high_ns": 21693.046
+  },
+  {
+    "id": "num-bigint.div.65536",
+    "impl": "num-bigint",
+    "op": "div",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 203471.486,
+    "ci_low_ns": 200325.497,
+    "ci_high_ns": 207130.46
+  },
+  {
+    "id": "v8rs.div.65536",
+    "impl": "v8rs",
+    "op": "div",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 169873.37,
+    "ci_low_ns": 166980.645,
+    "ci_high_ns": 174127.942
+  },
+  {
+    "id": "num-bigint.rem.256",
+    "impl": "num-bigint",
+    "op": "rem",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 70.657,
+    "ci_low_ns": 69.538,
+    "ci_high_ns": 72.058
+  },
+  {
+    "id": "v8rs.rem.256",
+    "impl": "v8rs",
+    "op": "rem",
+    "radix": null,
+    "bits": 256,
+    "mean_ns": 106.717,
+    "ci_low_ns": 105.993,
+    "ci_high_ns": 107.723
+  },
+  {
+    "id": "num-bigint.rem.1024",
+    "impl": "num-bigint",
+    "op": "rem",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 292.389,
+    "ci_low_ns": 283.582,
+    "ci_high_ns": 303.607
+  },
+  {
+    "id": "v8rs.rem.1024",
+    "impl": "v8rs",
+    "op": "rem",
+    "radix": null,
+    "bits": 1024,
+    "mean_ns": 259.642,
+    "ci_low_ns": 259.271,
+    "ci_high_ns": 259.972
+  },
+  {
+    "id": "num-bigint.rem.4096",
+    "impl": "num-bigint",
+    "op": "rem",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 2289.615,
+    "ci_low_ns": 2285.35,
+    "ci_high_ns": 2293.586
+  },
+  {
+    "id": "v8rs.rem.4096",
+    "impl": "v8rs",
+    "op": "rem",
+    "radix": null,
+    "bits": 4096,
+    "mean_ns": 3445.255,
+    "ci_low_ns": 2931.728,
+    "ci_high_ns": 4309.14
+  },
+  {
+    "id": "num-bigint.rem.16384",
+    "impl": "num-bigint",
+    "op": "rem",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 22032.976,
+    "ci_low_ns": 21985.269,
+    "ci_high_ns": 22089.745
+  },
+  {
+    "id": "v8rs.rem.16384",
+    "impl": "v8rs",
+    "op": "rem",
+    "radix": null,
+    "bits": 16384,
+    "mean_ns": 21441.634,
+    "ci_low_ns": 20871.973,
+    "ci_high_ns": 22111.823
+  },
+  {
+    "id": "num-bigint.rem.65536",
+    "impl": "num-bigint",
+    "op": "rem",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 191249.305,
+    "ci_low_ns": 190726.778,
+    "ci_high_ns": 191917.789
+  },
+  {
+    "id": "v8rs.rem.65536",
+    "impl": "v8rs",
+    "op": "rem",
+    "radix": null,
+    "bits": 65536,
+    "mean_ns": 169435.838,
+    "ci_low_ns": 167277.815,
+    "ci_high_ns": 172108.318
+  },
+  {
+    "id": "num-bigint.to_string.10.64",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 64,
+    "mean_ns": 26.785,
+    "ci_low_ns": 26.728,
+    "ci_high_ns": 26.84
+  },
+  {
+    "id": "v8rs.to_string.10.64",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 64,
+    "mean_ns": 54.697,
+    "ci_low_ns": 53.967,
+    "ci_high_ns": 55.421
+  },
+  {
+    "id": "num-bigint.to_string.10.256",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 256,
+    "mean_ns": 146.66,
+    "ci_low_ns": 144.553,
+    "ci_high_ns": 149.34
+  },
+  {
+    "id": "v8rs.to_string.10.256",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 256,
+    "mean_ns": 290.936,
+    "ci_low_ns": 262.512,
+    "ci_high_ns": 325.425
+  },
+  {
+    "id": "num-bigint.to_string.10.1024",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 1024,
+    "mean_ns": 1888.179,
+    "ci_low_ns": 1676.54,
+    "ci_high_ns": 2192.779
+  },
+  {
+    "id": "v8rs.to_string.10.1024",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 1024,
+    "mean_ns": 1869.173,
+    "ci_low_ns": 1866.5,
+    "ci_high_ns": 1872.859
+  },
+  {
+    "id": "num-bigint.to_string.10.4096",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 4096,
+    "mean_ns": 12586.564,
+    "ci_low_ns": 12338.364,
+    "ci_high_ns": 12999.462
+  },
+  {
+    "id": "v8rs.to_string.10.4096",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 4096,
+    "mean_ns": 16362.642,
+    "ci_low_ns": 15797.755,
+    "ci_high_ns": 17067.991
+  },
+  {
+    "id": "num-bigint.to_string.10.16384",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 16384,
+    "mean_ns": 86210.091,
+    "ci_low_ns": 85999.988,
+    "ci_high_ns": 86435.199
+  },
+  {
+    "id": "v8rs.to_string.10.16384",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 16384,
+    "mean_ns": 115674.853,
+    "ci_low_ns": 110174.881,
+    "ci_high_ns": 122096.966
+  },
+  {
+    "id": "num-bigint.to_string.10.65536",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 65536,
+    "mean_ns": 675060.418,
+    "ci_low_ns": 670073.03,
+    "ci_high_ns": 682083.071
+  },
+  {
+    "id": "v8rs.to_string.10.65536",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 10,
+    "bits": 65536,
+    "mean_ns": 901901.58,
+    "ci_low_ns": 873493.987,
+    "ci_high_ns": 938044.855
+  },
+  {
+    "id": "num-bigint.to_string.16.64",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 64,
+    "mean_ns": 22.938,
+    "ci_low_ns": 22.053,
+    "ci_high_ns": 24.167
+  },
+  {
+    "id": "v8rs.to_string.16.64",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 64,
+    "mean_ns": 83.166,
+    "ci_low_ns": 73.192,
+    "ci_high_ns": 94.397
+  },
+  {
+    "id": "num-bigint.to_string.16.256",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 256,
+    "mean_ns": 42.505,
+    "ci_low_ns": 41.617,
+    "ci_high_ns": 43.646
+  },
+  {
+    "id": "v8rs.to_string.16.256",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 256,
+    "mean_ns": 89.782,
+    "ci_low_ns": 88.016,
+    "ci_high_ns": 91.874
+  },
+  {
+    "id": "num-bigint.to_string.16.1024",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 1024,
+    "mean_ns": 142.82,
+    "ci_low_ns": 136.815,
+    "ci_high_ns": 149.898
+  },
+  {
+    "id": "v8rs.to_string.16.1024",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 1024,
+    "mean_ns": 315.715,
+    "ci_low_ns": 305.721,
+    "ci_high_ns": 326.965
+  },
+  {
+    "id": "num-bigint.to_string.16.4096",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 4096,
+    "mean_ns": 609.183,
+    "ci_low_ns": 548.132,
+    "ci_high_ns": 682.31
+  },
+  {
+    "id": "v8rs.to_string.16.4096",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 4096,
+    "mean_ns": 1026.783,
+    "ci_low_ns": 1008.767,
+    "ci_high_ns": 1050.451
+  },
+  {
+    "id": "num-bigint.to_string.16.16384",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 16384,
+    "mean_ns": 1775.146,
+    "ci_low_ns": 1771.128,
+    "ci_high_ns": 1780.18
+  },
+  {
+    "id": "v8rs.to_string.16.16384",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 16384,
+    "mean_ns": 3923.483,
+    "ci_low_ns": 3910.499,
+    "ci_high_ns": 3937.991
+  },
+  {
+    "id": "num-bigint.to_string.16.65536",
+    "impl": "num-bigint",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 65536,
+    "mean_ns": 6965.943,
+    "ci_low_ns": 6953.008,
+    "ci_high_ns": 6980.341
+  },
+  {
+    "id": "v8rs.to_string.16.65536",
+    "impl": "v8rs",
+    "op": "to_string",
+    "radix": 16,
+    "bits": 65536,
+    "mean_ns": 15688.181,
+    "ci_low_ns": 15531.832,
+    "ci_high_ns": 15902.208
+  },
+  {
+    "id": "num-bigint.from_string.10.64",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 64,
+    "mean_ns": 61.543,
+    "ci_low_ns": 61.482,
+    "ci_high_ns": 61.597
+  },
+  {
+    "id": "v8rs.from_string.10.64",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 64,
+    "mean_ns": 47.979,
+    "ci_low_ns": 45.248,
+    "ci_high_ns": 51.845
+  },
+  {
+    "id": "num-bigint.from_string.10.256",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 256,
+    "mean_ns": 178.153,
+    "ci_low_ns": 175.049,
+    "ci_high_ns": 182.073
+  },
+  {
+    "id": "v8rs.from_string.10.256",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 256,
+    "mean_ns": 97.064,
+    "ci_low_ns": 96.364,
+    "ci_high_ns": 98.111
+  },
+  {
+    "id": "num-bigint.from_string.10.1024",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 1024,
+    "mean_ns": 567.776,
+    "ci_low_ns": 557.081,
+    "ci_high_ns": 580.699
+  },
+  {
+    "id": "v8rs.from_string.10.1024",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 1024,
+    "mean_ns": 541.466,
+    "ci_low_ns": 531.301,
+    "ci_high_ns": 553.801
+  },
+  {
+    "id": "num-bigint.from_string.10.4096",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 4096,
+    "mean_ns": 3342.979,
+    "ci_low_ns": 3333.991,
+    "ci_high_ns": 3353.275
+  },
+  {
+    "id": "v8rs.from_string.10.4096",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 4096,
+    "mean_ns": 3522.99,
+    "ci_low_ns": 3516.1,
+    "ci_high_ns": 3529.384
+  },
+  {
+    "id": "num-bigint.from_string.10.16384",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 16384,
+    "mean_ns": 27977.63,
+    "ci_low_ns": 27927.142,
+    "ci_high_ns": 28029.546
+  },
+  {
+    "id": "v8rs.from_string.10.16384",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 16384,
+    "mean_ns": 39161.017,
+    "ci_low_ns": 35905.43,
+    "ci_high_ns": 42857.662
+  },
+  {
+    "id": "num-bigint.from_string.10.65536",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 65536,
+    "mean_ns": 350119.968,
+    "ci_low_ns": 349226.259,
+    "ci_high_ns": 351124.638
+  },
+  {
+    "id": "v8rs.from_string.10.65536",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 10,
+    "bits": 65536,
+    "mean_ns": 274997.763,
+    "ci_low_ns": 262783.095,
+    "ci_high_ns": 294481.882
+  },
+  {
+    "id": "num-bigint.from_string.16.64",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 64,
+    "mean_ns": 49.179,
+    "ci_low_ns": 49.061,
+    "ci_high_ns": 49.301
+  },
+  {
+    "id": "v8rs.from_string.16.64",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 64,
+    "mean_ns": 45.564,
+    "ci_low_ns": 42.888,
+    "ci_high_ns": 48.947
+  },
+  {
+    "id": "num-bigint.from_string.16.256",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 256,
+    "mean_ns": 124.011,
+    "ci_low_ns": 121.959,
+    "ci_high_ns": 126.512
+  },
+  {
+    "id": "v8rs.from_string.16.256",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 256,
+    "mean_ns": 92.248,
+    "ci_low_ns": 91.193,
+    "ci_high_ns": 93.598
+  },
+  {
+    "id": "num-bigint.from_string.16.1024",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 1024,
+    "mean_ns": 379.547,
+    "ci_low_ns": 378.855,
+    "ci_high_ns": 380.288
+  },
+  {
+    "id": "v8rs.from_string.16.1024",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 1024,
+    "mean_ns": 305.144,
+    "ci_low_ns": 287.642,
+    "ci_high_ns": 327.67
+  },
+  {
+    "id": "num-bigint.from_string.16.4096",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 4096,
+    "mean_ns": 1718.951,
+    "ci_low_ns": 1545.2,
+    "ci_high_ns": 2023.187
+  },
+  {
+    "id": "v8rs.from_string.16.4096",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 4096,
+    "mean_ns": 1054.736,
+    "ci_low_ns": 1027.687,
+    "ci_high_ns": 1087.109
+  },
+  {
+    "id": "num-bigint.from_string.16.16384",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 16384,
+    "mean_ns": 6078.184,
+    "ci_low_ns": 6040.116,
+    "ci_high_ns": 6122.965
+  },
+  {
+    "id": "v8rs.from_string.16.16384",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 16384,
+    "mean_ns": 4077.822,
+    "ci_low_ns": 3949.554,
+    "ci_high_ns": 4236.035
+  },
+  {
+    "id": "num-bigint.from_string.16.65536",
+    "impl": "num-bigint",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 65536,
+    "mean_ns": 44220.626,
+    "ci_low_ns": 43926.001,
+    "ci_high_ns": 44541.631
+  },
+  {
+    "id": "v8rs.from_string.16.65536",
+    "impl": "v8rs",
+    "op": "from_string",
+    "radix": 16,
+    "bits": 65536,
+    "mean_ns": 14928.276,
+    "ci_low_ns": 14887.697,
+    "ci_high_ns": 14969.291
+  }
+]

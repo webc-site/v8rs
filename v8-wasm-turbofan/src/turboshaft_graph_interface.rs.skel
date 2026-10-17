@@ -1,0 +1,91 @@
+// 由 tool/src/wasm/turboshaft-graph-interface.h.js 从 v8/src/wasm/turboshaft-graph-interface.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// Turboshaft wasm 图构建: 模式枚举与 OpIndex 位置编码
+
+//! wasm 字节码 → Turboshaft 图的构建接口 (优化层)。
+/// v8: src/wasm/turboshaft-graph-interface.cc TurboshaftGraphBuildingInterface
+
+/// 编译模式 (顶层/内联三态)
+/// v8: src/wasm/turboshaft-graph-interface.cc enum Mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GraphBuildMode {
+    /// v8: kRegular — 非内联顶层函数
+    Regular,
+    /// v8: kInlinedUnhandled — 内联且异常未处理
+    InlinedUnhandled,
+    /// v8: kInlinedWithCatch — 内联且本帧捕获
+    InlinedWithCatch,
+    /// v8: kInlinedTailCall — 内联尾调用
+    InlinedTailCall,
+}
+
+/// 异常检查位置
+/// v8: enum class CheckForException
+pub const CHECK_EXCEPTION_VALUES: &[&str] = &["kNo", "kCatchInThisFrame", "kCatchInParentFrame"];
+
+/// 分支提示来源 (--stress-wasm-branch-hinting 逐位取 random_seed)
+/// v8: enum class BranchHintingMode + BranchHintingStresser
+pub const BRANCH_HINTING_MODES: &[&str] = &["kNone", "kModuleProvided", "kStress"];
+/// v8: 压力器游标 32 位回绕
+pub const STRESSER_CURSOR_MASK: i32 = 31;
+
+/// v8: kUsesPoppedArgs = true
+pub const USES_POPPED_ARGS: bool = true;
+
+/// br_table 快路径参数
+/// v8: src/wasm/turboshaft-graph-interface.cc kMaxComparesPerTarget 等
+pub mod br_table {
+    /// v8: kMaxComparesPerTarget = 2
+    pub const MAX_COMPARES_PER_TARGET: i32 = 2;
+    /// v8: kMaxTargets = 3
+    pub const MAX_TARGETS: u32 = 3;
+    /// v8: kMaxTableCount = 20
+    pub const MAX_TABLE_COUNT: i32 = 20;
+}
+
+/// 批量内存操作内联上限 (64 位 + 全非对齐支持 + 常量 size)
+/// v8: kMaxInlineBytes (memory.copy / memory.fill)
+pub const MAX_INLINE_MEMCPY_BYTES: u32 = 112;
+pub const MAX_INLINE_MEMFILL_BYTES: u32 = 144;
+
+/// OpIndex 位置编码: wasm 位置 + 内联 id 打包进节点 origin
+/// v8: PositionField / InliningIdField 位域
+pub mod position_encoding {
+    /// v8: kPositionFieldShift (槽宽 8 字节的 log2)
+    pub const SHIFT: u32 = 3;
+    /// v8: kPositionFieldSize (kV8MaxWasmFunctionSize < 2^23)
+    pub const POSITION_BITS: u32 = 23;
+    /// v8: kInliningIdFieldSize
+    pub const INLINING_ID_BITS: u32 = 6;
+    /// v8: kNoInliningId = 63
+    pub const NO_INLINING_ID: u8 = 63;
+
+    /// v8: WasmPositionToOpIndex 打包
+    pub fn encode(position: u32, inlining_id: u8) -> u32 {
+        (position << SHIFT) | (inlining_id as u32)
+    }
+}
+
+/// phi 输入初始容量
+/// v8: kInitialInputCapacityPerPhi
+pub const INITIAL_PHI_INPUT_CAPACITY: u32 = 2;
+
+/// deopt 单输入上限
+/// v8: max_deopt_input_count
+pub const MAX_DEOPT_INPUT_COUNT: usize = 500;
+
+/// builtin 指针以 Smi 编码 (BuiltinPtr = Smi)
+/// v8: src/wasm/turboshaft-graph-interface-inl.h GetBuiltinPointerTarget
+pub const BUILTIN_PTR_IS_SMI: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(position_encoding::SHIFT, 3);
+    assert_eq!(position_encoding::POSITION_BITS, 23);
+    assert_eq!(position_encoding::INLINING_ID_BITS, 6);
+    assert_eq!(position_encoding::NO_INLINING_ID, 63);
+    assert_eq!(1 << position_encoding::SHIFT, 8);
+    assert_eq!(br_table::MAX_TABLE_COUNT, 20);
+    assert_eq!(MAX_INLINE_MEMCPY_BYTES, 112);
+    assert_eq!(MAX_INLINE_MEMFILL_BYTES, 144);
+    assert_eq!(position_encoding::encode(1, 0), 8);
+};

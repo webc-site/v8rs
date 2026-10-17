@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/backend/riscv/instruction-selector-riscv.js 从 v8/src/compiler/backend/riscv/instruction-selector-riscv.h + instruction-selector-riscv32.cc + instruction-selector-riscv64.cc 生成; 修订就地改, 复跑覆盖
+// riscv 指令选择: OperandGenerator (CanBeImmediate) + riscv32/64 双变体
+
+//! 台账: RiscvOperandGenerator (UseOperand → CanBeImmediate: 12 位立即数/
+//!   只读根指针/RelocInfo 特化 + int64 重载); 公共 Visit 122 (h);
+//!   riscv32 变体 89 定义 (Word64 软实现, ReverseBytes 锚); riscv64 变体
+//!   133 定义 (Word64 And/Or/Xor/Shl 原生族); ZeroExtendsWord32ToWord64 传播。
+
+/// v8: RiscvOperandGenerator::CanBeImmediate — 12 位/根指针/重定位特化
+// fn can_be_immediate(value: i64, opcode: InstructionCode) -> bool
+/// v8: riscv32 变体 — 32 位软实现族 (89 Visit)
+// mod riscv32 { visit_* }
+/// v8: riscv64 变体 — 原生 64 位族 (133 Visit)
+// mod riscv64 { visit_word64_* }
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(VISIT32_COUNT == 89);
+  assert!(VISIT64_COUNT == 133);
+};
+pub const VISIT32_COUNT: usize = 89;
+pub const VISIT64_COUNT: usize = 133;
+const _: () = {
+  assert!(VISIT32_COUNT == 89);
+  assert!(VISIT64_COUNT == 133);
+};

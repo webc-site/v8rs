@@ -1,0 +1,32 @@
+// 由 tool/src/heap/memory-chunk.h.js 从 v8/src/heap/memory-chunk.h 生成; 修订就地改, 复跑覆盖
+// MemoryChunk 头台账: Flag 14 项逐值 (目标配置留 12) + 掩码 13 (留 12) + 成员 46 needle + 布局断言点
+
+// ══ MemoryChunk (原版 memory-chunk.h:47-376) → v8-heap-core/src/memory_chunk.rs ══
+// Flag 枚举 (h:56-109; 名/值/行号):
+//   NO_FLAGS                                 =    0  h:57
+//   IN_WRITABLE_SHARED_SPACE                 =    1  h:60
+//   POINTERS_TO_HERE_ARE_INTERESTING         =    2  h:64
+//   POINTERS_FROM_HERE_ARE_INTERESTING       =    4  h:65
+//   FROM_PAGE                                =    8  h:69
+//   TO_PAGE                                  =   16  h:71
+//   INCREMENTAL_MARKING                      =   32  h:74
+//   BLACK_ALLOCATED                          =   64  h:78
+//   LARGE_PAGE                               =  128  h:81
+//   EVACUATION_CANDIDATE                     =  256  h:85
+//   NEW_SPACE_BELOW_AGE_MARK                 =  512  h:89
+//   READ_ONLY_HEAP                           = 1024  h:97
+//   STICKY_MARK_BIT_CONTAINS_ONLY_OLD        = 2048  h:103
+//   STICKY_MARK_BIT_IS_MAJOR_GC_IN_PROGRESS  = 4096  h:107
+// 目标配置 (压缩+sandbox+external code space, sticky 关, 非连续 RO): 11 移位值 + NO_FLAGS 落地;
+// STICKY_* ×2 (h:103/107) + ContainsOnlyOldObjects (h:208) + IsOnlyOldOrMajorMarkingOn (h:258) — 非目标配置, 登记推迟
+// 掩码常量 (h:113-143): kAllFlagsMask / kPointersToHereAreInterestingMask / kPointersFromHereAreInterestingMask / kEvacuationCandidateMask / kIsInYoungGenerationMask / kIsLargePageMask / kInSharedHeap / kIncrementalMarking / kSkipEvacuationSlotsRecordingMask / kIsBlackAllocatedOrWriteableSharedMask / kIsInReadOnlyHeapMask / kIsReadOnlyOrSharedHeapMask — 12 项落地
+// 布局: repr(C) { flags: usize, metadata_index: u32 } → size_of=16, flags@0, index@8
+//   (原版 FlagsOffset h:301 / MetadataIndexOffset h:314 即 offset 导出面)
+// Metadata 族 (h:187-194, MetadataImpl h:338-341; 实体在 -inl.h, 见 memory-chunk-inl.h.js)
+//   — 依赖 heap BasePage/Isolate/IsolateGroup → 前向声明承接 + 推迟台账 (双引用见模块)
+// MetadataTableIndex (h:318 声明, cc:82 实现) — IsolateGroup/CodeRange 耦合 → MetadataTableEnv 窄 trait
+// hash<const MemoryChunk*> / hash<MemoryChunk*> (h:390-404) → chunk_hash 落地 (Tagged_t 截低 32 位后 >>kPageSizeBits)
+// ── rs 侧落地锚 (HC-1R2a 实测台账) ──
+// Landed @ v8-heap-core/src/memory_chunk.rs: Flag 14 逐值照录 + 掩码 12 (sticky 掩码按推迟台账 8 剥除) +
+//   BaseAddress/IsAligned/AddressToOffset/FromAddress/FromHeapObject 纯逻辑族 + repr(C) 布局 (offset 0/8) +
+//   chunk_hash + 谓词矩阵全落; 测试面 tests/memory_chunk_unittest.rs 金标准 13 用例 (clang -E 展开侧数值)。

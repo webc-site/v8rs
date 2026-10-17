@@ -1,0 +1,43 @@
+[package]
+name = "v8-strings"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-strings"
+keywords = []
+categories = []
+autobenches = false
+
+[features]
+default = []
+# 单独评测某个对比库 (std 对照与 v8rs 本体恒参与, 不设开关)
+bench-memchr = []
+bench-unicode-ident = []
+bench-unicode-normalization = []
+# 全部对比库评测
+bench = ["bench-memchr", "bench-unicode-ident", "bench-unicode-normalization"]
+
+[[bench]]
+name = "main"
+path = "benches/main.rs"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+icu_properties = "2.3.0"
+itoa = "1.0.18"
+log = "0.4.34"
+memchr = "2.8.3"
+thiserror = "2.0.21"
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+fastrand = "2.5.0"
+log = "0.4.34"
+log_init = "0.1.39"
+

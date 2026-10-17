@@ -1,0 +1,16 @@
+// 由 tool/src/objects/js-collator.h.js 从 v8/src/objects/js-collator.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSCollator 布局与 Intl.Collator 签名骨架
+
+//! 差集骨架: JSCollator (icu::Collator 的 JS 包装)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。ICU 语义面 (New/ResolvedOptions/compare) 留 Developer。
+
+/// v8: src/objects/js-collator.h JSCollator: icu_collator offset=24 (Foreign, Managed<icu::Collator>),
+///   bound_compare offset=32 (Undefined|JSFunction), locale offset=40 (String)
+pub const K_JS_COLLATOR_HEADER_SIZE: usize = 48;
+
+/// v8: src/objects/js-collator-inl.h JSCollator::icu_collator / bound_compare / locale accessor
+pub struct JSCollator { /* icu_collator_: Tagged<Foreign>, bound_compare_, locale_ */ }
+
+/// v8: src/objects/js-collator.h JSCollator::New — 解析 locales/options 构造 (语义面留锚)
+/// v8: src/objects/js-collator.h JSCollator::ResolvedOptions
+/// v8: src/objects/js-collator.h JSCollator::GetAvailableLocales

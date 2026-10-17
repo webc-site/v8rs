@@ -1,0 +1,10 @@
+// 由 tool/src/heap/visit-object.js 从 v8/src/heap/visit-object.h, src/heap/visit-object.cc 生成; 修订就地改, 复跑覆盖
+// 单对象 visit 入口 (调试/校验)
+/// v8: src/heap/visit-object.h VisitObject(Isolate*, HeapObject, ObjectVisitor*)
+pub fn visit_object(isolate: &Isolate, object: TaggedHeapObject, visitor: &mut dyn ObjectVisitor) { todo!() }
+/// v8: VisitObject(LocalIsolate*, ...) — 后台线程变体
+pub fn visit_object_local(isolate: &LocalIsolate, object: TaggedHeapObject, visitor: &mut dyn ObjectVisitor) { todo!() }
+/// v8: VisitObjectBody(Isolate*, object, visitor) — 先取 map 再转调下者
+/// v8: VisitObjectBody(Isolate*, map, object, visitor) — 按 map 分派 body
+/// v8: VisitObjectBody(LocalIsolate*, object, visitor) — 后台变体
+/// v8: src/heap/visit-object.cc 各实现 (VisitObjectWithoutVisitingPhantom etc. 见锚)

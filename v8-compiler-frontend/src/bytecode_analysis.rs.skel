@@ -1,0 +1,116 @@
+// 由 tool/src/compiler/bytecode-analysis.js 从 v8/src/compiler/bytecode-analysis.h + bytecode-analysis.cc 生成; 修订就地改, 复跑覆盖
+// 字节码循环分析: 循环范围/嵌套/赋值集/活性
+
+//! BytecodeAnalysis — 分析字节码找循环范围、循环嵌套、循环赋值与活性。
+//! OSR 分析 (osr_bailout_id 非 None) 子sumes 非 OSR 分析 (broker/serializer 依赖)。
+
+/// 循环变量赋值集 — 位向量: [0, parameter_count) 参数 / 其余局部
+/// v8: src/compiler/bytecode-analysis.h BytecodeLoopAssignments
+pub struct BytecodeLoopAssignments {
+    parameter_count: i32,
+    /// local_count = bit_vector.length - parameter_count
+    /// v8: src/compiler/bytecode-analysis.h BytecodeLoopAssignments::local_count
+    bit_vector: BitVector,
+}
+
+impl BytecodeLoopAssignments {
+    /// v8: src/compiler/bytecode-analysis.cc BytecodeLoopAssignments::Add (Register)
+    pub fn add(&mut self, r: Register);
+    /// v8: src/compiler/bytecode-analysis.cc BytecodeLoopAssignments::AddList
+    pub fn add_list(&mut self, r: Register, count: u32);
+    /// v8: src/compiler/bytecode-analysis.cc BytecodeLoopAssignments::Union
+    pub fn union_(&mut self, other: &BytecodeLoopAssignments);
+    /// v8: src/compiler/bytecode-analysis.cc BytecodeLoopAssignments::ContainsParameter
+    pub fn contains_parameter(&self, index: i32) -> bool;
+    /// v8: src/compiler/bytecode-analysis.cc BytecodeLoopAssignments::ContainsLocal
+    pub fn contains_local(&self, index: i32) -> bool;
+}
+
+/// 挂起生成器的恢复跳转目标
+/// v8: src/compiler/bytecode-analysis.h ResumeJumpTarget
+pub struct ResumeJumpTarget {
+    /// 恢复的 suspend id
+    suspend_id: i32,
+    /// 本恢复跳转的目标偏移
+    target_offset: i32,
+    /// 跨多次跳转后的最终偏移; is_leaf = target_offset == final_target_offset
+    /// v8: src/compiler/bytecode-analysis.h ResumeJumpTarget::is_leaf
+    final_target_offset: i32,
+}
+
+impl ResumeJumpTarget {
+    /// 实际恢复点
+    /// v8: src/compiler/bytecode-analysis.cc ResumeJumpTarget::Leaf
+    pub fn leaf(suspend_id: i32, target_offset: i32) -> Self;
+    /// 循环头处恢复 — 跨循环头后还有一次恢复跳转
+    /// v8: src/compiler/bytecode-analysis.cc ResumeJumpTarget::AtLoopHeader
+    pub fn at_loop_header(loop_header_offset: i32, next: &ResumeJumpTarget) -> Self;
+}
+
+/// 单个循环信息
+/// v8: src/compiler/bytecode-analysis.h LoopInfo
+pub struct LoopInfo {
+    /// 父循环偏移, 无父为 -1
+    parent_offset: i32,
+    /// 半开区间 [loop_start, loop_end)
+    /// v8: src/compiler/bytecode-analysis.h LoopInfo::Contains
+    loop_start: i32,
+    loop_end: i32,
+    /// 无 JumpLoop 时为 -1 (双构造函数协议)
+    jump_loop_offset: i32,
+    resumable: bool,   // = false
+    innermost: bool,   // = true
+    assignments: BytecodeLoopAssignments,
+    resume_jump_targets: Vec<ResumeJumpTarget>,
+}
+
+/// 字节码分析主类
+/// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis
+pub struct BytecodeAnalysis {
+    osr_bailout_id: BytecodeOffset,
+    analyze_liveness: bool,
+    resume_jump_targets: Vec<ResumeJumpTarget>,
+    /// loop_end → loop_header 映射
+    end_to_header: ZoneMap<i32, i32>,
+    /// 按 loop header 偏移升序
+    loop_infos: Vec<LoopInfo>,
+    osr_entry_point: i32,
+    liveness_map: Option<BytecodeLivenessMap>,
+    /// 字节码操作数, 初值 -1
+    bytecode_count: i32,
+}
+
+impl BytecodeAnalysis {
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::IsLoopHeader
+    pub fn IsLoopHeader(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::GetLoopOffsetFor
+    pub fn GetLoopOffsetFor(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::GetLoopEndOffsetForInnermost
+    pub fn GetLoopEndOffsetForInnermost(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::GetLoopInfoFor
+    pub fn GetLoopInfoFor(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::TryGetLoopInfoFor
+    pub fn TryGetLoopInfoFor(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::GetLoopInfos
+    pub fn GetLoopInfos(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::resume_jump_targets
+    pub fn resume_jump_targets(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::GetInLivenessFor
+    pub fn GetInLivenessFor(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::GetOutLivenessFor
+    pub fn GetOutLivenessFor(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::osr_entry_point
+    pub fn osr_entry_point(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::osr_bailout_id
+    pub fn osr_bailout_id(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::liveness_analyzed
+    pub fn liveness_analyzed(&self);
+    /// v8: src/compiler/bytecode-analysis.h BytecodeAnalysis::bytecode_count
+    pub fn bytecode_count(&self);
+}
+
+// —— 对数基准 (原版 .cc 定义面, 脚本计数) ——
+// LoopAssignments 定义 6 / ResumeJumpTarget 定义 3
+// BytecodeAnalysis(+Impl) 定义 12 / 去重方法 21
+// BytecodeAnalysis 公有查询: 13 个
+// LoopInfo 字段: 8 个

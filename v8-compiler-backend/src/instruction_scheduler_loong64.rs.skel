@@ -1,0 +1,13 @@
+// 由 tool/src/compiler/backend/loong64/instruction-scheduler-loong64.js 从 v8/src/compiler/backend/loong64/instruction-scheduler-loong64.cc 生成; 修订就地改, 复跑覆盖
+// loong64 调度架构面: 不支持调度 — 4 桩 UNREACHABLE
+
+//! 台账: SchedulerSupported()=false; GetResourceTable/GetInstructionResource/
+//!   GetTargetInstructionFlags/GetInstructionLatency 四桩全 UNREACHABLE。
+
+/// v8: SchedulerSupported (loong64) — false
+pub const SCHEDULER_SUPPORTED: bool = false;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(!SCHEDULER_SUPPORTED);
+};

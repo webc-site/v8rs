@@ -1,0 +1,31 @@
+// 由 tool/src/base/intrusive-set.h.js 从 v8/src/base/intrusive-set.h 生成; 修订就地改, 复跑覆盖
+// 侵入式指针集 (元素自带位置索引, swap-pop 删除)
+
+//! v8: src/base/intrusive-set.h
+
+/// v8: src/base/intrusive-set.h IntrusiveSetIndex
+/// value = kNotInSet (SIZE_MAX) 表示不在集合内
+pub struct IntrusiveSetIndex { value: usize }
+
+impl IntrusiveSetIndex {
+    /// v8: kNotInSet = numeric_limits<size_t>::max()
+    pub const NOT_IN_SET: usize = usize::MAX;
+}
+
+/// v8: src/base/intrusive-set.h IntrusiveSet<T, GetIntrusiveSetIndex, Container>
+/// T 须 trivially copyable (指针类轻值); index_functor 产 IntrusiveSetIndex&
+/// Add: Index(x) = size, push_back — 均摊 O(1), 迭代中可加 (会被遍历到)
+/// Remove: 尾元素换位 + 索引回写 + pop — O(1); 迭代中仅可删当前元素
+pub struct IntrusiveSet<T> { elements: Vec<T> }
+
+impl<T> IntrusiveSet<T> {
+    /// v8: Contains — Index(x) != kNotInSet
+    pub fn contains(&self, x: &T) -> bool;
+    /// v8: Add — DCHECK !Contains
+    pub fn add(&mut self, x: T);
+    /// v8: Remove — DCHECK Contains; DCHECK_EQ(x, elements_[index]); swap-pop
+    pub fn remove(&mut self, x: &T);
+    /// v8: iterator — operator* 先于 operator++ (记录 last_index_location_
+    ///     检测当前元素被 swap 换走来跳过重复访问); Rust 侧 Developer 按此语义实现
+    pub fn iter(&self) -> impl Iterator<Item = &T>;
+}

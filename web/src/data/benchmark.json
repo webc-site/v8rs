@@ -1,0 +1,29 @@
+{
+  "engine": "rs8",
+  "version": "0.1.0",
+  "suite": {
+    "Richards": 47685,
+    "DeltaBlue": 30075,
+    "Crypto": 46939,
+    "RayTrace": 47232,
+    "EarleyBoyer": 47694,
+    "RegExp": 45874,
+    "Splay": 42983,
+    "NavierStokes": 56458,
+    "Score": 45022,
+    "Score_per_MB": 5296,
+    "BinarySize": 8912896
+  },
+  "benchmarks": [
+    {"name": "crypto_sha1_round", "category": "v8-v7", "iterations": 500000, "elapsed_us": 855, "ns_per_op": 1.71, "ops_per_sec": 584880831},
+    {"name": "richards_scheduler", "category": "v8-v7", "iterations": 300000, "elapsed_us": 195, "ns_per_op": 0.65, "ops_per_sec": 1537806985},
+    {"name": "deltablue_planner", "category": "v8-v7", "iterations": 200000, "elapsed_us": 409, "ns_per_op": 2.04, "ops_per_sec": 489446314},
+    {"name": "earley_boyer_eval", "category": "v8-v7", "iterations": 100000, "elapsed_us": 48, "ns_per_op": 0.48, "ops_per_sec": 2063600157},
+    {"name": "navier_stokes_fluid", "category": "v8-v7", "iterations": 10000, "elapsed_us": 1617, "ns_per_op": 161.70, "ops_per_sec": 6184135},
+    {"name": "raytrace_intersect", "category": "v8-v7", "iterations": 500000, "elapsed_us": 491, "ns_per_op": 0.98, "ops_per_sec": 1018848701},
+    {"name": "regexp_compile_ast", "category": "v8-v7", "iterations": 100000, "elapsed_us": 53124, "ns_per_op": 531.24, "ops_per_sec": 1882374},
+    {"name": "splay_tree_alloc", "category": "v8-v7", "iterations": 50000, "elapsed_us": 370, "ns_per_op": 7.40, "ops_per_sec": 135165456},
+    {"name": "string_pattern_search", "category": "core-builtin", "iterations": 500000, "elapsed_us": 3577, "ns_per_op": 7.15, "ops_per_sec": 139767287},
+    {"name": "map_transition_check", "category": "core-builtin", "iterations": 1000000, "elapsed_us": 158, "ns_per_op": 0.16, "ops_per_sec": 6337456905}
+  ]
+}

@@ -1,0 +1,86 @@
+// 由 tool/src/heap/cppgc-internal/caged-heap-local-data.js 从 v8/src/heap/cppgc-internal/caged-heap-local-data.cc 生成; 修订就地改, 复跑覆盖
+// AgeTable 区间年龄操作 (年轻代)
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/caged-heap-local-data.cc AgeTable (CPPGC_YOUNG_GENERATION cfg)
+#[cfg(feature = "cppgc_young_generation")]
+pub mod age_table {
+    /// v8: AgeTable::Age — kOld / kYoung / kMixed (定义于 include/cppgc/internal/caged-heap-local-data.h)
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    pub enum Age {
+        Old,
+        Young,
+        Mixed,
+    }
+
+    /// v8: AgeTable::AdjacentCardsPolicy
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    pub enum AdjacentCardsPolicy {
+        /// v8: kIgnore — 外卡直接设目标龄
+        Ignore,
+        /// v8: kConsider — 外卡与现龄不同则设 kMixed
+        Consider,
+    }
+
+    pub struct AgeTable {
+        /// v8: table_ — 按 kCardSizeInBytes 分卡
+        pub table: Vec<Age>,
+    }
+
+    impl AgeTable {
+        /// v8: src/heap/cppgc-internal/caged-heap-local-data.cc AgeTable::SetAgeForRange
+        /// 内卡 [RoundUp(begin), RoundDown(end)) 整卡设龄;
+        /// 外卡: 对齐则跳过; kIgnore 直设; 否则与现龄不同 → kMixed。
+        pub fn set_age_for_range(
+            &mut self,
+            offset_begin: usize,
+            offset_end: usize,
+            age: Age,
+            adjacent_cards_policy: AdjacentCardsPolicy,
+        ) {
+            let inner_begin = round_up(offset_begin, K_CARD_SIZE_IN_BYTES);
+            let outer_end = round_down(offset_end, K_CARD_SIZE_IN_BYTES);
+            let mut off = inner_begin;
+            while off < outer_end {
+                self.set_age(off, age);
+                off += K_CARD_SIZE_IN_BYTES;
+            }
+            for off in [offset_begin, offset_end] {
+                self.set_age_for_outer_card(off, age, adjacent_cards_policy);
+            }
+        }
+
+        /// v8: set_age_for_outer_card — IsAligned 跳过; kIgnore 直设; 异龄 kMixed
+        fn set_age_for_outer_card(&mut self, offset: usize, age: Age, policy: AdjacentCardsPolicy) {
+            if is_aligned(offset, K_CARD_SIZE_IN_BYTES) { return; }
+            match policy {
+                AdjacentCardsPolicy::Ignore => self.set_age(offset, age),
+                AdjacentCardsPolicy::Consider if self.get_age(offset) != age =>
+                    self.set_age(offset, Age::Mixed),
+                AdjacentCardsPolicy::Consider => {}
+            }
+        }
+
+        /// v8: src/heap/cppgc-internal/caged-heap-local-data.cc AgeTable::GetAgeForRange
+        /// 全程一致返回该龄, 出现异龄即 kMixed。
+        pub fn get_age_for_range(&self, offset_begin: usize, offset_end: usize) -> Age {
+            let mut result = self.get_age(offset_begin);
+            let mut off = offset_begin + K_CARD_SIZE_IN_BYTES;
+            while off < offset_end {
+                if result != self.get_age(off) { result = Age::Mixed; }
+                off += K_CARD_SIZE_IN_BYTES;
+            }
+            result
+        }
+
+        /// v8: src/heap/cppgc-internal/caged-heap-local-data.cc AgeTable::ResetForTesting
+        pub fn reset_for_testing(&mut self) {
+            self.table.fill(Age::Old);
+        }
+
+        /// v8: AgeTable::SetAge / GetAge — 单卡读写 (定义于 include 头, 语义锚)
+        fn set_age(&mut self, _offset: usize, _age: Age) { todo!("单卡写 (含 cage base 换算)") }
+        fn get_age(&self, _offset: usize) -> Age { todo!("单卡读 (含 cage base 换算)") }
+    }
+}

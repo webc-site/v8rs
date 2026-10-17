@@ -1,0 +1,9 @@
+// 由 tool/src/base/free_deleter.h.js 从 v8/src/base/free_deleter.h 生成; 修订就地改, 复跑覆盖
+// free 释放器, Rust Drop/自定义分配器表达
+
+//! v8: src/base/free_deleter.h
+
+// v8: struct FreeDeleter { void operator()(void* ptr) const { base::Free(ptr); } }
+// 用途: std::unique_ptr<T, base::FreeDeleter> 包 malloc 分配指针
+// Rust 对应: 由自定义 allocator / Drop 实现; libc::free 直调
+// 登记跳过 (无独立类型面), 语义锚定 base::Free (platform/memory, 别席)

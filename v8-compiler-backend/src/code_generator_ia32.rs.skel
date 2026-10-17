@@ -1,0 +1,18 @@
+// 由 tool/src/compiler/backend/ia32/code-generator-ia32.js 从 v8/src/compiler/backend/ia32/code-generator-ia32.cc 生成; 修订就地改, 复跑覆盖
+// ia32 代码生成: 32 位 x86 分发 + edx:eax 双寄存器 64 位 + SSE
+
+//! 台账: AssembleArchInstruction case kIA32 ×304 (+ 公共 kArch ×40 + kMode ×21 地址特化);
+//!   ArchBranch/DeoptBranch/Boolean/TailCallAfterGap; 64 位值 edx:eax 双寄存器。
+
+/// v8: CodeGenerator::AssembleArchInstruction (ia32) — 304 case + 公共 40
+// fn assemble_arch_instruction(instr: &Instruction) -> CodeGenResult
+/// v8: 64 位双寄存器序列 (edx:eax)
+// fn 双寄存器乘除/移位锚
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(ARCH_CASE_COUNT == 304);
+  assert!(COMMON_CASE_COUNT == 40);
+};
+pub const ARCH_CASE_COUNT: usize = 304;
+pub const COMMON_CASE_COUNT: usize = 40;

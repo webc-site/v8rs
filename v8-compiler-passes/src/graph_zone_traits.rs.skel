@@ -1,0 +1,17 @@
+// 由 tool/src/compiler/graph-zone-traits.js 从 v8/src/compiler/graph-zone-traits.h 生成; 修订就地改, 复跑覆盖
+// graph 层 zone 指针特质别名 (ZoneTypeTraits 复用)
+
+//! zone 分配指针的类型别名层 — Rust 侧 zone 指针策略落地于 zone 层,
+//! 此处保留镜像别名。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/graph-zone-traits.h GraphZoneTraits
+/// 原文: using GraphZoneTraits = ZoneTypeTraits;
+/// (ZoneTypeTraits 提供 zone 内分配指针的 Ptr<T> 模板)
+pub use crate::zone::ZoneTypeTraits as GraphZoneTraits;
+
+/// v8: src/compiler/graph-zone-traits.h ZoneNodePtr
+/// 原文: using ZoneNodePtr = GraphZoneTraits::Ptr<Node>;
+/// Rust 侧: zone 分配 Node 的裸指针包装 (非全局 GC 指针)
+pub type ZoneNodePtr = <GraphZoneTraits as crate::zone::ZoneTraitsKind>::Ptr<crate::node::Node>;

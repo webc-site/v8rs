@@ -1,0 +1,66 @@
+// 由 tool/src/compiler/backend/register-allocation.js 从 v8/src/compiler/backend/register-allocation.h 生成; 修订就地改, 复跑覆盖
+// 寄存器分配公共工具: RegisterKind/配置查询/栈槽字宽表
+
+//! 台账: RegisterKind 4 值 (kGeneral/kDouble/kSimd128/kSimd256);
+//!   RegisterKindFor = Simd256→Simd128→浮点→通用判定链;
+//!   GetRegisterCount/GetAllocatableRegisterCount/GetAllocatableRegisterCodes
+//!   = RegisterConfiguration 按 kind 分派 (Simd256 UNREACHABLE);
+//!   ByteWidthForStackSlot 字宽表 (实测 17 rep 有映射, 4 rep UNREACHABLE)。
+
+/// v8: RegisterKind — 寄存器类别
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum RegisterKind {
+  /// kGeneral
+  General = 0,
+  /// kDouble
+  Double = 1,
+  /// kSimd128
+  Simd128 = 2,
+  /// kSimd256
+  Simd256 = 3,
+}
+
+/// v8: RegisterKindFor — 表示法 → 寄存器类别判定链
+// pub fn register_kind_for(rep: MachineRepresentation) -> RegisterKind
+/// v8: GetRegisterCount — 配置查询 (Simd256 不可达)
+// pub fn get_register_count(config: &RegisterConfiguration, kind: RegisterKind) -> i32
+/// v8: GetAllocatableRegisterCount — 可分配数查询
+// pub fn get_allocatable_register_count(config: &RegisterConfiguration, kind: RegisterKind) -> i32
+/// v8: GetAllocatableRegisterCodes — 可分配码表查询
+// pub fn get_allocatable_register_codes(config: &RegisterConfiguration, kind: RegisterKind) -> &[i32]
+/// v8: ByteWidthForStackSlot — 栈槽字宽 (kNone/kMapWord/kIndirectPointer/kFloat16RawBits 不可达)
+// pub fn byte_width_for_stack_slot(rep: MachineRepresentation) -> usize
+
+/// v8: ByteWidthForStackSlot → kSystemPointerSize
+pub const SLOT_WIDTH_BIT: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_WORD8: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_WORD16: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_WORD32: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_FLOAT16: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_FLOAT32: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_SANDBOXEDPOINTER: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_TAGGEDSIGNED: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_TAGGEDPOINTER: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_TAGGED: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_COMPRESSEDPOINTER: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_COMPRESSED: usize = kSystemPointerSize;
+pub const SLOT_WIDTH_PROTECTEDPOINTER: usize = kSystemPointerSize;
+
+/// v8: ByteWidthForStackSlot → kDoubleSize
+pub const SLOT_WIDTH_WORD64: usize = kDoubleSize;
+pub const SLOT_WIDTH_FLOAT64: usize = kDoubleSize;
+
+/// v8: ByteWidthForStackSlot → kSimd128Size
+pub const SLOT_WIDTH_SIMD128: usize = kSimd128Size;
+
+/// v8: ByteWidthForStackSlot → kSimd256Size
+pub const SLOT_WIDTH_SIMD256: usize = kSimd256Size;
+
+
+// —— 提取不变式断言 (字宽表实测: 指针宽 12 / 双宽 2 / Simd128 1 / Simd256 1) ——
+const _: () = {
+  assert!(SLOT_WIDTH_BIT == SLOT_WIDTH_WORD32); // 同组同宽实测
+  assert!(SLOT_WIDTH_WORD64 == SLOT_WIDTH_FLOAT64);
+  assert!(SLOT_WIDTH_TAGGED == SLOT_WIDTH_POINTER);
+};

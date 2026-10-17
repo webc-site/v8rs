@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="298" font-family="system-ui,sans-serif">
+<rect width="100%" height="100%" fill="#ffffff" />
+<text x="10" y="22" fill="#000" text-anchor="start" font-size="13" font-weight="bold">v8-regexp-syntax 语法层性能评测</text>
+<text x="10" y="44" fill="#000" text-anchor="start" font-size="13" font-weight="bold">解析模式集</text>
+<rect x="320" y="49" width="228.2" height="16" fill="#4c72b0" />
+<text x="10" y="65" fill="#222" text-anchor="start" font-size="13" font-weight="400">regex-syntax</text>
+<text x="556.1682580799525" y="65" fill="#222" text-anchor="start" font-size="13" font-weight="400">334.534 µs（1.00x）</text>
+<rect x="320" y="75" width="460.0" height="16" fill="#dd8452" />
+<text x="10" y="91" fill="#222" text-anchor="start" font-size="13" font-weight="400">v8rs</text>
+<text x="788" y="91" fill="#222" text-anchor="start" font-size="13" font-weight="400">115.121 ms（344x）</text>
+<text x="10" y="130" fill="#000" text-anchor="start" font-size="13" font-weight="bold">字符区间集合代数</text>
+<rect x="320" y="135" width="55.1" height="16" fill="#4c72b0" />
+<text x="10" y="151" fill="#222" text-anchor="start" font-size="13" font-weight="400">regex-syntax</text>
+<text x="383.0790493749736" y="151" fill="#222" text-anchor="start" font-size="13" font-weight="400">4.271 µs（1.00x）</text>
+<rect x="320" y="161" width="68.1" height="16" fill="#dd8452" />
+<text x="10" y="177" fill="#222" text-anchor="start" font-size="13" font-weight="400">v8rs</text>
+<text x="396.09009241334564" y="177" fill="#222" text-anchor="start" font-size="13" font-weight="400">5.927 µs（1.39x）</text>
+<text x="10" y="216" fill="#000" text-anchor="start" font-size="13" font-weight="bold">format_ast 输出</text>
+<rect x="320" y="221" width="24.0" height="16" fill="#4c72b0" />
+<text x="10" y="237" fill="#222" text-anchor="start" font-size="13" font-weight="400">regex-syntax</text>
+<text x="352" y="237" fill="#222" text-anchor="start" font-size="13" font-weight="400">1.066 µs（1.00x）</text>
+<rect x="320" y="247" width="164.7" height="16" fill="#dd8452" />
+<text x="10" y="263" fill="#222" text-anchor="start" font-size="13" font-weight="400">v8rs</text>
+<text x="492.7319066893365" y="263" fill="#222" text-anchor="start" font-size="13" font-weight="400">67.657 µs（63.46x）</text>
+<text x="10" y="292" fill="#666" text-anchor="start" font-size="13" font-weight="400">样本集固定确定性（xorshift64 定种子），全部实现共用同一数据；v8rs 为被测产品实现。</text>
+</svg>

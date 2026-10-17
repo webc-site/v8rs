@@ -1,0 +1,16 @@
+// 由 tool/src/compiler/turboshaft/fast-api-call-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/fast-api-call-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// 快速 API 调用降级 reducer
+
+/// v8: src/compiler/turboshaft/fast-api-call-lowering-reducer.h FastApiCallLoweringReducer
+/// FastApiCall 参数/返回值包装处理
+pub struct FastApiCallLoweringReducer {
+  pub placeholder: (),
+}
+
+impl FastApiCallLoweringReducer {
+  /// 原版 OpIndex REDUCE(FastApiCall)(V<LazyFrameState> frame_state, V<Object> data_argument, V<Context> context, base::Vector<const OpIndex> arguments, const FastApiCallParameters* parameters, base::Vector<const RegisterRepresentation> out_reps)
+  /// v8: src/compiler/turboshaft/fast-api-call-lowering-reducer.h FastApiCallLoweringReducer::REDUCE(FastApiCall)
+  pub fn reduce_fast_api_call(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

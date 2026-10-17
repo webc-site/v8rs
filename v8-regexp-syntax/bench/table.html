@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>v8-regexp-syntax 语法层性能评测</title>
+<style>body{font-family:system-ui,sans-serif;max-width:56em;margin:2em auto}table{border-collapse:collapse;margin:1em 0}th,td{border:1px solid #bbb;padding:.35em .8em;text-align:right}th{background:#eee}td:first-child,th:first-child{text-align:left}h2{margin-top:2em}</style>
+<h1>v8-regexp-syntax 语法层性能评测</h1>
+<p>criterion 评测汇总（基线 bench）</p>
+<h2>解析模式集</h2>
+<p>RegExpParser 解析代表性模式集 × Flags 组合：字面量、分支、量词嵌套、捕获组、命名组与引用、字符类、范围合并规范化、Unicode property 路径、断言。</p>
+<table>
+<thead><tr><th>实现</th><th>均值</th><th>中位数</th><th>斜率/迭代</th><th>置信区间 (95%)</th><th>相对最快</th></tr></thead>
+<tbody><tr><td>regex-syntax</td><td>334.534 µs</td><td>335.993 µs</td><td>335.489 µs</td><td>333.194 µs – 335.720 µs</td><td>1.00x</td></tr>
+<tr><td>v8rs</td><td>115.121 ms</td><td>115.142 ms</td><td>—</td><td>114.942 ms – 115.299 ms</td><td>344x</td></tr></tbody>
+</table>
+<h2>字符区间集合代数</h2>
+<p>CharacterRange 集合代数批量操作：规范化合并（并集）、交集、差集、取反，外加 Interval::union 区间合并对照。固定确定性 128+128 码点区间。</p>
+<table>
+<thead><tr><th>实现</th><th>均值</th><th>中位数</th><th>斜率/迭代</th><th>置信区间 (95%)</th><th>相对最快</th></tr></thead>
+<tbody><tr><td>regex-syntax</td><td>4.271 µs</td><td>4.269 µs</td><td>4.270 µs</td><td>4.267 µs – 4.275 µs</td><td>1.00x</td></tr>
+<tr><td>v8rs</td><td>5.927 µs</td><td>5.920 µs</td><td>5.957 µs</td><td>5.907 µs – 5.949 µs</td><td>1.39x</td></tr></tbody>
+</table>
+<h2>format_ast 输出</h2>
+<p>RegExpTree format_ast 序列化输出：6 棵代表性语法树逐棵重渲染。</p>
+<table>
+<thead><tr><th>实现</th><th>均值</th><th>中位数</th><th>斜率/迭代</th><th>置信区间 (95%)</th><th>相对最快</th></tr></thead>
+<tbody><tr><td>regex-syntax</td><td>1.066 µs</td><td>1.020 µs</td><td>1.054 µs</td><td>1.023 µs – 1.124 µs</td><td>1.00x</td></tr>
+<tr><td>v8rs</td><td>67.657 µs</td><td>67.805 µs</td><td>67.854 µs</td><td>67.215 µs – 68.073 µs</td><td>63.46x</td></tr></tbody>
+</table>
+<p><small>regex-syntax 仅为解析对比 oracle：RegExp 回溯语义与 regex/RE2 类库不兼容（红线 10.3），不进产品路径，不能作执行替换；其无 V8 Flags 概念，按标志组合次数重复解析以对齐操作数，字符类集合用其 hir::ClassUnicode 区间代数对照。</small></p>
+<p><small>样本集固定确定性（xorshift64 定种子），全部实现共用同一数据；v8rs 为被测产品实现。 — 生成时间: 2026-10-11T08:37:00.544Z</small></p>

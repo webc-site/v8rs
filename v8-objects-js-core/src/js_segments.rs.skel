@@ -1,0 +1,18 @@
+// 由 tool/src/objects/js-segments.h.js 从 v8/src/objects/js-segments.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSSegments 槽位/granularity 位域差集骨架
+
+//! JSSegments: Intl.Segmenter.prototype.segment 返回的迭代句柄;
+//! icu_iterator_with_text_ 为 CppGCManaged<IcuBreakIteratorWithText> 槽。
+
+/// v8: src/objects/js-segments.h JSSegments::icu_iterator_with_text_
+pub const K_ICU_ITERATOR_WITH_TEXT_OFFSET: usize = 24;
+/// v8: src/objects/js-segments.h JSSegments::raw_string_
+pub const K_RAW_STRING_OFFSET: usize = 32;
+/// v8: src/objects/js-segments.h JSSegments::flags_
+pub const K_FLAGS_OFFSET: usize = 40;
+/// v8: src/objects/js-segments.h JSSegments::kHeaderSize
+pub const K_HEADER_SIZE: usize = 48;
+
+// GranularityBits 复用 JSSegmenter::Granularity (bit 0, 宽 2; 三值 Grapheme/Word/Sentence)
+// 方法映射 (语义推迟, 依赖 ICU/Isolate): Create / Containing / CreateSegmentDataObject /
+//   GranularityAsString (借 JSSegmenter::GetGranularityString)

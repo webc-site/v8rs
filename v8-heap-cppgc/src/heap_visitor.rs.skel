@@ -1,0 +1,58 @@
+// 由 tool/src/heap/cppgc-internal/heap-visitor.js 从 v8/src/heap/cppgc-internal/heap-visitor.h 生成; 修订就地改, 复跑覆盖
+// CRTP 先序堆遍历骨架
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/heap-visitor.h HeapVisitor
+/// CRTP: Rust 侧以 trait + 泛型自由函数呈现; 访问顺序: heap → space → page → header。
+/// 钩子返回 true 表示不再下钻。
+pub trait HeapVisitor {
+    /// v8: HeapVisitor::VisitHeap
+    fn visit_heap(&mut self, _heap: &mut RawHeap) -> bool { false }
+    /// v8: HeapVisitor::VisitNormalPageSpace
+    fn visit_normal_page_space(&mut self, _space: &mut NormalPageSpace) -> bool { false }
+    /// v8: HeapVisitor::VisitLargePageSpace
+    fn visit_large_page_space(&mut self, _space: &mut LargePageSpace) -> bool { false }
+    /// v8: HeapVisitor::VisitNormalPage
+    fn visit_normal_page(&mut self, _page: &mut NormalPage) -> bool { false }
+    /// v8: HeapVisitor::VisitLargePage
+    fn visit_large_page(&mut self, _page: &mut LargePage) -> bool { false }
+    /// v8: HeapVisitor::VisitHeapObjectHeader
+    fn visit_heap_object_header(&mut self, _header: &mut HeapObjectHeader) -> bool { false }
+}
+
+/// v8: src/heap/cppgc-internal/heap-visitor.h HeapVisitor::Traverse(RawHeap&)
+pub fn traverse_heap<V: HeapVisitor>(v: &mut V, heap: &mut RawHeap) {
+    if v.visit_heap(heap) { return; }
+    for space in heap.spaces_mut() {
+        traverse_space(v, space);
+    }
+}
+
+/// v8: src/heap/cppgc-internal/heap-visitor.h HeapVisitor::Traverse(BaseSpace&)
+pub fn traverse_space<V: HeapVisitor>(v: &mut V, space: &mut BaseSpace) {
+    let stopped = if space.is_large() {
+        v.visit_large_page_space(space.as_large().unwrap())
+    } else {
+        v.visit_normal_page_space(space.as_normal().unwrap())
+    };
+    if stopped { return; }
+    for page in space.pages_mut() {
+        traverse_page(v, page);
+    }
+}
+
+/// v8: src/heap/cppgc-internal/heap-visitor.h HeapVisitor::Traverse(BasePage&)
+pub fn traverse_page<V: HeapVisitor>(v: &mut V, page: &mut BasePage) {
+    if page.is_large() {
+        let large = page.as_large_mut().unwrap();
+        if v.visit_large_page(large) { return; }
+        v.visit_heap_object_header(large.object_header());
+    } else {
+        let normal = page.as_normal_mut().unwrap();
+        if v.visit_normal_page(normal) { return; }
+        for header in normal.iter_mut() {
+            v.visit_heap_object_header(header);
+        }
+    }
+}

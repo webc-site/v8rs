@@ -1,0 +1,15 @@
+// 由 tool/src/base/numerics/ranges.h.js 从 v8/src/base/numerics/ranges.h 生成; 修订就地改, 复跑覆盖
+// 近似相等判定
+
+//! v8 侧模板函数 1 个: IsApproximatelyEqual
+
+/// |rhs - lhs| <= tolerance
+/// v8: src/base/numerics/ranges.h IsApproximatelyEqual(lhs, rhs, tolerance)
+/// static_assert: T 必须算术类型 (Rust 用 PartialOrd + Sub 数值 trait 约束)
+pub fn is_approximately_equal<T>(lhs: T, rhs: T, tolerance: T) -> bool
+where
+    T: Copy + PartialOrd + core::ops::Sub<Output = T>,
+{
+    // 语义: (rhs - lhs).abs() <= tolerance — 浮点/整数各自实现, 就地修订
+    todo!()
+}

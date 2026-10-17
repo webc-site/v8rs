@@ -1,0 +1,81 @@
+// 由 tool/src/wasm/interpreter/x64/interpreter-builtins-x64.cc.js 从 v8/src/wasm/interpreter/x64/interpreter-builtins-x64.cc 生成; 修订就地改, 复跑覆盖
+// x64 解释器 builtin: 入口寄存器约定与 WasmToJS spill 槽链
+
+//! Drumbrake 解释器的 x64 汇编 builtin。
+/// v8: src/wasm/interpreter/x64/interpreter-builtins-x64.cc Builtins::Generate_*
+
+/// WasmInterpreterEntry 输入寄存器
+/// v8: src/wasm/interpreter/x64/interpreter-builtins-x64.cc Generate_WasmInterpreterEntry
+pub mod interpreter_entry_regs {
+    /// v8: kWasmImplicitArgRegister — wasm_instance
+    pub const WASM_INSTANCE: &str = "kWasmImplicitArgRegister";
+    /// v8: r12 — function_index
+    pub const FUNCTION_INDEX: &str = "r12";
+    /// v8: r15 — array_start
+    pub const ARRAY_START: &str = "r15";
+    /// v8: rax — result_start
+    pub const RESULT_START: &str = "rax";
+    /// v8: rbx — ref_params_array
+    pub const REF_PARAMS_ARRAY: &str = "rbx";
+}
+
+/// 压栈序: tagged (instance, ref_params) 先压保 GC 连续, 再压非 tagged
+/// v8: Generate_WasmInterpreterEntry pushq 序列
+pub const PUSH_ORDER: &[&str] = &[
+    "wasm_instance", "ref_params_array", "function_index", "array_start", "result_start",
+];
+
+/// v8: __ CallRuntime(Runtime::kWasmRunInterpreter, 5)
+pub const ENTRY_RUNTIME_ARGC: usize = 5;
+
+/// 手写 builtin (4 个)
+/// v8: Builtins::Generate_*
+pub const HANDWRITTEN_BUILTINS: &[&str] = &[
+    "WasmInterpreterEntry",
+    "JSToWasmInterpreterWrapperAsm",
+    "WasmInterpreterCWasmEntry",
+    "GenericWasmToJSInterpreterWrapper",
+];
+
+/// GenericWasmToJSInterpreterWrapper 的 spill 槽链 (高→低地址)
+/// v8: Generate_GenericWasmToJSInterpreterWrapper constexpr 偏移链
+pub const WASM_TO_JS_SPILL_SLOTS: &[&str] = &[
+    "packed_array",
+    "expected_arity",
+    "return_count",
+    "param_count",
+    "signature",
+    "param_index", // 迭代返回值时复用
+    "value_types_array_start",
+    "current_param", // 迭代返回值地址时复用
+];
+
+/// 复用槽对数 (param_index/result_index, current_param/current_result_address)
+/// v8: "Reuse this slot when iterating over return values."
+pub const REUSED_SLOT_PAIRS: usize = 2;
+
+/// spill 槽总数 = (marker - 最低槽) / 指针宽
+/// v8: kNumSpillSlots 公式
+pub fn num_spill_slots(marker_offset: i32, lowest_slot_offset: i32, pointer_size: i32) -> i32 {
+    (marker_offset - lowest_slot_offset) / pointer_size
+}
+
+/// X-macro handler 条目数 (INT_LOADSTORE + FLOAT_LOADMEM, 与 arm64 同构)
+/// v8: FOREACH_INT_LOADSTORE_BUILTIN / FOREACH_FLOAT_LOADMEM_BUILTIN
+pub const HANDLER_V_ENTRIES: usize = 96;
+pub const VARIANTS_PER_ENTRY: usize = 2;
+pub const TOTAL_HANDLER_BUILTINS: usize = HANDLER_V_ENTRIES * VARIANTS_PER_ENTRY;
+
+/// 沙箱构建下受信字段走 DecomompressProtected, 否则 LoadTaggedField
+/// v8: LoadWasmInstanceFromFunctionData
+pub const SANDBOX_DUAL_PATH: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(HANDWRITTEN_BUILTINS.len(), 4);
+    assert_eq!(PUSH_ORDER.len(), 5);
+    assert_eq!(WASM_TO_JS_SPILL_SLOTS.len(), 8);
+    assert_eq!(HANDLER_V_ENTRIES, 96);
+    assert_eq!(TOTAL_HANDLER_BUILTINS, 192);
+    assert_eq!(num_spill_slots(0x30, 0x10, 8), 4);
+};

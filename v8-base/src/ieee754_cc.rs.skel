@@ -1,0 +1,56 @@
+// 由 tool/src/base/ieee754.cc.js 从 v8/src/base/ieee754.cc 生成; 修订就地改, 复跑覆盖
+// ieee754 数学函数面 (llvm-libc 委托 + 5 个本地实现)
+
+//! v8: src/base/ieee754.cc — 对应 ieee754.h 声明 (归 base-core 顶层)
+//! 委托关系: 大多数直接转 LIBC_NAMESPACE::shared (llvm-libc);
+//! Rust 侧对应策略: std/primal 取代, 语义差异处 Developer 补差分测试
+
+// —— libc 委托面 (Rust 对应 std::f64 同名, 特例注明) ——
+/// v8: ieee754.cc a → llvm-libc c
+pub fn a(x: f64) -> f64;
+/// v8: ieee754.cc a → llvm-libc s
+pub fn a(x: f64) -> f64;
+/// v8: ieee754.cc a → llvm-libc t
+pub fn a(x: f64) -> f64;
+/// v8: ieee754.cc a → llvm-libc t
+pub fn a(x: f64) -> f64;
+/// v8: ieee754.cc c → llvm-libc o
+pub fn c(x: f64) -> f64;
+/// v8: ieee754.cc e → llvm-libc x
+pub fn e(x: f64) -> f64;
+/// v8: ieee754.cc l → llvm-libc o
+pub fn l(x: f64) -> f64;
+/// v8: ieee754.cc l → llvm-libc o
+pub fn l(x: f64) -> f64;
+/// v8: ieee754.cc l → llvm-libc o
+pub fn l(x: f64) -> f64;
+/// v8: ieee754.cc l → llvm-libc o
+pub fn l(x: f64) -> f64;
+/// v8: ieee754.cc e → llvm-libc x
+pub fn e(x: f64) -> f64;
+/// v8: ieee754.cc c → llvm-libc b
+pub fn c(x: f64) -> f64;
+/// v8: ieee754.cc s → llvm-libc i
+pub fn s(x: f64) -> f64;
+/// v8: ieee754.cc t → llvm-libc a
+pub fn t(x: f64) -> f64;
+/// v8: ieee754.cc p → llvm-libc o
+pub fn p(x: f64) -> f64;
+
+// —— 本地实现面 (fdlibm 移植, 含 static 常量表) ——
+/// v8: ieee754.cc acosh/asinh/atanh — fdlibm 风格分段实现, 内嵌 static const 常量表
+pub fn acosh(x: f64) -> f64;
+pub fn asinh(x: f64) -> f64;
+pub fn atanh(x: f64) -> f64;
+/// v8: ieee754.cc cosh — |x| > KCOSH_OVERFLOW 走溢出路径
+pub fn cosh(x: f64) -> f64;
+/// v8: ieee754.cc sinh — |x| > KSINH_OVERFLOW 走溢出路径
+pub fn sinh(x: f64) -> f64;
+
+// v8: 溢出阈值 (static const double)
+pub const KCOSH_OVERFLOW: f64 = 710.4758600739439;
+pub const KSINH_OVERFLOW: f64 = 710.4758600739439;
+
+// v8: namespace legacy { pow } — 双参 pow 也走 llvm-libc shared::pow
+/// v8: ieee754.cc legacy::pow(x, y)
+pub fn pow(x: f64, y: f64) -> f64;

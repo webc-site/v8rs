@@ -1,0 +1,132 @@
+#!/usr/bin/env bun
+// v8/src/compiler/machine-operator-reducer.cc + machine-operator-reducer.h
+// → v8-compiler-passes/src/machine_operator_reducer.rs.skel
+//
+// 规则面: SignallingNanPropagation 枚举、常量工厂内联双轨
+// (Uint32→Int32 位重解释等 4 项)、Reduce 分派 case 计数 (125) +
+// 首尾锚; Word32/Word64 Adapter 友元锚。
+import { readV8, writeSrc, banner } from "../../lib.js";
+
+const h = readV8("src/compiler/machine-operator-reducer.h");
+const cc = readV8("src/compiler/machine-operator-reducer.cc");
+
+// —— 哨兵 ——
+const sentinels = [
+  [h, /class V8_EXPORT_PRIVATE MachineOperatorReducer final/, "MachineOperatorReducer"],
+  [h, /enum SignallingNanPropagation \{/, "SignallingNanPropagation"],
+  [h, /kSilenceSignallingNan,/, "枚举首项"],
+  [h, /return Int32Constant\(base::bit_cast<int32_t>\(value\)\);/, "Uint32 重解释"],
+  [h, /return Int64Constant\(base::bit_cast<int64_t>\(value\)\);/, "Uint64 重解释"],
+  [h, /friend class Word32Adapter;/, "Adapter 友元"],
+  [cc, /Reduction MachineOperatorReducer::Reduce\(Node\* node\) \{/, "Reduce 实现"],
+  [cc, /Reduction MachineOperatorReducer::ReduceWord32And\(Node\* node\) \{/, "首个 ReduceWord32"],
+];
+for (const [src, re, name] of sentinels) {
+  if (!re.test(src)) throw new Error(`哨兵缺失: ${name}`);
+}
+
+// —— 枚举变体 ——
+const snp = h.match(/enum SignallingNanPropagation \{([\s\S]*?)\};/)[1];
+const snpVariants = [...snp.matchAll(/k(\w+),?\s*$/gm)].map((m) => m[1]);
+if (snpVariants.join() !== "SilenceSignallingNan,PropagateSignallingNan") throw new Error(`SNP 漂移: ${snpVariants}`);
+
+// —— 分派 case 计数 + 首尾 ——
+const switchSrc = cc.slice(
+  cc.indexOf("Reduction MachineOperatorReducer::Reduce(Node* node) {"),
+  cc.indexOf("Reduction MachineOperatorReducer::ReduceWord32And"),
+);
+const cases = [...switchSrc.matchAll(/case IrOpcode::k(\w+):/g)].map((m) => m[1]);
+if (cases.length !== 111) throw new Error(`Reduce 主分派 case ${cases.length} != 111`);
+if (cases[0] !== "Projection" || cases.at(-1) !== "Uint64LessThanOrEqual") {
+  throw new Error(`分派首尾漂移: ${cases[0]}..${cases.at(-1)}`);
+}
+
+const body = `${banner("src/compiler/machine-operator-reducer.js", "src/compiler/machine-operator-reducer.h + src/compiler/machine-operator-reducer.cc", "MachineOperatorReducer — 机器算子常量折叠/强度削减 (分派 125 case)")}
+//! MachineOperatorReducer: 逐机器算子的代数化简。
+//!
+//! 规则面: SNP 枚举 + 常量工厂内联双轨 + Reduce 主分派 ${cases.length} case (全文 case 125)
+//! (${cases[0]}..${cases.at(-1)})。
+//! 语义面 (推迟): 各 case 的折叠规则 (cc 1500+ 行)。
+
+#![allow(dead_code, unused_variables, non_camel_case_types)]
+
+/// v8: src/compiler/machine-operator-reducer.h MachineOperatorReducer::SignallingNanPropagation
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SignallingNanPropagation {
+  /// kSilenceSignallingNan — 安静化 sNaN
+  Silence,
+  /// kPropagateSignallingNan — 传播 sNaN
+  Propagate,
+}
+
+/// v8: src/compiler/machine-operator-reducer.h MachineOperatorReducer
+pub struct MachineOperatorReducer {
+  /// 原 mcgraph_
+  pub mcgraph: *mut crate::machine_graph::MachineGraph,
+  /// 原 signalling_nan_propagation_
+  pub signalling_nan_propagation: SignallingNanPropagation,
+  /// 原 allow_signalling_nan_ 推导位
+  pub allow_signalling_nan: bool,
+}
+
+impl MachineOperatorReducer {
+  /// v8: src/compiler/machine-operator-reducer.cc MachineOperatorReducer::reducer_name
+  pub const REDUCER_NAME: &'static str = "MachineOperatorReducer";
+
+  /// v8: src/compiler/machine-operator-reducer.cc MachineOperatorReducer::Reduce
+  /// 主分派 ${cases.length} case, 首 k${cases[0]} 尾 k${cases.at(-1)}
+  pub fn reduce(&mut self, node: &crate::node::Node) -> crate::graph_reducer::Reduction {
+    let _ = node;
+    todo!("111 case 主分派 (全文 case 125)")
+  }
+
+  /// v8: src/compiler/machine-operator-reducer.h Uint32Constant (内联)
+  /// 原文: return Int32Constant(base::bit_cast<int32_t>(value));
+  fn uint32_constant(&mut self, value: u32) -> crate::node::Node {
+    self.int32_constant(value as i32)
+  }
+  /// v8: src/compiler/machine-operator-reducer.h Uint64Constant (内联)
+  /// 原文: return Int64Constant(base::bit_cast<int64_t>(value));
+  fn uint64_constant(&mut self, value: u64) -> crate::node::Node {
+    self.int64_constant(value as i64)
+  }
+  /// v8: src/compiler/machine-operator-reducer.h Word32And (uint32 版内联)
+  /// 原文: return Word32And(lhs, Uint32Constant(rhs));
+  fn word32_and_const(&mut self, lhs: crate::node::Node, rhs: u32) -> crate::node::Node {
+    self.word32_and(lhs, self.uint32_constant(rhs))
+  }
+  /// v8: src/compiler/machine-operator-reducer.h Word64And (uint64 版内联)
+  /// 原文: return Word64And(lhs, Uint64Constant(rhs));
+  fn word64_and_const(&mut self, lhs: crate::node::Node, rhs: u64) -> crate::node::Node {
+    self.word64_and(lhs, self.uint64_constant(rhs))
+  }
+  /// v8: src/compiler/machine-operator-reducer.h ReplaceBool (内联)
+  /// 原文: return ReplaceInt32(value ? 1 : 0);
+  fn replace_bool(&mut self, value: bool) -> crate::graph_reducer::Reduction {
+    self.replace_int32(if value { 1 } else { 0 })
+  }
+
+  // 常量工厂 (cc): Float32/Float64/Int32/Int64Constant,
+  // 算术助手: Word{32,64}{And,Sar,Shr,Equal}, Int{32,64}{Add,Sub,Mul,Div},
+  // Uint{32,64}Div, Float64Mul/PowHalf, Truncate/Change 系列 — 语义面随 mcgraph 缓存
+  fn int32_constant(&mut self, v: i32) -> crate::node::Node {
+    todo!("mcgraph 常量")
+  }
+  fn int64_constant(&mut self, v: i64) -> crate::node::Node {
+    todo!("mcgraph 常量")
+  }
+  fn word32_and(&mut self, l: crate::node::Node, r: crate::node::Node) -> crate::node::Node {
+    todo!("Word32And 节点")
+  }
+  fn word64_and(&mut self, l: crate::node::Node, r: crate::node::Node) -> crate::node::Node {
+    todo!("Word64And 节点")
+  }
+  fn replace_int32(&mut self, v: i32) -> crate::graph_reducer::Reduction {
+    let _ = v;
+    todo!("Replace(Int32Constant)")
+  }
+}
+`;
+
+const p = writeSrc("v8-compiler-passes", "machine_operator_reducer.rs.skel", body);
+console.log(`written ${p}\nSNP=${snpVariants.length} 分派case=${cases.length} (${cases[0]}..${cases.at(-1)}) 内联双轨=5`);

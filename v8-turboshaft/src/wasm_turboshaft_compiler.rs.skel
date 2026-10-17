@@ -1,0 +1,18 @@
+// 由 tool/src/compiler/turboshaft/wasm-turboshaft-compiler.h.js 从 v8/src/compiler/turboshaft/wasm-turboshaft-compiler.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm 编译入口: Turboshaft tier 的 job 与执行
+
+/// 原版 ExecuteTurboshaftWasmCompilation — 委托 Pipeline::GenerateWasmCode,
+/// 后置断言: succeeded / result_tier == kTurbofan / assumptions 移交非空。
+/// v8: src/compiler/turboshaft/wasm-turboshaft-compiler.{h,cc}
+pub fn execute_turboshaft_wasm_compilation(
+  env: &CompilationEnv, data: &mut WasmCompilationData,
+  detected: &mut WasmDetectedFeatures,
+  counter_updates: &mut DelayedCounterUpdates,
+) -> WasmCompilationResult { todo!() }
+
+/// 原版 TurboshaftCompilationJob — OptimizedCompilationJob 子类,
+/// 名字固定 "Turboshaft", 持 compilation_info_。
+/// v8: wasm-turboshaft-compiler.h TurboshaftCompilationJob
+pub struct TurboshaftCompilationJob {
+  pub compilation_info: *mut OptimizedCompilationInfo,
+}

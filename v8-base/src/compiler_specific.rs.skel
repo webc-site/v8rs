@@ -1,0 +1,16 @@
+// 由 tool/src/base/compiler-specific.h.js 从 v8/src/base/compiler-specific.h 生成; 修订就地改, 复跑覆盖
+// 编译器注记宏, Rust 无对应物逐项登记
+
+//! v8: src/base/compiler-specific.h — 编译器差异抹平宏, Rust 侧全部语义等价或不需要
+
+// | v8 宏 | Rust 对应 | 备注 |
+// | --- | --- | --- |
+// | v8: V8_ALLOW_UNUSED | #[allow(dead_code)] | attribute__((unused)) |
+// | v8: PRINTF_FORMAT(f, d) | 无 (Rust 格式串编译期检查) | GNUC format(printf,...) |
+// | v8: STATIC_CONST_MEMBER_DEFINITION | 无 | MSVC declspec(selectany) |
+// | v8: MSVC_SUPPRESS_WARNING(n) | 无 | 仅 MSVC |
+// | v8: NON_EXPORTED_BASE(code) | 无 | MSVC C4275 抑制 |
+// | v8: V8_NOEXCEPT | 无 (Rust fn 天然不抛) | 旧编译器 noexcept 兼容层 |
+// | v8: ALIGNAS(n) | #[repr(align(n))] | attribute__((aligned(n))) |
+// | v8: V8_DEBUGGING_EXPORT | 无 | used+retain+optnone+visibility, GDB 调试用 |
+// | v8: HAS_CPP_CLASS_TYPES_AS_TEMPLATE_ARGS | 无 | C++20 门 (202002L), Rust 恒真等价 |

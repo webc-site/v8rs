@@ -1,0 +1,67 @@
+// 由 tool/src/heap/main-allocator.js 从 v8/src/heap/main-allocator.cc, src/heap/main-allocator-inl.h (族 .h: src/heap/main-allocator.h) 生成; 修订就地改, 复跑覆盖
+// 主分配器: 分配策略族与黑分配开关
+/// v8: src/heap/main-allocator.h MainAllocator::BlackAllocation
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum BlackAllocation {
+  /// kAlwaysEnabled
+  ALWAYS_ENABLED = 0,
+  /// kAlwaysDisabled
+  ALWAYS_DISABLED = 1,
+  /// kEnabledOnMarking
+  ENABLED_ON_MARKING = 2,
+}
+
+/// v8: src/heap/main-allocator.cc MainAllocator::ComputeBlackAllocation
+/// 入参 IsNewGeneration = StrongAlias<bool> (kNewGeneration{true}/kOldGeneration{false})
+/// 新生代 → AlwaysDisabled; sticky_mark_bits → AlwaysEnabled; 否则 EnabledOnMarking
+pub fn compute_black_allocation(is_new_generation: bool) -> BlackAllocation {
+  if is_new_generation {
+    return BlackAllocation::AlwaysDisabled;
+  }
+  if v8_flags().sticky_mark_bits {
+    return BlackAllocation::AlwaysEnabled;
+  }
+  BlackAllocation::EnabledOnMarking
+}
+
+/// v8: src/heap/main-allocator.h AllocatorPolicy — 基类虚接口
+/// EnsureAllocation(size, alignment, origin) / FreeLinearAllocationArea /
+/// SupportsExtendingLAB (默认 false)
+pub trait AllocatorPolicy {
+  fn ensure_allocation(&mut self, size_in_bytes: i32, alignment: AllocationAlignment, origin: AllocationOrigin) -> bool;
+  fn free_linear_allocation_area(&mut self);
+  fn supports_extending_lab(&self) -> bool { false }
+}
+
+/// v8: src/heap/main-allocator.h SemiSpaceNewSpaceAllocatorPolicy
+pub struct SemiSpaceNewSpaceAllocatorPolicy<'a> {
+  /// v8: space_
+  pub space: &'a mut SemiSpaceNewSpace,
+}
+impl SemiSpaceNewSpaceAllocatorPolicy<'_> {
+  /// v8: kLabSizeInGC = 32 * KB — GC 中 LAB 固定 32KB
+  pub const K_LAB_SIZE_IN_GC: i32 = 32 * 1024;
+  /// v8: FreeLinearAllocationAreaUnsynchronized
+  /// v8: EnsureAllocation (cc)
+}
+
+/// v8: src/heap/main-allocator.h PagedSpaceAllocatorPolicy
+/// RefillLab / ContributeToSweeping (kMaxPagesToSweep=1 见 cc) /
+/// TryAllocationFromFreeList / TryExpandAndAllocate / TryExtendLAB /
+/// SetLinearAllocationArea / FreeLinearAllocationAreaUnsynchronized
+/// v8: src/heap/main-allocator.cc PagedSpaceAllocatorPolicy 各实现
+
+/// v8: src/heap/main-allocator.h PagedNewSpaceAllocatorPolicy
+/// SupportsExtendingLAB() = true; TryAllocatePage / WaitForSweepingForAllocation
+/// v8: src/heap/main-allocator.cc PagedNewSpaceAllocatorPolicy 各实现
+
+/// v8: src/heap/main-allocator-inl.h MainAllocator 内联面
+/// (AllocateRaw/fast path/lab 管理 — 语义体留 Developer)
+/// v8: src/heap/main-allocator.cc MainAllocator::MainAllocator / 析构
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(BlackAllocation::AlwaysDisabled == 1);
+  assert!(BlackAllocation::EnabledOnMarking == 2);
+};

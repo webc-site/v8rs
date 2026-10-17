@@ -1,0 +1,25 @@
+// 由 tool/src/heap/memory-chunk-layout.h.js 从 v8/src/heap/memory-chunk-layout.h 生成; 修订就地改, 复跑覆盖
+// MemoryChunkLayout 7 函数台账; 布局数值链 + InstructionStream 依赖推迟
+
+// ══ MemoryChunkLayout (原版 memory-chunk-layout.h:14-67) → v8-heap-core/src/memory_chunk.rs ══
+// layout:18   static constexpr intptr_t ObjectStartOffsetInCodePage()
+// layout:26   static constexpr size_t AllocatableMemoryInCodePage()
+// layout:30   static constexpr size_t ObjectStartOffsetInDataPage()
+// layout:35   static constexpr size_t AllocatableMemoryInDataPage()
+// layout:42   static constexpr size_t ObjectStartOffsetInMemoryChunk(
+// layout:51   static constexpr size_t AllocatableMemoryInMemoryChunk(
+// layout:61   static constexpr int MaxRegularCodeObjectSize()
+// 目标配置数值链 (Rust 侧 const 计算 + tests 布局金标准逐项断言):
+//   sizeof(MemoryChunk) = 16 (repr(C): flags usize@0 + metadata_index u32@8, pad 至 16)
+//   ObjectStartOffsetInDataPage = RoundUp(16, ALIGN_TO_ALLOCATION_ALIGNMENT(8)) = 16
+//   AllocatableMemoryInDataPage = 2^18 - 16 = 262128; 断言 kMaxRegularHeapObjectSize(131072) <= 262128 ✓
+//   ObjectStartOffsetInCodePage = RoundUp(16 + IStream头, kCodeAlignment) - IStream头
+//     — InstructionStream::kHeaderSize 属 objects/instruction-stream.h (他票): 目标配置推导值 16
+//       (TrustedObject 4 + 保护指针 ×2 各 4 + body_size u32 4, 无嵌入式常量池 x64/arm64);
+//       Rust 侧以 const 参数注入 + 双引用推迟登记 (原版 layout:21 ↔ memory_chunk.rs 推迟台账)
+//   MaxRegularCodeObjectSize = RoundDown(码页可分配/2, kTaggedSize) — 依赖上项, 同法注入
+// DCHECK_NE(space, CODE_LO_SPACE) layout:53 — release 剥除 (展开实测 0), Rust 不复活
+// ── rs 侧落地锚 (HC-1R2a 实测台账) ──
+// Landed @ v8-heap-core/src/memory_chunk.rs (MemoryChunkLayout 区): 7 函数全落, 头尺寸参数注入式承接
+//   (K_INSTRUCTION_STREAM_HEADER_SIZE_DERIVED=16, 推迟台账 10 双引用 layout:21);
+//   测试面 tests/memory_chunk_unittest.rs::layout_fns_gold 逐项金标准 (16/262128/码页 cfg 双形态)。

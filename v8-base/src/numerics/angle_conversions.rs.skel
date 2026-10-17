@@ -1,0 +1,28 @@
+// 由 tool/src/base/numerics/angle_conversions.h.js 从 v8/src/base/numerics/angle_conversions.h 生成; 修订就地改, 复跑覆盖
+// 角度/弧度换算规则面
+
+//! v8 侧 2 个模板函数, 解析计数: 2
+
+use core::ops::{Div, Mul};
+
+/// 度 → 弧度: deg * pi / 180
+/// v8: src/base/numerics/angle_conversions.h DegToRad
+pub fn deg_to_rad<T>(deg: T) -> T
+where
+    T: Copy + Mul<Output = T> + Div<Output = T> + PartialEq,
+{
+    // 语义: deg * std::f64::consts::PI / 180.0 (按 T 特化)
+    /// v8: expr = * std::numbers::pi_v<T> / 180
+    todo!()
+}
+
+/// 弧度 → 度: rad * 180 / pi
+/// v8: src/base/numerics/angle_conversions.h RadToDeg
+pub fn rad_to_deg<T>(rad: T) -> T
+where
+    T: Copy + Mul<Output = T> + Div<Output = T> + PartialEq,
+{
+    // 语义: rad * 180.0 / std::f64::consts::PI (按 T 特化)
+    /// v8: expr = * 180 / std::numbers::pi_v<T>
+    todo!()
+}

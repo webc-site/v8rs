@@ -1,0 +1,151 @@
+// 由 tool/src/compiler/operator.cc.js 从 v8/src/compiler/operator.cc + operator.h 生成; 修订就地改, 复跑覆盖
+// Operator 布局/CheckRange/属性打印序; 位面正典在 v8-compiler-graph/src/operator.rs
+
+//! Operator 实现面基线 — operator.cc 的机械规则。
+//!
+//! - 字段序 (声明序 = ctor 初始化序): mnemonic_/opcode_/properties_ 先行,
+//!   effect_out_ (u8) 提前到 u32 组之前做位打包 (h:155 注释), 其余 5 计数 u32 收尾
+//! - CheckRange<N>: CHECK 上界 = min(N::MAX, kMaxInt) 后收窄 (getter 仍返 int 的过渡约束)
+//! - PrintPropsTo: 按 OPERATOR_PROPERTY_LIST 固定序打印已置位名, ", " 分隔
+
+/// 操作码裸值域 (Operator::Opcode = uint16_t)
+pub type Opcode = u16;
+
+/// 打印冗长度 (operator.h:61 PrintVerbosity)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum PrintVerbosity {
+  /// kVerbose
+  VERBOSE = 0,
+  /// kSilent
+  SILENT = 1,
+}
+
+/// kMaxInt — std::numeric_limits<int>::max() (CheckRange 的公共上界分量)
+pub const K_MAX_INT: u64 = 2_147_483_647;
+
+/// CheckRange<uint8_t> 的 1:1 转写 — 上界 = min(255, kMaxInt) = 255
+/// v8: src/compiler/operator.cc:16 CheckRange (effect_out_)
+#[must_use]
+pub const fn check_range_u8(val: u64) -> u8 {
+  assert!(val <= u8::MAX as u64);
+  val as u8
+}
+
+/// CheckRange<uint32_t> 的 1:1 转写 — 上界 = min(u32::MAX, kMaxInt) = kMaxInt
+/// v8: src/compiler/operator.cc:16 CheckRange (value/effect/control 计数)
+#[must_use]
+pub const fn check_range_u32(val: u64) -> u32 {
+  assert!(val <= K_MAX_INT);
+  val as u32
+}
+
+// —— 字段布局台账 (类型面由 Developer 落型; 序与打包意图照原版) ——
+// h:152  const char* mnemonic_;
+// h:153  Opcode opcode_;                       // uint16_t
+// h:154  Properties properties_;               // base::Flags<Property, uint8_t>
+// h:155  uint8_t  effect_out_;                 // 声明序提前, 字段打包 (原注释)
+// h:156  uint32_t value_in_;
+// h:157  uint32_t effect_in_;
+// h:158  uint32_t control_in_;
+// h:159  uint32_t value_out_;
+// h:160  uint32_t control_out_;
+// ctor (cc:27-38) 初始化序与声明序一致; 全部计数经 CheckRange 收窄
+
+/// 属性位打印序 — OPERATOR_PROPERTY_LIST (可视化器固定序, operator.h:57-59)
+pub const PROPERTY_PRINT_ORDER: [&str; 7] = ["Commutative", "Associative", "Idempotent", "NoRead", "NoWrite", "NoThrow", "NoDeopt"];
+
+/// 打印序对应的属性位 (k 名 → 位值; 与 operator.h:44-50 逐位一致)
+pub const PROPERTY_PRINT_BITS: [(&str, u8); 7] = [
+  ("Commutative", 0x1),
+  ("Associative", 0x2),
+  ("Idempotent", 0x4),
+  ("NoRead", 0x8),
+  ("NoWrite", 0x10),
+  ("NoThrow", 0x20),
+  ("NoDeopt", 0x40),
+];
+
+/// PrintPropsTo 的 1:1 转写 — 已置位属性名按固定序拼接, ", " 分隔
+/// (原版 PRINT_PROP_IF_SET 宏展开: HasProperty(k##name) 真则打印 #name)
+/// v8: src/compiler/operator.cc:49 Operator::PrintPropsTo
+#[must_use]
+pub fn print_props_to(properties: u8) -> String {
+  let mut out = String::new();
+  let mut separator = "";
+  for (name, bit) in PROPERTY_PRINT_BITS {
+    if properties & bit == bit {
+      out.push_str(separator);
+      out.push_str(name);
+      separator = ", ";
+    }
+  }
+  out
+}
+
+/// kFoldable = kNoRead|kNoWrite (组合位, 对数锚)
+pub const K_FOLDABLE: u8 = 0x18;
+/// kEliminatable = kNoDeopt|kNoWrite|kNoThrow
+pub const K_ELIMINATABLE: u8 = 0x70;
+/// kKontrol = kNoDeopt|kFoldable|kNoThrow (原版拼写如此)
+pub const K_KONTROL: u8 = 0x78;
+/// kPure = kKontrol|kIdempotent
+pub const K_PURE: u8 = 0x7c;
+
+// —— 方法签名骨架 (语义实现由 Developer 就地修订) ——
+/// 原版签名: Operator::Operator(Opcode opcode, Properties properties, const char* mnemonic, size_t value_in, size_t effect_in, size_t control_in, size_t value_out, size_t effect_out, size_t control_out)
+/// v8: src/compiler/operator.cc:27
+pub fn operator_new() {
+  todo!("就地修订: 九参构造, 计数经 CheckRange 收窄")
+}
+
+/// 原版签名: std::ostream& operator<<(std::ostream& os, const Operator& op)
+/// v8: src/compiler/operator.cc:40
+pub fn operator_stream_out() {
+  todo!("就地修订: 转发 PrintTo")
+}
+
+/// 原版签名: void Operator::PrintToImpl(std::ostream& os, PrintVerbosity verbose) const
+/// v8: src/compiler/operator.cc:45
+pub fn print_to_impl() {
+  todo!("就地修订: 基类直写 mnemonic, 子类覆写带参打印")
+}
+
+/// 原版签名: void Operator::PrintPropsTo(std::ostream& os) const
+/// v8: src/compiler/operator.cc:49
+pub fn print_props_to_skel() {
+  todo!("就地修订: 挂接 print_props_to 纯函数")
+}
+
+// —— 提取不变式断言 (编译期可求值面) ——
+const _: () = {
+  assert!(K_MAX_INT == 2_147_483_647);
+  assert!(check_range_u8(0) == 0);
+  assert!(check_range_u8(255) == 255);
+  assert!(check_range_u32(2_147_483_647) == 2_147_483_647);
+  assert!(PROPERTY_PRINT_ORDER.len() == 7);
+  assert!(K_FOLDABLE == 0x18);
+  assert!(K_ELIMINATABLE == 0x70);
+  assert!(K_KONTROL == 0x78);
+  assert!(K_PURE == 0x7c);
+};
+
+// —— 行为面对数 (String/str 非 const, 挂接后随 crate 测试跑; 暂以标准 #[test] 占位,
+//    挂接时由 Developer 改写为仓库规范测试样式) ——
+#[cfg(test)]
+mod generated_checks {
+  use super::{print_props_to, PROPERTY_PRINT_ORDER};
+
+  #[test]
+  fn print_props_separator_rule() {
+    assert_eq!(PROPERTY_PRINT_ORDER[0], "Commutative");
+    assert_eq!(PROPERTY_PRINT_ORDER[6], "NoDeopt");
+    assert_eq!(print_props_to(0), "");
+    assert_eq!(print_props_to(0x01), "Commutative");
+    assert_eq!(print_props_to(0x18), "NoRead, NoWrite");
+    assert_eq!(
+      print_props_to(0x7f),
+      "Commutative, Associative, Idempotent, NoRead, NoWrite, NoThrow, NoDeopt"
+    );
+  }
+}

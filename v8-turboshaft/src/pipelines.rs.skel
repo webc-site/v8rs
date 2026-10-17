@@ -1,0 +1,75 @@
+// 由 tool/src/compiler/turboshaft/pipelines.h.js 从 v8/src/compiler/turboshaft/pipelines.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 流水线编排: phase 执行序列与入口
+
+/// 原版 kTempZoneName — phase 临时 zone 名
+/// v8: src/compiler/turboshaft/pipelines.h kTempZoneName
+pub const TEMP_ZONE_NAME: &str = "temp-zone";
+
+/// 原版 RUN_MAYBE_ABORT(phase, ...) — phase 返回 false 即中止整条流水线
+/// v8: src/compiler/turboshaft/pipelines.h RUN_MAYBE_ABORT
+macro_rules! run_maybe_abort {
+  ($phase:expr) => { if !$phase.run() { return None; } };
+}
+
+/// 原版 SimplificationAndNormalizationPhase (pipelines.cc 定义 Run)
+/// v8: src/compiler/turboshaft/pipelines.{h,cc} SimplificationAndNormalizationPhase
+pub struct SimplificationAndNormalizationPhase;
+
+/// 原版 detail::NoLinkage — 无 linkage 构造 Pipeline 的哨兵重载
+/// v8: src/compiler/turboshaft/pipelines.h detail::NoLinkage
+pub enum NoLinkage { NoLinkage }
+
+/// 原版 Pipeline — Turboshaft 主流水线 (data_ + linkage)
+/// v8: src/compiler/turboshaft/pipelines.h Pipeline
+pub struct Pipeline<'d> {
+  pub data: &'d mut PipelineData,
+  pub linkage: Option<&'d Linkage>,
+}
+
+impl<'d> Pipeline<'d> {
+  /// OptimizeTurboshaftGraph 的 phase 执行序 (在位顺序):
+  /// - WasmInJSInliningPhase
+  /// - WasmGCOptimizePhase
+  /// - LoopOptimizationPhase
+  /// - MachineLoweringPhase
+  /// - LoopUnrollingPhase
+  /// - LoadEliminationPhase
+  /// - MemoryOptimizationPhase
+  /// - RandomReschedulingPhase
+  /// - TypedOptimizationsPhase
+  /// - TypeAssertionsPhase
+  /// - CodeEliminationAndSimplificationPhase
+  /// - DebugFeatureLoweringPhase
+  /// - SimplificationAndNormalizationPhase
+  /// - BlockInstrumentationPhase
+  /// - ProfileApplicationPhase(profile)
+  /// - DecompressionOptimizationPhase
+  ///
+  /// v8: src/compiler/turboshaft/pipelines.h Pipeline::OptimizeTurboshaftGraph
+  pub fn optimize_turboshaft_graph(&mut self) -> bool { todo!() }
+
+  /// SelectInstructions 段:
+  /// - InstructionSelectionPhase
+  /// v8: src/compiler/turboshaft/pipelines.h Pipeline::SelectInstructions
+  pub fn select_instructions(&mut self) -> bool { todo!() }
+
+  /// v8: pipelines.h Pipeline::CreateGraphWithMaglev — 跑 TurbolevFrontendPipeline
+  /// 后接 TurbolevGraphBuildingPhase (可选 bailout)
+  pub fn create_graph_with_maglev(&mut self, linkage: &Linkage) -> bool { todo!() }
+  /// v8: pipelines.h Pipeline::GenerateCode / AllocateRegisters / AssembleCode
+  pub fn generate_code(&mut self) -> Option<Code> { todo!() }
+  pub fn allocate_registers(&mut self, config: &RegisterConfiguration) -> bool { todo!() }
+  pub fn assemble_code(&mut self, linkage: &Linkage) -> bool { todo!() }
+}
+
+/// 原版 BuiltinPipeline::OptimizeBuiltin 序列 (CSA 内置, 8 phase):
+/// - CsaEarlyMachineOptimizationPhase
+/// - CsaLoadEliminationPhase
+/// - CsaLateEscapeAnalysisPhase
+/// - CsaBranchEliminationPhase
+/// - CsaEffectsComputationPhase
+/// - CsaMemoryOptimizationPhase
+/// - CodeEliminationAndSimplificationPhase
+/// - DebugFeatureLoweringPhase
+/// v8: src/compiler/turboshaft/pipelines.cc BuiltinPipeline::OptimizeBuiltin
+pub struct BuiltinPipeline<'d>(pub Pipeline<'d>);

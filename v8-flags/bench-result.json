@@ -1,0 +1,142 @@
+{
+  "crate": "v8-flags",
+  "generated_at": "2026-10-11T07:54:00.788Z",
+  "groups": [
+    "batch_set",
+    "lookup_hit",
+    "lookup_miss",
+    "parse_bool",
+    "parse_kv",
+    "parse_multi",
+    "parse_neg",
+    "parse_str_kv",
+    "parse_unknown",
+    "reset_default"
+  ],
+  "impls": [
+    "v8rs-phf",
+    "std-hashmap"
+  ],
+  "measures": [
+    {
+      "group": "batch_set",
+      "impl": "v8rs-phf",
+      "mean_ns": 5638.445805853299,
+      "median_ns": 5609.071610169492,
+      "std_dev_ns": 454.2437018202957,
+      "ci_lower_ns": 5562.69199101001,
+      "ci_upper_ns": 5738.057623435587,
+      "throughput": null
+    },
+    {
+      "group": "lookup_hit",
+      "impl": "std-hashmap",
+      "mean_ns": 994.3676896026305,
+      "median_ns": 984.7470739247074,
+      "std_dev_ns": 59.65735617296449,
+      "ci_lower_ns": 984.3386907864182,
+      "ci_upper_ns": 1007.3389634611367,
+      "throughput": null
+    },
+    {
+      "group": "lookup_hit",
+      "impl": "v8rs-phf",
+      "mean_ns": 1946.0749201365552,
+      "median_ns": 1721.1345069107497,
+      "std_dev_ns": 732.3694083756135,
+      "ci_lower_ns": 1820.543890020056,
+      "ci_upper_ns": 2103.6222063055,
+      "throughput": null
+    },
+    {
+      "group": "lookup_miss",
+      "impl": "std-hashmap",
+      "mean_ns": 723.1649010908685,
+      "median_ns": 712.5820674402063,
+      "std_dev_ns": 54.92980327438956,
+      "ci_lower_ns": 714.0193708960797,
+      "ci_upper_ns": 735.2674865809391,
+      "throughput": null
+    },
+    {
+      "group": "lookup_miss",
+      "impl": "v8rs-phf",
+      "mean_ns": 1435.7152697011145,
+      "median_ns": 1401.6512567793075,
+      "std_dev_ns": 166.39179769877435,
+      "ci_lower_ns": 1409.6581058905672,
+      "ci_upper_ns": 1472.9704104987818,
+      "throughput": null
+    },
+    {
+      "group": "parse_bool",
+      "impl": "v8rs-phf",
+      "mean_ns": 769.5788010784086,
+      "median_ns": 608.6836006604553,
+      "std_dev_ns": 1254.8715042177294,
+      "ci_lower_ns": 628.7196878180556,
+      "ci_upper_ns": 1034.126497241958,
+      "throughput": null
+    },
+    {
+      "group": "parse_kv",
+      "impl": "v8rs-phf",
+      "mean_ns": 681.0023049201948,
+      "median_ns": 647.2313986013986,
+      "std_dev_ns": 163.66192012321184,
+      "ci_lower_ns": 653.4463904866112,
+      "ci_upper_ns": 716.9494240520079,
+      "throughput": null
+    },
+    {
+      "group": "parse_multi",
+      "impl": "v8rs-phf",
+      "mean_ns": 1055.656347086438,
+      "median_ns": 852.8277571755143,
+      "std_dev_ns": 1534.7415215137855,
+      "ci_lower_ns": 880.1953250372072,
+      "ci_upper_ns": 1381.2833121667534,
+      "throughput": null
+    },
+    {
+      "group": "parse_neg",
+      "impl": "v8rs-phf",
+      "mean_ns": 682.1319153550623,
+      "median_ns": 642.3106490420533,
+      "std_dev_ns": 196.45079040129255,
+      "ci_lower_ns": 649.630337084346,
+      "ci_upper_ns": 725.052910664978,
+      "throughput": null
+    },
+    {
+      "group": "parse_str_kv",
+      "impl": "v8rs-phf",
+      "mean_ns": 1386.353449966661,
+      "median_ns": 835.4530383039091,
+      "std_dev_ns": 3131.9747765783877,
+      "ci_lower_ns": 935.2639252695122,
+      "ci_upper_ns": 2098.7096382054615,
+      "throughput": null
+    },
+    {
+      "group": "parse_unknown",
+      "impl": "v8rs-phf",
+      "mean_ns": 778.5296074790527,
+      "median_ns": 695.8842340532178,
+      "std_dev_ns": 237.69694263088095,
+      "ci_lower_ns": 735.8838944983672,
+      "ci_upper_ns": 828.4726794967937,
+      "throughput": null
+    },
+    {
+      "group": "reset_default",
+      "impl": "v8rs-phf",
+      "mean_ns": 2936.065698554685,
+      "median_ns": 2818.0859334949673,
+      "std_dev_ns": 688.7335169623241,
+      "ci_lower_ns": 2847.6919614301246,
+      "ci_upper_ns": 3089.623492342016,
+      "throughput": null
+    }
+  ]
+}

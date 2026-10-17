@@ -1,0 +1,25 @@
+// 由 tool/src/maglev/frontend.js 从 v8/src/maglev/maglev-graph-builder.h, src/maglev/maglev-graph-builder.cc, src/maglev/maglev-reducer.h, src/maglev/maglev-reducer-inl.h, src/maglev/maglev-inlining.h, src/maglev/maglev-inlining.cc, src/maglev/maglev-loop-peeler.h, src/maglev/maglev-loop-peeler.cc, src/maglev/maglev-compilation-info.h, src/maglev/maglev-compilation-info.cc, src/maglev/maglev-compilation-unit.h, src/maglev/maglev-compilation-unit.cc, src/maglev/maglev-interpreter-frame-state.h, src/maglev/maglev-interpreter-frame-state.cc, src/maglev/maglev-known-node-aspects.h, src/maglev/maglev-known-node-aspects.cc, src/maglev/maglev-kna-processor.h, src/maglev/maglev-kna-processor.cc, src/maglev/maglev-map-inference.h 生成; 修订就地改, 复跑覆盖
+// 建图前端: builder/reducer/内联/剥循环/单元/KNA
+
+//! 依赖: v8-maglev-ir (Opcode/NodeType/Graph), v8-interpreter (字节码), broker 只读面。
+//! 破环登记 (todo.md 五; 泛型单态化, 禁 dyn):
+//!   pub trait MaglevBrokerEnv { /* StaticTypeForMap/Constant 的 Map/broker 只读面 */ }
+//!   pub trait MaglevIsolateEnv { /* LocalIsolate/Zone 分配面 */ }
+
+// ── MaglevGraphBuilder (字节码→图; 父子 KNA/VO 借用: Take/Move 成对) ──
+//   BuildGraph(info, osr_offset); known_node_aspects(); 内联时 BorrowParent* 守卫
+
+// ── MaglevReducer (concept 约束族: WithKNA/WithKNASetter/WithEagerDeopt/WithLoopEffectTracking…) ──
+//   修订转 Rust trait bound; MaglevReducer 本体在 passes 侧被各 Processor 组合
+
+// ── 内联 + 剥循环 (Phase kInlining/kLoopPeeling) ──
+//   MaglevCompilationUnit::New/NewInner/NewDummy (顶层/内联/哑单元); is_inline()=depth!=0
+//   MaglevLoopPeeler; MaglevLoopPeelInfo 登记在 Graph 侧
+
+// ── KNA (KnownNodeAspects: map 推断 + 循环头 MergeForLoop/IsCompatibleWithLoopHeader) ──
+//   RecomputeKnownNodeAspectsProcessor (优化器/KNA 重算共用); MapInference (单点 map 折叠)
+//   InterpreterFrameState: Take/Clone/Clear/MergeNodeAspects (merge 块状态机)
+
+// ── MaglevCompilationInfo (顶层编译参数; OSR 经 toplevel unit) ──
+
+// 对数: builder 5 + reducer 3 + kna 4 + unit 3 + frame 3 + peeler 1 + info/map 2 全过

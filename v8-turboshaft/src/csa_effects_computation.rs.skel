@@ -1,0 +1,55 @@
+// 由 tool/src/compiler/turboshaft/csa-effects-computation.h.js 从 v8/src/compiler/turboshaft/csa-effects-computation.{h,cc} 生成; 修订就地改, 复跑覆盖
+// builtin 分配效应分析 phase: CallView/TryGetBuiltin/AnalyzeCall 骨架
+
+/// v8: src/compiler/turboshaft/csa-effects-computation.h CsaEffectsComputationPhase
+pub struct CsaEffectsComputationPhase;
+
+impl CsaEffectsComputationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "CsaEffectsComputation"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftCsaEffectsComputation";
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/csa-effects-computation.cc CsaEffectsComputationPhase::Run
+  ///
+  /// "builtin 可分配" 判定三规则 (原版注释保留):
+  /// 1. 图内含 AllocateOp
+  /// 2. 调用了可触发 GC 的 runtime 函数 (Runtime::kCanTriggerGC; Abort 除外)
+  /// 3. 调用了可分配的其它 builtin (递归, 由 BuiltinsEffectsAnalyzer::Finalize 定点)
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    unimplemented!("Developer 修订: 遍历 AllObjects + AnalyzeCall + RegisterInitialEffects")
+  }
+}
+
+/// v8: src/compiler/turboshaft/csa-effects-computation.cc CallView
+/// CallOp / TailCallOp 统一视图 (分派 2 分支: Call / TailCall)
+pub struct CallView {
+  /// target: V<CallTarget>
+  pub target: (),
+  /// arguments: base::Vector<const OpIndex>
+  pub arguments: (),
+  /// descriptor: const TSCallDescriptor*
+  pub descriptor: (),
+}
+
+/// v8: src/compiler/turboshaft/csa-effects-computation.cc TryGetBuiltin
+/// HeapConstant<Code> 且 is_builtin → builtin_id
+pub fn try_get_builtin(node: crate::index::OpIndex, graph: &crate::graph::Graph) -> Option<u16> {
+  unimplemented!("签名骨架, Developer 修订")
+}
+
+/// v8: src/compiler/turboshaft/csa-effects-computation.cc AnalyzeCall
+/// 三分支: builtin 目标 / ExternalConstant 目标 (不可分配) / 其它 (可分配)
+pub fn analyze_call(
+  call: &CallView,
+  called_builtins: &mut std::collections::HashSet<u16>,
+  can_allocate: &mut crate::phase::BuiltinAllocateEffect,
+  graph: &crate::graph::Graph,
+  current_builtin: u16,
+) {
+  unimplemented!("签名骨架, Developer 修订")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(CsaEffectsComputationPhase::PHASE_NAME == "V8.TFTurboshaftCsaEffectsComputation");
+};

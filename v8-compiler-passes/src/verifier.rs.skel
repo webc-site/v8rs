@@ -1,0 +1,103 @@
+// 由 tool/src/compiler/verifier.js 从 v8/src/compiler/verifier.h + verifier.cc 生成; 修订就地改, 复跑覆盖
+// DEBUG 图良构校验与调度校验
+
+//! verifier — 图不变式校验 (输入/输出计数, effect/control/framestate 链,
+//! phi 前置, 支配性); Release 构建全部为空操作。
+
+/// 原版 Verifier::Typing — 是否检查类型
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Typing {
+  /// TYPED
+  #[default]
+  Typed,
+  /// UNTYPED
+  Untyped,
+}
+
+/// 原版 Verifier::CheckInputs — 输入检查范围
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CheckInputs {
+  /// kValuesOnly
+  ValuesOnly,
+  /// kAll
+  #[default]
+  All,
+}
+
+/// 原版 Verifier::CodeType — 代码类别 (默认 JS / wasm)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CodeType {
+  /// kDefault
+  #[default]
+  Default,
+  /// kWasm
+  Wasm,
+}
+
+/// 原版 Verifier — 静态门面 (AllStatic)
+pub struct Verifier;
+
+impl Verifier {
+  /// 原版 Run — 全图遍历校验 (默认 TYPED + kAll + kDefault)
+  /// v8: src/compiler/verifier.cc Verifier::Run
+  pub fn run(graph: &TFGraph, typing: Typing, check_inputs: CheckInputs, code_type: CodeType) {
+    todo!("v8: src/compiler/verifier.cc Verifier::Run")
+  }
+
+  /// 原版 VerifyNode — 单节点不变式 (仅 DEBUG 构建有体)
+  /// v8: src/compiler/verifier.cc Verifier::VerifyNode
+  pub fn verify_node(node: &Node) {
+    // Release: 原版空体
+  }
+
+  /// 原版 VerifyEdgeInputReplacement — 替换节点输出满足边需求
+  /// v8: src/compiler/verifier.cc Verifier::VerifyEdgeInputReplacement
+  pub fn verify_edge_input_replacement(edge: &Edge, replacement: &Node) {
+    // Release: 原版空体
+  }
+}
+
+/// 原版 Verifier::Visitor — 逐节点检查面 (cc 实现)
+/// Check 方法清单 (7 个): CheckSwitch, Check, CheckNotTyped, CheckTypeIs, CheckTypeMaybe, CheckValueInputIs, CheckOutput
+/// Check 分派 opcode case: 730 个
+pub struct VerifierVisitor<'g> {
+  /// typing (Visitor 模板参数)
+  pub typing: Typing,
+  /// code_type
+  pub code_type: CodeType,
+  /// check_inputs
+  pub check_inputs: CheckInputs,
+  /// graph
+  pub graph: &'g TFGraph,
+}
+
+impl VerifierVisitor<'_> {
+  /// 原版 Visitor::Check — 单节点分派 (opcode case 展开)
+  /// v8: src/compiler/verifier.cc Verifier::Visitor::Check
+  pub fn check(&mut self, node: &Node, all: &AllNodes) {
+    todo!("v8: src/compiler/verifier.cc Verifier::Visitor::Check (730 case)")
+  }
+
+  /// 原版 Visitor::CheckSwitch — Switch 节点专属检查
+  /// v8: src/compiler/verifier.cc Verifier::Visitor::CheckSwitch
+  pub fn check_switch(&mut self, node: &Node, all: &AllNodes) {
+    todo!("v8: src/compiler/verifier.cc Verifier::Visitor::CheckSwitch")
+  }
+
+  /// 原版 Visitor::CheckOutput — 使用方需求校验
+  /// v8: src/compiler/verifier.cc Verifier::Visitor::CheckOutput
+  pub fn check_output(&mut self, node: &Node, r#use: &Node, count: usize, kind: &str) {
+    todo!("v8: src/compiler/verifier.cc Verifier::Visitor::CheckOutput")
+  }
+}
+
+/// 原版 ScheduleVerifier — 调度校验 (支配性/phi 前置)
+pub struct ScheduleVerifier;
+
+impl ScheduleVerifier {
+  /// 原版 Run
+  /// v8: src/compiler/verifier.cc ScheduleVerifier::Run
+  pub fn run(schedule: &Schedule) {
+    todo!("v8: src/compiler/verifier.cc ScheduleVerifier::Run")
+  }
+}

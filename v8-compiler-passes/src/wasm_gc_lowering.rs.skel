@@ -1,0 +1,169 @@
+// 由 tool/src/compiler/wasm-gc-lowering.js 从 v8/src/compiler/wasm-gc-lowering.h + wasm-gc-lowering.cc 生成; 修订就地改, 复跑覆盖
+// wasm-gc 算子 → 机器算子
+
+//! wasm-gc-lowering — 类型检查/转换/空值/结构/数组算子的机器级展开
+//! (19 个 Reduce* 面)。
+//!
+//! 空检查策略: trap_handler::IsTrapHandlerEnabled() && V8_STATIC_ROOTS_BOOL。
+
+/// 原版 NullCheckStrategy (wasm-compiler-definitions.h)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NullCheckStrategy {
+  /// kExplicit — 显式分支
+  Explicit,
+  /// kTrapHandler — 陷井处理
+  TrapHandler,
+}
+
+/// 原版 WasmGCLowering — AdvancedReducer
+pub struct WasmGCLowering<'z> {
+  /// null_check_strategy_
+  pub null_check_strategy: NullCheckStrategy,
+  /// gasm_
+  pub gasm: WasmGraphAssembler<'z>,
+  /// module_
+  pub module: *const wasm::WasmModule,
+  /// dead_
+  pub dead: *mut Node,
+  /// mcgraph_
+  pub mcgraph: *const MachineGraph<'z>,
+  /// source_position_table_
+  pub source_position_table: *mut SourcePositionTable,
+}
+
+impl WasmGCLowering<'_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "WasmGCLowering";
+
+  /// 原版 Reduce — opcode 分派
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::Reduce")
+  }
+
+  /// 原版 ReduceWasmTypeCheck
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCheck
+  fn reduce_wasm_type_check(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCheck")
+  }
+
+  /// 原版 ReduceWasmTypeCheckAbstract
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCheckAbstract
+  fn reduce_wasm_type_check_abstract(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCheckAbstract")
+  }
+
+  /// 原版 ReduceWasmTypeCast
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCast
+  fn reduce_wasm_type_cast(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCast")
+  }
+
+  /// 原版 ReduceWasmTypeCastAbstract
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCastAbstract
+  fn reduce_wasm_type_cast_abstract(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmTypeCastAbstract")
+  }
+
+  /// 原版 ReduceAssertNotNull
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceAssertNotNull
+  fn reduce_assert_not_null(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceAssertNotNull")
+  }
+
+  /// 原版 ReduceNull
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceNull
+  fn reduce_null(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceNull")
+  }
+
+  /// 原版 ReduceIsNull
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceIsNull
+  fn reduce_is_null(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceIsNull")
+  }
+
+  /// 原版 ReduceIsNotNull
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceIsNotNull
+  fn reduce_is_not_null(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceIsNotNull")
+  }
+
+  /// 原版 ReduceRttCanon
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceRttCanon
+  fn reduce_rtt_canon(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceRttCanon")
+  }
+
+  /// 原版 ReduceWasmAnyConvertExtern
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmAnyConvertExtern
+  fn reduce_wasm_any_convert_extern(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmAnyConvertExtern")
+  }
+
+  /// 原版 ReduceWasmExternConvertAny
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmExternConvertAny
+  fn reduce_wasm_extern_convert_any(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmExternConvertAny")
+  }
+
+  /// 原版 ReduceWasmStructGet
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmStructGet
+  fn reduce_wasm_struct_get(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmStructGet")
+  }
+
+  /// 原版 ReduceWasmStructSet
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmStructSet
+  fn reduce_wasm_struct_set(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmStructSet")
+  }
+
+  /// 原版 ReduceWasmArrayGet
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArrayGet
+  fn reduce_wasm_array_get(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArrayGet")
+  }
+
+  /// 原版 ReduceWasmArraySet
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArraySet
+  fn reduce_wasm_array_set(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArraySet")
+  }
+
+  /// 原版 ReduceWasmArrayLength
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArrayLength
+  fn reduce_wasm_array_length(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArrayLength")
+  }
+
+  /// 原版 ReduceWasmArrayInitializeLength
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArrayInitializeLength
+  fn reduce_wasm_array_initialize_length(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceWasmArrayInitializeLength")
+  }
+
+  /// 原版 ReduceStringAsWtf16
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceStringAsWtf16
+  fn reduce_string_as_wtf16(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceStringAsWtf16")
+  }
+
+  /// 原版 ReduceStringPrepareForGetCodeunit
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceStringPrepareForGetCodeunit
+  fn reduce_string_prepare_for_get_codeunit(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::ReduceStringPrepareForGetCodeunit")
+  }
+
+  /// 原版 Null — 类型特定的 null 常量 (wasm null/JS null)
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::Null
+  fn null(&mut self, type_: wasm::ValueType) -> *mut Node {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::Null")
+  }
+
+  /// 原版 BuildLoadExternalPointerFromObject
+  /// v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::BuildLoadExternalPointerFromObject
+  fn build_load_external_pointer_from_object(&mut self, object: &Node, offset: i32, tag: ExternalPointerTag) -> *mut Node {
+    todo!("v8: src/compiler/wasm-gc-lowering.cc WasmGCLowering::BuildLoadExternalPointerFromObject")
+  }
+}

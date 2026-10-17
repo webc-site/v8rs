@@ -1,0 +1,487 @@
+// 由 tool/src/wasm/interpreter/wasm-interpreter.cc.js 从 v8/src/wasm/interpreter/wasm-interpreter.cc 生成; 修订就地改, 复跑覆盖
+// Drumbrake 指令分发表骨架 (大 .cc, 语义面 Developer 就地修订)
+
+//! 分发表规则: 表长 4096, MUSTTAIL 尾分派, 大 id 经表掩码回绕落表。
+
+/// 指令表长 (原版 kInstructionTableSize, 2^12)
+pub const K_INSTRUCTION_TABLE_SIZE: usize = 4096;
+
+/// 指令表掩码 (原版 kInstructionTableMask)
+pub const K_INSTRUCTION_TABLE_MASK: u32 = (K_INSTRUCTION_TABLE_SIZE as u32) - 1;
+
+/// f32 符号位掩码 (原版 kFloat32SignBitMask)
+pub const K_FLOAT32_SIGN_BIT_MASK: u32 = 1 << 31;
+
+/// f64 符号位掩码 (原版 kFloat64SignBitMask)
+pub const K_FLOAT64_SIGN_BIT_MASK: u64 = 1 << 63;
+
+/// 越界检查 handler 计数枚举 (原版 BoundsCheckedHandlersCounter;
+/// 仅 V8_DRUMBRAKE_BOUNDS_CHECKS 开启时编译, 项 = REGULAR+SUPER 字面展开)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u16)]
+pub enum BoundsCheckedHandler {
+  /// r2r_I32LoadMem8Scounter
+  R2R_I32LOADMEM8S_COUNTER = 0,
+  /// r2r_I32LoadMem8Ucounter
+  R2R_I32LOADMEM8U_COUNTER = 1,
+  /// r2r_I32LoadMem16Scounter
+  R2R_I32LOADMEM16S_COUNTER = 2,
+  /// r2r_I32LoadMem16Ucounter
+  R2R_I32LOADMEM16U_COUNTER = 3,
+  /// r2r_I64LoadMem8Scounter
+  R2R_I64LOADMEM8S_COUNTER = 4,
+  /// r2r_I64LoadMem8Ucounter
+  R2R_I64LOADMEM8U_COUNTER = 5,
+  /// r2r_I64LoadMem16Scounter
+  R2R_I64LOADMEM16S_COUNTER = 6,
+  /// r2r_I64LoadMem16Ucounter
+  R2R_I64LOADMEM16U_COUNTER = 7,
+  /// r2r_I64LoadMem32Scounter
+  R2R_I64LOADMEM32S_COUNTER = 8,
+  /// r2r_I64LoadMem32Ucounter
+  R2R_I64LOADMEM32U_COUNTER = 9,
+  /// r2r_I32LoadMemcounter
+  R2R_I32LOADMEM_COUNTER = 10,
+  /// r2r_I64LoadMemcounter
+  R2R_I64LOADMEM_COUNTER = 11,
+  /// r2r_F32LoadMemcounter
+  R2R_F32LOADMEM_COUNTER = 12,
+  /// r2r_F64LoadMemcounter
+  R2R_F64LOADMEM_COUNTER = 13,
+  /// r2s_I32LoadMem8Scounter
+  R2S_I32LOADMEM8S_COUNTER = 14,
+  /// r2s_I32LoadMem8Ucounter
+  R2S_I32LOADMEM8U_COUNTER = 15,
+  /// r2s_I32LoadMem16Scounter
+  R2S_I32LOADMEM16S_COUNTER = 16,
+  /// r2s_I32LoadMem16Ucounter
+  R2S_I32LOADMEM16U_COUNTER = 17,
+  /// r2s_I64LoadMem8Scounter
+  R2S_I64LOADMEM8S_COUNTER = 18,
+  /// r2s_I64LoadMem8Ucounter
+  R2S_I64LOADMEM8U_COUNTER = 19,
+  /// r2s_I64LoadMem16Scounter
+  R2S_I64LOADMEM16S_COUNTER = 20,
+  /// r2s_I64LoadMem16Ucounter
+  R2S_I64LOADMEM16U_COUNTER = 21,
+  /// r2s_I64LoadMem32Scounter
+  R2S_I64LOADMEM32S_COUNTER = 22,
+  /// r2s_I64LoadMem32Ucounter
+  R2S_I64LOADMEM32U_COUNTER = 23,
+  /// r2s_I32LoadMemcounter
+  R2S_I32LOADMEM_COUNTER = 24,
+  /// r2s_I64LoadMemcounter
+  R2S_I64LOADMEM_COUNTER = 25,
+  /// r2s_F32LoadMemcounter
+  R2S_F32LOADMEM_COUNTER = 26,
+  /// r2s_F64LoadMemcounter
+  R2S_F64LOADMEM_COUNTER = 27,
+  /// s2r_I32LoadMem8Scounter
+  S2R_I32LOADMEM8S_COUNTER = 28,
+  /// s2r_I32LoadMem8Ucounter
+  S2R_I32LOADMEM8U_COUNTER = 29,
+  /// s2r_I32LoadMem16Scounter
+  S2R_I32LOADMEM16S_COUNTER = 30,
+  /// s2r_I32LoadMem16Ucounter
+  S2R_I32LOADMEM16U_COUNTER = 31,
+  /// s2r_I64LoadMem8Scounter
+  S2R_I64LOADMEM8S_COUNTER = 32,
+  /// s2r_I64LoadMem8Ucounter
+  S2R_I64LOADMEM8U_COUNTER = 33,
+  /// s2r_I64LoadMem16Scounter
+  S2R_I64LOADMEM16S_COUNTER = 34,
+  /// s2r_I64LoadMem16Ucounter
+  S2R_I64LOADMEM16U_COUNTER = 35,
+  /// s2r_I64LoadMem32Scounter
+  S2R_I64LOADMEM32S_COUNTER = 36,
+  /// s2r_I64LoadMem32Ucounter
+  S2R_I64LOADMEM32U_COUNTER = 37,
+  /// s2r_I32LoadMemcounter
+  S2R_I32LOADMEM_COUNTER = 38,
+  /// s2r_I64LoadMemcounter
+  S2R_I64LOADMEM_COUNTER = 39,
+  /// s2r_F32LoadMemcounter
+  S2R_F32LOADMEM_COUNTER = 40,
+  /// s2r_F64LoadMemcounter
+  S2R_F64LOADMEM_COUNTER = 41,
+  /// s2s_I32LoadMem8Scounter
+  S2S_I32LOADMEM8S_COUNTER = 42,
+  /// s2s_I32LoadMem8Ucounter
+  S2S_I32LOADMEM8U_COUNTER = 43,
+  /// s2s_I32LoadMem16Scounter
+  S2S_I32LOADMEM16S_COUNTER = 44,
+  /// s2s_I32LoadMem16Ucounter
+  S2S_I32LOADMEM16U_COUNTER = 45,
+  /// s2s_I64LoadMem8Scounter
+  S2S_I64LOADMEM8S_COUNTER = 46,
+  /// s2s_I64LoadMem8Ucounter
+  S2S_I64LOADMEM8U_COUNTER = 47,
+  /// s2s_I64LoadMem16Scounter
+  S2S_I64LOADMEM16S_COUNTER = 48,
+  /// s2s_I64LoadMem16Ucounter
+  S2S_I64LOADMEM16U_COUNTER = 49,
+  /// s2s_I64LoadMem32Scounter
+  S2S_I64LOADMEM32S_COUNTER = 50,
+  /// s2s_I64LoadMem32Ucounter
+  S2S_I64LOADMEM32U_COUNTER = 51,
+  /// s2s_I32LoadMemcounter
+  S2S_I32LOADMEM_COUNTER = 52,
+  /// s2s_I64LoadMemcounter
+  S2S_I64LOADMEM_COUNTER = 53,
+  /// s2s_F32LoadMemcounter
+  S2S_F32LOADMEM_COUNTER = 54,
+  /// s2s_F64LoadMemcounter
+  S2S_F64LOADMEM_COUNTER = 55,
+  /// r2s_I32StoreMem8counter
+  R2S_I32STOREMEM8_COUNTER = 56,
+  /// r2s_I32StoreMem16counter
+  R2S_I32STOREMEM16_COUNTER = 57,
+  /// r2s_I64StoreMem8counter
+  R2S_I64STOREMEM8_COUNTER = 58,
+  /// r2s_I64StoreMem16counter
+  R2S_I64STOREMEM16_COUNTER = 59,
+  /// r2s_I64StoreMem32counter
+  R2S_I64STOREMEM32_COUNTER = 60,
+  /// r2s_I32StoreMemcounter
+  R2S_I32STOREMEM_COUNTER = 61,
+  /// r2s_I64StoreMemcounter
+  R2S_I64STOREMEM_COUNTER = 62,
+  /// r2s_F32StoreMemcounter
+  R2S_F32STOREMEM_COUNTER = 63,
+  /// r2s_F64StoreMemcounter
+  R2S_F64STOREMEM_COUNTER = 64,
+  /// s2s_I32StoreMem8counter
+  S2S_I32STOREMEM8_COUNTER = 65,
+  /// s2s_I32StoreMem16counter
+  S2S_I32STOREMEM16_COUNTER = 66,
+  /// s2s_I64StoreMem8counter
+  S2S_I64STOREMEM8_COUNTER = 67,
+  /// s2s_I64StoreMem16counter
+  S2S_I64STOREMEM16_COUNTER = 68,
+  /// s2s_I64StoreMem32counter
+  S2S_I64STOREMEM32_COUNTER = 69,
+  /// s2s_I32StoreMemcounter
+  S2S_I32STOREMEM_COUNTER = 70,
+  /// s2s_I64StoreMemcounter
+  S2S_I64STOREMEM_COUNTER = 71,
+  /// s2s_F32StoreMemcounter
+  S2S_F32STOREMEM_COUNTER = 72,
+  /// s2s_F64StoreMemcounter
+  S2S_F64STOREMEM_COUNTER = 73,
+  /// s2s_I32LoadMem8S_LocalSetcounter
+  S2S_I32LOADMEM8S_LOCALSET_COUNTER = 74,
+  /// s2s_I32LoadMem8U_LocalSetcounter
+  S2S_I32LOADMEM8U_LOCALSET_COUNTER = 75,
+  /// s2s_I32LoadMem16S_LocalSetcounter
+  S2S_I32LOADMEM16S_LOCALSET_COUNTER = 76,
+  /// s2s_I32LoadMem16U_LocalSetcounter
+  S2S_I32LOADMEM16U_LOCALSET_COUNTER = 77,
+  /// s2s_I64LoadMem8S_LocalSetcounter
+  S2S_I64LOADMEM8S_LOCALSET_COUNTER = 78,
+  /// s2s_I64LoadMem8U_LocalSetcounter
+  S2S_I64LOADMEM8U_LOCALSET_COUNTER = 79,
+  /// s2s_I64LoadMem16S_LocalSetcounter
+  S2S_I64LOADMEM16S_LOCALSET_COUNTER = 80,
+  /// s2s_I64LoadMem16U_LocalSetcounter
+  S2S_I64LOADMEM16U_LOCALSET_COUNTER = 81,
+  /// s2s_I64LoadMem32S_LocalSetcounter
+  S2S_I64LOADMEM32S_LOCALSET_COUNTER = 82,
+  /// s2s_I64LoadMem32U_LocalSetcounter
+  S2S_I64LOADMEM32U_LOCALSET_COUNTER = 83,
+  /// s2s_I32LoadMem_LocalSetcounter
+  S2S_I32LOADMEM_LOCALSET_COUNTER = 84,
+  /// s2s_I64LoadMem_LocalSetcounter
+  S2S_I64LOADMEM_LOCALSET_COUNTER = 85,
+  /// s2s_F32LoadMem_LocalSetcounter
+  S2S_F32LOADMEM_LOCALSET_COUNTER = 86,
+  /// s2s_F64LoadMem_LocalSetcounter
+  S2S_F64LOADMEM_LOCALSET_COUNTER = 87,
+  /// r2s_I32LoadStoreMemcounter
+  R2S_I32LOADSTOREMEM_COUNTER = 88,
+  /// r2s_I64LoadStoreMemcounter
+  R2S_I64LOADSTOREMEM_COUNTER = 89,
+  /// r2s_F32LoadStoreMemcounter
+  R2S_F32LOADSTOREMEM_COUNTER = 90,
+  /// r2s_F64LoadStoreMemcounter
+  R2S_F64LOADSTOREMEM_COUNTER = 91,
+  /// s2s_I32LoadStoreMemcounter
+  S2S_I32LOADSTOREMEM_COUNTER = 92,
+  /// s2s_I64LoadStoreMemcounter
+  S2S_I64LOADSTOREMEM_COUNTER = 93,
+  /// s2s_F32LoadStoreMemcounter
+  S2S_F32LOADSTOREMEM_COUNTER = 94,
+  /// s2s_F64LoadStoreMemcounter
+  S2S_F64LOADSTOREMEM_COUNTER = 95,
+  /// kTotalItems
+  K_TOTAL_ITEMS = 96,
+}
+
+impl BoundsCheckedHandler {
+  /// 计数项总数 (原版 kTotalItems)
+  pub const K_COUNT: u16 = 96;
+}
+
+/// 指令表槽位 (规则面: 表内既可指向 C++ handler 也可指向 asm builtin)
+/// v8: src/wasm/interpreter/wasm-interpreter.cc kInstructionTable
+pub enum InstructionTableSlot {
+  /// 未初始化 (BOUNDS_CHECKS 关时 load/store 槽先置空, InitInstructionTableOnce 填 builtin)
+  Uninit,
+  /// C++ 处理函数 (小/大尺寸类别)
+  Handler { small: bool },
+  /// asm builtin 入口 (_s 压缩版 / _l 大版)
+  Builtin { small: bool },
+}
+
+/// 指令表 (定长 4096; 大 id 回绕由 K_INSTRUCTION_TABLE_MASK 保证)
+/// v8: src/wasm/interpreter/wasm-interpreter.cc kInstructionTable
+pub type InstructionTable = [InstructionTableSlot; K_INSTRUCTION_TABLE_SIZE];
+
+/// 表初始化次序规则 (无 BOUNDS_CHECKS 缺省配置):
+/// 1) 小段: LOAD_STORE 槽留给 builtin (InitInstructionTableOnce), 其余 NO_BOUNDSCHECK C++ handler;
+/// 2) 大段: 同构, builtin 取 _l 版本;
+/// 3) InitTrapHandlersOnce 注册 trap_handler 数据, SetLandingPad 指向 TrapMemOutOfBounds。
+/// v8: InitInstructionTableOnce / InitTrapHandlersOnce / WasmInterpreter 构造
+pub fn init_instruction_table_rule() {
+  todo!("就地修订: builtin blob 解包与 trap_handler 注册依赖 Isolate/EmbeddedData")
+}
+
+/// 尾分派读取规则 (原版 MUSTTAIL 链):
+/// fn_id = ReadFnId(code); slot = fn_id & kInstructionTableMask; MUSTTAIL 跳转。
+/// v8: src/wasm/interpreter/wasm-interpreter.cc NextOp 宏族
+pub fn tail_dispatch_rule() {
+  todo!("就地修订: 与 ReadFnId 编码 (尺寸位 + id) 联动")
+}
+
+/// 顶层函数定义清单 (col-0 签名, 按源序; Class::member 对)
+/// v8: src/wasm/interpreter/wasm-interpreter.cc
+pub const TOP_LEVEL_FN_DEFS: &[(&str, &str)] = &[
+  ("CodeMap", "CodeMap"),
+  ("CodeMap", "Preprocess"),
+  ("WasmInterpreterThreadMap", "GetCurrentInterpreterThread"),
+  ("WasmInterpreterThreadMap", "NotifyIsolateDisposal"),
+  ("FrameState", "SetCaughtException"),
+  ("FrameState", "GetCaughtException"),
+  ("FrameState", "DisposeCaughtExceptionsArray"),
+  ("", "WasmExecutionTimer"),
+  ("WasmExecutionTimer", "BeginInterval"),
+  ("WasmExecutionTimer", "EndInterval"),
+  ("WasmExecutionTimer", "AddSample"),
+  ("WasmExecutionTimer", "StartInternal"),
+  ("WasmExecutionTimer", "StopInternal"),
+  ("WasmExecutionTimer", "Terminate"),
+  ("Activation", "CaptureStackTrace"),
+  ("Activation", "GetFunctionIndex"),
+  ("", "WasmInterpreterThread"),
+  ("", "~WasmInterpreterThread"),
+  ("WasmInterpreterThread", "EnsureRefStackSpace"),
+  ("WasmInterpreterThread", "ClearRefStackValues"),
+  ("WasmInterpreterThread", "RaiseException"),
+  ("WasmInterpreterThread", "SetRuntimeLastWasmError"),
+  ("WasmInterpreterThread", "GetRuntimeLastWasmError"),
+  ("WasmInterpreterThread", "StartExecutionTimer"),
+  ("WasmInterpreterThread", "StopExecutionTimer"),
+  ("WasmInterpreterThread", "TerminateExecutionTimers"),
+  ("", "WasmInterpreter"),
+  ("WasmInterpreter", "ContinueExecution"),
+  ("WasmBytecodeGenerator", "TracePushConstSlot"),
+  ("WasmBytecodeGenerator", "TracePushCopySlot"),
+  ("WasmBytecodeGenerator", "TraceSetSlotType"),
+  ("ShadowStack", "Print"),
+  ("Slot", "Print"),
+  ("WasmEHData", "GetTryBlock"),
+  ("WasmEHData", "GetParentTryBlock"),
+  ("WasmEHData", "GetDelegateTryBlock"),
+  ("WasmEHData", "GetEndInstructionOffsetFor"),
+  ("WasmEHData", "GetExceptionPayloadStartSlotOffsets"),
+  ("WasmEHData", "GetTryBranchOf"),
+  ("WasmEHDataGenerator", "AddTryBlock"),
+  ("WasmEHDataGenerator", "AddCatchBlock"),
+  ("WasmEHDataGenerator", "AddDelegatedBlock"),
+  ("WasmEHDataGenerator", "EndTryCatchBlocks"),
+  ("WasmEHDataGenerator", "RecordPotentialExceptionThrowingInstruction"),
+  ("", "WasmBytecode"),
+  ("WasmBytecode", "GetPcFromTrapCode"),
+  ("", "WasmBytecodeGenerator"),
+  ("Simd128Hash", "operator"),
+  ("WasmBytecodeGenerator", "HasSharedSlot"),
+  ("WasmBytecodeGenerator", "FindSharedSlot"),
+  ("WasmBytecodeGenerator", "EmitCopySlot"),
+  ("WasmBytecodeGenerator", "CopyToSlot"),
+  ("WasmBytecodeGenerator", "CopyToSlotAndPop"),
+  ("WasmBytecodeGenerator", "PreserveArgsAndLocals"),
+  ("WasmBytecodeGenerator", "ReserveBlockSlots"),
+  ("WasmBytecodeGenerator", "StoreBlockParamsIntoSlots"),
+  ("WasmBytecodeGenerator", "StoreBlockParamsAndResultsIntoSlots"),
+  ("WasmBytecodeGenerator", "RestoreIfElseParams"),
+  ("WasmBytecodeGenerator", "ScanConstInstructions"),
+  ("WasmBytecodeGenerator", "EndBlock"),
+  ("WasmBytecodeGenerator", "Return"),
+  ("WasmBytecodeGenerator", "DecodeInstruction"),
+  ("WasmBytecodeGenerator", "DecodeGCOp"),
+  ("WasmBytecodeGenerator", "DecodeNumericOp"),
+  ("WasmBytecodeGenerator", "DecodeAtomicOp"),
+  ("WasmInterpreter", "InitializeOncePerProcess"),
+  ("WasmInterpreter", "GlobalTearDown"),
+  ("WasmBytecodeGenerator", "PrintBytecodeCompressionStats"),
+  ("WasmBytecodeGenerator", "InitSlotsForFunctionArgs"),
+  ("WasmInterpreter", "NotifyIsolateDisposal"),
+  ("WasmBytecodeGenerator", "TypeCheckAlwaysSucceeds"),
+  ("WasmBytecodeGenerator", "TypeCheckAlwaysFails"),
+  ("WasmBytecodeGenerator", "HasSideEffects"),
+  ("WasmBytecodeGenerator", "EncodeInstruction"),
+  ("WasmBytecodeGenerator", "DoEncodeInstruction"),
+  ("WasmBytecodeGenerator", "EncodeSuperInstruction"),
+  ("WasmBytecodeGenerator", "DoEncodeSuperInstruction"),
+  ("WasmBytecodeGenerator", "GenerateBytecode"),
+  ("WasmBytecodeGenerator", "BeginBlock"),
+  ("WasmBytecodeGenerator", "GetCurrentTryBlockIndex"),
+  ("WasmBytecodeGenerator", "PatchLoopBeginInstructions"),
+  ("WasmBytecodeGenerator", "PatchBranchOffsets"),
+  ("WasmBytecodeGenerator", "TryCompactInstructionHandler"),
+];
+
+/// 分派发射宏清单 (原版 #define 全量)
+pub const DISPATCH_MACROS: &[&str] = &[
+  "EMIT_INSTR_HANDLER",
+  "EMIT_INSTR_HANDLER_WITH_PC",
+  "START_EMIT_INSTR_HANDLER",
+  "START_EMIT_INSTR_HANDLER_WITH_ID",
+  "START_EMIT_INSTR_HANDLER_WITH_PC",
+  "END_EMIT_INSTR_HANDLER",
+  "EMIT_MEM64_INSTR_HANDLER",
+  "EMIT_MEM64_INSTR_HANDLER_WITH_PC",
+  "EMIT_MULTI_MEM64_INSTR_HANDLER",
+  "EMIT_MULTI_MEM64_INSTR_HANDLER_WITH_PC",
+  "EMIT_MEM_MEM_INSTR_HANDLER",
+  "EMIT_MEM_MEM_INSTR_HANDLER_WITH_PC",
+  "DECLARE_MEM_VARIANT_INTERNAL",
+  "DECLARE_MEM64_VARIANTS",
+  "DECLARE_MEM64_ONLY_VARIANT",
+  "DECLARE_ALL_MEM_VARIANTS",
+  "EMIT_MEM64_ONLY_INSTR_HANDLER_WITH_PC",
+  "ITEM_ENUM_DEFINE",
+  "V",
+  "V",
+  "DEFINE_INSTR_HANDLER",
+  "NextOp",
+  "NextOp",
+  "TRAP",
+  "INLINED_TRAP",
+  "FOREACH_ARITHMETIC_BINOP",
+  "DEFINE_BINOP",
+  "FOREACH_SIGNED_DIV_BINOP",
+  "FOREACH_UNSIGNED_DIV_BINOP",
+  "FOREACH_REM_BINOP",
+  "FOREACH_TRAPPING_BINOP",
+  "DEFINE_BINOP",
+  "DEFINE_BINOP",
+  "DEFINE_BINOP",
+  "FOREACH_COMPARISON_BINOP",
+  "DEFINE_BINOP",
+  "FOREACH_MORE_BINOP",
+  "DEFINE_BINOP",
+  "FOREACH_SIMPLE_UNOP",
+  "DEFINE_UNOP",
+  "FOREACH_ADDITIONAL_CONVERT_UNOP",
+  "FOREACH_I64_CONVERT_FROM_FLOAT_UNOP",
+  "FOREACH_I32_CONVERT_FROM_FLOAT_UNOP",
+  "FOREACH_OTHER_CONVERT_UNOP",
+  "FOREACH_CONVERT_UNOP",
+  "DEFINE_UNOP",
+  "DEFINE_UNOP",
+  "DEFINE_UNOP",
+  "FOREACH_REINTERPRET_UNOP",
+  "DEFINE_UNOP",
+  "FOREACH_BITS_UNOP",
+  "DEFINE_REG_BINOP",
+  "FOREACH_EXTENSION_UNOP",
+  "DEFINE_UNOP",
+  "FOREACH_TRUNCSAT_UNOP",
+  "DEFINE_UNOP",
+  "FOREACH_ATOMIC_BINOP",
+  "ATOMIC_BINOP",
+  "FOREACH_ATOMIC_COMPARE_EXCHANGE_OP",
+  "ATOMIC_COMPARE_EXCHANGE_OP",
+  "FOREACH_ATOMIC_LOAD_OP",
+  "ATOMIC_LOAD_OP",
+  "FOREACH_ATOMIC_STORE_OP",
+  "ATOMIC_STORE_OP",
+  "LANE",
+  "LANE",
+  "SPLAT_CASE",
+  "EXTRACT_LANE_CASE",
+  "EXTRACT_LANE_EXTEND_CASE",
+  "BINOP_CASE",
+  "UNOP_CASE",
+  "BITMASK_CASE",
+  "CMPOP_CASE",
+  "REPLACE_LANE_CASE",
+  "SHIFT_CASE",
+  "CONVERT_CASE",
+  "PACK_CASE",
+  "REDUCTION_CASE",
+  "QFM_CASE",
+  "V",
+  "V",
+  "V",
+  "V",
+  "V",
+  "V",
+  "LOAD_CASE",
+  "STORE_CASE",
+  "EXECUTE_BINOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "DECODE_UNOP",
+  "ATOMIC_BINOP",
+  "ATOMIC_OP",
+  "LOAD_CASE",
+  "STORE_CASE",
+  "EXECUTE_BINOP",
+  "EXECUTE_BINOP",
+  "EXECUTE_BINOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "EXECUTE_UNOP",
+  "ATOMIC_BINOP",
+  "ATOMIC_COMPARE_EXCHANGE_OP",
+  "ATOMIC_LOAD_OP",
+  "ATOMIC_STORE_OP",
+  "SPLAT_CASE",
+  "EXTRACT_LANE_CASE",
+  "EXTRACT_LANE_EXTEND_CASE",
+  "BINOP_CASE",
+  "UNOP_CASE",
+  "BITMASK_CASE",
+  "CMPOP_CASE",
+  "REPLACE_LANE_CASE",
+  "SHIFT_CASE",
+  "EXT_MUL_CASE",
+  "CONVERT_CASE",
+  "PACK_CASE",
+  "SELECT_CASE",
+  "REDUCTION_CASE",
+  "QFM_CASE",
+  "LOAD_SPLAT_CASE",
+  "LOAD_EXTEND_CASE",
+  "LOAD_ZERO_EXTEND_CASE",
+  "LOAD_LANE_CASE",
+  "STORE_LANE_CASE",
+  "EXT_ADD_PAIRWISE_CASE",
+  "LOAD_CASE",
+  "STORE_CASE",
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(K_INSTRUCTION_TABLE_MASK == 4095);
+  assert!(BoundsCheckedHandler::K_COUNT as usize == 96);
+  assert!(DISPATCH_MACROS.len() == 132);
+  assert!(TOP_LEVEL_FN_DEFS.len() == 83);
+  assert!(K_FLOAT32_SIGN_BIT_MASK == 0x8000_0000);
+  assert!(K_FLOAT64_SIGN_BIT_MASK == 0x8000_0000_0000_0000);
+};

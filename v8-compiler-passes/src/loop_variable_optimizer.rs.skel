@@ -1,0 +1,126 @@
+// 由 tool/src/compiler/loop-variable-optimizer.js 从 v8/src/compiler/loop-variable-optimizer.h + src/compiler/loop-variable-optimizer.cc 生成; 修订就地改, 复跑覆盖
+// LoopVariableOptimizer — 归纳变量识别 (phi→增量+界约束)
+
+//! 归纳变量: phi = init + n*increment, 附上下界约束; 供 bound 收紧用。
+//!
+//! 规则面: 枚举 2 + Bound + 方法面 16。
+//! 语义面 (推迟): TryGetInductionVariable 的算术模式匹配 (cc)。
+
+#![allow(dead_code, unused_variables)]
+
+/// v8: src/compiler/loop-variable-optimizer.h InductionVariable::ConstraintKind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConstraintKind {
+  /// kStrict — 严格不等 (<)
+  Strict,
+  /// kNonStrict — 非严格 (<=)
+  NonStrict,
+}
+
+/// v8: src/compiler/loop-variable-optimizer.h InductionVariable::ArithmeticType
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ArithmeticType {
+  /// kAddition
+  Addition,
+  /// kSubtraction
+  Subtraction,
+}
+
+/// v8: src/compiler/loop-variable-optimizer.h InductionVariable::Bound
+pub struct Bound {
+  /// 原 bound
+  pub bound: crate::node::Node,
+  /// 原 kind
+  pub kind: ConstraintKind,
+}
+
+/// v8: src/compiler/loop-variable-optimizer.h InductionVariable
+pub struct InductionVariable {
+  /// 原 phi_ — 归纳变量 phi
+  pub phi: crate::node::Node,
+  /// 原 effect_phi_ — 同循环节点
+  pub effect_phi: crate::node::Node,
+  /// 原 arith_ — 增量算术节点
+  pub arith: crate::node::Node,
+  /// 原 increment_
+  pub increment: crate::node::Node,
+  /// 原 init_value_
+  pub init_value: crate::node::Node,
+  /// 原 lower_bounds_ / upper_bounds_
+  pub lower_bounds: Vec<Bound>,
+  pub upper_bounds: Vec<Bound>,
+  /// 原 arithmeticType_
+  pub arithmetic_type: ArithmeticType,
+}
+
+impl InductionVariable {
+  /// v8: src/compiler/loop-variable-optimizer.h InductionVariable::phi 等 getter 5 项
+  pub fn phi(&self) -> crate::node::Node {
+    self.phi
+  }
+  /// v8: src/compiler/loop-variable-optimizer.h InductionVariable::Type
+  pub fn ty(&self) -> ArithmeticType {
+    self.arithmetic_type
+  }
+  /// v8: src/compiler/loop-variable-optimizer.h InductionVariable::AddUpperBound
+  pub fn add_upper_bound(&mut self, bound: crate::node::Node, kind: ConstraintKind) {
+    self.upper_bounds.push(Bound { bound, kind });
+  }
+  /// v8: src/compiler/loop-variable-optimizer.h InductionVariable::AddLowerBound
+  pub fn add_lower_bound(&mut self, bound: crate::node::Node, kind: ConstraintKind) {
+    self.lower_bounds.push(Bound { bound, kind });
+  }
+}
+
+/// v8: src/compiler/loop-variable-optimizer.h LoopVariableOptimizer
+pub struct LoopVariableOptimizer {
+  /// 原 graph_ / common_ / zone_
+  pub graph: *mut crate::graph::TFGraph,
+  pub common: *mut crate::common_operator::CommonOperatorBuilder,
+  pub zone: *mut crate::zone::Zone,
+  /// 原 induction_vars_ — phi NodeId → 归纳变量
+  pub induction_vars: std::collections::BTreeMap<i32, *mut InductionVariable>,
+}
+
+impl LoopVariableOptimizer {
+  /// v8: src/compiler/loop-variable-optimizer.cc LoopVariableOptimizer::Run
+  /// 原文: 逐 loop 头 DetectInductionVariables
+  pub fn run(&mut self) {
+    todo!("遍历 Loop 节点")
+  }
+
+  /// v8: src/compiler/loop-variable-optimizer.h induction_variables
+  pub fn induction_variables(&self) -> &std::collections::BTreeMap<i32, *mut InductionVariable> {
+    &self.induction_vars
+  }
+
+  /// v8: src/compiler/loop-variable-optimizer.cc ChangeToInductionVariablePhis
+  pub fn change_to_induction_variable_phis(&mut self) {
+    todo!("phi op → InductionVariablePhi")
+  }
+  /// v8: src/compiler/loop-variable-optimizer.cc ChangeToPhisAndInsertGuards
+  pub fn change_to_phis_and_insert_guards(&mut self) {
+    todo!("还原 phi + 插入界守卫")
+  }
+
+  /// v8: src/compiler/loop-variable-optimizer.cc VisitBackedge
+  pub fn visit_backedge(&mut self, from: crate::node::Node, to: crate::node::Node) {
+    let _ = (from, to);
+    todo!("回边处更新约束")
+  }
+  /// v8: src/compiler/loop-variable-optimizer.cc FindInductionVariable
+  pub fn find_induction_variable(&self, node: &crate::node::Node) -> *const InductionVariable {
+    let _ = node;
+    todo!("phi id 查表")
+  }
+  /// v8: src/compiler/loop-variable-optimizer.cc TryGetInductionVariable
+  pub fn try_get_induction_variable(&mut self, phi: crate::node::Node) -> *mut InductionVariable {
+    let _ = phi;
+    todo!("phi 算术模式匹配构造")
+  }
+  /// v8: src/compiler/loop-variable-optimizer.cc DetectInductionVariables
+  pub fn detect_induction_variables(&mut self, loop_node: crate::node::Node) {
+    let _ = loop_node;
+    todo!("循环体 phi 扫描")
+  }
+}

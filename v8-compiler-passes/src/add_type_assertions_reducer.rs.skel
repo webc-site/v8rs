@@ -1,0 +1,49 @@
+// 由 tool/src/compiler/add-type-assertions-reducer.js 从 v8/src/compiler/add-type-assertions-reducer.h + src/compiler/add-type-assertions-reducer.cc 生成; 修订就地改, 复跑覆盖
+// AddTypeAssertions — 为可断言类型节点插 AssertType (调度后遍)
+
+//! AddTypeAssertions: 遍历 RPO 序基本块, 对 effect 输出/输入各 1 的节点
+//! 之前的 pending 节点插类型断言。
+//!
+//! 规则面: 跳过 opcode 清单 6 项 + IsTyped 否定。
+//! 语义面 (推迟): NewNode(AssertType)/ReplaceEffectInput 图改写。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/add-type-assertions-reducer.cc AddTypeAssertionsImpl
+struct AddTypeAssertionsImpl<'a> {
+  jsgraph: &'a mut crate::js_graph::JSGraph,
+  schedule: &'a crate::schedule::Schedule,
+  phase_zone: &'a mut crate::zone::Zone,
+}
+
+impl AddTypeAssertionsImpl<'_> {
+  /// v8: src/compiler/add-type-assertions-reducer.cc AddTypeAssertionsImpl::Run
+  fn run(&mut self) {
+    for block in self.schedule.rpo_order() {
+      self.process_block(block);
+    }
+  }
+
+  /// v8: src/compiler/add-type-assertions-reducer.cc AddTypeAssertionsImpl::ProcessBlock
+  /// 跳过清单 (原文顺序): AssertType, Allocate, ObjectState, ObjectId, Phi, Unreachable 或未定型
+  fn process_block(&mut self, block: &crate::schedule::BasicBlock) {
+    let mut pending: Vec<crate::node::Node> = Vec::new();
+    let mut inside_of_region = false;
+    let _ = (&mut pending, &mut inside_of_region, block);
+    todo!("ProcessBlock: effect 链匹配 + CanBeAsserted 门槛")
+  }
+
+  /// v8: src/compiler/add-type-assertions-reducer.cc AddTypeAssertionsImpl::InsertAssertion
+  fn insert_assertion(&mut self, asserted: &crate::node::Node, effect_successor: &crate::node::Node) {
+    todo!("InsertAssertion: AssertType 节点拼接 + ReplaceEffectInput")
+  }
+}
+
+/// v8: src/compiler/add-type-assertions-reducer.h AddTypeAssertions
+pub fn add_type_assertions(
+  jsgraph: &mut crate::js_graph::JSGraph,
+  schedule: &crate::schedule::Schedule,
+  phase_zone: &mut crate::zone::Zone,
+) {
+  AddTypeAssertionsImpl { jsgraph, schedule, phase_zone }.run();
+}

@@ -1,0 +1,49 @@
+// 由 tool/src/base/debug/stack_trace_posix.cc.js 从 v8/src/base/debug/stack_trace_posix.cc 生成; 修订就地改, 复跑覆盖
+// POSIX 栈回溯后端 (backtrace + 信号转储, async-signal-safe 约束)
+
+//! v8: src/base/debug/stack_trace_posix.cc
+//! 硬约束: 信号处理器路径禁 malloc/stdio — itoa_r 自实现, write 直写 stderr
+
+// —— v8: internal::itoa_r(i, buf, sz, base, padding) ——
+/// async-signal-safe 整数转 ASCII; base ∈ [2,16]; 负数仅 base 10;
+/// padding 前导零补齐; 溢出/非法 base 返回 None (原版 nullptr)
+pub fn itoa_r(i: isize, buf: &mut [u8], base: u32, padding: usize) -> Option<&str>;
+
+// —— v8: 符号 demangle ——
+// kMangledSymbolPrefix = "_Z" (Itanium ABI);
+// kSymbolCharacters = [a-zA-Z0-9_];
+// DemangleSymbols: 扫 "_Z"+词字符, __cxa_demangle 成功则替换; 失败从 _Z 后 2 字节重试
+fn demangle_symbols(text: &mut String);
+
+// —— v8: 输出抽象 ——
+// trait BacktraceOutputHandler { handle_output(&str); output_file_descriptor() -> RawFd }
+// ProcessBacktrace(trace, size, handler):
+//   非 handler 态: backtrace_symbols + demangle 逐帧
+//   handler 态且有 fd: backtrace_symbols_fd 直写
+//   兜底: " [0x...]" itoa_r(16, padding 12) 逐帧
+// v8: PrintBacktraceOutputHandler (stderr fd) / StreamBacktraceOutputHandler (ostream)
+
+/// v8: posix EnableInProcessStackDumping — SIGPIPE 忽略 + WarmUpBacktrace +
+///     注册 SIGILL SIGABRT SIGFPE SIGBUS SIGSEGV SIGSYS (SA_RESETHAND|SA_SIGINFO|SA_ONSTACK)
+pub fn enable_in_process_stack_dumping() -> bool;
+/// v8: posix DisableSignalStackDump — dump_stack_in_signal_handler = false
+pub fn disable_signal_stack_dump();
+
+// v8: StackDumpSignalHandler — in_signal_handler=1; PKU (V8_HAS_PKU_SUPPORT) 时
+//     SetDefaultPermissionsForAllKeysInSignalHandler; 打印信号号与 si_code 名;
+//     SIGBUS/FPE/ILL/SEGV 附 si_addr; 末尾恢复 SIG_DFL 后 _exit(1)
+// si_code 表 (20 项): U U U P P P P P P P P L L L L L L L E E
+
+impl StackTrace {
+    /// v8: posix StackTrace() — backtrace(trace_, 62); 无 execinfo 时 count_=0
+    #[cfg(unix)]
+    pub fn capture() -> Self;
+    /// v8: posix Print — PrintBacktraceOutputHandler + ProcessBacktrace
+    #[cfg(unix)]
+    pub fn print(&self);
+    /// v8: posix OutputToStream — StreamBacktraceOutputHandler + ProcessBacktrace
+    #[cfg(unix)]
+    pub fn output_to_stream(&self, os: &mut dyn std::io::Write);
+}
+
+// v8: WarmUpBacktrace — 预跑一次 StackTrace, 防 glibc pthread_once 在信号态 malloc 死锁

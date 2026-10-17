@@ -1,0 +1,186 @@
+// 由 tool/src/compiler/node-matchers.js 从 v8/src/compiler/node-matchers.h + node-matchers.cc 生成; 修订就地改, 复跑覆盖
+// 节点模式匹配器族: 常量匹配/二元匹配/地址分解匹配
+
+//! node-matchers — 节点模式匹配器 (只读查询, 不改图)
+//!
+//! 层次: NodeMatcher (opcode 面) → ValueMatcher<T> (常量参数面, 跳过 value
+//! identity) → Int/Float/BoxedFloat/HeapObject 特化 → BinopMatcher (左右操作
+//! 数 + 可交换换位) → Scale/Add/BaseWithIndexAndDisplacement (寻址分解)。
+//! `Is##Opcode()` 全 opcode 谓词由 IrOpcode 判等直接覆盖 (见 v8-compiler-graph
+//! opcodes), 不在此重表。
+
+/// 原版 DisplacementMode — 位移符号
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisplacementMode {
+  /// kPositiveDisplacement
+  Positive,
+  /// kNegativeDisplacement
+  Negative,
+}
+
+/// 原版 AddressOption 位标志 (base::Flags<AddressOption, uint8_t>)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct AddressOptions(u8);
+
+impl AddressOptions {
+  /// kAllowNone
+  pub const NONE: Self = Self(0);
+  /// kAllowInputSwap = 1 << 0
+  pub const ALLOW_INPUT_SWAP: Self = Self(1);
+  /// kAllowScale = 1 << 1
+  pub const ALLOW_SCALE: Self = Self(2);
+  /// kAllowAll = kAllowInputSwap | kAllowScale
+  pub const ALLOW_ALL: Self = Self(3);
+
+  /// 位域
+  pub const fn bits(self) -> u8 {
+    self.0
+  }
+}
+
+impl core::ops::BitOr for AddressOptions {
+  type Output = Self;
+  fn bitor(self, rhs: Self) -> Self {
+    Self(self.0 | rhs.0)
+  }
+}
+
+/// 原版 ScaleMatcher — 乘/移位寻址缩放识别表
+///
+/// shift 分支: value ∈ [0,3] → scale = value;
+/// mul 分支主表 (2 的幂) 与 p2p1 附加表 (需 allow_power_of_two_plus_one):
+pub const SCALE_TABLE: [(i64, i8, bool); 7] = [
+  (1, 0, false),
+  (2, 1, false),
+  (4, 2, false),
+  (8, 3, false),
+  (3, 1, true),
+  (5, 2, true),
+  (9, 3, true),
+];
+
+/// matcher 结构清单 (Rust 侧以泛型/组合重建, 各自签名见锚)
+/// v8: src/compiler/node-matchers.h struct NodeMatcher
+/// v8: src/compiler/node-matchers.h struct ValueMatcher
+/// v8: src/compiler/node-matchers.h struct IntMatcher
+/// v8: src/compiler/node-matchers.h struct FloatMatcher
+/// v8: src/compiler/node-matchers.h struct BoxedFloatMatcher
+/// v8: src/compiler/node-matchers.h struct HeapObjectMatcherImpl
+/// v8: src/compiler/node-matchers.h struct ExternalReferenceMatcher
+/// v8: src/compiler/node-matchers.h struct LoadMatcher
+/// v8: src/compiler/node-matchers.h struct BinopMatcher
+/// v8: src/compiler/node-matchers.h struct ScaleMatcher
+/// v8: src/compiler/node-matchers.h struct AddMatcher
+/// v8: src/compiler/node-matchers.h struct BaseWithIndexAndDisplacementMatcher
+/// v8: src/compiler/node-matchers.h struct BranchMatcher
+/// v8: src/compiler/node-matchers.h struct DiamondMatcher
+/// v8: src/compiler/node-matchers.h struct LoadTransformMatcher
+
+/// using 别名 → Rust 类型别名 (64 位宿主: IntPtr = Int64)
+pub type Int32Matcher = ValueMatcherI32;
+pub type Uint32Matcher = ValueMatcherU32;
+pub type Int64Matcher = ValueMatcherI64;
+pub type Uint64Matcher = ValueMatcherU64;
+pub type IntPtrMatcher = Int64Matcher;
+pub type UintPtrMatcher = Uint64Matcher;
+
+/// v8: Int32Matcher = IntMatcher<...>
+pub type Int32Matcher = IntMatcher<T, K>;
+/// v8: Uint32Matcher = IntMatcher<...>
+pub type Uint32Matcher = IntMatcher<T, K>;
+/// v8: Int64Matcher = IntMatcher<...>
+pub type Int64Matcher = IntMatcher<T, K>;
+/// v8: Uint64Matcher = IntMatcher<...>
+pub type Uint64Matcher = IntMatcher<T, K>;
+/// v8: V128ConstMatcher = ValueMatcher<...>
+pub type V128ConstMatcher = ValueMatcher<T, K>;
+/// v8: Float32Matcher = FloatMatcher<...>
+pub type Float32Matcher = FloatMatcher<T, K>;
+/// v8: NumberMatcher = FloatMatcher<...>
+pub type NumberMatcher = FloatMatcher<T, K>;
+/// v8: Float64Matcher = BoxedFloatMatcher<...>
+pub type Float64Matcher = BoxedFloatMatcher<T, K>;
+/// v8: HeapObjectMatcher = HeapObjectMatcherImpl<...>
+pub type HeapObjectMatcher = HeapObjectMatcherImpl<T, K>;
+/// v8: CompressedHeapObjectMatcher = HeapObjectMatcherImpl<...>
+pub type CompressedHeapObjectMatcher = HeapObjectMatcherImpl<T, K>;
+/// v8: Int32BinopMatcher = BinopMatcher<Int32Matcher, Int32Matcher, ...>
+pub type Int32BinopMatcher = BinopMatcher<Int32Matcher, Int32Matcher>;
+/// v8: Uint32BinopMatcher = BinopMatcher<Uint32Matcher, Uint32Matcher, ...>
+pub type Uint32BinopMatcher = BinopMatcher<Uint32Matcher, Uint32Matcher>;
+/// v8: Int64BinopMatcher = BinopMatcher<Int64Matcher, Int64Matcher, ...>
+pub type Int64BinopMatcher = BinopMatcher<Int64Matcher, Int64Matcher>;
+/// v8: Uint64BinopMatcher = BinopMatcher<Uint64Matcher, Uint64Matcher, ...>
+pub type Uint64BinopMatcher = BinopMatcher<Uint64Matcher, Uint64Matcher>;
+/// v8: IntPtrBinopMatcher = BinopMatcher<IntPtrMatcher, IntPtrMatcher, ...>
+pub type IntPtrBinopMatcher = BinopMatcher<IntPtrMatcher, IntPtrMatcher>;
+/// v8: UintPtrBinopMatcher = BinopMatcher<UintPtrMatcher, UintPtrMatcher, ...>
+pub type UintPtrBinopMatcher = BinopMatcher<UintPtrMatcher, UintPtrMatcher>;
+/// v8: Float32BinopMatcher = BinopMatcher<Float32Matcher, Float32Matcher, ...>
+pub type Float32BinopMatcher = BinopMatcher<Float32Matcher, Float32Matcher>;
+/// v8: Float64BinopMatcher = BinopMatcher<Float64Matcher, Float64Matcher, ...>
+pub type Float64BinopMatcher = BinopMatcher<Float64Matcher, Float64Matcher>;
+/// v8: NumberBinopMatcher = BinopMatcher<NumberMatcher, NumberMatcher, ...>
+pub type NumberBinopMatcher = BinopMatcher<NumberMatcher, NumberMatcher>;
+/// v8: HeapObjectBinopMatcher = BinopMatcher<HeapObjectMatcher, HeapObjectMatcher, ...>
+pub type HeapObjectBinopMatcher = BinopMatcher<HeapObjectMatcher, HeapObjectMatcher>;
+/// v8: CompressedHeapObjectBinopMatcher = BinopMatcher<CompressedHeapObjectMatcher, CompressedHeapObjectMatcher, ...>
+pub type CompressedHeapObjectBinopMatcher = BinopMatcher<CompressedHeapObjectMatcher, CompressedHeapObjectMatcher>;
+/// v8: Int32ScaleMatcher = ScaleMatcher<...>
+pub type Int32ScaleMatcher = ScaleMatcher<Int32AddMatcher>;
+/// v8: Int64ScaleMatcher = ScaleMatcher<...>
+pub type Int64ScaleMatcher = ScaleMatcher<Int32AddMatcher>;
+/// v8: Int32AddMatcher = AddMatcher<...>
+pub type Int32AddMatcher = AddMatcher<Int32AddMatcher>;
+/// v8: Int64AddMatcher = AddMatcher<...>
+pub type Int64AddMatcher = AddMatcher<Int32AddMatcher>;
+/// v8: BaseWithIndexAndDisplacement32Matcher = BaseWithIndexAndDisplacementMatcher<...>
+pub type BaseWithIndexAndDisplacement32Matcher = BaseWithIndexAndDisplacementMatcher<Int32AddMatcher>;
+/// v8: BaseWithIndexAndDisplacement64Matcher = BaseWithIndexAndDisplacementMatcher<...>
+pub type BaseWithIndexAndDisplacement64Matcher = BaseWithIndexAndDisplacementMatcher<Int32AddMatcher>;
+
+/// 原版 NodeMatcher — opcode 查询面
+/// v8: src/compiler/node-matchers.cc NodeMatcher::IsComparison
+pub fn is_comparison(opcode: IrOpcode) -> bool {
+  todo!("v8: src/compiler/node-matchers.cc NodeMatcher::IsComparison")
+}
+
+/// 原版 BranchMatcher — Branch + IfTrue/IfFalse 投影匹配
+/// v8: src/compiler/node-matchers.cc BranchMatcher::BranchMatcher
+pub struct BranchMatcher<'n> {
+  /// if_true_
+  pub if_true: Option<&'n Node>,
+  /// if_false_
+  pub if_false: Option<&'n Node>,
+}
+
+/// 原版 DiamondMatcher — 分支-合并菱形匹配
+/// v8: src/compiler/node-matchers.cc DiamondMatcher::DiamondMatcher
+pub struct DiamondMatcher<'n> {
+  /// branch_
+  pub branch: Option<&'n Node>,
+  /// if_true_
+  pub if_true: &'n Node,
+  /// if_false_
+  pub if_false: &'n Node,
+}
+
+impl DiamondMatcher<'_> {
+  /// 原版 IfProjectionsAreOwned — 两投影均被 merge 独占
+  /// v8: src/compiler/node-matchers.h DiamondMatcher::IfProjectionsAreOwned
+  pub fn if_projections_are_owned(&self) -> bool {
+    todo!("v8: src/compiler/node-matchers.h DiamondMatcher::IfProjectionsAreOwned")
+  }
+
+  /// 原版 TrueInputOf — phi 的 true 侧输入
+  /// v8: src/compiler/node-matchers.h DiamondMatcher::TrueInputOf
+  pub fn true_input_of(&self, phi: &Node) -> Option<&Node> {
+    todo!("v8: src/compiler/node-matchers.h DiamondMatcher::TrueInputOf")
+  }
+
+  /// 原版 FalseInputOf — phi 的 false 侧输入
+  /// v8: src/compiler/node-matchers.h DiamondMatcher::FalseInputOf
+  pub fn false_input_of(&self, phi: &Node) -> Option<&Node> {
+    todo!("v8: src/compiler/node-matchers.h DiamondMatcher::FalseInputOf")
+  }
+}

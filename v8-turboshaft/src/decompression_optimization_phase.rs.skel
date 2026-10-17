@@ -1,0 +1,24 @@
+// 由 tool/src/compiler/turboshaft/decompression-optimization-phase.h.js 从 v8/src/compiler/turboshaft/decompression-optimization-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 解压优化 phase: 直调 RunDecompressionOptimization 骨架
+
+/// v8: src/compiler/turboshaft/decompression-optimization-phase.h DecompressionOptimizationPhase
+pub struct DecompressionOptimizationPhase;
+
+impl DecompressionOptimizationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "DecompressionOptimization"
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftDecompressionOptimization";
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/decompression-optimization-phase.cc DecompressionOptimizationPhase::Run
+  ///
+  /// 非 CopyingPhase — 直接: RunDecompressionOptimization(data->graph(), temp_zone);
+  /// (实参为 Zone* 指针)
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    unimplemented!("Developer 修订: 委托 run_decompression_optimization")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(DecompressionOptimizationPhase::PHASE_NAME == "V8.TFTurboshaftDecompressionOptimization");
+};

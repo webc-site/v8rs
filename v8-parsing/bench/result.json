@@ -1,0 +1,143 @@
+{
+  "generated": "2026-10-11T08:28:12.478Z",
+  "ops": [
+    "scan_tokens",
+    "scan_regexp",
+    "lookahead",
+    "literal_fill"
+  ],
+  "rows": [
+    {
+      "impl": "naive-tokenizer",
+      "op": "scan_tokens",
+      "sample": "large",
+      "param": "69.84_KiB",
+      "bytes": 71520,
+      "elements": 0,
+      "mean_ns": 84639.21719354273,
+      "median_ns": 84496.765625,
+      "std_dev_ns": 957.9894545279681
+    },
+    {
+      "impl": "v8-scanner",
+      "op": "scan_tokens",
+      "sample": "large",
+      "param": "69.84_KiB",
+      "bytes": 71520,
+      "elements": 0,
+      "mean_ns": 374032.81040935667,
+      "median_ns": 375534.42905011657,
+      "std_dev_ns": 6110.213034270672
+    },
+    {
+      "impl": "naive-tokenizer",
+      "op": "scan_tokens",
+      "sample": "medium",
+      "param": "6.98_KiB",
+      "bytes": 7152,
+      "elements": 0,
+      "mean_ns": 8380.103530628496,
+      "median_ns": 8334.105486130833,
+      "std_dev_ns": 111.59790764114722
+    },
+    {
+      "impl": "v8-scanner",
+      "op": "scan_tokens",
+      "sample": "medium",
+      "param": "6.98_KiB",
+      "bytes": 7152,
+      "elements": 0,
+      "mean_ns": 37454.7198934105,
+      "median_ns": 37257.877938871476,
+      "std_dev_ns": 905.801673335468
+    },
+    {
+      "impl": "naive-tokenizer",
+      "op": "scan_tokens",
+      "sample": "small",
+      "param": "596_B",
+      "bytes": 596,
+      "elements": 0,
+      "mean_ns": 714.47893168125,
+      "median_ns": 708.4634552081242,
+      "std_dev_ns": 27.7154501673388
+    },
+    {
+      "impl": "v8-scanner",
+      "op": "scan_tokens",
+      "sample": "small",
+      "param": "596_B",
+      "bytes": 596,
+      "elements": 0,
+      "mean_ns": 3031.4315124464833,
+      "median_ns": 3021.139768249516,
+      "std_dev_ns": 30.43154549693102
+    },
+    {
+      "impl": "naive-tokenizer",
+      "op": "scan_regexp",
+      "sample": "regexp",
+      "param": "195_B",
+      "bytes": 195,
+      "elements": 0,
+      "mean_ns": 259.452468185012,
+      "median_ns": 258.9557032555554,
+      "std_dev_ns": 3.4926940849673973
+    },
+    {
+      "impl": "v8-scanner",
+      "op": "scan_regexp",
+      "sample": "regexp",
+      "param": "195_B",
+      "bytes": 195,
+      "elements": 0,
+      "mean_ns": 971.7981529143627,
+      "median_ns": 965.6538645273297,
+      "std_dev_ns": 13.33463820403408
+    },
+    {
+      "impl": "naive-tokenizer",
+      "op": "lookahead",
+      "sample": "hit_path",
+      "param": "",
+      "bytes": 0,
+      "elements": 1024,
+      "mean_ns": 5817.023644896549,
+      "median_ns": 5826.584691049595,
+      "std_dev_ns": 95.49494447887714
+    },
+    {
+      "impl": "v8-scanner",
+      "op": "lookahead",
+      "sample": "hit_path",
+      "param": "",
+      "bytes": 0,
+      "elements": 1024,
+      "mean_ns": 644.8144133468243,
+      "median_ns": 644.6238551366204,
+      "std_dev_ns": 4.846858411325184
+    },
+    {
+      "impl": "naive-tokenizer",
+      "op": "literal_fill",
+      "sample": "latin1",
+      "param": "",
+      "bytes": 0,
+      "elements": 131072,
+      "mean_ns": 82900.2277124769,
+      "median_ns": 82444.95409076122,
+      "std_dev_ns": 882.392769694801
+    },
+    {
+      "impl": "v8-scanner",
+      "op": "literal_fill",
+      "sample": "latin1",
+      "param": "",
+      "bytes": 0,
+      "elements": 131072,
+      "mean_ns": 88196.2176477003,
+      "median_ns": 88479.93346666667,
+      "std_dev_ns": 899.9182910391002
+    }
+  ]
+}

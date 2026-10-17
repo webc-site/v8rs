@@ -1,0 +1,78 @@
+// 由 tool/src/base/once.h.js 从 v8/src/base/once.h + .cc 生成; 修订就地改, 复跑覆盖
+// POD 单次初始化原语
+
+//! v8 侧: 状态枚举 3; CallOnce 重载 3 + Impl 1
+//! Rust 策略: OnceType = AtomicU8; 整体可替换 std::sync::Once, 保留状态机供差分
+
+/// v8: src/base/once.h OnceType = std::atomic<uint8_t> (POD, 无静态初始化器)
+pub type OnceType = core::sync::atomic::AtomicU8;
+
+/// v8: src/base/once.h enum : uint8_t
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum OnceState {
+    /// v8: ONCE_STATE_UNINITIALIZED = 0
+    Uninitialized = 0,
+    /// v8: ONCE_STATE_EXECUTING_FUNCTION = 1
+    ExecutingFunction = 1,
+    /// v8: ONCE_STATE_DONE = 2
+    Done = 2,
+}
+
+/// v8: src/base/once.h CallOnce (acquire 快路径 + Impl)
+/// 语义: load(acquire) != DONE 才进 Impl
+#[inline]
+pub fn call_once<F: FnOnce()>(once: &OnceType, init_func: F) {
+    use core::sync::atomic::Ordering;
+    if once.load(Ordering::Acquire) != OnceState::Done as u8 {
+        call_once_impl(once, init_func);
+    }
+}
+
+/// v8: src/base/once.cc CallOnceImpl — CAS(UNINIT→EXECUTING, acq_rel) 成功者执行;
+/// 失败者自旋 yield 等 DONE
+pub fn call_once_impl<F: FnOnce()>(once: &OnceType, init_func: F) {
+    use core::sync::atomic::Ordering;
+    /// v8: 三态机 — 原文行区间 cc 16-53 见文件尾
+    todo!()
+}
+
+// ---- v8 CallOnceImpl 原文 (CAS/自旋证据) ----
+// namespace base {
+// 
+// void CallOnceImpl(OnceType* once, std::function<void()> init_func) {
+//   // Fast path. The provided function was already executed.
+//   if (once->load(std::memory_order_acquire) == ONCE_STATE_DONE) {
+//     return;
+//   }
+// 
+//   // The function execution did not complete yet. The once object can be in one
+//   // of the two following states:
+//   //   - UNINITIALIZED: We are the first thread calling this function.
+//   //   - EXECUTING_FUNCTION: Another thread is already executing the function.
+//   //
+//   // First, try to change the state from UNINITIALIZED to EXECUTING_FUNCTION
+//   // atomically.
+//   uint8_t expected = ONCE_STATE_UNINITIALIZED;
+//   if (once->compare_exchange_strong(expected, ONCE_STATE_EXECUTING_FUNCTION,
+//                                     std::memory_order_acq_rel)) {
+//     // We are the first thread to call this function, so we have to call the
+//     // function.
+//     init_func();
+//     once->store(ONCE_STATE_DONE, std::memory_order_release);
+//   } else {
+//     // Another thread has already started executing the function. We need to
+//     // wait until it completes the initialization.
+//     while (once->load(std::memory_order_acquire) ==
+//            ONCE_STATE_EXECUTING_FUNCTION) {
+// #ifdef _WIN32
+//       ::Sleep(0);
+// #elif defined(V8_OS_STARBOARD)
+//       SbThreadYield();
+// #else
+//       sched_yield();
+// #endif
+//     }
+//   }
+// }
+// 

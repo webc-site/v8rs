@@ -1,0 +1,32 @@
+// 由 tool/src/objects/js-display-names.h.js 从 v8/src/objects/js-display-names.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSDisplayNames 枚举/位标志/布局骨架
+
+//! 差集骨架: JSDisplayNames (DisplayNamesInternal 的 JS 包装)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。ICU 语义面留 Developer。
+
+/// v8: src/objects/js-display-names.h JSDisplayNames::Style
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Style { Long = 0, Short = 1, Narrow = 2 }
+
+/// v8: src/objects/js-display-names.h JSDisplayNames::Fallback
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Fallback { Code = 0, None = 1 }
+
+/// v8: src/objects/js-display-names.h JSDisplayNames::LanguageDisplay
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LanguageDisplay { Dialect = 0, Standard = 1 }
+
+/// v8: src/objects/js-display-names.h JSDisplayNames::StyleBits (bit 0..2)
+pub const K_STYLE_MASK: u32 = 0x3;
+/// v8: src/objects/js-display-names.h JSDisplayNames::FallbackBit (bit 2)
+pub const K_FALLBACK_MASK: u32 = 0x1 << 2;
+/// v8: src/objects/js-display-names.h JSDisplayNames::LanguageDisplayBit (bit 3)
+pub const K_LANGUAGE_DISPLAY_MASK: u32 = 0x1 << 3;
+
+/// v8: src/objects/js-display-names.h JSDisplayNames: internal_ offset=24 (CppGCManaged),
+///   flags_ offset=32 (Smi)
+pub const K_JS_DISPLAY_NAMES_HEADER_SIZE: usize = 40;
+
+/// v8: src/objects/js-display-names-inl.h flags accessor (Smi) + set_style/style/
+///   set_fallback/fallback/set_language_display/language_display
+pub struct JSDisplayNames { /* internal_: CppGCManaged, flags_: Smi */ }

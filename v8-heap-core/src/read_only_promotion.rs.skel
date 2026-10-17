@@ -1,0 +1,11 @@
+// 由 tool/src/heap/read-only-promotion.js 从 v8/src/heap/read-only-promotion.h, src/heap/read-only-promotion.cc 生成; 修订就地改, 复跑覆盖
+// 启动时把老生代部分页提升为只读页
+/// v8: src/heap/read-only-promotion.h ReadOnlyPromotion (AllStatic)
+pub struct ReadOnlyPromotion;
+
+impl ReadOnlyPromotion {
+  /// v8: ReadOnlyPromotion::Promote(isolate, safepoint_scope, no_gc)
+  /// 语义: 遍历 ReadOnlyRoots 引用闭包, 迁移对象到只读空间,
+  ///       去写屏障, 页转 ReadOnlyPage; 需在 safepoint 下运行。
+  pub fn promote(isolate: &Isolate, safepoint_scope: &SafepointScope, no_gc: &DisallowGarbageCollection) { todo!() }
+}

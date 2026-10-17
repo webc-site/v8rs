@@ -1,0 +1,50 @@
+// 由 tool/src/objects/embedder-data-slot-inl.h.js 从 v8/src/objects/embedder-data-slot-inl.h 生成; 修订就地改, 复跑覆盖
+// 差集 (h 归 embedder-data-slot.h.js 席): 槽方法清单 + 配置分支规则
+
+//! 差集骨架: EmbedderDataSlot 行内读写语义。
+//! 依赖 (CppHeapPointerTable/WriteBarrier/cage base) 未落地, 语义留 Developer 就地修订。
+//! 配置: 脚本登记原版双配置分支; v8-objects-arrays 配置登记为 64 位非压缩。
+
+/// -inl 方法清单 (15 方法名, 构造 2 形态 / ToAlignedPointer 2 重载 / store_aligned_pointer 2 形态)。
+pub const EMBEDDER_DATA_SLOT_INL_METHODS: &[&str] = &[
+  "EmbedderDataSlot",
+  "Initialize",
+  "load_tagged",
+  "store_smi",
+  "store_tagged",
+  "clear_cpp_heap_pointer_field",
+  "ToAlignedPointer",
+  "ToGenericAlignedPointer",
+  "DeprecatedToAlignedPointer",
+  "store_aligned_pointer",
+  "store_tagged_without_barrier",
+  "store_handle_without_barrier",
+  "load_raw",
+  "store_raw",
+  "MustClearDuringSerialization",
+];
+
+/// 配置分支规则面 (每条 = 压缩分支 / 非压缩分支)。
+pub const EMBEDDER_DATA_SLOT_CONFIG_RULES: &[(&str, &str)] = &[
+  ("clear_cpp_heap_pointer_field: CppHeapPointerSlot Relaxed_StoreHandle(空 handle)",
+   "clear_cpp_heap_pointer_field: WriteUnalignedValue(槽+kCppHeapPointerOffset, kNullAddress)"),
+  ("ToAlignedPointer: handle 空或表查 kNullAddress → nullptr; 否则表查返回指针",
+   "ToAlignedPointer: ReadUnalignedValue<Address>(槽+kCppHeapPointerOffset) 直读"),
+  ("store_aligned_pointer: handle 空→table.Set; 非空→AllocateAndInitializeEntry+Release_StoreHandle; tagged 部分写 Smi::zero",
+   "store_aligned_pointer: WriteUnalignedValue 直写 + tagged 部分写 Smi::zero + 非空时 ForCppHeapPointer 屏障"),
+  ("load_raw: ReadUnalignedValue<RawData>(槽地址) 单次读 8 字节",
+   "load_raw: RawData{ReadUnalignedValue(pointer 段), ObjectSlot Relaxed_Load(tagged 段)}"),
+  ("store_raw: 两段 32 位写 (lo 经 ObjectSlot Relaxed_Store, hi 经 AsAtomicTagged::Relaxed_Store) — tagged 原子性 + 槽仅 4 字节对齐",
+   "store_raw: tagged 段 Relaxed_Store + pointer 段 WriteUnalignedValue"),
+  ("MustClearDuringSerialization: CppHeapPointerHandle 原子读 != 空 handle",
+   "MustClearDuringSerialization: ReadUnalignedValue != kNullAddress"),
+];
+
+/// 通用语义要点 (与配置无关)。
+pub const EMBEDDER_DATA_SLOT_SEMANTICS: &[&str] = &[
+  "构造: EmbedderDataArray 形态 = FIELD_ADDR(array, OffsetOfElementAt(entry_index)); JSObject 形态 = FIELD_ADDR(object, GetEmbedderFieldOffset)",
+  "Initialize: tagged 段写初值 (Smi 或只读堆对象) + 清 cpp 指针段",
+  "store_tagged: 压缩下 CHECK value 与宿主同 cage base; 写后清 cpp 指针段 (双写保 tagged 段独立)",
+  "store_handle_without_barrier: DuplicateEntry 复制 handle, 新 handle 空槽 Release_StoreHandle, tagged 段写 Smi::zero",
+  "ToAlignedPointer(ExternalPointerTagRange): 包装对象 tag 命中 → 解包 pointer, 否则 nullptr",
+];

@@ -1,0 +1,29 @@
+// 由 tool/src/compiler/backend/spill-placer.js 从 v8/src/compiler/backend/spill-placer.h + spill-placer.cc 生成; 修订就地改, 复跑覆盖
+// SpillPlacer: 位图批处理最优 spill 插入点 (64 值/Entry 并行三遍扫描)
+
+//! 台账: Add 累积 TopLevelLiveRange (vreg 槽位分配, 满则先 CommitSpills 腾位);
+//!   三遍扫描: FirstBackwardPass (标 "后继需 spill" — deferred/非 deferred 分态)
+//!   → ForwardPass (合流点判 "需 spill") → SecondBackwardPass (最早一致点传播
+//!   + 发射 spill move: 定义处或后继块首); 回边全忽略; kValueIndicesPerEntry=64。
+
+/// v8: SpillPlacer::Add — 累积 range (满批先提交)
+// pub fn add(&mut self, range: &mut TopLevelLiveRange)
+/// v8: SpillPlacer::GetOrCreateIndexForLatestVreg — vreg 位槽 (LRU 单槽)
+// fn get_or_create_index_for_latest_vreg(&mut self, vreg: i32) -> usize
+/// v8: SpillPlacer::CommitSpills — 批提交 (三遍 + 发射)
+// fn commit_spills(&mut self)
+/// v8: SpillPlacer::FirstBackwardPass — 逆向标 "后继需 spill" 态
+// fn first_backward_pass(&mut self)
+/// v8: SpillPlacer::ForwardPass — 正向合流点判需 spill
+// fn forward_pass(&mut self)
+/// v8: SpillPlacer::SecondBackwardPass — 再逆向传播 + 发射 spill move
+// fn second_backward_pass(&mut self)
+/// v8: SpillPlacer::Entry 位标志态 — unmarked/definition/spill required×3 (deferred 分态)
+// struct Entry (每块一 Entry, 64 位/SIMD 批)
+/// v8: SpillPlacer::kValueIndicesPerEntry — 每 Entry 64 值
+pub const VALUE_INDICES_PER_ENTRY: usize = 64;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(VALUE_INDICES_PER_ENTRY == 64);
+};

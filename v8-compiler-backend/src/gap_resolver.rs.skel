@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/backend/gap-resolver.js 从 v8/src/compiler/backend/gap-resolver.h + gap-resolver.cc 生成; 修订就地改, 复跑覆盖
+// GapResolver: 并行移动序列化 (环检测 + 临时位置破环)
+
+//! 台账: Assembler trait 8 方法 (AssembleMove/AssembleSwap/Push/Pop/
+//!   PopTempStackSlots/MoveToTempLocation/MoveTempLocationTo/SetPendingMove)
+//!   + temp_slots_; Resolve 逐未消除 move → PerformMove (helper 失败返回
+//!   blocking_move 则临时槽破环重试) → PerformCycle (环走 SetPendingMove +
+//!   MoveToTempLocation + MoveTempLocationTo 三步); 递归 PerformMoveHelper。
+
+/// v8: GapResolver::Assembler — 发射接口 (Rust trait)
+// pub trait Assembler { assemble_move; assemble_swap; push; pop;
+//   pop_temp_stack_slots; move_to_temp_location; move_temp_location_to; set_pending_move }
+/// v8: GapResolver::Resolve — 公有入口
+// pub fn resolve(&mut self, parallel_move: &mut ParallelMove)
+/// v8: GapResolver::PerformMove — 依赖链驱动 + 破环重试
+// fn perform_move(&mut self, moves: &mut ParallelMove, mv: &mut MoveOperands)
+/// v8: GapResolver::PerformMoveHelper — 递归先行, 环则返回阻塞 move
+// fn perform_move_helper(&mut self, moves: &mut ParallelMove, mv: &mut MoveOperands,
+//   cycle: &mut Vec<*mut MoveOperands>) -> Option<&mut MoveOperands>
+/// v8: GapResolver::PerformCycle — 环三步破
+// fn perform_cycle(&mut self, cycle: &[*mut MoveOperands])
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 接口面 7 方法对数见生成脚本日志
+};

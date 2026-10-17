@@ -1,0 +1,16 @@
+v8-parsing 词法扫描评测 (生成时间: 2026-10-11T08:28:12.478Z)
+
+操作            样本               规模           实现               平均耗时       中位数        标准差       吞吐            语义成本
+────────────  ───────────────  ───────────  ───────────────  ─────────  ─────────  ────────  ────────────  ─────
+scan_tokens   large 69.84_KiB  69.84 KiB    naive-tokenizer  84.64 µs   84.50 µs   958.0 ns  805.9 MiB/s   -
+scan_tokens   large 69.84_KiB  69.84 KiB    v8-scanner       374.03 µs  375.53 µs  6.11 µs   182.4 MiB/s   4.42×
+scan_tokens   medium 6.98_KiB  6.98 KiB     naive-tokenizer  8.38 µs    8.33 µs    111.6 ns  813.9 MiB/s   -
+scan_tokens   medium 6.98_KiB  6.98 KiB     v8-scanner       37.45 µs   37.26 µs   905.8 ns  182.1 MiB/s   4.47×
+scan_tokens   small 596_B      596 B        naive-tokenizer  714.5 ns   708.5 ns   27.7 ns   795.5 MiB/s   -
+scan_tokens   small 596_B      596 B        v8-scanner       3.03 µs    3.02 µs    30.4 ns   187.5 MiB/s   4.24×
+scan_regexp   regexp 195_B     195 B        naive-tokenizer  259.5 ns   259.0 ns   3.5 ns    716.8 MiB/s   -
+scan_regexp   regexp 195_B     195 B        v8-scanner       971.8 ns   965.7 ns   13.3 ns   191.4 MiB/s   3.75×
+lookahead     hit_path         1024 elem    naive-tokenizer  5.82 µs    5.83 µs    95.5 ns   176 Melem/s   -
+lookahead     hit_path         1024 elem    v8-scanner       644.8 ns   644.6 ns   4.8 ns    1588 Melem/s  0.11×
+literal_fill  latin1           131072 elem  naive-tokenizer  82.90 µs   82.44 µs   882.4 ns  1581 Melem/s  -
+literal_fill  latin1           131072 elem  v8-scanner       88.20 µs   88.48 µs   899.9 ns  1486 Melem/s  1.06×

@@ -1,0 +1,58 @@
+// 由 tool/src/compiler/backend/instruction-selector.js 从 v8/src/compiler/backend/instruction-selector.h + instruction-selector.cc + instruction-selector-impl.h 生成; 修订就地改, 复跑覆盖
+// 指令选择器 (turboshaft): 主流程/VisitNode 分发/FlagsContinuation/操作数生成
+
+//! 台账: SelectInstructions → 逐块 VisitBlock (VisitNode 值节点 97 case 分发 +
+//!   VisitControl 控制节点) + 整合 Emit; 调用面 InitializeCallBuffer (压参
+//!   EmitPrepareArguments); switch 面 SwitchInfo (CaseInfo/跳转表/二分);
+//!   FlagsContinuation 5 模式 (none/branch/deoptimize/trap/select) +
+//!   ConditionalCompare 5 字段 + 比较链上限 4 (EmitCcmpCompareChain);
+//!   配置 6 布尔 + SourcePositionMode + CallBufferFlag; impl.h: OperandGenerator
+//!   (RegisterUseKind/RegisterMode) + CompareChainNode (kFlagSetting/kLogicalCombine)
+//!   + CompareSequence; 失败通道 set_instruction_selection_failed → BailoutReason。
+
+/// v8: FlagsContinuation 模式 — kFlags_none/branch/deoptimize/trap/select
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum FlagsModeKind { None = 0, Branch = 1, Deoptimize = 2, Trap = 3, Select = 4 }
+
+/// v8: kMaxCompareChainSize — ccmp 比较链上限 (实测 4)
+pub const MAX_COMPARE_CHAIN_SIZE: usize = 4;
+
+/// v8: SourcePositionMode — kCallSourcePositions/kAllSourcePositions
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum SourcePositionMode { CallSourcePositions = 0, AllSourcePositions = 1 }
+
+/// v8: OperandGenerator::RegisterUseKind — kUseRegister/kUseUniqueRegister
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum RegisterUseKind { UseRegister = 0, UseUniqueRegister = 1 }
+
+/// v8: CompareChainNode::NodeKind — kFlagSetting/kLogicalCombine
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum CompareChainNodeKind { FlagSetting = 0, LogicalCombine = 1 }
+
+/// v8: InstructionSelector::SelectInstructions — 主流程 (Option<BailoutReason>)
+// pub fn select_instructions(&mut self) -> Option<BailoutReason>
+/// v8: InstructionSelector::VisitNode — 值节点 97 case 分发 (架构镜像扩展)
+// fn visit_node(&mut self, node: OpIndex)
+/// v8: InstructionSelector::VisitBlock / VisitControl — 块与控制终结
+// fn visit_block(&mut self, block) / visit_control
+/// v8: InstructionSelector::InitializeCallBuffer — 调用实参缓冲 (CallBufferFlag)
+// fn initialize_call_buffer(...)
+/// v8: SwitchInfo + CaseInfo (impl.h) — switch 表构建 (跳转表/查找表/二分)
+// struct SwitchInfo { cases: Vec<CaseInfo>, min_value, max_value, default_case }
+/// v8: OperandGenerator (impl.h) — 操作数构造 (Use/RegisterMode 族)
+// struct OperandGenerator
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(MAX_COMPARE_CHAIN_SIZE == 4);
+  assert!(FlagsModeKind::Select as u8 == 4);
+};
+/// v8: VisitNode 分发 case 总数 (实测 97, wasm 条件 case 在内)
+pub const VISIT_NODE_CASE_COUNT: usize = 97;
+const _: () = {
+  assert!(VISIT_NODE_CASE_COUNT == 97);
+};

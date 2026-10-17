@@ -1,0 +1,12 @@
+// 由 tool/src/objects/js-shadow-realm.h.js 从 v8/src/objects/js-shadow-realm.h + js-shadow-realm-inl.h + js-shadow-realm.tq 生成; 修订就地改, 复跑覆盖
+// JSShadowRealm 单槽布局差集骨架
+
+//! JSShadowRealm: JSObject + native_context (ShadowRealm 提案; 仅 1 个 tagged 槽)。
+
+/// v8: src/objects/js-shadow-realm.h JSShadowRealm::native_context_
+pub const K_NATIVE_CONTEXT_OFFSET: usize = 24;
+/// v8: src/objects/js-shadow-realm.h JSShadowRealm (隐式 kHeaderSize = sizeof)
+pub const K_HEADER_SIZE: usize = 32;
+
+// 访问器 (inl): native_context()/set_native_context() → Tagged<NativeContext> load/store + 写屏障
+// 推迟: DECL_PRINTER / EXPORT_DECL_VERIFIER (L4 诊断), BodyDescriptor (heap 层)

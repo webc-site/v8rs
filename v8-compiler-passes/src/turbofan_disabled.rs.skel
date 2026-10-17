@@ -1,0 +1,22 @@
+// 由 tool/src/compiler/turbofan-disabled.cc.js 从 v8/src/compiler/turbofan-disabled.cc 生成; 修订就地改, 复跑覆盖
+// v8_enable_turbofan=false 时的 API 桩 (FATAL)
+
+//! turbofan-disabled — TF 关闭构建的实现面
+//!
+//! 两个入口全部 FATAL (调用即错, 不产代码):
+//! - NewCompilationJob — "compiler::NewCompilationJob must not be called when Turbofan is disabled"
+//! - NewJSToWasmCompilationJob — 同类文案。
+
+/// 原版 NewCompilationJob 桩 — TF 关闭时调用即 FATAL
+/// v8: src/compiler/turbofan-disabled.cc NewCompilationJob
+#[cfg(not(feature = "turbofan"))]
+pub fn new_compilation_job(/* isolate, function, has_script, osr_offset */) -> ! {
+  panic!("compiler::NewCompilationJob must not be called when Turbofan is disabled (v8_enable_turbofan = false)")
+}
+
+/// 原版 NewJSToWasmCompilationJob 桩
+/// v8: src/compiler/turbofan-disabled.cc NewJSToWasmCompilationJob
+#[cfg(not(feature = "turbofan"))]
+pub fn new_js_to_wasm_compilation_job(/* isolate, sig */) -> ! {
+  panic!("compiler::NewJSToWasmCompilationJob must not be called when Turbofan is disabled (v8_enable_turbofan = false)")
+}

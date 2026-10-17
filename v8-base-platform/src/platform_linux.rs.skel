@@ -1,0 +1,55 @@
+// 由 tool/src/base/platform/platform-linux.js 从 v8/src/base/platform/platform-linux.{h,cc} 生成; 修订就地改, 复跑覆盖
+// linux 平台面 (/proc/self/maps 信号安全解析 + mremap; 非目标, 登记骨架)
+
+/// /proc/PID/maps 记录 (原版 struct MemoryRegion)
+/// v8: src/base/platform/platform-linux.h MemoryRegion
+#[derive(Debug, Clone)]
+pub struct MemoryRegion {
+  pub start: usize,
+  pub end: usize,
+  /// 原版 char raw_permissions[5] ("rwxp" + NUL)
+  pub raw_permissions: [u8; 5],
+  pub permissions: crate::platform::PagePermissions,
+  pub offset: usize,
+  pub dev: u64,
+  pub inode: u64,
+  pub pathname: [u8; 128],
+}
+
+/// 路径容量 (原版 kMaxPathnameSize)
+/// v8: src/base/platform/platform-linux.h MemoryRegion::kMaxPathnameSize
+pub const MAX_PATHNAME_SIZE: usize = 128;
+/// 读缓冲 (原版 SignalSafeMapsParser::kBufferSize)
+/// v8: src/base/platform/platform-linux.h SignalSafeMapsParser::kBufferSize
+pub const PARSER_BUFFER_SIZE: usize = 1024;
+
+/// 信号安全 maps 解析器 (原版 class SignalSafeMapsParser)
+/// v8: src/base/platform/platform-linux.h SignalSafeMapsParser
+/// 只用 open/read/close; Next() 逐行取 MemoryRegion;
+/// ReadHex/ReadDecimal 借中间字符定位分隔符 — 供信号处理器内查映射
+
+// —— OS 9 方法登记 (linux 非目标, 语义留锚) ——
+/// v8: src/base/platform/platform-linux.cc OS::CreateTimezoneCache
+/// v8: src/base/platform/platform-linux.cc OS::SignalCodeMovingGC
+/// 写 GC 假 mmap 文件 + mmap(PROT_READ|PROT_EXEC) 触发剖析器记录代码段移动
+/// v8: src/base/platform/platform-linux.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-linux.cc OS::GetFirstFreeMemoryRangeWithin
+/// 扫 /proc/self/maps 找 [boundary_start, boundary_end) 内首个 ≥minimum_size 空洞
+/// v8: src/base/platform/platform-linux.cc OS::GetSharedLibraryAddresses
+/// 包装 GetSharedLibraryAddresses(fp) 直读 /proc/self/maps
+/// v8: src/base/platform/platform-linux.cc GetSharedLibraryAddresses(FILE* fp)
+/// 测试通道: fp 伪造 maps 内容 (Visible for testing)
+/// v8: src/base/platform/platform-linux.cc OS::RemapShared
+/// mremap(old, 0, size, MREMAP_FIXED | MREMAP_MAYMOVE, new) 共享区搬迁
+/// v8: src/base/platform/platform-linux.cc OS::RemapPages
+/// mremap 原地重映射 (对应 darwin 的 mach_vm_remap)
+/// v8: src/base/platform/platform-linux.cc OS::GetGCFakeMMapFile / GetRandomMmapAddr
+/// posix 基座转发
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(MAX_PATHNAME_SIZE, 128);
+  assert_eq!(PARSER_BUFFER_SIZE, 1024);
+  // raw_permissions 定长 5 = 'r','w','x',共享/私有,NUL
+  assert_eq!(core::mem::size_of::<[u8; 5]>(), 5);
+};

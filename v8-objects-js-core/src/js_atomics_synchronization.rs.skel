@@ -1,0 +1,45 @@
+// 由 tool/src/objects/js-atomics-synchronization.h.js 从 v8/src/objects/js-atomics-synchronization.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSAtomicsMutex/Condition 状态位与 waiter 队列布局
+
+//! 差集骨架: JSSynchronizationPrimitive / JSAtomicsMutex / JSAtomicsCondition。
+//! 配置: 64 位非压缩 (kTaggedSize=8, waiter_queue_head_ = 原生指针)。
+//! state 编码: mutex = 0bLQW (bit2=L 锁, bit1=Q 队列锁, bit0=W 有等待者);
+//!   condition = 0bQW。锁算法 (CAS 快路径/慢路径停车) 语义面留 Developer。
+
+/// v8: src/objects/js-atomics-synchronization.h JSSynchronizationPrimitive::HasWaitersField
+pub const K_HAS_WAITERS_MASK: u32 = 0x1;
+/// v8: src/objects/js-atomics-synchronization.h JSSynchronizationPrimitive::IsWaiterQueueLockedField
+pub const K_IS_WAITER_QUEUE_LOCKED_MASK: u32 = 0x2;
+/// v8: src/objects/js-atomics-synchronization.h kWaiterQueueMask = BitFieldUnion(两标志)
+pub const K_WAITER_QUEUE_STATE_MASK: u32 = 0x3;
+/// v8: src/objects/js-atomics-synchronization.h JSSynchronizationPrimitive::kEmptyState
+pub const K_EMPTY_STATE: u32 = 0;
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsMutex::IsLockedField (NextBitField, bit2)
+pub const K_IS_LOCKED_MASK: u32 = 0x4;
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsMutex::kLockedUncontended
+pub const K_LOCKED_UNCONTENDED: u32 = 0x4;
+/// v8: src/objects/js-atomics-synchronization.cc kInvalidState = ~kEmptyState
+pub const K_INVALID_STATE: u32 = 0xFFFF_FFFF;
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsCondition::kAllWaiters
+pub const K_ALL_WAITERS: u32 = u32::MAX;
+/// v8: src/objects/js-atomics-synchronization.cc LockSlowPath 自旋参数
+pub const K_SPIN_COUNT: i32 = 64;
+/// v8: src/objects/js-atomics-synchronization.cc LockSlowPath 退避上限
+pub const K_MAX_BACKOFF: i32 = 16;
+
+// ── 64 位非压缩布局 ──
+/// v8: src/objects/js-atomics-synchronization.h JSSynchronizationPrimitive:
+///   waiter_queue_head_ offset=24 (8), state_ offset=32 (4), 隐式对齐 padding 36..40
+pub const K_JS_SYNC_PRIMITIVE_HEADER_SIZE: usize = 40;
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsMutex:
+///   owner_thread_id_ offset=36 (int32, 落在基类对齐 padding 槽)
+pub const K_JS_ATOMICS_MUTEX_HEADER_SIZE: usize = 40;
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsCondition:
+///   optional_padding_ offset=36 (uint32, TAGGED_SIZE_8_BYTES 显式)
+pub const K_JS_ATOMICS_CONDITION_HEADER_SIZE: usize = 40;
+
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsMutex::Lock/TryLock/Unlock/
+///   LockSlowPath/UnlockSlowPath/MaybeEnqueueNode; LockGuard/TryLockGuard RAII
+/// v8: src/objects/js-atomics-synchronization.h JSAtomicsCondition::WaitFor/Notify
+/// v8: src/objects/js-atomics-synchronization.h SetWaiterQueueHead (压缩时经外部指针表)
+pub struct JSAtomicsMutex { /* waiter_queue_head_, state_, owner_thread_id_ */ }

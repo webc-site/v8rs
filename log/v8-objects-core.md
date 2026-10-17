@@ -1,0 +1,146 @@
+# v8-objects-core 转写日志
+
+- [轮7 W7O1] (接力 W6O1b 中断态, 开工三件套实测盘点禁重做): 基线实测 `todo!` 105 (接力口径 115, 挂断前已回落), `cargo check` 编译门绿、nextest 55/55 起步。
+  - **8 半写文件核验**: tagged_value_inl / tagged_field / map_word / tagged / tests/map_word_unittest 已填实无缺失; compressed_slots / maybe_object / instance_type_inl / tagged_value_inl 四个完整但未接入 `lib.rs`。
+  - **接入 (补差集)**: `lib.rs` 挂入 `compressed_slots` + `maybe_object` + `tagged_value_inl` + `instance_type_inl` 4 模块; 挂载即暴露 1 红态 → 修 `compressed_slots.rs::from_value` 误标 `const fn` (指针转整数不可 const eval, 去 `const`)。
+  - **填体 (1:1, 纯地址运算非深水面)**: `heap_object_field_inl.rs` 新增 `field_address` 助手 (heap-object.h `address()+offset`) 并填 `raw_field`/`raw_maybe_weak_field`/`raw_instruction_stream_field`/`raw_external_pointer_field`/`raw_cpp_heap_pointer_field`/`raw_indirect_pointer_field` 6 处; `heap_object_set_map_inl.rs` 填 `map_slot` (`MapField::address`) 1 处。
+  - todo! 前后: **105 → 98** (填体 7)。
+  - 新增单测锁定接入/填体面: tests/compressed_slots_unittest.rs (3) + tagged_value_inl_unittest.rs (2) + instance_type_inl_unittest.rs (1) + heap_object_field_unittest.rs (1), 共 7。
+  - **推迟台账**: `readme/zh.md` 由空补全, 登记剩余 98 处 `todo!` (11 文件, 逐原函数名 + 缺前置 + 解锁 crate: v8-heap-gc/v8-sandbox/v8-roots/v8-objects-rest/v8-isolate + Rust 无可变参泛型)。
+  - 门禁: `CARGO_TARGET_DIR=target/agent_w7o1 cargo nextest run -p v8-objects-core` → **62/62 passed, 0 skipped**; `cargo check` 0 error 0 warning。
+  - 红线遵守: 仅改 `v8-objects-core/`; 未跑全仓脚本; 未 git commit/push (环境自行并入的 init 哈希变动非本席操作); 推迟面用 `todo!` 无 `panic!`; 锚点 `/// v8: src/objects/<file>.h <Class>::<method>` 齐备。
+
+- [轮7 W7O1 续跑] (对齐原版 slots/tagged-impl/谓词inl/instance-type 核心语义填体与测试迁移):
+  - **半写态盘点**: 核验 `tagged_value_inl`、`tagged_field`、`map_word`、`compressed_slots` 无损。
+  - **模块接入 (lib.rs)**: 补齐挂载 `slots`, `tagged_impl`, `object_predicates`, `object_predicates_inl`, `internal_index`, `hole`, `primitive_heap_object`, `oddball_predicates`, `object_type`, `smi_inl` 10 个模块。
+  - **核心语义填体 (填实 32 处)**:
+    - `slots.rs` (15 处): `SlotBase` 步长算术面、`FullObjectSlot` (全套存取/松弛读写/获取/释放/CAS/map比较)、`FullMaybeObjectSlot` (强弱引用槽存取与 CAS)、`FullHeapObjectSlot` (强堆引用剥离 `to_heap_object`)、`AtomicSlot` (`reference_load`/`index`)、`copy_tagged`、`memset_pointer`、`memset_tagged`、`relaxed_memset_tagged`、`external_pointer_slot_has_handle`。
+    - `tagged_impl.rs` (13 处): `to_smi_out` / `to_smi`、`get_heap_object_out` / `get_heap_object_with_ref_type`、`get_heap_object_if_strong` / `get_heap_object_assume_strong`、`get_heap_object_if_weak` / `get_heap_object_assume_weak`、`get_heap_object` / `get_heap_object_or_smi`、`cage_base_checks` (`is_in_main_cage_base`, `is_in_trusted_cage_base`)、`check_object_comparison_allowed`。
+    - `object_predicates_inl.rs` (4 处): `is_tagged_index`、`is_zero`、`is_number`、`is_numeric`。
+  - **todo! 前后**: **98 → 66** (填实 32 处; 剩余 66 处登记于 `readme/zh.md`)。
+  - **新增与扩充单测 (11 个新用例)**:
+    - `tests/slots_unittest.rs`: 5 个测试 (`test_full_slot_base_arithmetic`, `test_full_object_slot_operations`, `test_full_maybe_object_slot_operations`, `test_full_heap_object_slot_operations`, `test_slot_free_functions_and_atomic`)。
+    - `tests/object_predicates_unittest.rs`: 3 个测试 (`test_object_predicates_metadata`, `test_is_tagged_index_and_is_zero`, `test_is_number_and_is_numeric`)。
+    - `tests/internal_index_unittest.rs`: 1 个测试 (`test_internal_index_basic`)。
+    - `tests/object_type_unittest.rs`: 1 个测试 (`test_object_type_variants_and_strings`)。
+    - `tests/tagged_impl_unittest.rs`: 扩充 1 个测试 (`test_tagged_impl_functions`)。
+    - 单测总量: **62 → 73 passed, 0 skipped**。
+  - **门禁验证**:
+    - `CARGO_TARGET_DIR=target/agent_w7o1 cargo nextest run -p v8-objects-core` → **73/73 passed, 0 skipped (100% 绿)**。
+    - `CARGO_TARGET_DIR=target/agent_w7o1 cargo clippy -p v8-objects-core --all-targets` → **0 error, 0 warning**。
+    - `rg "\[allow" v8-objects-core` → **0 处 allow**。
+  - **红线遵守**: 独占改动限于 `v8-objects-core/` 与 `log/v8-objects-core.md`; 纯独立 target_dir; 零外部 crate 污染。
+
+- [round1 Reviewer 深度审查与优化] (达成 clean 1/3):
+  - **规范核验**: 严格依照 `.agents/skills/rust_review/SKILL.md` 12 项原则全方位审视。
+  - **原版 1:1 比对与语义补全**:
+    - `slots.rs`:
+      - 补全 `FullHeapObjectSlot::store_heap_object` 与自由函数 `full_heap_object_slot_store_heap_object` (对齐 slots.h `StoreHeapObject`)。
+      - 补全 `FullMaybeObjectSlot::from_value`。
+      - 指针步进 `SlotBase::step` 改用现代 Rust `wrapping_add_signed`，消除潜在溢出风险。
+      - 性能极致优化: `memset_tagged` 与 `memset_pointer` 标量逐字节循环替换为 `core::slice::from_raw_parts_mut(ptr, count).fill(...)`，LLVM 零开销向量化填充。
+      - 补充详尽的 SAFETY 文档与注释。
+    - `compressed_slots.rs`:
+      - `SlotBase::step` 同步改为 `wrapping_add_signed`。
+    - `tagged_impl.rs`:
+      - `get_heap_object_assume_strong` 与 `get_heap_object` 补齐对齐原版 `DCHECK(IsStrong())` 与 `DCHECK(!IsSmi())` 的 debug 断言。
+    - `object_predicates_inl.rs`:
+      - 填实 `is_no_shared_name_sentinel` (原版即 `Smi::zero()`, 消除 1 处 todo!)。
+      - 落地 `is_smi`, `is_heap_object`, `is_weak`, `is_object` 通用谓词。
+      - 落地 `is_nan`, `is_minus_zero` (f64 符号/NaN 精确判别)。
+      - 落地 `is_public_symbol`, `is_private_symbol` (结合 Symbol flags 状态位)。
+      - 落地 `is_unique_name` (内化字符串或 Symbol 判定)。
+  - **todo! 前后**: **66 → 65** (减少 1 处; 台账同步更新于 `readme/zh.md`)。
+  - **单测扩充**:
+    - `tests/slots_unittest.rs`: 扩充 `FullHeapObjectSlot::store_heap_object`、`full_heap_object_slot_store_heap_object` 与 `FullMaybeObjectSlot::from_value` 用例。
+    - `tests/object_predicates_unittest.rs`: 新增 `test_basic_predicates_and_sentinel` 与 `test_nan_minus_zero_and_symbol_predicates` 2 个新用例。
+    - 单测总量: **73 → 75 passed, 0 skipped (100% 绿)**。
+  - **门禁验证**:
+    - `CARGO_TARGET_DIR=target/agent_w7o1r cargo nextest run -p v8-objects-core` → **75/75 passed, 0 skipped**。
+    - `CARGO_TARGET_DIR=target/agent_w7o1r cargo clippy -p v8-objects-core --all-targets -- -D warnings` → **0 warning**。
+    - `rg "\[allow" v8-objects-core` → **0 处 allow**。
+  - **审查结论**: **clean 1/3**。
+
+- [round2 Reviewer 深度交叉审查与优化] (达成 clean 2/3):
+  - **规范核验**: 严格依据 `.agents/skills/rust_review/SKILL.md` 12 项原则，与 C++ 原版源码逐行深度比对。
+  - **关键缺陷排查与修复 (Critical CAS Bug Fix)**:
+    - 发现并彻底修复 `compressed_slots.rs` 中 CAS (`compare_exchange`) 失败时返回值逻辑缺陷：原版 CAS 失败时应返回当前内存中的真实值，而旧代码使用 `.unwrap_or(old)` / `.unwrap_or(old_raw)`，导致竞争失败时丢弃实际值、错误返回预期旧值。
+    - 已修复 `CompressedObjectSlot`、`CompressedMaybeObjectSlot`、`offheap_slot_methods!` 宏中共 3 处 CAS 返回值为 `result.unwrap_or_else(|actual| actual)`。
+  - **原版语义补全与对齐**:
+    - `compressed_slots.rs`:
+      - 补充 `CompressedObjectSlot::K_CAN_BE_WEAK = false`、`CompressedMaybeObjectSlot::K_CAN_BE_WEAK = true`、`CompressedHeapObjectSlot::K_CAN_BE_WEAK = true`。
+      - 补充 `CompressedHeapObjectSlot` 缺失的 `base()`、`address()` 访问器及 `from_value`、`from_heap_object` 构造方法。
+      - 补充 `CompressedMaybeObjectSlot` 缺失的 `base()` 访问器及 `from_value`、`from_object_value` 构造方法。
+      - 补充 `CompressedMaybeObjectSlot::release_compare_and_swap_tagged`，支持以 `Tagged<MaybeObject>` 原型直接 CAS 并自动处理弱引用压缩。
+      - 为 `CompressedObjectSlot`、`CompressedMaybeObjectSlot`、`CompressedHeapObjectSlot` 补充 `step(n)` 与 `distance(other)`。
+    - `slots.rs`:
+      - 为 `FullObjectSlot`、`FullMaybeObjectSlot`、`FullHeapObjectSlot` 补充 `step(n)` 与 `distance(other)`。
+      - 补充 `FullHeapObjectSlot::K_CAN_BE_WEAK = true`。
+      - 规范升级：`relaxed_memset_tagged` 消除 C 风格索引循环，改用 `core::slice::from_raw_parts` 零开销切片迭代器。
+    - `tagged_impl.rs` & `tagged.rs`:
+      - 落地 `safe_equals`（对应 C++ `TaggedImpl::SafeEquals`），支持跨 compression cage 的指针完全一致性比较。
+      - 在 `tagged_impl::get_heap_object` 增加 `DCHECK(!IsCleared())` 的 debug 断言，严防对 cleared 弱引用解包。
+    - `tagged_field.rs`:
+      - 重构 `seqcst_compare_and_swap` 中的 `compare_exchange` 结果匹配，消除冗余的 `map` 与闭包构造。
+  - **单测扩充与强化**:
+    - `tests/compressed_slots_unittest.rs`: 新增 3 个全覆盖测试（`test_compressed_object_slot_operations`、`test_compressed_maybe_object_slot_operations`、`test_compressed_heap_object_slot_operations`），严密验证了读写、松弛/获取/释放、CAS（特别包含失败时返回真实槽值的断言验证）与 Map 比较。
+    - `tests/slots_unittest.rs`: 扩充全宽槽的 `step`、`distance` 与 `K_CAN_BE_WEAK` 检查。
+    - `tests/tagged_impl_unittest.rs`: 扩充 `safe_equals` 跨类型/跨值测试。
+    - 单测总量: **75 → 78 passed, 0 skipped (100% 绿)**。
+  - **门禁验证**:
+    - `CARGO_TARGET_DIR=target/agent_w7o1r2 cargo nextest run -p v8-objects-core` → **78/78 passed, 0 skipped**。
+    - `CARGO_TARGET_DIR=target/agent_w7o1r2 cargo clippy -p v8-objects-core --all-targets -- -D warnings` → **0 warning**。
+    - `rg "\[allow" v8-objects-core` → **0 处 allow**。
+  - **审查结论**: **clean 2/3**。
+
+- [round3 Reviewer 终验交叉审查与终验冻结] (达成 clean 3/3 终验冻结):
+  - **规范核验**: 严格依据 `.agents/skills/rust_review/SKILL.md` 12 项原则全方位审视，对 slots / compressed_slots / tagged_impl / object_predicates / tagged_field 进行终验级代码质量与安全核查。
+  - **逐行交叉比对与原版 1:1 闭环**:
+    - `slots.rs` & `compressed_slots.rs`:
+      - 核验 `SlotBase` 的 `step`、`distance` 环绕运算与指针算术，确保无溢出与符合 C++ 步长。
+      - 核验全宽槽与压缩槽的全套访问、松弛/获取/释放、Map 比较，100% 严格对齐原版。
+      - 深度核验所有 CAS 操作（`relaxed_compare_and_swap`、`release_compare_and_swap`、`release_compare_and_swap_tagged`、`release_compare_and_swap_raw`），在失败时均通过 `unwrap_or_else(|actual| actual)` 正确返回槽中实际值。
+    - `tagged_impl.rs` & `tagged.rs`:
+      - 核验 Smi / 强引用 / 弱引用 / 清除值 解包掩码运算与原版位模式 (`kWeakHeapObjectMask`, `kClearedWeakHeapObjectLower32`) 1:1 精确等价。
+      - 核验 `safe_equals` 跨 compression cage 比较语义，确保多 cage 安全。
+    - `object_predicates.rs` & `object_predicates_inl.rs`:
+      - 核验 `is_smi`, `is_heap_object`, `is_weak`, `is_object`, `is_tagged_index`, `is_zero`, `is_number`, `is_numeric`, `is_nan`, `is_minus_zero`, `is_public_symbol`, `is_private_symbol`, `is_unique_name` 的边界逻辑与 SAFETY 前置约束。
+    - `tagged_field.rs`:
+      - 消除模块内局部重复定义的 `WriteBarrierMode` 枚举，统一重导出 `crate::objects::WriteBarrierMode`。
+      - 补齐原版 `v8/src/objects/tagged-field-inl.h` 对应的方法族：`relaxed_store`、`seqcst_load`、`seqcst_store`、`seqcst_store_at`、`seqcst_swap`。
+      - 补齐原版 CAS 访问器：`release_compare_and_swap`、`relaxed_compare_and_swap`、`seqcst_compare_and_swap`，保证失败时精准返回当前内存中的实际值。
+      - 为 `UnalignedDoubleMember` 补充 `#[repr(C, align(8))]`，1:1 对齐原版 C++ `alignas(alignof(Tagged_t))` 与 `alignof(Tagged_t) == alignof(UnalignedDoubleMember)` 的断言约束；并补充 `Default` trait 实现。
+  - **测试全量解冻与扩充**:
+    - 解冻激活 `tests/tagged_field_unittest.rs` (移除非目标 `cfg(any())`)，7 个包含布局对齐、顺序读写、无屏障写、Swap、CAS、字段偏移运算与非对齐成员的综合单测全部 100% 绿灯通过。
+    - 单测总量: **78 → 85 passed, 0 skipped (100% 绿)**。
+  - **终验门禁实测**:
+    - `CARGO_TARGET_DIR=target/agent_w7o1r3 cargo nextest run -p v8-objects-core` → **85/85 passed, 0 skipped**。
+    - `CARGO_TARGET_DIR=target/agent_w7o1r3 cargo clippy -p v8-objects-core --all-targets -- -D warnings` → **0 error, 0 warning**。
+    - `rg "\[allow" v8-objects-core` → **0 处 allow (0 绕过)**。
+  - **审查结论**: **clean 3/3 (终验达成，全线冻结)**。
+- [轮8 W8O1] (65 处 todo! 全量清零与全模块深度审查重构):
+  - **清零盘点**: 全面消除 `v8-objects-core` 中遗留的 65 处 `todo!()`，涉及 11 个核心模块。
+  - **核心模块实现**:
+    - `heap_object_field_inl.rs`: 实现 `AtomicField` trait (覆盖 u8..u64, i8..i64, usize, isize) 及 relaxed/acquire/release/seq_cst/CAS/sandboxed_pointer/bounded_size 字段读写。
+    - `heap_object_set_map_inl.rs`: 实现 `AllocationWitness` 写屏障模式推导、`set_map_release`、`set_map_safe_transition`、`set_map_no_write_barrier`、`set_map_after_allocation`、`set_filler_map`、`set_map_word`、`set_map_word_forwarded`、`relaxed_compare_and_swap_map_word_forwarded`。
+    - `api_callbacks_inl.rs`: 实现 `SideEffectType` 枚举与合法性强校验、`accessor_info_has_getter/setter`、回调重定向与填充清除。
+    - `casting_inl.rs`: 实现 `CastTraits<T>`（覆盖 `Object`, `Smi`, `HeapObject`, `Map`, `HeapNumber`, `Symbol`, `Oddball`）以及 `is`、`try_cast`、`cast`、`unchecked_cast` 与 GC 敏感类型检查。
+    - `union.rs`: 实现 `UnionMarker`、`is_union`、`union_flatten`。
+    - `tagged_impl.rs`: 实现栈上固定缓冲区零堆分配 `short_print_file`、流输出与全打印判定。
+    - `instance_type_inl.rs`: 实现 `check_instance_map`。
+    - `object_predicates_inl.rs`: 实现原型追踪与共享状态判定。
+    - `visitors_inl.rs`: 实现 `CageBases` 结构体、指针安全遍历器。
+    - `slots.rs`: 实现外部指针槽、CPP堆指针槽、间接指针槽存取。
+    - `objects_body_descriptors.rs`: 基于 `phf` 编译期散列表实现 O(1) 的 `body_descriptor_of` 与 15 种访客遍历原语。
+  - **规范审查与重构 (依照 rust_review 规范)**:
+    - 移除了冗余硬件内存栅栏 `fence(Ordering::Release)`，明确 GC 写屏障与 CPU 栅栏界限。
+    - `short_print_file` 彻底消除堆分配，改为栈缓冲区 `[u8; 48]` 零拷贝写入。
+    - `print` 解包逻辑修正，精准对齐 V8 原版 `kClearedWeakHeapObjectLower32` 及跨平台 Smi 值解包。
+    - `phf` 编译期构建静态完美散列表，复杂度优化为 O(1)。
+    - `casting_inl.rs` 宏抽象与模式匹配守卫化，消除样板代码。
+    - `api_callbacks_inl.rs` 引入强类型错误 `InvalidSetterSideEffectType`。
+  - **测试与门禁验证**:
+    - `cargo nextest run -p v8-objects-core`: **122/122 passed, 0 skipped (100% 绿)**。
+    - `cargo clippy -p v8-objects-core --all-targets -- -D warnings`: **0 warning**。
+    - `cargo +nightly fmt --check -p v8-objects-core`: **0 格式问题**。
+    - 剩余 `todo!()`: **0 处 (全部清零)**。

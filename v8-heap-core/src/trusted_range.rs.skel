@@ -1,0 +1,26 @@
+// 由 tool/src/heap/trusted-range.js 从 v8/src/heap/trusted-range.h, src/heap/trusted-range.cc 生成; 修订就地改, 复跑覆盖
+// 可信对象地址区间 (沙箱外, 每 isolate group 一个)
+#![cfg(feature = "sandbox")] // 原文 #ifdef V8_ENABLE_SANDBOX
+
+/// v8: src/heap/trusted-range.h TrustedRange (VirtualMemoryCage 派生)
+pub struct TrustedRange {
+  pub base: VirtualMemoryCage,
+}
+
+impl TrustedRange {
+  /// v8: src/heap/trusted-range.cc TrustedRange::InitReservation(requested)
+  /// - DCHECK: kMinimumTrustedRangeSize <= requested <= kMaximalTrustedRangeSize
+  /// - page_size = NormalPage::kPageSize (256KB)
+  /// - base_alignment = 4GB — 必须分配在 4GB 之上 (避开压缩指针误读)
+  /// - start hint: RoundDown(GetRandomMmapAddr(), 4GB)
+  /// - permissions = kNoAccess, 页可未初始化, 释放即不可访问
+  /// - 成功后保留零页, 防压缩 nullptr 解引用
+  pub fn init_reservation(&mut self, requested: usize) -> bool { todo!() }
+
+  /// v8: TrustedRange 过程级单例 (EnsureProcessWideTrustedRange, 见 cc/h)
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // base_alignment 恒 4GB (原文 size_t{4} * GB)
+};

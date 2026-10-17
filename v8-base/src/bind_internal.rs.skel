@@ -1,0 +1,26 @@
+// 由 tool/src/base/functional/bind-internal.h.js 从 v8/src/base/functional/bind-internal.h 生成; 修订就地改, 复跑覆盖
+// bind 内部类型萃取 (Chromium 移植, Rust 泛型天然表达)
+
+//! v8: src/base/functional/bind-internal.h
+
+// v8: TypeList<Types...> — 类型列表; Rust 元编程用 tuple/cons 表达, 登记跳过
+// v8: ExtractArgsImpl<R(Args...)> → { ReturnType: R, ArgsList: TypeList<Args...> }
+// v8: ExtractArgs / ExtractReturnType — 签名拆解别名
+// v8: ExtractCallableRunType — 经 operator() 的 4 种 qualifier
+//     (无/const/noexcept/const noexcept, X-macro 展开) 取 R(Args...)
+
+// v8: DecayedFunctorTraits 三主特化标志位表:
+// | 特化 | RunType | is_method | is_nullable | is_stateless |
+// | --- | --- | --- | --- | --- |
+// | lambda/函对象 (HasNonOverloadedCallOp) | ExtractCallableRunType | false | false | is_empty |
+// | 函数指针 R(*)(Args...) | R(Args...) | false | true | true |
+// | 方法 R(Receiver::*)(Args...) | R(Receiver*, Args...) | true | true | true |
+// 派生: noexcept 函数指针 / const 方法 (RunType → const Receiver*) /
+//        const/noexcept 方法 (X-macro 2 展开)
+
+// v8: FunctorTraits 双分派 — 一般走 decay 后的 DecayedFunctorTraits;
+//     重载 operator() (HasOverloadedCallOp) 时用未 decay 型, RunType 由
+//     declval<Functor>(bound_args...)(decay_t<BoundArgs>...) 现场合成
+
+// Rust 侧: Fn/FnMut/FnOnce trait 体系 + impl Trait 直接覆盖绝大多数萃取需求;
+//           方法指针场景由 Developer 按具体 bind 使用点定收接形态, 类型面登记跳过

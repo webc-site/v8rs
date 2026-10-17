@@ -1,0 +1,31 @@
+// 由 tool/src/compiler/turboshaft/loop-optimization-phase.h.js 从 v8/src/compiler/turboshaft/loop-optimization-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// LoopOptimizationPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/loop-optimization-phase.h LoopOptimizationPhase
+pub struct LoopOptimizationPhase;
+
+impl LoopOptimizationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "LoopOptimization" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftLoopOptimization";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "LoopOptimizationReducer",
+    "ValueNumberingReducer",
+  ];
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/loop-optimization-phase.cc LoopOptimizationPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<LoopOptimizationReducer, ValueNumberingReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(LoopOptimizationPhase::PHASE_NAME == "V8.TFTurboshaftLoopOptimization");
+  assert!(LoopOptimizationPhase::REDUCERS.len() == 2);
+  assert!(LoopOptimizationPhase::REDUCERS[0] == "LoopOptimizationReducer");
+};

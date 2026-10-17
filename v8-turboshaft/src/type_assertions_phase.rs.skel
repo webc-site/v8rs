@@ -1,0 +1,15 @@
+// 由 tool/src/compiler/turboshaft/type-assertions-phase.h.js 从 v8/src/compiler/turboshaft/type-assertions-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 类型断言: 插入 CheckTurboshaftTypeOf 校验推断
+
+/// 原版 TypeAssertionsPhase — DEBUG 用: 为每个操作插入类型断言。
+/// v8: src/compiler/turboshaft/type-assertions-phase.{h,cc}
+pub struct TypeAssertionsPhase;
+
+impl TypeAssertionsPhase {
+  /// v8: cc Run —
+  /// - typing args: InputGraphTyping=kPrecise, OutputGraphTyping=kPreserveFromInputGraph
+  /// - UnparkedScopeIfNeeded(broker)
+  /// - CopyingPhase<turboshaft::AssertTypesReducer, turboshaft::ValueNumberingReducer, turboshaft::TypeInferenceReducer>::Run
+  /// (AssertTypesReducer 借 TypeInference 推断结果插 CheckTurboshaftTypeOf)
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

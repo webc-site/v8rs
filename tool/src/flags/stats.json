@@ -1,0 +1,82 @@
+{
+  "config": {
+    "os": "darwin/macOS",
+    "arch": "arm64",
+    "build": "release",
+    "on": [
+      "V8_TARGET_ARCH_ARM64",
+      "V8_HOST_ARCH_ARM64",
+      "V8_TARGET_ARCH_64_BIT",
+      "V8_OS_MACOS",
+      "V8_OS_DARWIN",
+      "V8_ENABLE_WEBASSEMBLY",
+      "V8_INTL_SUPPORT",
+      "V8_ENABLE_SPARKPLUG",
+      "V8_ENABLE_MAGLEV",
+      "V8_ENABLE_TURBOFAN",
+      "V8_COMPRESS_POINTERS",
+      "V8_ENABLE_SANDBOX"
+    ],
+    "extra": [
+      "DEBUG_BOOL false",
+      "COMPRESS_POINTERS_BOOL true",
+      "V8_EXTERNAL_CODE_SPACE_BOOL false",
+      "COMPRESS_POINTERS_IN_CAGE_IMPL true",
+      "COMPRESS_POINTERS_IN_SHARED_CAGE_BOOL false",
+      "V8_DICT_PROPERTY_CONST_TRACKING_BOOL false",
+      "V8_CAN_CREATE_SHARED_HEAP_BOOL false",
+      "V8_STATIC_ROOTS_GENERATION_BOOL false",
+      "V8_DEFAULT_STACK_SIZE_KB 984",
+      "V8_STACK_LIMIT_MARGIN_KB 40"
+    ]
+  },
+  "canonical": {
+    "primary": 998,
+    "aliases": 1,
+    "all_entries": 999,
+    "readonly": 119,
+    "by_type": {
+      "BOOL": 775,
+      "STRING": 44,
+      "UINT": 32,
+      "INT": 101,
+      "FLOAT": 12,
+      "MAYBE_BOOL": 10,
+      "SIZE_T": 22,
+      "UINT64": 2
+    },
+    "implications": 847,
+    "by_kind": {
+      "value": 830,
+      "warn": 5,
+      "generic": 6,
+      "require": 6
+    },
+    "features": 34,
+    "contradictions": 80,
+    "contradictions_wasm_scoped": 6,
+    "reset_fuzzing": 4,
+    "reset_correctness": 14
+  },
+  "raw_file": {
+    "define_bool": 533,
+    "define_int": 109,
+    "define_uint": 35,
+    "define_uint64": 5,
+    "define_float": 13,
+    "define_size_t": 24,
+    "define_string": 51,
+    "define_maybe_bool": 11,
+    "define_debug_bool": 15,
+    "define_experimental_feature": 49,
+    "define_unsafe_flag": 12,
+    "define_developer_flag": 182,
+    "define_debug_developer_flag": 1,
+    "define_smi": 5,
+    "define_positive_smi": 2,
+    "define_alias": 7,
+    "implication_total": 479,
+    "requirement": 7,
+    "generic": 8
+  }
+}

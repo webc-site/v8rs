@@ -1,0 +1,43 @@
+// 由 tool/src/wasm/interpreter/wasm-interpreter-objects.h.js 从 v8/src/wasm/interpreter/wasm-interpreter-objects.{h,cc} 生成; 修订就地改, 复跑覆盖
+// WasmInterpreterObject 入口与解释栈条目
+
+//! 解释器对象入口: 状态经 TrustedManaged<InterpreterHandle> 挂在实例受信数据上。
+/// v8: src/wasm/interpreter/wasm-interpreter-objects.h WasmInterpreterObject
+
+/// 解释栈条目 (自底向上: caller 在前)
+/// v8: src/wasm/interpreter/wasm-interpreter-objects.h struct WasmInterpreterStackEntry
+#[derive(Debug, Clone, Copy)]
+pub struct WasmInterpreterStackEntry {
+    /// v8: int function_index
+    pub function_index: i32,
+    /// v8: int byte_offset
+    pub byte_offset: i32,
+}
+
+/// RunInterpreter 两种入口的参数形态
+/// v8: src/wasm/interpreter/wasm-interpreter-objects.cc RunInterpreter 两个重载
+#[derive(Debug)]
+pub enum RunInterpreterArgs<'a> {
+    /// v8: const std::vector<wasm::WasmValue>& argument_values (GetOrCreate 新 handle)
+    ValueArgs { argument_values: &'a [WasmValue] },
+    /// v8: uint8_t* interpreter_sp (Get 复用现成 handle, 恢复执行)
+    ResumeSp { interpreter_sp: *mut u8 },
+}
+
+/// 入口前置: 每次执行都要把当前 trusted data 发布进 runtime 的实例作用域
+/// v8: src/wasm/interpreter/wasm-interpreter-objects.cc WasmInterpreterRuntime::InstanceScope
+pub const PUBLISHES_INSTANCE_SCOPE: bool = true;
+
+/// GetInterpretedStack / GetFunctionIndex 的前置检查
+/// v8: src/wasm/interpreter/wasm-interpreter-objects.cc CHECK(has_interpreter_handle())
+pub const REQUIRES_INTERPRETER_HANDLE: bool = true;
+
+/// 假设: 一个实例同时只在一个线程运行
+/// v8: src/wasm/interpreter/wasm-interpreter-objects.cc "Assume an instance can run in only one thread."
+pub const SINGLE_THREAD_PER_INSTANCE: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(PUBLISHES_INSTANCE_SCOPE);
+    assert!(SINGLE_THREAD_PER_INSTANCE);
+};

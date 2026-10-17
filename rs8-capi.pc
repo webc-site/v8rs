@@ -1,0 +1,10 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: rs8-capi
+Description: High-performance V8 C ABI compatibility layer implemented in pure Rust
+Version: 0.1.0
+Libs: -L${libdir} -lrs8_capi
+Cflags: -I${includedir}

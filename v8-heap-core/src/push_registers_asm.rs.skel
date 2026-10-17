@@ -1,0 +1,49 @@
+// 由 tool/src/heap/base/asm/push_registers_asm.cc.js 从 v8/src/heap/base/asm/*/push_registers_asm.cc (10 架构) 生成; 修订就地改, 复跑覆盖
+// 保存全部被调者保存寄存器并迭代栈: extern C 声明骨架
+
+/// 对应 extern "C" void PushAllRegistersAndIterateStack(
+///   Stack* stack, void* argument, Stack::IterateStackCallback callback);
+/// 语义: 压入全部 callee-saved 寄存器 → 以当前 sp 为栈标记回调 → 弹出恢复。
+/// 实现是每架构手写内联汇编, 不能机械转写; Rust 侧按架构 cfg 挂外部符号
+/// (todo 五: 先 x64 + arm64, 其余架构后置)。
+/// v8: src/heap/base/asm/x64/push_registers_asm.cc PushAllRegistersAndIterateStack
+pub type IterateStackCallback = unsafe extern "C" fn(stack: *mut u8, argument: *mut u8, sp: *const u8);
+
+#[cfg(target_arch = "x86_64")]
+extern "C" {
+  /// x64: push rbp + 对齐 dummy + rbx/r12/r13/r14/r15, call *%r8 回调
+  /// (指令行 23, 其中 push 7)
+  #[link_name = "PushAllRegistersAndIterateStack"]
+  pub fn push_all_registers_and_iterate_stack(
+    stack: *mut u8,
+    argument: *mut u8,
+    callback: IterateStackCallback,
+  );
+}
+
+#[cfg(target_arch = "aarch64")]
+extern "C" {
+  /// arm64: stp fp,lr + x19-x28 五对, blr 回调 (指令行 15, 其中 stp 6)
+  #[link_name = "PushAllRegistersAndIterateStack"]
+  pub fn push_all_registers_and_iterate_stack(
+    stack: *mut u8,
+    argument: *mut u8,
+    callback: IterateStackCallback,
+  );
+}
+
+// 其余 8 架构台账 (asm 指令行数; 后端启用时按同型 extern "C" 挂符号):
+//   arm: 6
+//   ia32: 13
+//   loong64: 21
+//   mips64: 21
+//   ppc: 36
+//   riscv: 46
+//   s390: 7
+//   zos: 8
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // 回调签名三参 (Stack*, argument, sp) — 与函数指针占位对齐
+  assert!(core::mem::size_of::<IterateStackCallback>() == core::mem::size_of::<*mut u8>());
+};

@@ -1,0 +1,207 @@
+// 由 tool/src/heap/cppgc-internal/marking-state.js 从 v8/src/heap/cppgc-internal/marking-state.h + src/heap/cppgc-internal/marking-state.cc 生成; 修订就地改, 复跑覆盖
+// 标记状态: worklist 本地端聚合 + 标记字节记账
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/marking-state.h MarkingStateBase
+pub struct MarkingStateBase {
+    /// v8: heap_
+    pub heap: *mut HeapBase,
+    /// v8: marking_worklist_ (Local)
+    marking_worklist: MarkingWorklistLocal,
+    /// v8: not_fully_constructed_worklist_ (引用)
+    not_fully_constructed_worklist: *mut ExternalMarkingWorklist,
+}
+
+impl MarkingStateBase {
+    /// v8: src/heap/cppgc-internal/marking-state.h MarkingStateBase::MarkAndPush
+    /// 构造中 (atomic) → not_fully_constructed; 否则 MarkNoPush 成功 → PushMarked。
+    pub fn mark_and_push(&mut self, object: *const core::ffi::c_void, desc: TraceDescriptor) {
+        let header = HeapObjectHeader::from_object(desc.base_object_payload);
+        if header.is_in_construction() {
+            unsafe { (*self.not_fully_constructed_worklist).push(header as *mut _); }
+        } else if self.mark_no_push(header) {
+            self.push_marked(header, desc);
+        }
+    }
+
+    /// v8: MarkNoPush — TryMarkAtomic (自由项 DCHECK 禁标)
+    fn mark_no_push(&self, header: &HeapObjectHeader) -> bool {
+        debug_assert!(!header.is_free());
+        header.try_mark_atomic()
+    }
+
+    /// v8: MarkAndPush(header) — TraceDescriptor 取 GCInfo 表 trace 回调
+    pub fn mark_and_push_header(&mut self, header: &HeapObjectHeader) {
+        todo!("GCInfoFromIndex(header.GetGCInfoIndex()).trace 构造 desc")
+    }
+
+    /// v8: PushMarked — push {ObjectStart, callback}
+    fn push_marked(&mut self, header: &HeapObjectHeader, desc: TraceDescriptor) {
+        debug_assert!(header.is_marked());
+        debug_assert!(!header.is_in_construction());
+        self.marking_worklist.push(desc);
+    }
+
+    /// v8: src/heap/cppgc-internal/marking-state.cc MarkingStateBase::Publish
+    pub fn publish(&mut self) { self.marking_worklist.publish(); }
+}
+
+/// v8: src/heap/cppgc-internal/marking-state.h BasicMarkingState
+pub struct BasicMarkingState {
+    /// v8: MarkingStateBase 基类子对象
+    pub base: MarkingStateBase,
+    /// v8: previously_not_fully_constructed_worklist_ 等 9 个 Local/引用
+    previously_not_fully_constructed_worklist: PreviouslyNotFullyConstructedLocal,
+    weak_container_callback_worklist: WeakCallbackLocal,
+    parallel_weak_callback_worklist: WeakCallbackLocal,
+    weak_custom_callback_worklist: WeakCustomCallbackLocal,
+    write_barrier_worklist: WriteBarrierLocal,
+    concurrent_marking_bailout_worklist: ConcurrentMarkingBailoutLocal,
+    discovered_ephemeron_pairs_worklist: EphemeronPairsLocal,
+    ephemeron_pairs_for_processing_worklist: EphemeronPairsLocal,
+    weak_containers_worklist: *mut ExternalMarkingWorklist,
+    /// v8: movable_slots_worklist_ — 存在即压缩启用
+    movable_slots_worklist: Option<MovableReferencesLocal>,
+    /// v8: marked_bytes_ / last_marked_bytes_
+    marked_bytes: usize,
+    last_marked_bytes: usize,
+    /// v8: in_ephemeron_processing_ / discovered_new_ephemeron_pairs_ / in_atomic_pause_
+    in_ephemeron_processing: bool,
+    discovered_new_ephemeron_pairs: bool,
+    in_atomic_pause: bool,
+    /// v8: marked_bytes_map_ (BasePage* → i64)
+    marked_bytes_map: CachedUnorderedMap<*mut BasePage, i64>,
+}
+
+impl BasicMarkingState {
+    /// v8: src/heap/cppgc-internal/marking-state.h RegisterWeakReferenceIfNeeded
+    /// 已标记且非构造中 → 跳过 (WriteBarrier 保活); 否则 parallel_weak 入队。
+    pub fn register_weak_reference_if_needed(&mut self, _object: *const core::ffi::c_void, desc: TraceDescriptor, weak_callback: WeakCallback, parameter: *const core::ffi::c_void) {
+        let header = HeapObjectHeader::from_object(desc.base_object_payload);
+        if !header.is_in_construction() && header.is_marked() { return; }
+        self.parallel_weak_callback_worklist.push(WeakCallbackItem { callback: weak_callback, parameter });
+    }
+
+    /// v8: src/heap/cppgc-internal/marking-state.h ProcessWeakContainer
+    /// 构造中 → not_fully; RegisterWeakContainer; MarkNoPush 失败即止;
+    /// desc.callback 有 → PushMarked, 无 (弱容器免trace) → AccountMarkedBytes。
+    pub fn process_weak_container(&mut self, object: *const core::ffi::c_void, desc: TraceDescriptor, callback: WeakCallback, data: *const core::ffi::c_void) {
+        let _ = (object, desc, callback, data);
+        todo!("弱容器四步")
+    }
+
+    /// v8: src/heap/cppgc-internal/marking-state.h ProcessEphemeron
+    /// 键构造中: in_atomic_pause_ 决定活性; 键活 → 标值或直调 value_desc.callback;
+    /// 否则 {key,value,value_desc} 入 discovered 队 + discovered_new_ephemeron_pairs_=true。
+    pub fn process_ephemeron(&mut self, key: *const core::ffi::c_void, value: *const core::ffi::c_void, value_desc: TraceDescriptor) {
+        let _ = (key, value, value_desc);
+        todo!("ephemeron 键值判定")
+    }
+
+    /// v8: src/heap/cppgc-internal/marking-state.h RegisterMovableReference
+    /// 无压缩工作表 → 空操作; 出笼/栈上槽 → 排除; 其余 movable 入队。
+    pub fn register_movable_reference(&mut self, slot: *mut *const core::ffi::c_void) {
+        if self.movable_slots_worklist.is_none() { return; }
+        if Stack::is_on_stack(slot.cast()) { return; }
+        todo!("movable_slots_worklist_->Push(slot)")
+    }
+
+    /// v8: AccountMarkedBytes — 大页取 PayloadSize, 常规取 AllocatedSize; 双计 (总数+页映射)
+    pub fn account_marked_bytes(&mut self, header: &HeapObjectHeader) {
+        let bytes = if header.is_large_object() {
+            unsafe { (*LargePage::from(BasePage::from_payload(header as *const _ as *mut _))).payload_size() }
+        } else {
+            header.allocated_size()
+        };
+        self.marked_bytes += bytes;
+        let page = BasePage::from_payload(header as *const _ as *mut core::ffi::c_void);
+        *self.marked_bytes_map.entry(page).or_insert(0) += bytes as i64;
+    }
+    /// v8: RecentlyMarkedBytes — 消费式差值
+    pub fn recently_marked_bytes(&mut self) -> usize {
+        core::mem::replace(&mut self.last_marked_bytes, self.marked_bytes);
+        self.marked_bytes - self.last_marked_bytes
+    }
+
+    /// v8: src/heap/cppgc-internal/marking-state.cc BasicMarkingState::Publish
+    /// 9 队 Publish + marked_bytes_map_.Take() 逐页 IncrementMarkedBytes。
+    pub fn publish(&mut self) {
+        self.base.publish();
+        self.previously_not_fully_constructed_worklist.publish();
+        self.weak_container_callback_worklist.publish();
+        self.parallel_weak_callback_worklist.publish();
+        self.weak_custom_callback_worklist.publish();
+        self.write_barrier_worklist.publish();
+        self.concurrent_marking_bailout_worklist.publish();
+        self.discovered_ephemeron_pairs_worklist.publish();
+        self.ephemeron_pairs_for_processing_worklist.publish();
+        if let Some(m) = &mut self.movable_slots_worklist { m.publish(); }
+        for (page, bytes) in self.marked_bytes_map.take() {
+            unsafe { (*page).increment_marked_bytes(bytes as usize); }
+        }
+    }
+}
+
+/// v8: src/heap/cppgc-internal/marking-state.h MutatorMarkingState
+pub struct MutatorMarkingState {
+    /// v8: BasicMarkingState 基类子对象
+    pub basic: BasicMarkingState,
+    /// v8: recently_retraced_weak_containers_ (kMaxCacheSize=8 环形)
+    recently_retraced_weak_containers: RecentlyRetracedWeakContainers,
+    /// v8: retrace_marked_objects_worklist_ (Local)
+    retrace_marked_objects_worklist: RetraceMarkedObjectsLocal,
+}
+
+pub mod constants {
+    /// v8: src/heap/cppgc-internal/marking-state.h MutatorMarkingState::RecentlyRetracedWeakContainers::kMaxCacheSize
+    pub const K_MAX_CACHE_SIZE: usize = 8;
+}
+
+/// v8: MutatorMarkingState::RecentlyRetracedWeakContainers — 环形 8 项, Contains 线性, Insert 取模推进
+pub struct RecentlyRetracedWeakContainers {
+    cache: Vec<*const HeapObjectHeader>,
+    last_used_index: usize,
+}
+
+impl MutatorMarkingState {
+    /// v8: src/heap/cppgc-internal/marking-state.cc FlushNotFullyConstructedObjects
+    /// Extract(atomic) → 逐项 MarkNoPush 成功入 previously 队。
+    pub fn flush_not_fully_constructed_objects(&mut self) { todo!("Extract + 重标") }
+    /// v8: src/heap/cppgc-internal/marking-state.cc FlushDiscoveredEphemeronPairs
+    /// Publish discovered → 非空则 Merge 进 processing。
+    pub fn flush_discovered_ephemeron_pairs(&mut self) { todo!("Publish + Merge") }
+    /// v8: src/heap/cppgc-internal/marking-state.cc MutatorMarkingState::Publish — Basic::Publish + retrace Publish
+    pub fn publish(&mut self) { todo!("两级发布") }
+    /// v8: ReTraceMarkedWeakContainer — Insert 缓存 + retrace 入队
+    pub fn re_trace_marked_weak_container(&mut self, _visitor: &mut Visitor, header: &HeapObjectHeader) { todo!("缓存+入队") }
+    /// v8: DynamicallyMarkAddress — ObjectHeaderFromInnerAddress + MarkNoPush + 入队
+    pub fn dynamically_mark_address(&mut self, _address: *const u8) { todo!("动态标记") }
+    /// v8: InvokeWeakRootsCallbackIfNeeded — 根弱回调立即执行 (LivenessBrokerFactory::Create)
+    pub fn invoke_weak_roots_callback_if_needed(&mut self, _desc: TraceDescriptor, weak_callback: WeakCallback, parameter: *const core::ffi::c_void) {
+        weak_callback(LivenessBroker::default(), parameter);
+    }
+    /// v8: IsMarkedWeakContainer — weak_containers 含 && 未在重trace缓存
+    pub fn is_marked_weak_container(&mut self, _header: &HeapObjectHeader) -> bool { todo!("双判定") }
+}
+
+/// v8: src/heap/cppgc-internal/marking-state.h ConcurrentMarkingState
+pub struct ConcurrentMarkingState {
+    /// v8: BasicMarkingState 基类子对象
+    pub basic: BasicMarkingState,
+}
+
+impl ConcurrentMarkingState {
+    /// v8: AccountDeferredMarkedBytes — 总数与页映射同步扣减 (延迟 trace 回收)
+    pub fn account_deferred_marked_bytes(&mut self, base_page: *mut BasePage, deferred_bytes: usize) {
+        debug_assert!(deferred_bytes <= self.basic.marked_bytes);
+        self.basic.marked_bytes -= deferred_bytes;
+        *self.basic.marked_bytes_map.entry(base_page).or_insert(0) -= deferred_bytes as i64;
+    }
+}
+
+/// v8: src/heap/cppgc-internal/marking-state.h DrainWorklistWithPredicate
+/// 模板参数: kDeadlineCheckInterval + ShouldYield + CreateStatsScope + ProcessWorklistItem;
+/// 局部空且全局空 → true; 先查一次 yield; 循环 Pop 处理, 每 kInterval 复查。
+/// v8: src/heap/cppgc-internal/marking-state.h DynamicallyTraceMarkedObject
+/// 断言非构造中且已标记 → header.TraceImpl(visitor)。

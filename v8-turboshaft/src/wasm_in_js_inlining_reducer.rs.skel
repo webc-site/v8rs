@@ -1,0 +1,70 @@
+// 由 tool/src/compiler/turboshaft/wasm-in-js-inlining-reducer-inl.h.js 从 v8/src/compiler/turboshaft/wasm-in-js-inlining-reducer-inl.h 生成; 修订就地改, 复跑覆盖
+// wasm-in-JS 内联 reducer: 字节码级内联执行
+
+/// 原版 WasmInJSInliningReducer — 拦 Call 到 wasm 函数时,
+/// 借 WasmFullDecoder 在 JS 图内直接执行 wasm 字节码。
+/// v8: src/compiler/turboshaft/wasm-in-js-inlining-reducer-inl.h
+pub struct WasmInJSInliningReducer;
+
+impl WasmInJSInliningReducer {
+  /// v8: REDUCE(ProcessWasmArgument)(value, type) — JS 值到 wasm 表示
+  pub fn reduce_process_wasm_argument(&mut self, value: V<Object>, ty: ValueType) -> V<Object> { todo!() }
+  /// v8: REDUCE(Call)(callee, arguments, label, feedback, descriptor, frame_state)
+  /// — 命中可内联 wasm 目标时走 decoder; 否则透传
+  pub fn reduce_call(&mut self) -> V<Any> { todo!() }
+}
+
+/// 原版 WasmInJsInliningInterface — wasm 字节码 decoder 回调面
+/// (42 个方法名):
+/// - REDUCE
+/// - set_current_wasm_source_position
+/// - CreateWasmInlinedIntoJSFrameState
+/// - CreateJSWasmCallBuiltinContinuationFrameState
+/// - get
+/// - OnFirstError
+/// - Bailout
+/// - name
+/// - StartFunction
+/// - StartFunctionBody
+/// - FinishFunction
+/// - NextInstruction
+/// - NopForTestingUnsupportedInLiftoff
+/// - UnOp
+/// - BinOp
+/// - BinOpImpl
+/// - I32Const
+/// - I64Const
+/// - F32Const
+/// - F64Const
+/// - RefNull
+/// - RefFunc
+/// - RefAsNonNull
+/// - Drop
+/// - LocalGet
+/// - LocalSet
+/// - LocalTee
+/// - GlobalGet
+/// - GlobalSet
+/// - Forward
+/// - DoReturn
+/// - Trap
+/// - AssertNullTypecheck
+/// - AssertNotNullTypecheck
+/// - StructGet
+/// - StructSet
+/// - ArrayGet
+/// - ArraySet
+/// - ArrayLen
+/// - managed_object_maps
+/// - RefCast
+/// - RefCastAbstract
+/// 约束: ValidationTag = NoValidationTag (已在前端校验);
+/// kUsesPoppedArgs = false; 暂不支持控制流 (Control = ControlBase)。
+/// v8: wasm-in-js-inlining-reducer-inl.h WasmInJsInliningInterface
+pub struct WasmInJsInliningInterface<'a> {
+  pub asm: &'a mut Assembler,
+  pub arguments: Vec<OpIndex>,
+  pub trusted_instance_data: V<WasmTrustedInstanceData>,
+  pub frame_state: V<EagerFrameState>,
+  pub inlining_id: i32,
+}

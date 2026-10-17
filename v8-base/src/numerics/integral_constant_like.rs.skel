@@ -1,0 +1,22 @@
+// 由 tool/src/base/numerics/integral_constant_like.h.js 从 v8/src/base/numerics/integral_constant_like.h 生成; 修订就地改, 复跑覆盖
+// [span.syn] 展示性 concept, Rust 映射为 trait 约束
+
+//! v8 侧 concept 1 个, 谓词 6 条 (&& 链)
+//! Rust 无 concept; 对应 trait: IntegralConstantLike (由 Developer 定型, 常量求值约束交 const 泛型/关联常量)
+
+/// v8: src/base/numerics/integral_constant_like.h concept IntegralConstantLike
+/// 谓词原文 (逐条):
+///   (1) std::is_integral_v<decltype(T::value)>
+///   (2) !std::is_same_v<bool, std::remove_const_t<decltype(T::value)>>
+///   (3) std::convertible_to<T, decltype(T::value)>
+///   (4) std::equality_comparable_with<T, decltype(T::value)>
+///   (5) std::bool_constant<T() == T::value>::value
+///   (6) std::bool_constant<static_cast<decltype(T::value)>(T()) == T::value>::value
+pub trait IntegralConstantLike {
+    /// v8 谓词 (1): decltype(T::value) 为整型且非 bool
+    type Value: Copy + Eq + core::fmt::Debug;
+    /// v8 谓词 (1)(2): T::value 是整型常量 (非 bool)
+    const VALUE: Self::Value;
+    /// v8 谓词 (3)(4): T 可转换/可比较到 Value
+    /// v8 谓词 (5)(6): T() == T::value (可默认构造且等于 value) — 常量求值, 就地修订
+}

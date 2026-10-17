@@ -1,0 +1,196 @@
+#!/usr/bin/env bun
+// tool/src/base/platform/time.js — 覆盖 v8/src/base/platform/time.{h,cc}
+// 时间原语: TimeConstants 常量表 + TimeDelta 工厂/换算面 + 三时钟类签名
+// → v8-base-platform/src/time.rs.skel
+
+import { readV8, writeSrc, banner } from "../../../lib.js";
+
+const hSrc = readV8("src/base/platform/time.h");
+const ccSrc = readV8("src/base/platform/time.cc");
+
+// 1. TimeConstants 常量表: 圈定 class 体后逐项解析求值 (只允许 整数/标识符/乘号/空白)
+const tcBody = hSrc.match(/class TimeConstants \{([\s\S]*?)\n\};/);
+if (!tcBody) throw new Error("未找到 TimeConstants 类体");
+const decls = new Map();
+for (const m of tcBody[1].matchAll(/k(\w+) =\s*\n?\s*([^;]+);/g)) {
+  const rhs = m[2].replace(/\s+/g, " ").trim();
+  if (/^[\d\s\w*]+$/.test(rhs)) decls.set(m[1], rhs);
+}
+const evalConst = (name) => {
+  const key = name.replace(/^k/, "");
+  const expr = decls.get(key);
+  if (expr === undefined) throw new Error(`TimeConstants 缺 ${name}`);
+  const val = expr.replace(/k(\w+)/g, (_, ref) => String(evalConst(ref)));
+  const n = Function(`"use strict"; return (${val});`)();
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`TimeConstants ${name} 求值异常: ${n}`);
+  return n;
+};
+// 11 常量锚: 名单 + 个数 + 三个直接锚点值
+const constNames = [...decls.keys()];
+if (constNames.length !== 11) throw new Error(`TimeConstants 常量数不符: ${constNames.length}, 期望 11`);
+if (evalConst("kHoursPerDay") !== 24 || evalConst("kMicrosecondsPerSecond") !== 1_000_000 || evalConst("kNanosecondsPerSecond") !== 1_000_000_000) {
+  throw new Error("TimeConstants 锚点值不符");
+}
+
+// 2. TimeDelta 工厂面: From* 9 个 (7 整 + 2 double)
+const fromFactories = [...hSrc.matchAll(/static constexpr TimeDelta From(\w+)\(/g)].map((m) => m[1]);
+if (fromFactories.length !== 9) throw new Error(`From 工厂数不符: ${fromFactories.length}, 期望 9`);
+// 换算面 In* 10 个
+const inConverters = [...hSrc.matchAll(/^  (?:int64_t|int|double) In(\w+)\(\) const;/gm)].map((m) => m[1]);
+if (inConverters.length !== 10) throw new Error(`In 换算器数不符: ${inConverters.length}, 期望 10`);
+// 自由函数 9 个声明 (Milliseconds/Seconds 各 int+double 重载)
+const freeFns = [...hSrc.matchAll(/^constexpr TimeDelta (\w+)\(/gm)].map((m) => m[1]);
+if (freeFns.length !== 9) throw new Error(`自由函数声明数不符: ${freeFns.length}, 期望 9`);
+// 三时钟类 + TimeBase 模板
+for (const c of ["class V8_BASE_EXPORT TimeDelta final", "class V8_BASE_EXPORT Time final", "class V8_BASE_EXPORT TimeTicks final", "class V8_BASE_EXPORT ThreadTicks final", "class TimeBase : public TimeConstants"]) {
+  if (!hSrc.includes(c)) throw new Error(`time.h 缺类: ${c}`);
+}
+
+// 3. 实现侧锚点: epoch 换算 + darwin 时钟公式 + 线程时钟
+const ccAnchors = [
+  "static const int64_t kTimeToEpochInMicroseconds = int64_t{11644473600000000};",
+  "constexpr int kAttempts = 100;",
+  "ticks = mach_absolute_time() * info.numer /",
+  "ticks = ClockNow(CLOCK_MONOTONIC);",
+  "return TimeTicks(ticks + 1);",
+  "return ThreadTicks(ClockNow(CLOCK_THREAD_CPUTIME_ID));",
+  "ticks = (gethrtime() / Time::kNanosecondsPerMicrosecond);",
+  "ticks = zx_clock_get_monotonic() / Time::kNanosecondsPerMicrosecond;",
+  "DCHECK_EQ(clk_id, CLOCK_MONOTONIC);",
+];
+for (const a of ccAnchors) {
+  if (!ccSrc.includes(a)) throw new Error(`time.cc 缺锚点: ${a}`);
+}
+// Time::Now 平台分支: WIN(368) / POSIX||STARBOARD(409)
+if (!ccSrc.includes("#elif V8_OS_POSIX || V8_OS_STARBOARD") || !ccSrc.includes("struct timeval tv;")) {
+  throw new Error("Time::Now POSIX 分支锚点缺失");
+}
+
+console.log(`time: TimeConstants ${constNames.length}, From 工厂 ${fromFactories.length}, In 换算 ${inConverters.length}, 自由函数 ${freeFns.length}, 时钟类 4+模板 1`);
+
+let rust = banner("src/base/platform/time.js", "src/base/platform/time.{h,cc}", "时间原语 TimeDelta/Time/TimeTicks/ThreadTicks (微秒时基, darwin+posix 目标)");
+
+const snake = (s) => s.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
+const constRows = [...decls.keys()].map((n) => `  pub const ${snake("k" + n).replace(/^_/, "")}: i64 = ${evalConst(n)}; /// v8: k${n} = ${decls.get(n)}`).join("\n");
+
+rust += `
+/// 时间换算常量表 (原版 class TimeConstants)
+/// v8: src/base/platform/time.h TimeConstants
+pub mod time_constants {
+${constRows}
+}
+
+/// 时间增量 (原版 class TimeDelta final; 内部单位微秒 i64)
+/// v8: src/base/platform/time.h TimeDelta
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct TimeDelta(i64);
+
+impl TimeDelta {
+  /// 原版私有 ctor: 显式微秒值 (TimeDelta(int64_t delta))
+  pub const fn from_microseconds_raw(us: i64) -> Self { Self(us) }
+
+  // —— From* 工厂 (原版 static constexpr TimeDelta FromXxx) ——
+  pub fn from_days(days: i64) -> Self { Self(days * time_constants::MICROSECONDS_PER_DAY) }
+  pub fn from_hours(hours: i64) -> Self { Self(hours * time_constants::MICROSECONDS_PER_HOUR) }
+  pub fn from_minutes(minutes: i64) -> Self { Self(minutes * time_constants::MICROSECONDS_PER_MINUTE) }
+  pub fn from_seconds(seconds: i64) -> Self { Self(seconds * time_constants::MICROSECONDS_PER_SECOND) }
+  pub fn from_milliseconds(ms: i64) -> Self { Self(ms * time_constants::MICROSECONDS_PER_MILLISECOND) }
+  pub fn from_microseconds(us: i64) -> Self { Self(us) }
+  /// 原版 FromNanoseconds: nanos / kNanosecondsPerMicrosecond (向下取整)
+  pub fn from_nanoseconds(ns: i64) -> Self { Self(ns / time_constants::NANOSECONDS_PER_MICROSECOND) }
+  /// 原版 FromSecondsD/FromMillisecondsD: FromDouble(saturated_cast<i64>)
+  pub fn from_seconds_d(seconds: f64) -> Self { Self(seconds as i64) }
+  pub fn from_milliseconds_d(ms: f64) -> Self { Self(ms as i64) }
+
+  /// 原版 Max()/Min(): i64 极值哨兵
+  pub const fn max_value() -> Self { Self(i64::MAX) }
+  pub const fn min_value() -> Self { Self(i64::MIN) }
+
+  /// 原版 IsZero/IsMax/IsMin
+  pub const fn is_zero(&self) -> bool { self.0 == 0 }
+  pub const fn is_max(&self) -> bool { self.0 == i64::MAX }
+  pub const fn is_min(&self) -> bool { self.0 == i64::MIN }
+
+  // —— In* 换算 (原版 10 个: InDays..InNanoseconds) ——
+  pub fn in_days(&self) -> i32 { (self.0 / time_constants::MICROSECONDS_PER_DAY) as i32 }
+  pub fn in_hours(&self) -> i32 { (self.0 / time_constants::MICROSECONDS_PER_HOUR) as i32 }
+  pub fn in_minutes(&self) -> i32 { (self.0 / time_constants::MICROSECONDS_PER_MINUTE) as i32 }
+  pub fn in_seconds_f(&self) -> f64 { self.0 as f64 / time_constants::MICROSECONDS_PER_SECOND as f64 }
+  pub fn in_seconds(&self) -> i64 { self.0 / time_constants::MICROSECONDS_PER_SECOND }
+  pub fn in_milliseconds_f(&self) -> f64 { self.0 as f64 / time_constants::MICROSECONDS_PER_MILLISECOND as f64 }
+  pub fn in_milliseconds(&self) -> i64 { self.0 / time_constants::MICROSECONDS_PER_MILLISECOND }
+  /// 原版 InMillisecondsRoundedUp: (delta + 999) / 1000 形态的上取整
+  pub fn in_milliseconds_rounded_up(&self) -> i64 { (self.0 + time_constants::MICROSECONDS_PER_MILLISECOND - 1) / time_constants::MICROSECONDS_PER_MILLISECOND }
+  pub fn in_microseconds(&self) -> i64 { self.0 }
+  pub fn in_nanoseconds(&self) -> i64 { self.0 * time_constants::NANOSECONDS_PER_MICROSECOND }
+
+  // —— Mach/POSIX timespec 桥 (darwin/posix 目标) ——
+  /// v8: src/base/platform/time.cc FromMachTimespec / ToMachTimespec (V8_OS_DARWIN)
+  /// v8: src/base/platform/time.cc FromTimespec / ToTimespec (V8_OS_POSIX)
+
+  // —— 运算面 (原版 operator+ - * / 与 TimesOf/PercentOf) ——
+}
+
+/// 微时间基抽象 (原版 time_internal::TimeBase<TimeClass> 模板)
+/// v8: src/base/platform/time.h TimeBase
+/// 承载 us_ 存储 + IsNull/IsMax/IsMin/ToInternalValue/since_origin。
+/// 原版 WIN 分支 kQPCOverflowThreshold = 0x8637BD05AF7 (非目标, 登记)。
+
+/// 绝对时间 (原版 class Time final; 1970-01-01 UTC 起微秒)
+/// v8: src/base/platform/time.h Time
+/// 静态面: Now / NowFromSystemTime / UnixEpoch / FromTimespec / ToTimespec /
+/// FromTimeval / ToTimeval / FromFiletime(WIN) / ToFiletime(WIN) /
+/// FromJsTime / ToJsTime
+/// v8: src/base/platform/time.cc Time::Now (POSIX): gettimeofday → FromTimeval;
+/// WIN epoch 桥: kTimeToEpochInMicroseconds = 11644473600000000 (登记, 非目标)
+
+/// 单调时钟 (原版 class TimeTicks final)
+/// v8: src/base/platform/time.h TimeTicks
+/// 静态面: Now / IsHighResolution / FromMsTicksForTesting
+/// v8: src/base/platform/time.cc TimeTicks::Now (darwin):
+///   static mach_timebase_info info (denom==0 时初始化);
+///   ticks = mach_absolute_time() * info.numer / (kNanosecondsPerMicrosecond * info.denom);
+///   返回 TimeTicks(ticks + 1) — 恒非零哨兵。
+/// v8: src/base/platform/time.cc (posix): ClockNow(CLOCK_MONOTONIC);
+/// solaris: gethrtime; fuchsia: zx_clock_get_monotonic (登记, 非目标)
+
+/// 线程 CPU 时钟 (原版 class ThreadTicks final)
+/// v8: src/base/platform/time.h ThreadTicks
+/// 静态面: IsSupported / WaitUntilInitialized / Now (+WIN GetForThread)
+/// v8: src/base/platform/time.cc ThreadTicks::Now 分支:
+///   starboard→CurrentMonotonicThreadTime; darwin→ComputeThreadTicks(thread_info);
+///   fuchsia→zx_object_get_info; posix→ClockNow(CLOCK_THREAD_CPUTIME_ID);
+///   solaris→gethrvtime; win→GetForThread — 目标: darwin + posix 产码, 余登记
+
+// —— 自由函数 (原版 9 声明: Nanoseconds..FromDays, Milliseconds/Seconds 带 double 重载) ——
+/// v8: src/base/platform/time.h Nanoseconds/Microseconds/Milliseconds/Seconds/Minutes/Hours/FromDays
+pub fn nanoseconds(ns: i64) -> TimeDelta { TimeDelta::from_nanoseconds(ns) }
+pub fn microseconds(us: i64) -> TimeDelta { TimeDelta::from_microseconds(us) }
+pub fn milliseconds(ms: i64) -> TimeDelta { TimeDelta::from_milliseconds(ms) }
+pub fn milliseconds_d(ms: f64) -> TimeDelta { TimeDelta::from_milliseconds_d(ms) }
+pub fn seconds(s: i64) -> TimeDelta { TimeDelta::from_seconds(s) }
+pub fn seconds_d(s: f64) -> TimeDelta { TimeDelta::from_seconds_d(s) }
+pub fn minutes(m: i32) -> TimeDelta { TimeDelta::from_minutes(m as i64) }
+pub fn hours(h: i32) -> TimeDelta { TimeDelta::from_hours(h as i64) }
+pub fn from_days(d: i32) -> TimeDelta { TimeDelta::from_days(d as i64) }
+
+// —— IsHighResolutionTimer 探测 (原版 time.cc 141-165) ——
+/// v8: src/base/platform/time.cc IsHighResolutionTimer
+/// CLOCK_MONOTONONIC 读取 100 次 (kAttempts = 100), 增量 ≤1μs 即高分辨率
+pub const HIGH_RES_PROBE_ATTEMPTS: i32 = 100;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  use time_constants::*;
+  assert!(HOURS_PER_DAY == 24);
+  assert!(MICROSECONDS_PER_SECOND == 1_000_000);
+  assert!(NANOSECONDS_PER_SECOND == 1_000_000_000);
+  assert!(MICROSECONDS_PER_WEEK == 604_800_000_000);
+  assert!(MICROSECONDS_PER_DAY == MICROSECONDS_PER_HOUR * HOURS_PER_DAY);
+  assert!(TimeDelta::from_microseconds_raw(0).is_zero());
+  assert!(!TimeDelta::max_value().is_zero());
+};
+`;
+
+const p = writeSrc("v8-base-platform", "time.rs.skel", rust);
+console.log(`written ${p}`);

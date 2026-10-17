@@ -1,0 +1,93 @@
+# v8-regexp-syntax 转写日志
+
+## 看板与复审记录
+
+- [round1 Reviewer 深度审查与优化] (达成 clean 1/3):
+  - **代码规范核验**:
+    - 严格依照 `.agents/skills/rust_review/SKILL.md` 12 项原则（极致性能、零拷贝、单次遍历、现代 Rust、状态机、无 panic、无 allow 绕过等）全模块审查。
+    - 纯 Rust 零外部 C 依赖，无 unsafe 裸指针越界风险，错误处理使用 `thiserror` 透明派发。
+    - 无 `#[allow(...)]` 绕过 clippy 警告。
+  - **原版源码逐行比对 (v8/src/regexp/ vs v8-regexp-syntax/src/)**:
+    - `char_range.rs` vs `regexp-ast.h` / `regexp-compiler-tonode.cc`:
+      - 极致优化 `CharacterRange::intersect`：优化双端步进分支，消减 `to == lhs.to && to == rhs.to` 时的冗余循环，1:1 对齐 C++ cc:2038-2043 步进逻辑。
+      - 核验 `CharacterRange::canonicalize` / `negate` / `subtract` / `clamp_to_one_byte` / `add_class_escape` 算法与区间代数。
+    - `ast.rs` & `ast_generated.rs` vs `regexp-ast.h` / `regexp-ast.cc`:
+      - 14 类 AST 节点统一枚举 `Tree`（16 字节对齐，Box 承接树型所有权）。
+      - 捕获寄存器索引列表分配（`capture_registers` + `list_capture_registers` + `Interval` 代数与 `StackLimiter` 溢出哨兵）逐行核对 C++ cc:40-80 1:1 等价。
+      - 起始锚定判据（`is_certainly_anchored_at_start` / `is_certainly_anchored_at_end`）逐行核对 C++ cc:82-156 与 `Group` 头文件内联 h:700-707，全部等价。
+      - 溢出封顶加法 `increase_by` 与量词乘法溢出封顶 `K_INFINITY` 1:1 等价。
+    - `parser.rs` & `parser_generated.rs` vs `regexp-parser.h` / `regexp-parser.cc`:
+      - 4 组 128 位 ASCII 语法掩码（`SYNTAX_CHARS_OR_SLASH_MASK`, `CLASS_SET_SYNTAX_CHARS_MASK`, `CLASS_SET_RESERVED_PUNCTUATORS_MASK`, `CLASS_SET_DOUBLE_PUNCTUATORS_MASK`）编译期 const fn 计算 + static_assert 断言对数。
+      - Unicode 代理对解析、八进制/十六进制/Unicode 码点转义、环视与修改符组 `(?ims-ims:)` 解析状态机闭环。
+      - Unicode Sets (`/v` 模式) 的字符类集合运算（`--` 差集、`&&` 交集、`\q` 字符串类析取、嵌套类）解析与错误拦截（如取反类包含字符串错误拦截）1:1 吻合。
+    - `flags.rs` & `flags_generated.rs` vs `regexp-flags.h`:
+      - 9 标志位序与字符映射逐位核对、连续性编译期断言。
+    - `error.rs` & `regexp_error_generated.rs` vs `regexp-error.h`:
+      - 33 项 `RegexpError` 枚举与错误字符串 1:1 对应。
+  - **单元测试扩充**:
+    - 在 `tests/parser_unittest.rs` 新增 `test_certainly_anchored` 测试用例（覆盖首尾肯定/否定锚定、析取分支全肯定原则、环视/分组/捕获、前序消费阻断以及递归预算耗尽校验）。
+    - 测试总量: **19 → 20 passed, 0 skipped (100% 绿)**。
+  - **门禁验证**:
+    - `CARGO_TARGET_DIR=target/agent_w8repsr1 cargo nextest run -p v8-regexp-syntax` → **20/20 passed, 0 skipped**。
+    - `CARGO_TARGET_DIR=target/agent_w8repsr1 cargo clippy -p v8-regexp-syntax --all-targets -- -D warnings` → **0 warning**。
+    - `rg "\[allow" v8-regexp-syntax` → **0 处 allow**。
+  - **结论**: 0 行为缺陷 / 0 遗漏 / 测试全过，达成 **clean 1/3**。
+
+- [round2 Reviewer 深度交叉审查与优化] (达成 clean 2/3):
+  - **代码规范核验**:
+    - 完整核查 `.agents/skills/rust_review/SKILL.md` 12 项原则（极致性能、零拷贝、单次遍历、现代 Rust、状态机、无 panic、无 allow 绕过等）。
+    - 内存与性能极致优化：
+      - `char_range.rs`:
+        - `negate_with_max`: `negated.reserve(range_count + 1)`，预估容量避免多次重分配。
+        - `intersect`: `intersection.reserve(lhs.len().min(rhs.len()))` 消除初始扩容抖动。
+        - `subtract`: `result.reserve(src.len())` 并将尾部复制循环 `while src_index < src.len()` 升级为单切片直接写入 `result.extend_from_slice(&src[src_index..])`。
+      - `ast.rs`:
+        - `Disjunction::new`: 消除 `i32::MAX / i32::MIN` 占位，升级为现代函数式 `alternatives.first().map(...iter().fold(...))`。
+        - `Alternative::new`: 将命令式循环升级为 `nodes.iter().fold((0, 0), ...)`。
+        - `Tree::append_to_text`: `Self::Text` 变体由逐个 `add_element` 循环升级为 `text.length += t.length; text.elements.append(&mut t.elements);` 块搬移，复杂度从 O(K) 降低到 O(1) 向量拼接。
+  - **原版源码逐行交叉比对 (v8/src/regexp/ vs v8-regexp-syntax/src/)**:
+    - `regexp-ast.{h,cc}` vs `ast.rs` / `ast_impl.rs`:
+      - 核对 14 类 AST 节点统一枚举 `Tree`、`StackLimiter` 溢出传递与寄存器列表 `Interval::union`。
+      - 核对 `Quantifier::new` 溢出检查 `min > 0 && body_min > K_INFINITY / min` 与 `max > 0 && body_max > K_INFINITY / max` 1:1 对齐 C++ h:610-618。
+      - 核对 `Capture`、`Group`、`Alternative`、`Disjunction`、`Lookaround` 的 `is_certainly_anchored_at_start` 与 `is_certainly_anchored_at_end` 判据与递归预算递减，1:1 对齐 C++ cc:82-156。
+    - `regexp-parser.{h,cc}` vs `parser.rs` / `parser_generated.rs`:
+      - 核对 Unicode 代理对扫描、`advance` / `advance_by` / `rewind_by_one_codepoint` / `reset` 状态机。
+      - 核对 Unicode Sets (`/v` 模式) 的集合运算：交集 `&&`、差集 `--`、取反类与含字符串类互斥拦截（`kNegatedCharacterClassWithStrings`）1:1 等价。
+    - `char-ranges.{h,cc}` & `special-case.h` vs `char_range.rs`:
+      - 字符区间规范化 `canonicalize`、区间相交 `intersect`、补集 `negate_with_max`、差集 `subtract` 保持区间代数等价。
+    - `regexp-flags.h` vs `flags.rs` / `flags_generated.rs`:
+      - 9 个正则标志位位序与连续性断言 1:1。
+    - `regexp-error.h` vs `error.rs` / `regexp_error_generated.rs`:
+      - 33 个正则错误项 1:1 映射。
+  - **门禁验证**:
+    - `CARGO_TARGET_DIR=target/agent_w8repsr2 cargo nextest run -p v8-regexp-syntax` → **21/21 passed, 0 skipped**。
+    - `CARGO_TARGET_DIR=target/agent_w8repsr2 cargo clippy -p v8-regexp-syntax --all-targets -- -D warnings` → **0 warning**。
+    - `rg "\[allow" v8-regexp-syntax` → **0 处 allow**。
+  - **结论**: 0 行为缺陷 / 0 遗漏 / 性能优化落地 / 测试全过，达成 **clean 2/3**。
+
+- [round3 Reviewer 终验交叉审查与冻结] (达成 clean 3/3 终检验收冻结):
+  - **代码规范核验**:
+    - 完整核查 `.agents/skills/rust_review/SKILL.md` 12 项原则（极致性能、零拷贝、单次遍历、现代 Rust、状态机、无 panic、无 allow 绕过等）。
+    - 内存安全性与生命周期: 全模块零裸指针解引用，无 unsafe 风险（仅测试 log_init 符合规范）；AST 节点结构由 `Box<Tree>` 树型持有，递归遍历严格受控。
+    - 零堆分配优化: 语法与转义字符集基于 `const fn` 128 位掩码做 O(1) 判定；区间运算（交集、补集、差集）全部就地 reserve 容量，尾部直接 `extend_from_slice` 单切片拷贝；`Text` 向量块以 `elements.append(&mut t.elements)` 搬移，无逐元素二次拷贝。
+  - **原版源码逐行终验交叉比对 (v8/src/regexp/ vs v8-regexp-syntax/src/)**:
+    - `regexp-ast.{h,cc}` vs `ast.rs` / `ast_impl.rs` / `ast_generated.rs`:
+      - 14 类 AST 节点统一枚举 `Tree` 内存排布合理，16 字节对齐，精确支持 `accept<V: Visitor>`。
+      - 捕获寄存器索引列表分配（`CaptureRegisters` / `ListCaptureRegisters`）对齐 C++ cc:40-80；`StackLimiter` 溢出哨兵传递与 `Interval::union` 区间代数完全吻合。
+      - 起始锚定判据（`IsCertainlyAnchoredAtStart` / `IsCertainlyAnchoredAtEnd`）对齐 C++ cc:82-156 与 `Group` 内联 h:700-707：分支析取全肯定准则、前序 `max_match > 0` 阻断准则、正向前瞻透传准则全部 1:1 等价。
+      - 节点 min/max 长度装配：`IncreaseBy` 封顶溢出加法与 `Quantifier::new` 的 `K_INFINITY` 溢出封顶乘法（h:610-618）1:1 等价。
+    - `regexp-parser.{h,cc}` vs `parser.rs` / `parser_generated.rs`:
+      - Unicode 代理对扫描、前导/后随代理拼装与反向回退 1:1。
+      - Unicode Sets (`/v` 模式) 集合运算：`--`（差集）、`&&`（交集）、`\q{...}`（字符串析取）及 `NegatedCharacterClassWithStrings` 错误拦截严格一致。
+    - `char-ranges.{h,cc}` & `special-case.h` vs `char_range.rs`:
+      - 规范化 `canonicalize`、区间相交 `intersect`、补集 `negate_with_max`、差集 `subtract`、单字节截断 `clamp_to_one_byte` 区间代数完全一致。
+    - `regexp-flags.h` vs `flags.rs` / `flags_generated.rs`:
+      - 9 个正则标志位位序与连续性断言 1:1，解析与互斥校验（如 u 与 v 互斥）完全一致。
+    - `regexp-error.h` vs `error.rs` / `regexp_error_generated.rs`:
+      - 33 项 `RegexpError` 1:1 映射，错误消息与定位完全一致。
+  - **门禁验证**:
+    - `CARGO_TARGET_DIR=target/agent_w8repsr3 cargo nextest run -p v8-regexp-syntax` → **21/21 passed, 0 skipped** (100% 绿)。
+    - `CARGO_TARGET_DIR=target/agent_w8repsr3 cargo clippy -p v8-regexp-syntax --all-targets -- -D warnings` → **0 warning**。
+    - `rg "\[allow" v8-regexp-syntax` → **0 处 allow**。
+  - **终验结论**: 0 行为缺陷 / 0 遗漏 / 规范全达标 / 测试全过，**达成 clean 3/3 终检验收冻结**。
+

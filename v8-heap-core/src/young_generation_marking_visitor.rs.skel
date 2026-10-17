@@ -1,0 +1,45 @@
+// 由 tool/src/heap/young-generation-marking-visitor.js 从 v8/src/heap/young-generation-marking-visitor.h, src/heap/young-generation-marking-visitor-inl.h 生成; 修订就地改, 复跑覆盖
+// 新生代标记 visitor (并发/并行两实例化)
+/// 访问模式 (h 顶层枚举)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum YoungGenerationMarkingVisitationMode {
+  /// kParallel
+  PARALLEL = 0,
+  /// kConcurrent
+  CONCURRENT = 1,
+}
+
+/// 对象访问: 直访或推工作表
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum ObjectVisitationMode {
+  /// kVisitDirectly
+  VISIT_DIRECTLY = 0,
+  /// kPushToWorklist
+  PUSH_TO_WORKLIST = 1,
+}
+
+/// 槽位处理: 只读/读写 (并发下锁字符串表)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum SlotTreatmentMode {
+  /// kReadOnly
+  READ_ONLY = 0,
+  /// kReadWrite
+  READ_WRITE = 1,
+}
+
+/// v8: src/heap/young-generation-marking-visitor.h YoungGenerationMarkingVisitor<marking_mode>
+/// 构造: (heap, local_pretenuring_feedback, young_pending_allocations_snapshot = nullptr)
+/// 静态开关: EnableConcurrentVisitation() = marking_mode == kConcurrent
+/// VisitPointers(ObjectSlot|MaybeObjectSlot) → VisitPointersImpl (inl)
+/// v8: src/heap/young-generation-marking-visitor-inl.h VisitPointersImpl /
+///     VisitJSShamoObject 等实现面
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(YoungGenerationMarkingVisitationMode::Concurrent == 1);
+  assert!(ObjectVisitationMode::PushToWorklist == 1);
+  assert!(SlotTreatmentMode::ReadWrite == 1);
+};

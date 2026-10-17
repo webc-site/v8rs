@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/wasm-typer.js 从 v8/src/compiler/wasm-typer.h + wasm-typer.cc 生成; 修订就地改, 复跑覆盖
+// wasm-gc 类型沿图收窄到不动点
+
+//! wasm-typer — 结构字段/数组元素/phi/类型转换/TypeGuard 重定型
+//! (环上迭代至不动点)。
+//!
+//! retyped 面 (8): TypeGuard, WasmTypeCast, WasmTypeCastAbstract, AssertNotNull, Phi, WasmArrayGet, WasmStructGet, Null。
+
+/// 原版 WasmTyper — AdvancedReducer
+pub struct WasmTyper<'z> {
+  /// function_index_
+  pub function_index: u32,
+  /// graph_zone_
+  pub graph_zone: &'z Zone<'z>,
+}
+
+impl WasmTyper<'_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "WasmTyper";
+
+  /// 原版 Reduce — 逐节点重定型, 类型收窄即 Changed
+  /// v8: src/compiler/wasm-typer.cc WasmTyper::Reduce (8 case)
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-typer.cc WasmTyper::Reduce (TypeGuard/WasmTypeCast/WasmTypeCastAbstract/AssertNotNull/Phi/WasmArrayGet/WasmStructGet/Null)")
+  }
+}

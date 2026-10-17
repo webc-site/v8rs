@@ -1,0 +1,77 @@
+// 由 tool/src/heap/gc-tracer.cc.js 从 v8/src/heap/gc-tracer.{cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// GC 追踪: 事件名常量表与速度界
+
+/// 事件类型名表 (对应 ToString(GCTracer::Event::Type, short_name) 双名)。
+/// v8: src/heap/gc-tracer.cc ToString(Event::Type)
+#[must_use]
+pub fn event_type_to_string(type_: &str, short_name: bool) -> &'static str {
+  match type_ {
+    "SCAVENGER" => if short_name { "s" } else { "Scavenge" },
+    "MARK_COMPACTOR" => if short_name { "mc" } else { "Mark-Compact" },
+    "INCREMENTAL_MARK_COMPACTOR" => if short_name { "mc" } else { "Incremental Mark-Compact" },
+    "MINOR_MARK_SWEEPER" => if short_name { "mms" } else { "Minor Mark-Sweep" },
+    "INCREMENTAL_MINOR_MARK_SWEEPER" => if short_name { "mms" } else { "Incremental Minor Mark-Sweep" },
+    "START" => if short_name { "st" } else { "Start" },
+    _ => unreachable!("Event::Type 全枚举"),
+  }
+}
+
+/// 事件状态名 (对应 ToString(GCTracer::Event::State))。
+/// v8: src/heap/gc-tracer.cc ToString(Event::State)
+#[must_use]
+pub fn event_state_to_string(state: &str) -> &'static str {
+  match state {
+    "MARKING" => "Marking",
+    "ATOMIC" => "Atomic",
+    "SWEEPING" => "Sweeping",
+    "NOT_RUNNING" => "Not running",
+    _ => unreachable!("Event::State 全枚举"),
+  }
+}
+
+/// isolate 优先级名 (对应 ToString(v8::Isolate::Priority))。
+/// v8: src/heap/gc-tracer.cc ToString(Priority)
+#[must_use]
+pub fn priority_to_string(priority: &str) -> &'static str {
+  match priority {
+    "kUserBlocking" => "UserBlocking",
+    "kUserVisible" => "UserVisible",
+    "kBestEffort" => "BestEffort",
+    _ => unreachable!("Priority 全枚举"),
+  }
+}
+
+/// 速度界 (对应 BoundedAverageSpeed 常量: 非空下限 1 B/ms, 上限 1 GB/ms)。
+pub const K_MIN_NON_EMPTY_SPEED_IN_BYTES_PER_MS: f64 = 1.0;
+pub const K_MAX_SPEED_IN_BYTES_PER_MS: f64 = 1024.0 * 1024.0 * 1024.0;
+
+/// 对应 BoundedAverageSpeed: 环形缓冲均值夹在 [1, GB] 内。
+/// v8: src/heap/gc-tracer.cc BoundedAverageSpeed
+#[must_use]
+pub fn bounded_average_speed(raw: Option<f64>) -> Option<f64> {
+  raw.map(|v| v.clamp(K_MIN_NON_EMPTY_SPEED_IN_BYTES_PER_MS, K_MAX_SPEED_IN_BYTES_PER_MS))
+}
+
+/// 对应 BoundedThroughput: 平滑吞吐上限 GB/ms。
+/// v8: src/heap/gc-tracer.cc BoundedThroughput
+#[must_use]
+pub fn bounded_throughput(raw: f64) -> f64 {
+  raw.min(K_MAX_SPEED_IN_BYTES_PER_MS)
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(event_type_to_string("SCAVENGER", false), "Scavenge");
+  assert_eq!(event_type_to_string("SCAVENGER", true), "s");
+  assert_eq!(event_type_to_string("INCREMENTAL_MARK_COMPACTOR", true), "mc");
+  assert_eq!(event_type_to_string("INCREMENTAL_MINOR_MARK_SWEEPER", false), "Incremental Minor Mark-Sweep");
+  assert_eq!(event_type_to_string("START", true), "st");
+  assert_eq!(event_state_to_string("MARKING"), "Marking");
+  assert_eq!(event_state_to_string("SWEEPING"), "Sweeping");
+  assert_eq!(priority_to_string("kBestEffort"), "BestEffort");
+  assert_eq!(bounded_average_speed(Some(0.5)), Some(1.0)); // 下限兜底
+  assert_eq!(bounded_average_speed(Some(1e12)), Some(K_MAX_SPEED_IN_BYTES_PER_MS));
+  assert_eq!(bounded_average_speed(None), None);
+  assert_eq!(bounded_throughput(2e12), K_MAX_SPEED_IN_BYTES_PER_MS);
+  assert_eq!(bounded_throughput(123.0), 123.0);
+};

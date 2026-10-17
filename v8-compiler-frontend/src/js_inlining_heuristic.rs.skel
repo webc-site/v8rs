@@ -1,0 +1,74 @@
+// 由 tool/src/compiler/js-inlining-heuristic.js 从 v8/src/compiler/js-inlining-heuristic.h + js-inlining-heuristic.cc 生成; 修订就地改, 复跑覆盖
+// 内联启发式: 候选收集 + 尺寸阈值 + 多态分派
+
+
+/// 内联模式
+/// v8: src/compiler/js-inlining-heuristic.h JSInliningHeuristic::Mode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Mode {
+    /// 只内联 JS 调用
+    JsOnly,
+    /// 只内联 wasm 包装
+    WasmWrappersOnly,
+    /// wasm 包装 + (支持时) 整个 wasm 函数
+    WasmFullInlining,
+}
+
+/// 多态内联上限
+/// v8: src/compiler/js-inlining-heuristic.h JSInliningHeuristic::kMaxCallPolymorphism
+pub const K_MAX_CALL_POLYMORPHISM: usize = 4;
+
+/// 内联候选 (10 成员)
+/// v8: src/compiler/js-inlining-heuristic.h JSInliningHeuristic::Candidate
+pub struct Candidate {
+    /// 多态槽 ×4; num_functions==1 && functions[0].is_null() 表示按 SFI 内联
+    pub functions: [Option<JSFunctionRef>; K_MAX_CALL_POLYMORPHISM],
+    /// 多态时逐函数能否内联
+    pub can_inline_function: [bool; K_MAX_CALL_POLYMORPHISM],
+    /// 字节码强引用 — 防选点期间被 SFI 冲刷
+    pub bytecode: [Option<BytecodeArrayRef>; K_MAX_CALL_POLYMORPHISM],
+    pub shared_info: Option<SharedFunctionInfoRef>,
+    pub num_functions: i32,
+    /// 内联调用点
+    pub node: Option<NodeRef>,
+    /// 调用点相对频率
+    pub frequency: CallFrequency,
+    pub total_size: i32,
+    pub own_size: i32,
+    pub has_heapnumber_params: bool,
+}
+
+/// 帧态复制模式
+/// v8: src/compiler/js-inlining-heuristic.h JSInliningHeuristic::StateCloneMode
+pub enum StateCloneMode {
+    /// 复制一份状态 (多态分派用)
+    CloneState,
+    /// 原地改 (单态重定向)
+    ChangeInPlace,
+}
+
+/// JSInliningHeuristic — 收集候选, Finalize 时按重要度挑内联
+/// v8: src/compiler/js-inlining-heuristic.h JSInliningHeuristic
+pub struct JSInliningHeuristic {
+    inliner: JSInliner,
+    /// 排序唯一候选集 (CandidateCompare)
+    candidates: BTreeSet<Candidate>,
+    seen: HashSet<NodeId>,
+    /// 三个字节码尺寸阈值 (构造时从 v8_flags 快照, 防中途改旗标):
+    /// max_inlined_bytecode_size_cumulative / _absolute / _small_total
+    thresholds: InliningThresholds,
+    mode: Mode,
+}
+
+impl JSInliningHeuristic {
+    /// total = 已内联 + 已忽略
+    /// v8: src/compiler/js-inlining-heuristic.h JSInliningHeuristic::total_inlined_bytecode_size
+    pub fn total_inlined_bytecode_size(&self) -> i32;
+    /// 候选收尾: 逐个 InlineCandidate (small_function 判定)
+    /// v8: src/compiler/js-inlining-heuristic.cc JSInliningHeuristic::Finalize
+    fn finalize(&mut self);
+}
+
+// —— 对数基准 ——
+// Mode 3 / Candidate 成员 10 / 阈值旗标读取 3
+// cc 定义面 13: CollectFunctions,Reduce,Finalize,DuplicateStateValuesAndRename,DuplicateFrameStateAndRename,TryReuseDispatch...

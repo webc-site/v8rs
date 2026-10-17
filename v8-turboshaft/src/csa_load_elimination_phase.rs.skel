@@ -1,0 +1,32 @@
+// 由 tool/src/compiler/turboshaft/csa-load-elimination-phase.h.js 从 v8/src/compiler/turboshaft/csa-load-elimination-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// CsaLoadEliminationPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/csa-load-elimination-phase.h CsaLoadEliminationPhase
+pub struct CsaLoadEliminationPhase;
+
+impl CsaLoadEliminationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "CsaLoadElimination" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftCsaLoadElimination";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "LateLoadEliminationReducer",
+    "MachineOptimizationReducer",
+    "ValueNumberingReducer",
+  ];
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/csa-load-elimination-phase.cc CsaLoadEliminationPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<LateLoadEliminationReducer, MachineOptimizationReducer, ValueNumberingReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(CsaLoadEliminationPhase::PHASE_NAME == "V8.TFTurboshaftCsaLoadElimination");
+  assert!(CsaLoadEliminationPhase::REDUCERS.len() == 3);
+  assert!(CsaLoadEliminationPhase::REDUCERS[0] == "LateLoadEliminationReducer");
+};

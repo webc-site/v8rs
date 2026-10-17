@@ -1,0 +1,56 @@
+// 由 tool/src/heap/marking-worklist.js 从 v8/src/heap/marking-worklist.h, src/heap/marking-worklist.cc, src/heap/marking-worklist-inl.h 生成; 修订就地改, 复跑覆盖
+// 全局标记工作表集合与线程本地视图
+/// v8: src/heap/marking-worklist.h ContextWorklistPair
+pub struct ContextWorklistPair {
+  pub context: Address,
+  pub worklist: Box<MarkingWorklist>,
+}
+
+/// v8: src/heap/marking-worklist.h MarkingWorklists
+pub struct MarkingWorklists {
+  /// v8: default_ — 绝大多数对象
+  pub default_: MarkingWorklist,
+  /// v8: on_hold_ — 并发标记对新生成对象 bail out (避免黑分配)
+  pub on_hold: MarkingWorklist,
+  /// v8: other_ — 归属未被测量 context 的对象
+  pub other: MarkingWorklist,
+  /// v8: context_worklists_
+  pub context_worklists: Vec<ContextWorklistPair>,
+}
+
+impl MarkingWorklists {
+  /// v8: MarkingWorklists::kSharedContext — 未归属任何 context 的假地址
+  pub const K_SHARED_CONTEXT: Address = 0;
+  /// v8: MarkingWorklists::kOtherContext — 归属未测量 context 的假地址
+  pub const K_OTHER_CONTEXT: Address = 8;
+
+  /// v8: MarkingWorklists::CreateContextWorklists — 标记开始时按 contexts 建表
+  pub fn create_context_worklists(&mut self, contexts: &[Address]) { todo!() }
+  /// v8: MarkingWorklists::ReleaseContextWorklists — 结束时全部须为空
+  pub fn release_context_worklists(&mut self) { todo!() }
+  /// v8: MarkingWorklists::IsPerContextMode — !context_worklists_.empty()
+  pub fn is_per_context_mode(&self) -> bool { !self.context_worklists.is_empty() }
+  /// v8: MarkingWorklists::Clear / Print / IsEmpty / PrintWorklist
+}
+
+/// v8: src/heap/marking-worklist.h MarkingWorklists::Local
+/// 线程本地视图; active_ 直接内嵌 Local 实例避免间接层
+/// (不变式: active_owner 为空壳, 内容已移入 active_)。
+pub struct MarkingWorklistsLocal {
+  /// v8: global / active / active_owner / active_context / cpp_marking_state_
+  pub fields_todo: (),
+}
+impl MarkingWorklistsLocal {
+  pub const K_SHARED_CONTEXT: Address = 0;
+  pub const K_OTHER_CONTEXT: Address = 8;
+
+  /// v8: Local::Push / Pop (默认表)
+  /// v8: Local::PushOnHold / PopOnHold
+  /// v8: Local::Publish — 本地段推回全局
+  /// v8: Local::IsEmpty / IsWrapperEmpty
+  /// v8: Local::ShareWork — 全局空则发布 active (含 shared)
+  /// v8: Local::PublishWork — 非 per-context 模式发布
+  /// v8: Local::MergeOnHold — on_hold 并回 shared
+  /// v8: Local::PublishCppHeapObjects (-inl.h)
+  fn todo_iface(&mut self) { todo!() }
+}

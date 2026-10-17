@@ -1,0 +1,21 @@
+// 由 tool/src/compiler/turboshaft/load-store-verification-reducer.h.js 从 v8/src/compiler/turboshaft/load-store-verification-reducer.h 生成; 修订就地改, 复跑覆盖
+// 载入存储校验 reducer (DEBUG)
+
+/// v8: src/compiler/turboshaft/load-store-verification-reducer.h StoreLoadVerificationReducer
+/// 类名与文件名不同: StoreLoadVerificationReducer
+pub struct StoreLoadVerificationReducer {
+  pub placeholder: (),
+}
+
+impl StoreLoadVerificationReducer {
+  /// 原版 V<Any> REDUCE(Load)(OpIndex base, OptionalOpIndex index, LoadOp::Kind kind, MemoryRepresentation loaded_rep, RegisterRepresentation result_rep, int32_t offset, uint8_t element_size_log2)
+  /// v8: src/compiler/turboshaft/load-store-verification-reducer.h StoreLoadVerificationReducer::REDUCE(Load)
+  pub fn reduce_load(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Store)(OpIndex base, OptionalOpIndex index, OpIndex value, StoreOp::Kind kind, MemoryRepresentation stored_rep, WriteBarrierKind write_barrier, std::optional<AtomicMemoryOrder> memory_order, int32_t offset, uint8_t element_size_log2, bool maybe_initializing_or_transitioning, IndirectPointerTag maybe_indirect_pointer_tag)
+  /// v8: src/compiler/turboshaft/load-store-verification-reducer.h StoreLoadVerificationReducer::REDUCE(Store)
+  pub fn reduce_store(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

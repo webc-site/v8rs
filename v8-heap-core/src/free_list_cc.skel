@@ -1,0 +1,64 @@
+// 由 tool/src/heap/free-list.cc.js 从 v8/src/heap/free-list.cc 生成; 修订就地改, 复跑覆盖
+// FreeList 实体台账: 37 定义 (目标配置留 35) + 逻辑体 33 needle + USE/DEBUG 区锚 + 展开侧核对
+
+// ══ free-list.cc:1-603 → v8-heap-core/src/free_list.rs ══
+// ── 函数定义处置 (原版行号实测) ──
+// cc:22   void FreeListCategory::Unlink(FreeList* owner)
+// cc:30   void FreeListCategory::Reset(FreeList* owner)
+// cc:36   Tagged<FreeSpace> FreeListCategory::PickNodeFromList(size_t minimum_size,
+// cc:52   Tagged<FreeSpace> FreeListCategory::SearchForNodeInList(const Heap* heap,
+// cc:93   void FreeListCategory::Free(const Heap* heap,
+// cc:112  void FreeListCategory::RepairFreeList(Heap* heap)
+// cc:126  void FreeListCategory::Relink(FreeList* owner)
+// cc:134  FreeList::FreeList(int number_of_categories, size_t min_block_size)
+// cc:139  std::unique_ptr<FreeList> FreeList::CreateFreeList()
+// cc:143  std::unique_ptr<FreeList> FreeList::CreateFreeListForNewSpace()
+// cc:147  Tagged<FreeSpace> FreeList::TryFindNodeIn(FreeListCategoryType type,
+// cc:163  Tagged<FreeSpace> FreeList::SearchForNodeInList(const Heap* heap,
+// cc:184  size_t FreeList::Free(const Isolate* isolate,
+// cc:211  FreeListMany::FreeListMany() : FreeList(kNumberOfCategories, kMinBlockSize)
+// cc:217  FreeListMany::~FreeListMany()
+// cc:219  NormalPage* FreeListMany::GetPageForSize(size_t size_in_bytes)
+// cc:233  Tagged<FreeSpace> FreeListMany::Allocate(const Heap* heap, size_t size_in_bytes,
+// cc:260  FreeListManyCached::FreeListManyCached()
+// cc:262  void FreeListManyCached::Reset()
+// cc:267  void FreeListManyCached::ResetForNonBlackAllocatedPages()
+// cc:272  bool FreeListManyCached::AddCategory(FreeListCategory* category)
+// cc:287  void FreeListManyCached::RemoveCategory(FreeListCategory* category)
+// cc:301  size_t FreeListManyCached::Free(const Isolate* isolate,
+// cc:334  Tagged<FreeSpace> FreeListManyCached::Allocate(const Heap* heap,
+// cc:375  Tagged<FreeSpace> FreeListManyCachedFastPathBase::Allocate(
+// cc:441  Tagged<FreeSpace> FreeListManyCachedOrigin::Allocate(const Heap* heap,
+// cc:456  void FreeList::Reset()
+// cc:466  void FreeList::ResetForNonBlackAllocatedPages()
+// cc:485  void FreeList::EvictFreeListItems(NormalPage* page)
+// cc:495  void FreeList::RepairLists(Heap* heap)
+// cc:500  bool FreeList::AddCategory(FreeListCategory* category)
+// cc:519  void FreeList::RemoveCategory(FreeListCategory* category)
+// cc:542  void FreeList::PrintCategories(FreeListCategoryType type)
+// cc:553  size_t FreeListCategory::SumFreeList()
+// cc:568  int FreeListCategory::FreeListLength()
+// cc:579  bool FreeList::IsVeryLong()
+// cc:594  size_t FreeList::SumFreeLists()
+// cc:209 constexpr categories_min 再声明 (C++ 链接件) → Rust pub const 即定义处
+// cc:578-600 #ifdef DEBUG (IsVeryLong/SumFreeLists) 展开侧剥除 → Rust 常编 pub, debug_assert! 消费侧零求值
+// ── 耦合处置 (窄 trait FreeListEnv 承接, 双行号进模块推迟台账) ──
+// Isolate*/Heap* 形参 (cc:93/152/163/184/233/301/334/375/441) → env 吸收 (同 chunk 票 MetadataTableEnv 先例)
+// NormalPage 反查/计数 (cc:188-193/200/250/306-311/318/365/427/487-492) → env 页面包 7 法
+// Tagged<FreeSpace> 读写 (cc:42/46/57/60/90/99/563/572) → env 节点面包 3 法 (objects/free-space.h 他票)
+// SetNext JIT 双通道 (cc:68-76 Metadata()->is_executable 判据) → env.set_node_next 实现面; Metadata 族
+//   属 memory_chunk 推迟台账 1 (BasePage/IsolateGroup 波次) → 本席登记推迟, 禁假绿
+// RepairFreeList/RepairLists (cc:112-124/495-498 ReadOnlyRoots/ObjectSlot store_map) → 推迟 (Heap roots 他票)
+// DCHECK(v8_flags.black_allocated_pages) (cc:467) → v8-flags 运行态单例他票, release 剥除注记
+// ── 虚拟分派承接 (本仓禁 dyn) ──
+// virtual Allocate/Free/AddCategory/RemoveCategory/Select 的虚表回击 (如 cc:107 AddCategory 触达 ManyCached
+//   override cc:272; cc:157/175 RemoveCategory 触达 cc:287) → Rust trait FreeList 默认体 + FreeListBase
+//   共享体 (*_impl) + 薄壳宏转接 (forward_free_list_impl), 逐触达点与 C++ 分派效果等价 (申报差异)
+// ── 工厂/组合链 ──
+// CreateFreeList→FreeListManyCachedOrigin (cc:140) / CreateFreeListForNewSpace→…ForNewSpace (cc:144);
+//   unique_ptr<FreeList> 多态返回面 → Rust 具体类型返回 (消费面 PagedSpace 他票, 申报差异)
+// ForNewSpace kProhibit ctor (h:443-451 读 v8_flags.minor_ms/minor_ms_min_lab_size_kb) → ctor 参数注入
+// ── rs 侧落地锚 (HC-3 实测台账) ──
+// Landed @ v8-heap-core/src/free_list.rs: 35 留体全落 (RepairFreeList/RepairLists 2 推迟台账);
+//   PrintCategories PrintF 流输出面 (cc:544-550) 由链格式化承接 (base::OS 面他票);
+//   测试面 tests/free_list_unittest.rs (spaces-unittest.cc:485/540 两可迁用例 + 金标准边界族)。

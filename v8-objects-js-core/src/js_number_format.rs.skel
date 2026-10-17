@@ -1,0 +1,28 @@
+// 由 tool/src/objects/js-number-format.h.js 从 v8/src/objects/js-number-format.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSNumberFormat 槽位/选项枚举差集骨架
+
+//! JSNumberFormat: Intl.NumberFormat 对象; icu_number_formatter_ 以 Foreign 槽
+//! 承载 Managed<icu::number::LocalizedNumberFormatter>。
+
+/// v8: src/objects/js-number-format.h JSNumberFormat::locale_
+pub const K_LOCALE_OFFSET: usize = 24;
+/// v8: src/objects/js-number-format.h JSNumberFormat::icu_number_formatter_
+pub const K_ICU_NUMBER_FORMATTER_OFFSET: usize = 32;
+/// v8: src/objects/js-number-format.h JSNumberFormat::bound_format_
+pub const K_BOUND_FORMAT_OFFSET: usize = 40;
+/// v8: src/objects/js-number-format.h JSNumberFormat::kHeaderSize
+pub const K_HEADER_SIZE: usize = 48;
+
+// cc 选项枚举 (字符串语义, js-number-format.cc:48-96):
+pub enum Style { DECIMAL, PERCENT, CURRENCY, UNIT } // 4 值
+pub enum CurrencyDisplay { CODE, SYMBOL, NAME, NARROW_SYMBOL } // 4 值
+pub enum CurrencySign { STANDARD, ACCOUNTING } // 2 值
+pub enum UnitDisplay { SHORT, NARROW, LONG } // 3 值
+pub enum SignDisplay { AUTO, ALWAYS, NEVER, EXCEPT_ZERO, NEGATIVE } // 5 值
+pub enum UseGrouping { OFF, MIN2, AUTO, ALWAYS } // 4 值
+// h: enum class ShowTrailingZeros { kShow, kHide } (枚举值 k 前缀映射为 Rust K_*)
+
+// 方法映射 (cc, 全依赖 ICU/Isolate → 语义推迟): New / UnwrapNumberFormat /
+//   NumberFormatFunction / ResolvedOptions / FormatToParts / FormatNumericRange(ToParts) /
+//   FormatNumeric / GetAvailableLocales / skeleton 解析三兄弟 + Rounding 四查询
+// IntlMathematicalValue: 栈上值 (approx_: f64 + value_: Handle) — Number/BigInt/String 三态

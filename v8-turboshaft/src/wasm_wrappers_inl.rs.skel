@@ -1,0 +1,62 @@
+// 由 tool/src/compiler/turboshaft/wasm-wrappers-inl.h.js 从 v8/src/compiler/turboshaft/wasm-wrappers-inl.h 生成; 修订就地改, 复跑覆盖
+// Wasm wrapper TS 图构建器方法面 — 深水面登记, 签名 1:1
+
+/// 原版 WasmWrapperTSGraphBuilder<Assembler> 的 -inl.h 方法面。
+/// 类型与成员字段面见 wasm_wrappers.rs (wasm-wrappers.h.js 产出);
+/// 本模块只承载 13 个模板方法的签名骨架。
+/// v8: src/compiler/turboshaft/wasm-wrappers-inl.h WasmWrapperTSGraphBuilder
+pub struct WasmWrapperTsGraphBuilder {
+  /// v8: is_inlining_into_js_ — 内联进 JS 管线时走高层转换
+  pub is_inlining_into_js: bool,
+}
+
+impl WasmWrapperTsGraphBuilder {
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L23 AbortIfNot(V<Word32> condition, AbortReason abort_reason)
+  pub fn abort_if_not(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L35 BuildChangeInt32ToNumber(compiler::turboshaft::V<Word32> value)
+  pub fn build_change_int32_to_number(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L68 BuildToJSFunctionRef(V<WasmFuncRef> ret, V<Context> context)
+  pub fn build_to_jsfunction_ref(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L90 CheckAndConvertSharedString(V<Object> ret, ScopedVar<Object>& result)
+  pub fn check_and_convert_shared_string(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L109 ToJS(OpIndex ret, CanonicalValueType type, V<Context> context)
+  pub fn to_js(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L201 BuildCallWasmFromWrapper(Zone* zone, const wasm::CanonicalSig* sig, V<Word32> callee, const base::Vector<OpIndex> args, base::Vector<OpIndex> returns, OptionalV<LazyFrameState> frame_state, compiler::LazyDeoptOnThrow lazy_deopt_on_throw)
+  pub fn build_call_wasm_from_wrapper(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L233 ConvertWasmResultsToJS(base::Vector<OpIndex> returns, V<Context> js_context)
+  pub fn convert_wasm_results_to_js(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L261 BuildJSToWasmWrapper(V<JSFunction> js_closure, V<Context> js_context, base::Vector<const OpIndex> arguments, OptionalV<LazyFrameState> lazy_frame_state, compiler::LazyDeoptOnThrow lazy_deopt_on_throw, OptionalV<EagerFrameState> caller_frame_state)
+  pub fn build_jsto_wasm_wrapper(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L387 BuildJSToWasmWrapper()
+  pub fn build_jsto_wasm_wrapper_entry(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L398 BuildWasmToJSWrapper(wasm::ImportCallKind kind, int expected_arity, wasm::Suspend suspend)
+  pub fn build_wasm_to_jswrapper(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L612 BuildWasmStackEntryWrapper()
+  pub fn build_wasm_stack_entry_wrapper(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L674 BuildCapiCallWrapper()
+  pub fn build_capi_call_wrapper(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L772 BuildCWasmEntryWrapper()
+  pub fn build_cwasm_entry_wrapper(&mut self) { todo!() }
+
+  /// v8: src/compiler/turboshaft/wasm-wrappers-inl.h L845 BuildJSFastApiCallWrapper(DirectHandle<JSReceiver> callable)
+  pub fn build_jsfast_api_call_wrapper(&mut self) { todo!() }
+
+}
+
+// —— 深水面登记 (推迟台账) ——
+// 13 个方法体全部依赖 Isolate 执行面: CallBuiltin<Descriptor>、
+// WasmCallRuntime、LoadRoot、TrustedPointer 加载、Simulator 边界。
+// 解锁前置: v8-execution-isolate / v8-roots / v8-objects-maps /
+// v8-compiler-broker (builtin 描述符) 与 assembler.rs 的 __ 门面。

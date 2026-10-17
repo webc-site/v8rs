@@ -1,0 +1,111 @@
+// 由 tool/src/compiler/turboshaft/int64-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/int64-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// int64 降级 reducer (32 位平台)
+
+/// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer
+/// word64 → word32 对表示
+pub struct Int64LoweringReducer {
+  pub placeholder: (),
+}
+
+impl Int64LoweringReducer {
+  /// 原版 Word32OrWord32Pair REDUCE(WordBinop)(Word32OrWord32Pair left, Word32OrWord32Pair right, WordBinopOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(WordBinop)
+  pub fn reduce_word_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 Word32OrWord32Pair REDUCE(Shift)(Word32OrWord32Pair left, V<Word32> right, ShiftOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Shift)
+  pub fn reduce_shift(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Word64MulWide)(V<Word32Pair> left, V<Word32Pair> right, Word64MulWideOp::Kind kind)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Word64MulWide)
+  pub fn reduce_word64_mul_wide(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(Comparison)(V<Any> left, V<Any> right, ComparisonOp::Kind kind, RegisterRepresentation rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Comparison)
+  pub fn reduce_comparison(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(Call)(V<CallTarget> callee, OptionalV<LazyFrameState> frame_state, base::Vector<const OpIndex> arguments, const TSCallDescriptor* descriptor, OpEffects effects)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Call)
+  pub fn reduce_call(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(TailCall)(OpIndex callee, base::Vector<const OpIndex> arguments, const TSCallDescriptor* descriptor)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(TailCall)
+  pub fn reduce_tail_call(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Constant)(ConstantOp::Kind kind, ConstantOp::Storage value)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Constant)
+  pub fn reduce_constant(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Parameter)(int32_t parameter_index, RegisterRepresentation rep, const char* debug_name = "")
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Parameter)
+  pub fn reduce_parameter(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Return)(V<Word32> pop_count, base::Vector<const OpIndex> return_values)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Return)
+  pub fn reduce_return(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 Word32OrWord32Pair REDUCE(WordUnary)(Word32OrWord32Pair input, WordUnaryOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(WordUnary)
+  pub fn reduce_word_unary(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Change)(OpIndex input, ChangeOp::Kind kind, ChangeOp::Assumption assumption, RegisterRepresentation from, RegisterRepresentation to)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Change)
+  pub fn reduce_change(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Load)(OpIndex base, OptionalOpIndex index, LoadOp::Kind kind, MemoryRepresentation loaded_rep, RegisterRepresentation result_rep, int32_t offset, uint8_t element_scale)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Load)
+  pub fn reduce_load(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<None> REDUCE(Store)(OpIndex base, OptionalOpIndex index, OpIndex value, StoreOp::Kind kind, MemoryRepresentation stored_rep, WriteBarrierKind write_barrier, std::optional<AtomicMemoryOrder> memory_order, int32_t offset, uint8_t element_size_log2, bool maybe_initializing_or_transitioning, IndirectPointerTag maybe_indirect_pointer_tag)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Store)
+  pub fn reduce_store(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(AtomicRMW)(OpIndex base, OpIndex index, OpIndex value, OptionalOpIndex expected, AtomicRMWOp::BinOp bin_op, RegisterRepresentation in_out_rep, MemoryRepresentation memory_rep, MemoryAccessKind kind, RegisterRepresentation base_rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(AtomicRMW)
+  pub fn reduce_atomic_rmw(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(Phi)(base::Vector<const OpIndex> inputs, RegisterRepresentation rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Phi)
+  pub fn reduce_phi(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(PendingLoopPhi)(OpIndex input, RegisterRepresentation rep)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(PendingLoopPhi)
+  pub fn reduce_pending_loop_phi(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Simd128> REDUCE(Simd128Splat)(V<Any> input, Simd128SplatOp::Kind kind)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Simd128Splat)
+  pub fn reduce_simd128_splat(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Any> REDUCE(Simd128ExtractLane)(V<Simd128> input, Simd128ExtractLaneOp::Kind kind, uint8_t lane)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Simd128ExtractLane)
+  pub fn reduce_simd128_extract_lane(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Simd128> REDUCE(Simd128ReplaceLane)(V<Simd128> into, V<Any> new_lane, Simd128ReplaceLaneOp::Kind kind, uint8_t lane)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(Simd128ReplaceLane)
+  pub fn reduce_simd128_replace_lane(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<AnyFrameState> REDUCE(FrameState)(base::Vector<const OpIndex> inputs, bool inlined, const FrameStateData* data)
+  /// v8: src/compiler/turboshaft/int64-lowering-reducer.h Int64LoweringReducer::REDUCE(FrameState)
+  pub fn reduce_frame_state(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

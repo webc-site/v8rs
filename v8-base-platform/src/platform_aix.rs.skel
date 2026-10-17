@@ -1,0 +1,32 @@
+// 由 tool/src/base/platform/platform-aix.js 从 v8/src/base/platform/platform-aix.cc 生成; 修订就地改, 复跑覆盖
+// AIX 平台面 (非目标; /proc 枚举 + getthrds 栈界 + mprotect 弃用页)
+
+/// maps 行缓冲 (原版 static const int MAP_LENGTH)
+/// v8: src/base/platform/platform-aix.cc MAP_LENGTH
+pub const MAP_LENGTH: usize = 1024;
+
+// —— AIXTimezoneCache (原版 class AIXTimezoneCache : public PosixTimezoneCache) ——
+/// v8: src/base/platform/platform-aix.cc AIXTimezoneCache
+/// DaylightSavingsOffset 走 tzset() 重建环境 (AIX 无 tm_gmtoff 语义时的替代)
+
+// —— OS 6 方法登记 ——
+/// v8: src/base/platform/platform-aix.cc OS::CreateTimezoneCache — new AIXTimezoneCache
+/// v8: src/base/platform/platform-aix.cc OS::GetSharedLibraryAddresses
+/// open("/proc/self/maps") 逐行解析 (loadquery 替代路径)
+/// v8: src/base/platform/platform-aix.cc OS::SignalCodeMovingGC — 空体
+/// v8: src/base/platform/platform-aix.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-aix.cc OS::GetFirstFreeMemoryRangeWithin — 恒 nullopt
+/// v8: src/base/platform/platform-aix.cc OS::DecommitPages
+/// AIX 特例: 预定地址 mmap(MAP_FIXED) 默认失败 (SPEC1170 才允许),
+/// 弃用页改走 mprotect(PROT_NONE) 而非 posix 基座的 mmap 重盖
+
+// —— Stack 2 方法登记 ——
+/// v8: src/base/platform/platform-aix.cc Stack::ObtainCurrentThreadStackStart
+/// pthread_getthrds_np 三值: __pi_stackend 为栈基 (高址端)
+/// v8: src/base/platform/platform-aix.cc Stack::ObtainCurrentThreadStackReservedLimit
+/// __pi_stackaddr - __pi_stacksize 形态 (低址界)
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(MAP_LENGTH, 1024);
+};

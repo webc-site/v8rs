@@ -1,0 +1,10 @@
+// 由 tool/src/base/cpu/cpu-s390.cc.js 从 v8/src/base/cpu/cpu-s390.cc 生成; 修订就地改, 复跑覆盖
+// s390x 特性探测空实现
+
+//! v8: src/base/cpu/cpu-s390.cc
+
+impl Cpu {
+    /// v8: cpu-s390.cc DetectFeatures — 空实现 (s390x 无需运行时探测)
+    #[cfg(target_arch = "s390x")]
+    fn detect_features(&mut self) {}
+}

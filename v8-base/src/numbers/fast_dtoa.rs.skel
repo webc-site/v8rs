@@ -1,0 +1,68 @@
+// 由 tool/src/base/numbers/fast-dtoa.h.js 从 v8/src/base/numbers/fast-dtoa.h + src/base/numbers/fast-dtoa.cc 生成; 修订就地改, 复跑覆盖
+// Grisu3 快速 double→ASCII (失败须回退 bignum)
+
+//! v8: src/base/numbers/fast-dtoa.h/.cc
+
+/// v8: fast-dtoa.h FastDtoaMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FastDtoaMode {
+    /// 最短表示: v == (double)(buffer * 10^(point-length)); 末位最接近 v
+    Shortest,
+    /// 定精度: 误差绝对值最小; 等距两可时返回 false (不信结果)
+    Precision,
+}
+
+/// v8: fast-dtoa.h kFastDtoaMaximalLength = 17 (不含 NUL)
+pub const FAST_DTOA_MAXIMAL_LENGTH: usize = 17;
+
+// v8: fast-dtoa.cc 指数窗 (选缓存幂 10^-k 使缩放后指数落窗内)
+/// 窗下界
+pub const MINIMAL_TARGET_EXPONENT: i32 = -60;
+/// 窗上界
+pub const MAXIMAL_TARGET_EXPONENT: i32 = -32;
+
+// v8: fast-dtoa.cc kTen4..kTen9 — 10000, 100000, 1000000, 10000000, 100000000, 1000000000
+
+/// v8: fast-dtoa.cc DivMagic — libdivide 无分支 u32 快除魔数
+/// mul = ceil(2^(33+shift) / divisor) 截 32 位; shift = floor(log2(divisor))
+#[derive(Debug, Clone, Copy)]
+pub struct DivMagic { pub mul: u32, pub shift: u32 }
+
+/// v8: fast-dtoa.cc div[] — 索引即 log10(除数); [0] 项不用 (除数 1 走分支)
+pub static DIV_MAGIC: [DivMagic; 9] = [
+    DivMagic { mul: 0, shift: 0 }, // v8: 未用 (除数 1 走分支)
+    DivMagic { mul: 0x9999999a, shift: 3 }, // v8: 10
+    DivMagic { mul: 0x47ae147b, shift: 6 }, // v8: 100
+    DivMagic { mul: 0x0624dd30, shift: 9 }, // v8: 1000
+    DivMagic { mul: 0xa36e2eb2, shift: 13 }, // v8: 10000
+    DivMagic { mul: 0x4f8b588f, shift: 16 }, // v8: 100000
+    DivMagic { mul: 0x0c6f7a0c, shift: 19 }, // v8: 1000000
+    DivMagic { mul: 0xad7f29ac, shift: 23 }, // v8: 10000000
+    DivMagic { mul: 0x5798ee24, shift: 26 }, // v8: 100000000
+];
+
+/// v8: fast-dtoa.cc fast_divmod — 返回 *val / divisor, 就地 *val %= divisor;
+/// libdivide 无分支算法 + 除数 1 特判
+pub fn fast_divmod(val: &mut u32, divisor: u32, d: DivMagic) -> u32;
+
+/// v8: fast-dtoa.cc BiggestPowerTen(number, number_bits) — 找 ≤ number 的最大 10 幂 (幂指数, 值)
+pub fn biggest_power_ten(number: u32, number_bits: i32) -> (u32, i32);
+
+/// v8: fast-dtoa.cc RoundWeed — 尾位修剪: unsafe_interval/margin 四参不等式判定回退或进位
+pub fn round_weed(last_digit: &mut [u8], distance_too_high_w: u64, unsafe_interval: u64, rest: u64, ten_kappa: u64, unit: u64) -> bool;
+/// v8: fast-dtoa.cc RoundWeedCounted — 计数版修剪
+pub fn round_weed_counted(buffer: &mut [u8], length: usize, rest: u64, ten_kappa: u64, unit: u64, margin_delta: u64) -> bool;
+
+/// v8: fast-dtoa.cc DigitGen — low < w < high 区间内逐位生成, RoundWeed 收尾
+pub fn digit_gen(low: DiyFp, w: DiyFp, high: DiyFp) -> Option<(Vec<u8>, i32)>;
+/// v8: fast-dtoa.cc DigitGenCounted — requested_digits 计数版
+pub fn digit_gen_counted(w: DiyFp, requested_digits: i32) -> Option<(Vec<u8>, i32)>;
+
+/// v8: fast-dtoa.cc Grisu3 — AsDiyFp 边界 × 10^-k 缩放进 [-60,-32] 窗后 DigitGen
+pub fn grisu3(v: f64) -> Option<(Vec<u8>, i32)>;
+/// v8: fast-dtoa.cc Grisu3Counted — 计数版 (Grisu 精度不足处理真半数, 等距返回 None)
+pub fn grisu3_counted(v: f64, requested_digits: i32) -> Option<(Vec<u8>, i32)>;
+
+/// v8: fast-dtoa.cc FastDtoa — SHORTEST→Grisu3 / PRECISION→Grisu3Counted;
+/// 前置 v 严格正有限; 失败返回 None (调用方回退 BignumDtoa)
+pub fn fast_dtoa(v: f64, mode: FastDtoaMode, requested_digits: i32) -> Option<(Vec<u8>, i32)>;

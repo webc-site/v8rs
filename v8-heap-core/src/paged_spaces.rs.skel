@@ -1,0 +1,48 @@
+// 由 tool/src/heap/paged-spaces.js 从 v8/src/heap/paged-spaces.cc, src/heap/paged-spaces-inl.h (族 .h: src/heap/paged-spaces.h) 生成; 修订就地改, 复跑覆盖
+// 分页空间: 迭代器/记账/压缩空间
+/// v8: src/heap/paged-spaces.h CompactionSpace::DestinationHeap
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum DestinationHeap {
+  /// kSameHeap
+  SAME_HEAP = 0,
+  /// kSharedSpaceHeap
+  SHARED_SPACE_HEAP = 1,
+}
+
+/// v8: src/heap/paged-spaces.h PagedSpaceBase 常量
+pub mod paged_space_base_consts {
+  /// v8: kCompactionMemoryWanted = 500 * KB — 压缩目标回收量
+  pub const K_COMPACTION_MEMORY_WANTED: usize = 500 * 1024;
+}
+
+/// v8: src/heap/paged-spaces.h HeapObjectRange — 单页对象区间迭代器
+/// 迭代器字段: cage_base_/cur_addr_/cur_size_(u32)/cur_end_
+/// v8: HeapObjectRange::iterator::AdvanceToNextObject (-inl.h)
+pub struct HeapObjectRange<'a> { pub page: &'a NormalPage }
+
+/// v8: src/heap/paged-spaces.h PagedSpaceObjectIterator — 空间级对象迭代
+/// Next() 跳 filler 与垃圾段; AdvanceToNextPage 慢路径 (cc)
+/// v8: PagedSpaceObjectIterator::AdvanceToNextPage (cc)
+pub struct PagedSpaceObjectIterator<'a> { pub space: &'a PagedSpaceBase }
+
+/// v8: src/heap/paged-spaces.h PagedSpaceBase (SpaceWithLinearArea 派生)
+/// 字段面: accounting_stats_ / free_list_ / executable_ /
+///         compaction_space_kind_ / sweeper(Sweeper*) /
+///         allocated_pages_(AtomicPtr<NormalPage>) 等
+/// v8: Contains/ContainsSlow, Capacity, CommittedPhysicalMemory,
+///     Increment/DecrementCommittedPhysicalMemory, ClearAllocatorState,
+///     Available, Size, Waste, RawAllocateBackground,
+///     Free/FreeDuringSweeping (-inl.h), ResetFreeList,
+///     Decrease/IncreaseAllocatedBytes, Decrease/IncreaseCapacity,
+///     TearDown, MergeCompactionSpace, InitializePage
+/// v8: src/heap/paged-spaces.cc PagedSpaceBase 各实现 (方法面见锚)
+/// v8: src/heap/paged-spaces.h PagedSpace — 指定 AllocationSpace 的分页空间
+/// v8: src/heap/paged-spaces.h CompactionSpace — 后台合并目标 (DestinationHeap)
+/// v8: src/heap/paged-spaces.h CompactionSpaceCollection — 多空间压缩集合
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(DestinationHeap::SHARED_SPACE_HEAP == 1);
+  assert!(paged_space_base_consts::K_COMPACTION_MEMORY_WANTED == 512_000);
+};

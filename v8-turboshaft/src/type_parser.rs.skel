@@ -1,0 +1,32 @@
+// 由 tool/src/compiler/turboshaft/type-parser.h.js 从 v8/src/compiler/turboshaft/type-parser.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 类型文法解析: 字符串 -> Type (%CheckTurboshaftTypeOf)
+
+/// 原版 TypeParser — 解析 Type::ToString() 逆文法:
+///   Type := Word32 | Word64 | Float32 | Float64 [ Set | Range ]
+///   Set  := "{" v ("," v)* "}"   (升序去重, 1..kMaxSetSize)
+///   Range:= "[" v "," v "]"      (非 Word 类型须 from <= to)
+/// v 的数值文法按目标类型: uint32_t->stoul, uint64_t->stoull, float->stof, double->stod
+/// v8: src/compiler/turboshaft/type-parser.{h,cc}
+pub struct TypeParser<'s> {
+  pub s: &'s str,
+  pub pos: usize,
+}
+
+impl<'s> TypeParser<'s> {
+  /// v8: Parse — 跳尾随空白后必须到串尾
+  pub fn parse(&mut self) -> Option<Type> { todo!() }
+  /// v8: cc ParseType — 4 前缀分派:
+  ///   "Word32" -> Word32Type (Float32 任意态原版误返 Float64Type::Any)
+  ///   "Word64" -> Word64Type (Float32 任意态原版误返 Float64Type::Any)
+  ///   "Float32" -> Float32Type (Float32 任意态原版误返 Float64Type::Any)
+  ///   "Float64" -> Float64Type (Float32 任意态原版误返 Float64Type::Any)
+  fn parse_type(&mut self) -> Option<Type> { todo!() }
+  /// v8: ParseRange<T> — "[" from "," to "]", Word 可回绕不检序
+  fn parse_range<T: FromStr>(&mut self) -> Option<T> { todo!() }
+  /// v8: ParseSet<T> — sort + unique, CHECK 1 <= n <= kMaxSetSize
+  fn parse_set<T: Ord>(&mut self) -> Option<Vec<T>> { todo!() }
+  /// v8: ConsumeIf / IsNext — 前缀消费 (跳前导空白)
+  fn consume_if(&mut self, prefix: &str) -> bool { todo!() }
+  /// v8: ReadValue<T> — 按类型 sto* 解析, read==0 为失败
+  fn read_value<T: FromStr>(&mut self) -> Option<T> { todo!() }
+}

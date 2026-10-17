@@ -1,0 +1,144 @@
+// 由 tool/src/maglev/nodes.js 从 v8/src/maglev/maglev-ir.h, src/maglev/maglev-ir.cc, src/maglev/maglev-ir-inl.h 生成; 修订就地改, 复跑覆盖
+// 节点类层级 173 + 输入数表 + 控制节点
+
+//! 层级: NodeBase → Node → ValueNode → FixedInputValueNodeT<N>/VarargsNodeT<M>;
+//!   非值节点 → FixedInputNodeT<N>; 控制节点独立层级 (Unconditional/Conditional/Terminal)。
+//! 修订: 固定输入转 [ValueNode; N] 定长数组, 变参转切片; N 以本表为准。
+
+// ── 基类 (5; 对齐 C++ 继承链, Rust 转组合 + trait) ──
+//   BASE NodeBase → Node(align 8) → ValueNode
+//   BASE NodeTMixin → FixedInputNodeTMixin / VarargsNodeTMixin
+
+// ── 固定输入节点 (122; 类名=输入数, 修订转定长数组) ──
+//   FIXED AllocationBlock 0
+//   FIXED ArgumentsElements 1
+//   FIXED ArgumentsLength 0
+//   FIXED AssertInt32 2
+//   FIXED AssertPeeled 0
+//   FIXED AssertRangeFloat64 1
+//   FIXED AssertRangeInt32 1
+//   FIXED AssumeMap 1
+//   FIXED BigIntCompare 2
+//   FIXED BigIntNegate 1
+//   FIXED CallWithArrayLike 4
+//   FIXED CheckDynamicValue 2
+//   FIXED CheckFloat64IsSmi 1
+//   FIXED CheckFloat64SameValue 1
+//   FIXED CheckHeapObject 1
+//   FIXED CheckHomomorphicMap 1
+//   FIXED CheckInstanceType 1
+//   FIXED CheckInt32Condition 2
+//   FIXED CheckInt32IsSmi 1
+//   FIXED CheckIntPtrIsSmi 1
+//   FIXED CheckJSDataViewBounds 2
+//   FIXED CheckMaglevType 1
+//   FIXED CheckMaps 1
+//   FIXED CheckNotHole 1
+//   FIXED CheckNotUndefined 1
+//   FIXED CheckNumber 1
+//   FIXED CheckSmi 1
+//   FIXED CheckString 1
+//   FIXED CheckStringOrOddball 1
+//   FIXED CheckSymbol 1
+//   FIXED CheckTypedArrayBounds 2
+//   FIXED CheckTypedArrayValid 1
+//   FIXED CheckUint32IsSmi 1
+//   FIXED CheckValue 1
+//   FIXED CheckValueEqualsInt32 1
+//   FIXED ConsStringMap 2
+//   FIXED ConstantGapMove 0
+//   FIXED ConvertReceiver 1
+//   FIXED CreateArrayLiteral 0
+//   FIXED CreateClosure 1
+//   FIXED Dead 0
+//   FIXED DeadValue 0
+//   FIXED DebugBreak 0
+//   FIXED DeleteProperty 3
+//   FIXED FastCreateClosure 1
+//   FIXED Float64Abs 1
+//   FIXED Float64Compare 2
+//   FIXED Float64Constant 0
+//   FIXED Float64Max 2
+//   FIXED Float64Min 2
+//   FIXED Float64Negate 1
+//   FIXED Float64Round 1
+//   FIXED Float64SameValue 2
+//   FIXED Float64Sqrt 1
+//   FIXED Float64ToBoolean 1
+//   FIXED ForInNext 5
+//   FIXED ForInPrepare 2
+//   FIXED FulfillPromise 2
+//   FIXED GapMove 0
+//   FIXED GetIterator 2
+//   FIXED GetKeyedGeneric 3
+//   FIXED GetTemplateObject 1
+//   FIXED HeapConstant 0
+//   FIXED HoleyFloat64IsHole 1
+//   FIXED Identity 1
+//   FIXED InitialValue 0
+//   FIXED InlinedAllocation 1
+//   FIXED Int32BitwiseNot 1
+//   FIXED Int32Compare 2
+//   FIXED Int32Constant 0
+//   FIXED Int32ToBoolean 1
+//   FIXED IntPtrConstant 0
+//   FIXED IntPtrToBoolean 1
+//   FIXED LoadContextSlot 1
+//   FIXED LoadFloat64 1
+//   FIXED LoadGlobal 1
+//   FIXED LoadInt32 1
+//   FIXED LoadNamedGeneric 2
+//   FIXED LoadTaggedField 1
+//   FIXED LogicalNot 1
+//   FIXED MapPrototypeGet 2
+//   FIXED MigrateMapIfNeeded 2
+//   FIXED NewConsString 3
+//   FIXED ObjectIsArray 1
+//   FIXED RegisterInput 0
+//   FIXED RestLength 0
+//   FIXED RootConstant 0
+//   FIXED SetKeyedGeneric 4
+//   FIXED SetNamedGeneric 3
+//   FIXED SetPendingMessage 1
+//   FIXED SetPrototypeHas 2
+//   FIXED SmiConstant 0
+//   FIXED StoreFloat64 2
+//   FIXED StoreGlobal 2
+//   FIXED StoreInt32 2
+//   FIXED StoreInt32ContextCell 2
+//   FIXED StoreMap 1
+//   FIXED StoreSmiContextCell 2
+//   FIXED StringAt 2
+//   FIXED StringConcat 2
+//   FIXED StringEqual 2
+//   FIXED StringIndexOf 3
+//   FIXED StringLength 1
+//   FIXED StringSlice 3
+//   FIXED StringSubstring 3
+//   FIXED TaggedEqual 2
+//   FIXED TaggedNotEqual 2
+//   FIXED TestInstanceOf 3
+//   FIXED TestTypeOf 1
+//   FIXED TestUndetectable 1
+//   FIXED ThrowIfNotCallable 1
+//   FIXED ToBoolean 1
+//   FIXED ToName 2
+//   FIXED ToNumberOrNumeric 1
+//   FIXED ToObject 2
+//   FIXED ToString 2
+//   FIXED Trap 0
+//   FIXED TrustedConstant 0
+//   FIXED TurbofanStaticAssert 1
+//   FIXED Uint32Constant 0
+//   FIXED VirtualObject 0
+//   FIXED name 2
+
+// ── 变参节点 (1; 类名=最少输入, 修订转切片) ──
+//   VARARGS GeneratorStore 2
+
+// ── 控制节点 (分支条件经 ConditionFor(Operation)/ConditionForNaN 映射) ──
+//   CTRL UnconditionalControlNode: Jump/CheckpointedJump/JumpLoop
+//   CTRL ConditionalControlNode: Switch + BranchIf* 全族 (见 opcodes.js)
+//   CTRL TerminalControlNode: Abort/Return/Deopt/Throw
+
+// 对数: 基类针 10 + 类总数 173 + 控制针 8 + 条件针 5 + 输入抽样 6 全过

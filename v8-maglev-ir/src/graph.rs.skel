@@ -1,0 +1,37 @@
+// 由 tool/src/maglev/graph.js 从 v8/src/maglev/maglev-graph.h, src/maglev/maglev-graph.cc, src/maglev/maglev-basic-block.h, src/maglev/maglev-phase.h, src/maglev/maglev-graph-labeller.h, src/maglev/maglev-graph-labeller.cc, src/maglev/maglev-graph-printer.h, src/maglev/maglev-graph-printer.cc, src/maglev/maglev-graph-serializer.h, src/maglev/maglev-graph-serializer.cc, src/maglev/maglev-graph-verifier.h 生成; 修订就地改, 复跑覆盖
+// Graph/Block/Phase 17 + 打印标注序列化校验
+
+//! 管线序即 Phase 枚举序 (kNone→kCodeGen); 打印/校验的不变量依赖此序, 修订禁重排。
+//! 破环登记: Graph 只认 Block/Node ID 与布局; broker/isolate 回调走窄 trait (禁 dyn):
+//!   pub trait MaglevGraphEnv { /* JSHeapBroker 只读面 */ }
+
+// ── MaglevPhase (17, 顺序即管线序) ──
+//   PHASE kNone
+//   PHASE kMaglevGraphBuilding
+//   PHASE kInlining
+//   PHASE kLoopPeeling
+//   PHASE kTruncationPropagation
+//   PHASE kTruncation
+//   PHASE kPostOptimizer
+//   PHASE kLoopOptimization
+//   PHASE kPrePhiUntagging
+//   PHASE kPhiUntagging
+//   PHASE kEscapeAnalysis
+//   PHASE kRangeAnalysis
+//   PHASE kAnyUseMarking
+//   PHASE kDeadNodeSweeping
+//   PHASE kDuringRegAlloc
+//   PHASE kRegAlloc
+//   PHASE kCodeGen
+
+// ── Graph (ZoneObject; blocks/osr_values/parameters 三表; OSR 经 compilation_unit) ──
+//   Graph::blocks/osr_values/parameters; is_osr(); Add/AddBlocksAt(重排 block id)
+
+// ── BasicBlock (kMerge/kEdgeSplit/kOther; merge 块才有 state/KNA) ──
+//   is_merge_block/has_state/successors(≤2)/first_id+control.id 区间断言
+
+// ── 打印·标注·序列化·校验 (修订阶段转 Rust 调试面, 非语义) ──
+//   MaglevGraphLabeller::PrintNodeLabel/PrintInput(has_regalloc_data 门)
+//   PrintGraph(os,graph,phase)/PrintGraphToFile; PrintMaglevGraphAsJSON; verifier
+
+// 对数: graph 7 + block 7 + phase 17 + 打印 6 全过

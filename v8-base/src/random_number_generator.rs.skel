@@ -1,0 +1,77 @@
+// 由 tool/src/base/random-number-generator.js 从 v8/src/base/utils/random-number-generator.h + .cc 生成; 修订就地改, 复跑覆盖
+
+// 常数: {"multiplier":"0x5deece66d","addend":"0xb","mask":"0xffffffffffff","murmur1":"0xFF51AFD7ED558CCD","murmur2":"0xC4CEB9FE1A85EC53"}
+// xorshift 区:
+  // Generate random numbers using xorshift128+.
+  static inline uint64_t XorShift128(uint64_t* state0, uint64_t* state1) {
+    uint64_t s1 = *state0;
+    uint64_t s0 = *state1;
+    *state0 = s0;
+    s1 ^= s1 << 23;
+    s1 ^= s1 >> 17;
+    s1 ^= s0;
+    s1 ^= s0 >> 26;
+    *state1 = s1;
+    return s0 + s1;
+  }
+  // LINT.ThenChange(/src/builtins/math.tq:xorshift128)
+
+  static uint64_t MurmurHash3(uint64_t);
+// NextInt 区:
+#endif  // V8_OS_CYGWIN || V8_OS_WIN
+}
+
+
+int RandomNumberGenerator::NextInt(int max) {
+  DCHECK_LT(0, max);
+
+  // Fast path if max is a power of 2.
+  if (bits::IsPowerOfTwo(max)) {
+    return static_cast<int>((max * static_cast<int64_t>(Next(31))) >> 31);
+  }
+
+  while (true) {
+    int rnd = Next(31);
+    int val = rnd % max;
+// NextSample 区:
+  // Choose to select or exclude, whatever needs fewer generator calls.
+  size_t smaller_part = static_cast<size_t>(
+      std::min(max - static_cast<uint64_t>(n), static_cast<uint64_t>(n)));
+  std::unordered_set<uint64_t> selected;
+
+  size_t counter = 0;
+  while (selected.size() != smaller_part && counter / 3 < smaller_part) {
+    uint64_t x = static_cast<uint64_t>(NextDouble() * max);
+    CHECK_LT(x, max);
+
+    selected.insert(x);
+    counter++;
+  }
+
+  if (selected.size() == smaller_part) {
+    if (smaller_part != n) {
+      return ComplementSample(selected, max);
+    }
+    return std::vector<uint64_t>(selected.begin(), selected.end());
+  }
+
+  // Failed to select numbers in smaller_part * 3 steps, try different approach.
+  return NextSampleSlow(max, n, selected);
+}
+
+std::vector<uint64_t> RandomNumberGenerator::NextSampleSlow(
+    uint64_t max, size_t n, const std::unordered_set<uint64_t>& excluded) {
+  CHECK_GE(max - excluded.size(), n);
+
+  std::vector<uint64_t> result;
+  result.reserve(max - excluded.size());
+
+  for (uint64_t i = 0; i < max; i++) {
+    if (!excluded.count(i)) {
+      result.push_back(i);
+    }
+  }
+
+  // Decrease result vector until it contains values to select or exclude,
+  // whatever needs fewer generator calls.
+  size_t larger_part = static_cast<size_t>(

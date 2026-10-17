@@ -1,0 +1,596 @@
+// 由 tool/src/heap/mark-compact.cc.js 从 v8/src/heap/mark-compact.{cc,inl.h} + mark-compact.h (锚) 生成; 修订就地改, 复跑覆盖
+// 疏散模式/压实启发式常量 + 全量方法骨架; 内部枚举在 mark_compact_enums.rs
+
+//! MarkCompactCollector 的机械规则面 (cc + inl)。
+//!
+//! - EvacuationMode: 疏散执行三态 (对象级新生→老生 / 页级新生→老生 / 老生→老生)
+//! - 压实启发式: 常规模式目标碎片率 70%, 单区目标时长 0.5ms;
+//!   reduce-memory / optimize-memory 模式由 5 个 compaction_* flag 驱动 (值属 flags 族)
+//! - 大函数体 (标记/清理/疏散/指针更新) 留签名骨架, 语义实现由 Developer 就地修订
+
+/// 疏散模式 (Evacuator::EvacuationMode, cc:4700)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum EvacuationMode {
+  /// kObjectsNewToOld
+  ObjectsNewToOld = 0,
+  /// kPageNewToOld
+  PageNewToOld = 1,
+  /// kObjectsOldToOld
+  ObjectsOldToOld = 2,
+}
+
+impl EvacuationMode {
+  /// 追踪名 — EvacuationModeName 的字符串面
+  /// v8: src/heap/mark-compact.cc:4706
+  #[must_use]
+  pub const fn trace_name(self) -> &'static str {
+    match self {
+      Self::ObjectsNewToOld => "objects-new-to-old",
+      Self::PageNewToOld => "page-new-to-old",
+      Self::ObjectsOldToOld => "objects-old-to-old",
+    }
+  }
+}
+
+/// 疏散模式选择 — ComputeEvacuationMode 的 1:1 转写
+/// (原注释: 判定序重要, will_be_promoted 必须先判)
+/// v8: src/heap/mark-compact.cc:4718 Evacuator::ComputeEvacuationMode
+#[must_use]
+pub const fn compute_evacuation_mode(will_be_promoted: bool, in_young_generation: bool) -> EvacuationMode {
+  if will_be_promoted {
+    EvacuationMode::PageNewToOld
+  } else if in_young_generation {
+    EvacuationMode::ObjectsNewToOld
+  } else {
+    EvacuationMode::ObjectsOldToOld
+  }
+}
+
+/// 常规模式目标碎片率 % (kTargetFragmentationPercent; cc:613 ComputeEvacuationHeuristics)
+pub const K_TARGET_FRAGMENTATION_PERCENT: i32 = 70;
+/// 单区 (页载荷) 目标压实时长 ms (kTargetMsPerArea, 原版 float; cc:618)
+pub const K_TARGET_MS_PER_AREA: f32 = 0.5;
+/// 压测中止抽查比例 (kFraction = 0.05; cc:1566 SetUpAbortEvacuationAtAddress 与
+/// cc:5202 EvacuatePagesInParallel 两处同值, 均仅 stress_compaction 路径)
+pub const K_STRESS_ABORT_FRACTION: f64 = 0.05;
+/// 标记工作表处理的截止检查间隔对象数 (kDeadlineCheckInterval; cc:2295)
+pub const K_DEADLINE_CHECK_INTERVAL: usize = 128;
+/// 字符串表分块上限 (kMaxStringTableChunks; cc:3136 ClearNonLiveReferences)
+pub const K_MAX_STRING_TABLE_CHUNKS: i32 = 8;
+/// 字符串表分块最小尺寸 (kMinStringTableChunkSize; cc:3137)
+pub const K_MIN_STRING_TABLE_CHUNK_SIZE: i32 = 1024;
+/// 指针更新并行任务上限 (kMaxPointerUpdateTasks; cc:5406)
+pub const K_MAX_POINTER_UPDATE_TASKS: usize = 8;
+
+// —— 方法签名骨架 (语义实现由 Developer 就地修订) ——
+
+/// MarkCompactCollector 方法骨架 (v8: src/heap/mark-compact.cc + mark-compact-inl.h)
+pub mod mark_compact_collector {
+  /// 原版签名: MarkCompactCollector::MarkCompactCollector(Heap* heap)
+  /// v8: src/heap/mark-compact.cc:300
+  pub fn mark_compact_collector() {
+    todo!("就地修订")
+  }
+  /// 原版签名: MarkCompactCollector::~MarkCompactCollector() = default; void MarkCompactCollector::TearDown()
+  /// v8: src/heap/mark-compact.cc:312
+  pub fn mark_compact_collector_v2() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::TearDown()
+  /// v8: src/heap/mark-compact.cc:314
+  pub fn tear_down() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::AddEvacuationCandidate(NormalPage* p)
+  /// v8: src/heap/mark-compact.cc:325
+  pub fn add_evacuation_candidate() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::StartCompaction(StartCompactionMode mode)
+  /// v8: src/heap/mark-compact.cc:349
+  pub fn start_compaction() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::StartMarking( std::shared_ptr<::heap::base::IncrementalMarkingSchedule> schedule)
+  /// v8: src/heap/mark-compact.cc:437
+  pub fn start_marking() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MaybeEnableBackgroundThreadsInCycle( CallOrigin origin)
+  /// v8: src/heap/mark-compact.cc:506
+  pub fn maybe_enable_background_threads_in_cycle() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::CollectGarbage()
+  /// v8: src/heap/mark-compact.cc:526
+  pub fn collect_garbage() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::VerifyMarkbitsAreClean(PagedSpaceBase* space)
+  /// v8: src/heap/mark-compact.cc:554
+  pub fn verify_markbits_are_clean() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::VerifyMarkbitsAreClean(NewSpace* space)
+  /// v8: src/heap/mark-compact.cc:561
+  pub fn verify_markbits_are_clean_v2() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::VerifyMarkbitsAreClean(LargeObjectSpace* space)
+  /// v8: src/heap/mark-compact.cc:573
+  pub fn verify_markbits_are_clean_v3() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::VerifyMarkbitsAreClean()
+  /// v8: src/heap/mark-compact.cc:583
+  pub fn verify_markbits_are_clean_v4() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ComputeEvacuationHeuristics( size_t area_size, int* target_fragmentation_percent, size_t* max_evacuated_bytes)
+  /// v8: src/heap/mark-compact.cc:596
+  pub fn compute_evacuation_heuristics() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::CollectEvacuationCandidates(PagedSpace* space)
+  /// v8: src/heap/mark-compact.cc:649
+  pub fn collect_evacuation_candidates() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::Prepare()
+  /// v8: src/heap/mark-compact.cc:800
+  pub fn prepare() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::FinishConcurrentMarking()
+  /// v8: src/heap/mark-compact.cc:825
+  pub fn finish_concurrent_marking() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::VerifyMarking()
+  /// v8: src/heap/mark-compact.cc:838
+  pub fn verify_marking() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::Finish()
+  /// v8: src/heap/mark-compact.cc:873
+  pub fn finish() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::SweepArrayBufferExtensions()
+  /// v8: src/heap/mark-compact.cc:959
+  pub fn sweep_array_buffer_extensions() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::IsUnmarkedHeapObject(Heap* heap, FullObjectSlot p)
+  /// v8: src/heap/mark-compact.cc:1901
+  pub fn is_unmarked_heap_object() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::IsUnmarkedSharedHeapObject(Heap* client_heap, FullObjectSlot p)
+  /// v8: src/heap/mark-compact.cc:1910
+  pub fn is_unmarked_shared_heap_object() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkRoots(RootVisitor* root_visitor)
+  /// v8: src/heap/mark-compact.cc:1923
+  pub fn mark_roots() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkRootsFromConservativeStack( RootVisitor* root_visitor)
+  /// v8: src/heap/mark-compact.cc:1970
+  pub fn mark_roots_from_conservative_stack() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkObjectsFromClientHeaps()
+  /// v8: src/heap/mark-compact.cc:1992
+  pub fn mark_objects_from_client_heaps() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkObjectsFromClientHeap(Isolate* client)
+  /// v8: src/heap/mark-compact.cc:2002
+  pub fn mark_objects_from_client_heap() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::MarkTransitiveClosureFixpoint()
+  /// v8: src/heap/mark-compact.cc:2141
+  pub fn mark_transitive_closure_fixpoint() {
+    todo!("就地修订")
+  }
+  /// 原版签名: template <MarkCompactCollector::MarkingWorklistProcessingMode mode> bool MarkCompactCollector::ReachTransitiveClosureWithEmbedder()
+  /// v8: src/heap/mark-compact.cc:2229
+  pub fn reach_transitive_closure_with_embedder() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkTransitiveClosureLinear()
+  /// v8: src/heap/mark-compact.cc:2248
+  pub fn mark_transitive_closure_linear() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ProcessCppHeapWorklist()
+  /// v8: src/heap/mark-compact.cc:2286
+  pub fn process_cpp_heap_worklist() {
+    todo!("就地修订")
+  }
+  /// 原版签名: template <MarkCompactCollector::MarkingWorklistProcessingMode mode> std::pair<size_t, size_t> MarkCompactCollector::ProcessMarkingWorklist( v8::base::TimeDelta max_duration, size_t max_bytes_to_process)
+  /// v8: src/heap/mark-compact.cc:2300
+  pub fn process_marking_worklist() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::ProcessEphemeron(Tagged<HeapObject> key, Tagged<HeapObject> value)
+  /// v8: src/heap/mark-compact.cc:2374
+  pub fn process_ephemeron() {
+    todo!("就地修订")
+  }
+  /// 原版签名: MarkCompactCollector::ApplyEphemeronSemantics(Tagged<HeapObject> key, Tagged<HeapObject> value)
+  /// v8: src/heap/mark-compact.cc:2387
+  pub fn apply_ephemeron_semantics() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::VerifyEphemeronMarking()
+  /// v8: src/heap/mark-compact.cc:2421
+  pub fn verify_ephemeron_marking() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ProcessTopOptimizedFrame(ObjectVisitor* visitor, Isolate* isolate)
+  /// v8: src/heap/mark-compact.cc:2447
+  pub fn process_top_optimized_frame() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::RecordObjectStats()
+  /// v8: src/heap/mark-compact.cc:2467
+  pub fn record_object_stats() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::RetainMaps()
+  /// v8: src/heap/mark-compact.cc:2514
+  pub fn retain_maps() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkLiveObjects()
+  /// v8: src/heap/mark-compact.cc:2564
+  pub fn mark_live_objects() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearNonLiveReferences()
+  /// v8: src/heap/mark-compact.cc:3082
+  pub fn clear_non_live_references() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkDependentCodeForDeoptimization()
+  /// v8: src/heap/mark-compact.cc:3525
+  pub fn mark_dependent_code_for_deoptimization() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearPotentialSimpleMapTransition( Tagged<Map> dead_target)
+  /// v8: src/heap/mark-compact.cc:3560
+  pub fn clear_potential_simple_map_transition() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearPotentialSimpleMapTransition( Tagged<Map> map, Tagged<Map> dead_target)
+  /// v8: src/heap/mark-compact.cc:3576
+  pub fn clear_potential_simple_map_transition_v2() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::SpecialClearMapSlot(Tagged<HeapObject> host, Tagged<Map> map, HeapObjectSlot slot)
+  /// v8: src/heap/mark-compact.cc:3591
+  pub fn special_clear_map_slot() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::FlushBytecodeFromSFI( Tagged<SharedFunctionInfo> shared_info)
+  /// v8: src/heap/mark-compact.cc:3625
+  pub fn flush_bytecode_from_sfi() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ProcessOldCodeCandidates()
+  /// v8: src/heap/mark-compact.cc:3730
+  pub fn process_old_code_candidates() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::ProcessOldBytecodeSFI( Tagged<SharedFunctionInfo> flushing_candidate)
+  /// v8: src/heap/mark-compact.cc:3814
+  pub fn process_old_bytecode_sfi() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::ProcessOldBaselineSFI( Tagged<SharedFunctionInfo> flushing_candidate)
+  /// v8: src/heap/mark-compact.cc:3838
+  pub fn process_old_baseline_sfi() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::FlushSFI(Tagged<SharedFunctionInfo> sfi, bool bytecode_already_decompiled)
+  /// v8: src/heap/mark-compact.cc:3892
+  pub fn flush_sfi() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearFlushedJsFunctions()
+  /// v8: src/heap/mark-compact.cc:3910
+  pub fn clear_flushed_js_functions() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearFullMapTransitions()
+  /// v8: src/heap/mark-compact.cc:3925
+  pub fn clear_full_map_transitions() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::TransitionArrayNeedsCompaction( Tagged<TransitionArray> transitions, int num_transitions)
+  /// v8: src/heap/mark-compact.cc:3966
+  pub fn transition_array_needs_compaction() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::CompactTransitionArray( Tagged<Map> map, Tagged<TransitionArray> transitions, Tagged<DescriptorArray> descriptors)
+  /// v8: src/heap/mark-compact.cc:4000
+  pub fn compact_transition_array() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::TrimDescriptorArray( Tagged<Map> map, Tagged<DescriptorArray> descriptors)
+  /// v8: src/heap/mark-compact.cc:4118
+  pub fn trim_descriptor_array() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearWeakCollections()
+  /// v8: src/heap/mark-compact.cc:4145
+  pub fn clear_weak_collections() {
+    todo!("就地修订")
+  }
+  /// 原版签名: template <typename TObjectAndSlot, typename TMaybeSlot> void MarkCompactCollector::ClearWeakReferences( WeakObjects::WeakObjectWorklist<TObjectAndSlot>::Local& worklist, Tagged<HeapObjectReference> cleared_weak_ref)
+  /// v8: src/heap/mark-compact.cc:4172
+  pub fn clear_weak_references() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearTrivialWeakReferences()
+  /// v8: src/heap/mark-compact.cc:4201
+  pub fn clear_trivial_weak_references() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearTrustedWeakReferences()
+  /// v8: src/heap/mark-compact.cc:4207
+  pub fn clear_trusted_weak_references() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ClearNonTrivialWeakReferences()
+  /// v8: src/heap/mark-compact.cc:4213
+  pub fn clear_non_trivial_weak_references() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ProcessJSWeakRefs(JobDelegate* delegate)
+  /// v8: src/heap/mark-compact.cc:4245
+  pub fn process_jsweak_refs() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::ShouldRecordRelocSlot(Tagged<InstructionStream> host, RelocInfo* rinfo, Tagged<HeapObject> target)
+  /// v8: src/heap/mark-compact.cc:4317
+  pub fn should_record_reloc_slot() {
+    todo!("就地修订")
+  }
+  /// 原版签名: MarkCompactCollector::ProcessRelocInfo(Tagged<InstructionStream> host, RelocInfo* rinfo, Tagged<HeapObject> target)
+  /// v8: src/heap/mark-compact.cc:4328
+  pub fn process_reloc_info() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::RecordRelocSlot(Tagged<InstructionStream> host, RelocInfo* rinfo, Tagged<HeapObject> target)
+  /// v8: src/heap/mark-compact.cc:4373
+  pub fn record_reloc_slot() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::EvacuatePrologue()
+  /// v8: src/heap/mark-compact.cc:4641
+  pub fn evacuate_prologue() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::EvacuateEpilogue()
+  /// v8: src/heap/mark-compact.cc:4665
+  pub fn evacuate_epilogue() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::PinPreciseRootsIfNeeded()
+  /// v8: src/heap/mark-compact.cc:5137
+  pub fn pin_precise_roots_if_needed() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::EvacuatePagesInParallel()
+  /// v8: src/heap/mark-compact.cc:5161
+  pub fn evacuate_pages_in_parallel() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::Evacuate()
+  /// v8: src/heap/mark-compact.cc:5281
+  pub fn evacuate() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::UpdatePointersAfterEvacuation()
+  /// v8: src/heap/mark-compact.cc:5781
+  pub fn update_pointers_after_evacuation() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::UpdatePointersInClientHeaps()
+  /// v8: src/heap/mark-compact.cc:5879
+  pub fn update_pointers_in_client_heaps() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::UpdatePointersInClientHeap(Isolate* client)
+  /// v8: src/heap/mark-compact.cc:5887
+  pub fn update_pointers_in_client_heap() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::UpdatePointersInPointerTables()
+  /// v8: src/heap/mark-compact.cc:5946
+  pub fn update_pointers_in_pointer_tables() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ReportAbortedEvacuationCandidateDueToOOM( Address failed_start, NormalPage* page)
+  /// v8: src/heap/mark-compact.cc:6010
+  pub fn report_aborted_evacuation_candidate_due_to_oom() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ReportAbortedEvacuationCandidateDueToFlags( NormalPage* page)
+  /// v8: src/heap/mark-compact.cc:6017
+  pub fn report_aborted_evacuation_candidate_due_to_flags() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ReportAbortedEvacuationCandidateDueToRunningCode( NormalPage* page)
+  /// v8: src/heap/mark-compact.cc:6028
+  pub fn report_aborted_evacuation_candidate_due_to_running_code() {
+    todo!("就地修订")
+  }
+  /// 原版签名: size_t MarkCompactCollector::PostProcessAbortedEvacuationCandidates()
+  /// v8: src/heap/mark-compact.cc:6070
+  pub fn post_process_aborted_evacuation_candidates() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ReleasePage(PagedSpaceBase* space, NormalPage* page)
+  /// v8: src/heap/mark-compact.cc:6108
+  pub fn release_page() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::StartSweepNewSpace()
+  /// v8: src/heap/mark-compact.cc:6135
+  pub fn start_sweep_new_space() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::ResetAndRelinkBlackAllocatedPage(PagedSpace* space, NormalPage* page)
+  /// v8: src/heap/mark-compact.cc:6160
+  pub fn reset_and_relink_black_allocated_page() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::StartSweepSpace(PagedSpace* space)
+  /// v8: src/heap/mark-compact.cc:6175
+  pub fn start_sweep_space() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::SweepLargeSpace(LargeObjectSpace* space)
+  /// v8: src/heap/mark-compact.cc:6233
+  pub fn sweep_large_space() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::Sweep()
+  /// v8: src/heap/mark-compact.cc:6270
+  pub fn sweep() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkObject( Tagged<HeapObject> obj, MarkingHelper::WorklistTarget target_worklist)
+  /// v8: src/heap/mark-compact.inl.h:27
+  pub fn mark_object() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::MarkRootObject( Root root, Tagged<HeapObject> obj, MarkingHelper::WorklistTarget target_worklist)
+  /// v8: src/heap/mark-compact.inl.h:34
+  pub fn mark_root_object() {
+    todo!("就地修订")
+  }
+  /// 原版签名: template <typename THeapObjectSlot, RecordYoungSlot kRecordYoung> void MarkCompactCollector::RecordSlot(Tagged<HeapObject> host, THeapObjectSlot slot, Tagged<HeapObject> value)
+  /// v8: src/heap/mark-compact.inl.h:58
+  pub fn record_slot() {
+    todo!("就地修订")
+  }
+  /// 原版签名: template <typename THeapObjectSlot, RecordYoungSlot kRecordYoung> void MarkCompactCollector::RecordSlot(MemoryChunk* host_chunk, THeapObjectSlot slot, Tagged<HeapObject> value)
+  /// v8: src/heap/mark-compact.inl.h:70
+  pub fn record_slot_v2() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void MarkCompactCollector::AddTransitionArray(Tagged<TransitionArray> array)
+  /// v8: src/heap/mark-compact.inl.h:113
+  pub fn add_transition_array() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool MarkCompactCollector::IsOnEvacuationCandidate(Tagged<MaybeObject> obj)
+  /// v8: src/heap/mark-compact.inl.h:118
+  pub fn is_on_evacuation_candidate() {
+    todo!("就地修订")
+  }
+}
+
+/// RootMarkingVisitor 方法骨架 (v8: src/heap/mark-compact.cc + mark-compact-inl.h)
+pub mod root_marking_visitor {
+  /// 原版签名: RootMarkingVisitor::RootMarkingVisitor(MarkCompactCollector* collector)
+  /// v8: src/heap/mark-compact.cc:6339
+  pub fn root_marking_visitor() {
+    todo!("就地修订")
+  }
+  /// 原版签名: RootMarkingVisitor::~RootMarkingVisitor() = default; void RootMarkingVisitor::VisitRunningCode( FullObjectSlot code_slot, FullObjectSlot istream_or_smi_zero_slot)
+  /// v8: src/heap/mark-compact.cc:6342
+  pub fn root_marking_visitor_v2() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void RootMarkingVisitor::VisitRunningCode( FullObjectSlot code_slot, FullObjectSlot istream_or_smi_zero_slot)
+  /// v8: src/heap/mark-compact.cc:6344
+  pub fn visit_running_code() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void RootMarkingVisitor::VisitRootPointer(Root root, const char* description, FullObjectSlot p)
+  /// v8: src/heap/mark-compact.inl.h:122
+  pub fn visit_root_pointer() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void RootMarkingVisitor::VisitRootPointers(Root root, const char* description, FullObjectSlot start, FullObjectSlot end)
+  /// v8: src/heap/mark-compact.inl.h:128
+  pub fn visit_root_pointers() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void RootMarkingVisitor::MarkObjectByPointer(Root root, FullObjectSlot p)
+  /// v8: src/heap/mark-compact.inl.h:136
+  pub fn mark_object_by_pointer() {
+    todo!("就地修订")
+  }
+}
+
+/// Evacuator 方法骨架 (v8: src/heap/mark-compact.cc + mark-compact-inl.h)
+pub mod evacuator {
+  /// 原版签名: void Evacuator::EvacuatePage(MutablePage* page)
+  /// v8: src/heap/mark-compact.cc:4780
+  pub fn evacuate_page() {
+    todo!("就地修订")
+  }
+  /// 原版签名: void Evacuator::Finalize()
+  /// v8: src/heap/mark-compact.cc:4807
+  pub fn finalize() {
+    todo!("就地修订")
+  }
+  /// 原版签名: bool Evacuator::RawEvacuatePage(MutablePage* page)
+  /// v8: src/heap/mark-compact.cc:4861
+  pub fn raw_evacuate_page() {
+    todo!("就地修订")
+  }
+}
+
+/// LiveObjectVisitor 方法骨架 (v8: src/heap/mark-compact.cc + mark-compact-inl.h)
+pub mod live_object_visitor {
+  /// 原版签名: template <class Visitor> bool LiveObjectVisitor::VisitMarkedObjects(NormalPage* page, Visitor* visitor, Tagged<HeapObject>* failed_object)
+  /// v8: src/heap/mark-compact.cc:4836
+  pub fn visit_marked_objects() {
+    todo!("就地修订")
+  }
+  /// 原版签名: template <class Visitor> void LiveObjectVisitor::VisitMarkedObjectsNoFail(NormalPage* page, Visitor* visitor)
+  /// v8: src/heap/mark-compact.cc:4850
+  pub fn visit_marked_objects_no_fail() {
+    todo!("就地修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(K_TARGET_FRAGMENTATION_PERCENT == 70);
+  assert!(K_TARGET_MS_PER_AREA == 0.5);
+  assert!(K_STRESS_ABORT_FRACTION == 0.05);
+  assert!(K_DEADLINE_CHECK_INTERVAL == 128);
+  assert!(K_MAX_STRING_TABLE_CHUNKS == 8);
+  assert!(K_MIN_STRING_TABLE_CHUNK_SIZE == 1024);
+  assert!(K_MAX_POINTER_UPDATE_TASKS == 8);
+  assert!(matches!(compute_evacuation_mode(true, true), EvacuationMode::PageNewToOld));
+  assert!(matches!(compute_evacuation_mode(true, false), EvacuationMode::PageNewToOld));
+  assert!(matches!(compute_evacuation_mode(false, true), EvacuationMode::ObjectsNewToOld));
+  assert!(matches!(compute_evacuation_mode(false, false), EvacuationMode::ObjectsOldToOld));
+};
+
+// —— 字符串面对数 (str 相等非 const, 挂接后随 crate 测试跑; 暂以标准 #[test] 占位,
+//    挂接时由 Developer 改写为仓库规范测试样式) ——
+#[cfg(test)]
+mod generated_checks {
+  use super::EvacuationMode;
+
+  #[test]
+  fn evacuation_mode_names() {
+    assert_eq!(EvacuationMode::ObjectsNewToOld.trace_name(), "objects-new-to-old");
+    assert_eq!(EvacuationMode::PageNewToOld.trace_name(), "page-new-to-old");
+    assert_eq!(EvacuationMode::ObjectsOldToOld.trace_name(), "objects-old-to-old");
+  }
+}

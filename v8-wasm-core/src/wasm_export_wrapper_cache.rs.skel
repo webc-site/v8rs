@@ -1,0 +1,73 @@
+// 由 tool/src/wasm/wasm-export-wrapper-cache.h.js 从 v8/src/wasm/wasm-export-wrapper-cache.{h,cc} 生成; 修订就地改, 复跑覆盖
+// JS-to-Wasm wrapper 的 WeakFixedArray 开地址缓存
+
+//! Isolate 级 JS-to-Wasm wrapper 缓存: WeakFixedArray 开地址表, key=Smi(canonical index)。
+/// v8: src/wasm/wasm-export-wrapper-cache.h WasmExportWrapperCache
+
+/// 布局参数
+/// v8: src/wasm/wasm-export-wrapper-cache.h 私有常量
+pub mod layout {
+    /// v8: kUnused = -1 (空槽哨兵, Smi)
+    pub const UNUSED: i32 = -1;
+    /// v8: kNumUsedElementsIndex = 0 (slot0 存已用条目数)
+    pub const NUM_USED_ELEMENTS_INDEX: usize = 0;
+    /// v8: kReservedSlots = 1
+    pub const RESERVED_SLOTS: usize = 1;
+    /// v8: kSlotsPerEntry = 2 (key Smi + weak value)
+    pub const SLOTS_PER_ENTRY: usize = 2;
+}
+
+/// 初始桶数
+/// v8: src/wasm/wasm-export-wrapper-cache.cc EnsureCapacity kInitialCapacity
+pub const INITIAL_CAPACITY: u32 = 16;
+
+/// 负载上限: used < capacity/2 即满足, 否则翻倍
+/// v8: src/wasm/wasm-export-wrapper-cache.cc EnsureCapacity
+pub const LOAD_FACTOR_NUM: u32 = 1;
+pub const LOAD_FACTOR_DEN: u32 = 2;
+
+/// hash = canonical type index 本身 (身份即键)
+/// v8: src/wasm/wasm-export-wrapper-cache.h Hash
+pub fn hash(sig_index: u32) -> u32 {
+    sig_index
+}
+
+/// 首探: 位掩码取模 (容量恒 2 的幂)
+/// v8: src/wasm/wasm-export-wrapper-cache.h FirstProbe
+pub fn first_probe(hash: u32, capacity: u32) -> u32 {
+    hash & (capacity - 1)
+}
+
+/// 后续探测: (last + n) & (capacity-1), n 从 1 递增
+/// v8: src/wasm/wasm-export-wrapper-cache.h NextProbe
+pub fn next_probe(last: u32, number: u32, capacity: u32) -> u32 {
+    (last.wrapping_add(number)) & (capacity - 1)
+}
+
+/// 桶号 → WeakFixedArray 槽位: reserved + entry*2
+/// v8: src/wasm/wasm-export-wrapper-cache.h ToArraySlot
+pub fn to_array_slot(entry: usize) -> usize {
+    layout::RESERVED_SLOTS + entry * layout::SLOTS_PER_ENTRY
+}
+
+/// 数组总长 = capacity*2 + 1; 反向 Capacity = len >> 1
+/// v8: src/wasm/wasm-export-wrapper-cache.cc New / Capacity
+pub fn array_length_for(capacity: u32) -> u32 {
+    capacity * layout::SLOTS_PER_ENTRY as u32 + layout::RESERVED_SLOTS as u32
+}
+pub fn capacity_of(array_length: u32) -> u32 {
+    array_length >> 1
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(layout::UNUSED, -1);
+    assert_eq!(INITIAL_CAPACITY, 16);
+    assert_eq!(array_length_for(16), 33);
+    assert_eq!(capacity_of(33), 16);
+    assert_eq!(to_array_slot(0), 1);
+    assert_eq!(to_array_slot(5), 11);
+    assert_eq!(first_probe(0x1234, 16), 0x4);
+    assert_eq!(next_probe(15, 1, 16), 0);
+    assert!(INITIAL_CAPACITY.is_power_of_two());
+};

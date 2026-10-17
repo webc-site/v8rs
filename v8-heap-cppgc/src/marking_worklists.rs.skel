@@ -1,0 +1,120 @@
+// 由 tool/src/heap/cppgc-internal/marking-worklists.js 从 v8/src/heap/cppgc-internal/marking-worklists.h + src/heap/cppgc-internal/marking-worklists.cc 生成; 修订就地改, 复跑覆盖
+// 标记期工作列表族 + 外部集合型
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/marking-worklists.h MarkingWorklists::kMutatorThreadId
+pub const K_MUTATOR_THREAD_ID: i32 = 0;
+
+/// v8: MarkingWorklists::MarkingItem = cppgc::TraceDescriptor
+pub type MarkingItem = TraceDescriptor;
+
+/// v8: src/heap/cppgc-internal/marking-worklists.h MarkingWorklists::WeakCallbackItem
+pub struct WeakCallbackItem {
+    pub callback: WeakCallback,
+    pub parameter: *const core::ffi::c_void,
+}
+
+/// v8: src/heap/cppgc-internal/marking-worklists.h MarkingWorklists::ConcurrentMarkingBailoutItem
+pub struct ConcurrentMarkingBailoutItem {
+    pub parameter: *const core::ffi::c_void,
+    pub callback: TraceCallback,
+    /// v8: bailedout_size
+    pub bailedout_size: usize,
+}
+
+/// v8: src/heap/cppgc-internal/marking-worklists.h MarkingWorklists::EphemeronPairItem
+pub struct EphemeronPairItem {
+    pub key: *const core::ffi::c_void,
+    pub value: *const core::ffi::c_void,
+    pub value_desc: TraceDescriptor,
+}
+
+pub mod worklists {
+    /// v8: MarkingWorklist — Worklist<MarkingItem, 512>
+    pub type MarkingWorklist = Worklist<MarkingItem, 512>;
+    /// v8: PreviouslyNotFullyConstructedWorklist — Worklist<HeapObjectHeader*, 16>
+    pub type PreviouslyNotFullyConstructedWorklist = Worklist<*mut HeapObjectHeader, 16>;
+    /// v8: WeakCallbackWorklist — Worklist<WeakCallbackItem, 64>
+    pub type WeakCallbackWorklist = Worklist<WeakCallbackItem, 64>;
+    /// v8: WeakCustomCallbackWorklist — Worklist<WeakCallbackItem, 16>
+    pub type WeakCustomCallbackWorklist = Worklist<WeakCallbackItem, 16>;
+    /// v8: WriteBarrierWorklist — Worklist<HeapObjectHeader*, 64>
+    pub type WriteBarrierWorklist = Worklist<*mut HeapObjectHeader, 64>;
+    /// v8: ConcurrentMarkingBailoutWorklist — Worklist<ConcurrentMarkingBailoutItem, 64>
+    pub type ConcurrentMarkingBailoutWorklist = Worklist<ConcurrentMarkingBailoutItem, 64>;
+    /// v8: EphemeronPairsWorklist — Worklist<EphemeronPairItem, 64>
+    pub type EphemeronPairsWorklist = Worklist<EphemeronPairItem, 64>;
+    /// v8: RetraceMarkedObjectsWorklist — Worklist<HeapObjectHeader*, 16>
+    pub type RetraceMarkedObjectsWorklist = Worklist<*mut HeapObjectHeader, 16>;
+}
+
+/// v8: src/heap/cppgc-internal/marking-worklists.h MarkingWorklists::ExternalMarkingWorklist
+/// 互斥 hash_set; kNonAtomic 时 ConditionalMutexGuard 为空壳 (免锁)。
+pub struct ExternalMarkingWorklist {
+    /// v8: lock_
+    lock: Mutex,
+    /// v8: objects_
+    objects: HashSet<*mut HeapObjectHeader>,
+}
+
+impl ExternalMarkingWorklist {
+    /// v8: ExternalMarkingWorklist::Push
+    pub fn push(&mut self, object: *mut HeapObjectHeader) { todo!("ConditionalMutexGuard + insert") }
+    /// v8: ExternalMarkingWorklist::Contains
+    pub fn contains(&mut self, object: *mut HeapObjectHeader) -> bool { todo!("find != end") }
+    /// v8: ExternalMarkingWorklist::Extract — swap 出全集
+    pub fn extract(&mut self) -> HashSet<*mut HeapObjectHeader> { todo!("swap") }
+    /// v8: ExternalMarkingWorklist::Clear
+    pub fn clear(&mut self) { todo!("clear") }
+    /// v8: ExternalMarkingWorklist::IsEmpty
+    pub fn is_empty(&mut self) -> bool { todo!("empty") }
+}
+
+/// v8: src/heap/cppgc-internal/marking-worklists.h MarkingWorklists
+pub struct MarkingWorklists {
+    /// v8: marking_worklist_
+    pub marking_worklist: worklists::MarkingWorklist,
+    /// v8: not_fully_constructed_worklist_ (External)
+    pub not_fully_constructed_worklist: ExternalMarkingWorklist,
+    /// v8: previously_not_fully_constructed_worklist_
+    pub previously_not_fully_constructed_worklist: worklists::PreviouslyNotFullyConstructedWorklist,
+    /// v8: write_barrier_worklist_
+    pub write_barrier_worklist: worklists::WriteBarrierWorklist,
+    /// v8: weak_container_callback_worklist_
+    pub weak_container_callback_worklist: worklists::WeakCallbackWorklist,
+    /// v8: parallel_weak_callback_worklist_
+    pub parallel_weak_callback_worklist: worklists::WeakCallbackWorklist,
+    /// v8: weak_custom_callback_worklist_
+    pub weak_custom_callback_worklist: worklists::WeakCustomCallbackWorklist,
+    /// v8: concurrent_marking_bailout_worklist_
+    pub concurrent_marking_bailout_worklist: worklists::ConcurrentMarkingBailoutWorklist,
+    /// v8: discovered_ephemeron_pairs_worklist_
+    pub discovered_ephemeron_pairs_worklist: worklists::EphemeronPairsWorklist,
+    /// v8: ephemeron_pairs_for_processing_worklist_
+    pub ephemeron_pairs_for_processing_worklist: worklists::EphemeronPairsWorklist,
+    /// v8: weak_containers_worklist_ (External)
+    pub weak_containers_worklist: ExternalMarkingWorklist,
+    /// v8: retrace_marked_objects_worklist_
+    pub retrace_marked_objects_worklist: worklists::RetraceMarkedObjectsWorklist,
+}
+
+impl MarkingWorklists {
+    /// v8: src/heap/cppgc-internal/marking-worklists.cc MarkingWorklists::ClearForTesting
+    /// 11 项逐一 Clear (marking/not_fully/previously/write_barrier/weak_container/
+    /// parallel_weak/weak_custom/concurrent_bailout/discovered_ephemeron/
+    /// ephemeron_processing/retrace)。
+    pub fn clear_for_testing(&mut self) {
+        self.marking_worklist.clear();
+        self.not_fully_constructed_worklist.clear();
+        self.previously_not_fully_constructed_worklist.clear();
+        self.write_barrier_worklist.clear();
+        self.weak_container_callback_worklist.clear();
+        self.parallel_weak_callback_worklist.clear();
+        self.weak_custom_callback_worklist.clear();
+        self.concurrent_marking_bailout_worklist.clear();
+        self.discovered_ephemeron_pairs_worklist.clear();
+        self.ephemeron_pairs_for_processing_worklist.clear();
+        self.retrace_marked_objects_worklist.clear();
+    }
+}

@@ -1,0 +1,25 @@
+// 由 tool/src/heap/memory-chunk-inl.h.js 从 v8/src/heap/memory-chunk-inl.h 生成; 修订就地改, 复跑覆盖
+// MemoryChunk inl 台账: 定义 10 逐项行号双校准 (名+行号)
+
+// ══ memory-chunk-inl.h 处置台账 (实体行号实测) ══
+// inl:19   BasePage* MemoryChunk::MetadataImpl(const Isolate* isolate) {
+// inl:45   const BasePage* MemoryChunk::MetadataImpl(const Isolate* isolate) const {
+// inl:49   BasePage* MemoryChunk::Metadata(const Isolate* isolate) {
+// inl:53   const BasePage* MemoryChunk::Metadata(const Isolate* isolate) const {
+// inl:57   BasePage* MemoryChunk::Metadata() {
+// inl:61   const BasePage* MemoryChunk::Metadata() const {
+// inl:65   BasePage* MemoryChunk::MetadataNoIsolateCheck() {
+// inl:69   const BasePage* MemoryChunk::MetadataNoIsolateCheck() const {
+// inl:73   bool MemoryChunk::IsEvacuationCandidate() const {
+// inl:83   V8_INLINE bool MemoryChunk::InReadOnlySpace() const {
+// Metadata 族 (MetadataImpl×2 + Metadata×4 + MetadataNoIsolateCheck×2):
+//   依赖 heap::BasePage (base-page.h 他票) + IsolateGroup 表 + Isolate →
+//   Rust: 前向声明 opaque BasePage; 表访问面 = MetadataTableEnv trait (与 .cc 共用);
+//   实体推迟双引用: 原版 inl:18-71 ↔ memory_chunk.rs 「推迟台账」区
+// IsEvacuationCandidate inl:73-81 — 目标配置仅剩 flag 读取 (DEBUG DCHECK 双检区剥除, 见展开实测) → 落地
+// InReadOnlySpace inl:83-95 — 非连续 RO 分支 (READ_ONLY_HEAP flag) 落地;
+//   连续 RO 地址掩码分支 (CONTIGUOUS_COMPRESSED_READ_ONLY_SPACE, 非目标) 登记不实现;
+//   TSAN 前置 SynchronizedLoad inl:86 空实现承接 (展开实测调用点保留)
+// ── rs 侧落地锚 (HC-1R2a 实测台账) ──
+// Landed @ v8-heap-core/src/memory_chunk.rs: inl 可迁面 (IsEvacuationCandidate/InReadOnlySpace 非连续分支 +
+//   inl:86 前置空操作) 全落; Metadata 族 8 定义 = 推迟台账 1 (inl:18-71 双行号照录), 连续 RO 分支 = 推迟台账 8 侧翼。

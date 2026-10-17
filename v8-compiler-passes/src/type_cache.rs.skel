@@ -1,0 +1,226 @@
+// 由 tool/src/compiler/type-cache.js 从 v8/src/compiler/type-cache.h + type-cache.cc 生成; 修订就地改, 复跑覆盖
+// 全图共享的单例/区间类型缓存
+
+//! type-cache — TypeCache 常量表 (68 项)
+//!
+//! RHS 形态对数: CreateRange<T> 4 /
+//! CreateRange(数字) 10 / CreateRange(常量域) 15 /
+//! Type::工厂 9 / 别名 4 / Union 23 /
+//! 域引用 0。
+
+/// 原版 TypeCache — 单例缓存 (LazyLock, zone 无关)
+pub struct TypeCache {
+  // —— 全表 (68 项; RHS 见 v8 锚, Developer 依 turbofan_types 常量填值) ——
+  /// kInt8 = CreateRange<int8_t>()
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub INT8: Type,
+  /// kUint8 = CreateRange<uint8_t>()
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub UINT8: Type,
+  /// kUint8Clamped = kUint8
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub UINT8_CLAMPED: Type,
+  /// kUint8OrMinusZeroOrNaN = Type::Union(kUint8, Type::MinusZeroOrNaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub UINT8_OR_MINUS_ZERO_OR_NA_N: Type,
+  /// kInt16 = CreateRange<int16_t>()
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub INT16: Type,
+  /// kUint16 = CreateRange<uint16_t>()
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub UINT16: Type,
+  /// kUnsigned31 = Type::Unsigned31()
+  /// v8: src/compiler/turbofan-types.h Type::Unsigned31
+  pub UNSIGNED31: Type,
+  /// kInt32 = Type::Signed32()
+  /// v8: src/compiler/turbofan-types.h Type::Signed32
+  pub INT32: Type,
+  /// kUint32 = Type::Unsigned32()
+  /// v8: src/compiler/turbofan-types.h Type::Unsigned32
+  pub UINT32: Type,
+  /// kDoubleRepresentableInt64 = CreateRange( std::numeric_limits<int64_t>::min(), kMaxDoubleRepresentableInt64)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub DOUBLE_REPRESENTABLE_INT64: Type,
+  /// kDoubleRepresentableInt64OrMinusZero = Type::Union(kDoubleRepresentableInt64, Type::MinusZero(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub DOUBLE_REPRESENTABLE_INT64_OR_MINUS_ZERO: Type,
+  /// kDoubleRepresentableUint64 = CreateRange( std::numeric_limits<uint64_t>::min(), kMaxDoubleRepresentableUint64)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub DOUBLE_REPRESENTABLE_UINT64: Type,
+  /// kFloat16 = Type::Number()
+  /// v8: src/compiler/turbofan-types.h Type::Number
+  pub FLOAT16: Type,
+  /// kFloat32 = Type::Number()
+  /// v8: src/compiler/turbofan-types.h Type::Number
+  pub FLOAT32: Type,
+  /// kFloat64 = Type::Number()
+  /// v8: src/compiler/turbofan-types.h Type::Number
+  pub FLOAT64: Type,
+  /// kBigInt64 = Type::SignedBigInt64()
+  /// v8: src/compiler/turbofan-types.h Type::SignedBigInt64
+  pub BIG_INT64: Type,
+  /// kBigUint64 = Type::UnsignedBigInt64()
+  /// v8: src/compiler/turbofan-types.h Type::UnsignedBigInt64
+  pub BIG_UINT64: Type,
+  /// kHoleySmi = Type::Union(Type::SignedSmall(), Type::Hole(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub HOLEY_SMI: Type,
+  /// kSingletonZero = CreateRange(0.0, 0.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub SINGLETON_ZERO: Type,
+  /// kSingletonOne = CreateRange(1.0, 1.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub SINGLETON_ONE: Type,
+  /// kSingletonTen = CreateRange(10.0, 10.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub SINGLETON_TEN: Type,
+  /// kSingletonMinusOne = CreateRange(-1.0, -1.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub SINGLETON_MINUS_ONE: Type,
+  /// kZeroOrMinusZero = Type::Union(kSingletonZero, Type::MinusZero(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub ZERO_OR_MINUS_ZERO: Type,
+  /// kZeroOrUndefined = Type::Union(kSingletonZero, Type::Undefined(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub ZERO_OR_UNDEFINED: Type,
+  /// kTenOrUndefined = Type::Union(kSingletonTen, Type::Undefined(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub TEN_OR_UNDEFINED: Type,
+  /// kMinusOneOrZero = CreateRange(-1.0, 0.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub MINUS_ONE_OR_ZERO: Type,
+  /// kMinusOneOrZeroOrOne = CreateRange(-1.0, 1.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub MINUS_ONE_OR_ZERO_OR_ONE: Type,
+  /// kMinusOneToOneOrMinusZeroOrNaN = Type::Union( Type::Union(CreateRange(-1.0, 1.0), Type::MinusZero(), zone()), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub MINUS_ONE_TO_ONE_OR_MINUS_ZERO_OR_NA_N: Type,
+  /// kZeroOrOne = CreateRange(0.0, 1.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub ZERO_OR_ONE: Type,
+  /// kZeroOrOneOrNaN = Type::Union(kZeroOrOne, Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub ZERO_OR_ONE_OR_NA_N: Type,
+  /// kZeroToThirtyOne = CreateRange(0.0, 31.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub ZERO_TO_THIRTY_ONE: Type,
+  /// kZeroToThirtyTwo = CreateRange(0.0, 32.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub ZERO_TO_THIRTY_TWO: Type,
+  /// kZeroish = Type::Union(kSingletonZero, Type::MinusZeroOrNaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub ZEROISH: Type,
+  /// kInteger = CreateRange(-V8_INFINITY, V8_INFINITY)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub INTEGER: Type,
+  /// kIntegerOrMinusZero = Type::Union(kInteger, Type::MinusZero(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub INTEGER_OR_MINUS_ZERO: Type,
+  /// kIntegerOrMinusZeroOrNaN = Type::Union(kIntegerOrMinusZero, Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub INTEGER_OR_MINUS_ZERO_OR_NA_N: Type,
+  /// kPositiveInteger = CreateRange(0.0, V8_INFINITY)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub POSITIVE_INTEGER: Type,
+  /// kPositiveIntegerOrMinusZero = Type::Union(kPositiveInteger, Type::MinusZero(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub POSITIVE_INTEGER_OR_MINUS_ZERO: Type,
+  /// kPositiveIntegerOrNaN = Type::Union(kPositiveInteger, Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub POSITIVE_INTEGER_OR_NA_N: Type,
+  /// kPositiveIntegerOrMinusZeroOrNaN = Type::Union(kPositiveIntegerOrMinusZero, Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub POSITIVE_INTEGER_OR_MINUS_ZERO_OR_NA_N: Type,
+  /// kSafeInteger = CreateRange(-kMaxSafeInteger, kMaxSafeInteger)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub SAFE_INTEGER: Type,
+  /// kAdditiveSafeInteger = CreateRange(kMinAdditiveSafeInteger, kMaxAdditiveSafeInteger)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub ADDITIVE_SAFE_INTEGER: Type,
+  /// kAdditiveSafeIntegerFeedback = CreateRange( kMinAdditiveSafeIntegerFeedback, kMaxAdditiveSafeIntegerFeedback)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub ADDITIVE_SAFE_INTEGER_FEEDBACK: Type,
+  /// kAdditiveSafeIntegerOrMinusZero = Type::Union(kAdditiveSafeInteger, Type::MinusZero(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub ADDITIVE_SAFE_INTEGER_OR_MINUS_ZERO: Type,
+  /// kSafeIntegerOrMinusZero = Type::Union(kSafeInteger, Type::MinusZero(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub SAFE_INTEGER_OR_MINUS_ZERO: Type,
+  /// kPositiveSafeInteger = CreateRange(0.0, kMaxSafeInteger)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub POSITIVE_SAFE_INTEGER: Type,
+  /// kFixedArrayLengthType = CreateRange(0.0, FixedArray::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub FIXED_ARRAY_LENGTH_TYPE: Type,
+  /// kContextLengthType = CreateRange(0.0, FixedArray::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub CONTEXT_LENGTH_TYPE: Type,
+  /// kWeakFixedArrayLengthType = CreateRange(0.0, FixedArray::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub WEAK_FIXED_ARRAY_LENGTH_TYPE: Type,
+  /// kFixedDoubleArrayLengthType = CreateRange(0.0, FixedDoubleArray::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub FIXED_DOUBLE_ARRAY_LENGTH_TYPE: Type,
+  /// kJSArrayLengthType = Type::Unsigned32()
+  /// v8: src/compiler/turbofan-types.h Type::Unsigned32
+  pub JSARRAY_LENGTH_TYPE: Type,
+  /// kJSArrayBufferByteLengthType = CreateRange(0.0, JSArrayBuffer::kMaxByteLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub JSARRAY_BUFFER_BYTE_LENGTH_TYPE: Type,
+  /// kJSArrayBufferViewByteLengthType = kJSArrayBufferByteLengthType
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub JSARRAY_BUFFER_VIEW_BYTE_LENGTH_TYPE: Type,
+  /// kJSArrayBufferViewByteOffsetType = kJSArrayBufferByteLengthType
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub JSARRAY_BUFFER_VIEW_BYTE_OFFSET_TYPE: Type,
+  /// kJSTypedArrayLengthType = CreateRange(0.0, JSTypedArray::kMaxByteLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub JSTYPED_ARRAY_LENGTH_TYPE: Type,
+  /// kStringLengthType = CreateRange(0.0, String::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub STRING_LENGTH_TYPE: Type,
+  /// kTimeValueType = CreateRange(-DateCache::kMaxTimeInMs, DateCache::kMaxTimeInMs)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub TIME_VALUE_TYPE: Type,
+  /// kJSDateDayType = Type::Union(CreateRange(1, 31.0), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_DAY_TYPE: Type,
+  /// kJSDateHourType = Type::Union(CreateRange(0, 23.0), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_HOUR_TYPE: Type,
+  /// kJSDateMinuteType = Type::Union(CreateRange(0, 59.0), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_MINUTE_TYPE: Type,
+  /// kJSDateMonthType = Type::Union(CreateRange(0, 11.0), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_MONTH_TYPE: Type,
+  /// kJSDateSecondType = kJSDateMinuteType
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub JSDATE_SECOND_TYPE: Type,
+  /// kJSDateValueType = Type::Union(kTimeValueType, Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_VALUE_TYPE: Type,
+  /// kJSDateWeekdayType = Type::Union(CreateRange(0, 6.0), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_WEEKDAY_TYPE: Type,
+  /// kJSDateYearType = Type::Union(CreateRange(-271821, 275760), Type::NaN(), zone())
+  /// v8: src/compiler/turbofan-types.h Type::Union
+  pub JSDATE_YEAR_TYPE: Type,
+  /// kArgumentsLengthType = CreateRange(0.0, FixedArray::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub ARGUMENTS_LENGTH_TYPE: Type,
+  /// kRestLengthType = CreateRange(0.0, FixedArray::kMaxLength)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub REST_LENGTH_TYPE: Type,
+  /// kJSArrayIteratorKindType = CreateRange(0.0, 2.0)
+  /// v8: src/compiler/turbofan-types.h CreateRange/别名
+  pub JSARRAY_ITERATOR_KIND_TYPE: Type,
+}
+
+impl TypeCache {
+  /// 原版 Get — 进程级单例
+  /// v8: src/compiler/type-cache.cc TypeCache::Get
+  pub fn get() -> &'static Self {
+    todo!("v8: src/compiler/type-cache.cc TypeCache::Get (LazyLock 单例)")
+  }
+}

@@ -1,0 +1,45 @@
+// 由 tool/src/compiler/checkpoint-elimination.js 从 v8/src/compiler/checkpoint-elimination.h + src/compiler/checkpoint-elimination.cc 生成; 修订就地改, 复跑覆盖
+// CheckpointElimination — 冗余 CheckPoint 消除
+
+//! CheckpointElimination: 若 CheckPoint 的 effect 输入链上最近节点已是
+//! CheckPoint (无中间可观察副作用), 则后者冗余, 改接前一个。
+//!
+//! 规则面: 分派表 1 case + effect 链回溯规则。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/checkpoint-elimination.h CheckpointElimination
+pub struct CheckpointElimination {
+  /// 原 editor_ (AdvancedReducer 基类)
+  pub editor: *mut crate::graph_reducer::Editor,
+}
+
+impl CheckpointElimination {
+  /// v8: src/compiler/checkpoint-elimination.cc CheckpointElimination::CheckpointElimination
+  pub fn new(editor: *mut crate::graph_reducer::Editor) -> Self {
+    Self { editor }
+  }
+
+  /// v8: src/compiler/checkpoint-elimination.cc CheckpointElimination::reducer_name
+  pub const REDUCER_NAME: &'static str = "CheckpointElimination";
+
+  /// v8: src/compiler/checkpoint-elimination.cc CheckpointElimination::Reduce
+  /// 原文: switch 单 case kCheckPoint → ReduceCheckpoint; 其余 NoChange
+  pub fn reduce(&mut self, node: &mut crate::node::Node) -> crate::graph_reducer::Reduction {
+    match node.opcode() {
+      crate::IrOpcode::Checkpoint => self.reduce_checkpoint(node),
+      _ => crate::graph_reducer::Reduction::NoChange,
+    }
+  }
+
+  /// v8: src/compiler/checkpoint-elimination.cc CheckpointElimination::ReduceCheckpoint
+  /// 原文: if (IsRedundantCheckpoint(node)) return Replace(GetEffectInput(node));
+  /// IsRedundantCheckpoint (cc:38-52): function_info 非空; 沿 effect 前驱
+  /// 走 (途经须 kNoWrite 且 EffectInputCount==1), 首个 kCheckpoint 的
+  /// GetFunctionInfo == 本节点 function_info 才冗余
+  fn reduce_checkpoint(&mut self, node: &mut crate::node::Node) -> crate::graph_reducer::Reduction {
+    let effect = crate::node_properties::get_effect_input(node);
+    let _ = effect;
+    todo!("effect 链回溯至前一 CheckPoint 并跳接")
+  }
+}

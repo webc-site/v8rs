@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/backend/arm64/instruction-selector-arm64.js 从 v8/src/compiler/backend/arm64/instruction-selector-arm64.cc 生成; 修订就地改, 复跑覆盖
+// arm64 指令选择: TryMatch 匹配族 (extend/shift 寻址) + Visit 面
+
+//! 台账: InstructionSelector::Visit* 定义 191 (::Visit 面 210);
+//!   case Opcode 7; TryMatchAnyExtend (uxtx/sxtb 扩展匹配, 左右双向尝试) +
+//!   TryMatchLoadStoreShift (移位寻址 [x + y << n]); 原子族; ccmp 比较链面;
+//!   canoolize 寻址序 (BaseWithIndexAndDisplacementMatcher 注释锚)。
+
+/// v8: TryMatchAnyExtend — 扩展操作数匹配 (left/right 双向)
+// fn try_match_any_extend(...) -> bool
+/// v8: TryMatchLoadStoreShift — load/store 移位寻址匹配
+// fn try_match_load_store_shift(...) -> bool
+/// v8: InstructionSelector::VisitNode (arm64 扩展) — case Opcode ×7
+// fn visit_node 架构扩展臂
+/// v8: InstructionSelector::VisitAtomic* — ldax/stlx 原子族
+// fn visit_word32/64_atomic_*
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(VISIT_DEF_COUNT >= 30);
+};
+/// v8: Visit* 定义数 (实测; ::Visit 总面 210)
+pub const VISIT_DEF_COUNT: usize = 191;
+const _: () = {
+  assert!(VISIT_DEF_COUNT == 191);
+};

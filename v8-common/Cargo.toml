@@ -1,0 +1,48 @@
+[package]
+name = "v8-common"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-common"
+keywords = []
+categories = []
+# bench 目标仅保留 benches/main.rs (base.rs 为其共享模块, 不作独立目标)
+autobenches = false
+
+[features]
+default = []
+# 单独评测 gxhash 对比实现 (todo 10.2 横切: std HashMap vs gxhash HashMap)
+bench-gxhash = []
+# 全部对比库评测
+bench = ["bench-gxhash"]
+
+[[bench]]
+name = "main"
+path = "benches/main.rs"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+libc = "0.2"
+log = "0.4"
+parking_lot = "0.12.5"
+strum = { version = "0.28.0", features = ["derive"] }
+thiserror = "2.0.21"
+
+[dev-dependencies]
+aok = "0.1.18"
+criterion = "0.8.2"
+ctor = "1.0.13"
+fastrand = "2.5.0"
+gxhash = "3.5.0"
+humansize = "2.1.3"
+log = "0.4.34"
+log_init = "0.1.39"
+parking_lot = "0.12.5"
+rusty_alloc-api = { workspace = true }
+static_assertions = "1.1.0"
+

@@ -1,0 +1,35 @@
+// 由 tool/src/objects/fixed-primitive-array.tq.js 从 v8/src/objects/fixed-primitive-array.tq 生成; 修订就地改, 复跑覆盖
+// 差集 (h/-inl.h 归既有两席): tq 布局 + extern 声明清单
+
+//! 差集骨架: 定长原始数组 tq 布局。
+//! 配置: 64 位非压缩 (kTaggedSize=8 → FixedArrayBase 头 = map(8)+length(4)+padding(4) = 16;
+//!   TrustedFixedArrayBase 同构)。
+
+/// tq 布局表 (1:1)。
+pub const PRIMITIVE_ARRAY_TQ_LAYOUT: &[(&str, &str, &str, &str)] = &[
+  ("FixedDoubleArray", "FixedArrayBase", "values[length]", "float64_or_undefined_or_hole"),
+  ("ByteArray", "FixedArrayBase", "values[length]", "uint8"),
+  ("TrustedByteArray", "TrustedFixedArrayBase", "values[length]", "uint8"),
+];
+
+/// extern operator 映射 (3 条)。
+pub const PRIMITIVE_ARRAY_TQ_OPERATORS: &[&str] = &[
+  ".values[]= → StoreFixedDoubleArrayElement",
+  ".values[]= → StoreFixedDoubleArrayElement",
+  ".values[] → LoadFixedDoubleArrayElement",
+];
+
+/// extern macro 声明 (6 次, 5 个名; AllocateFixedDoubleArrayWithHoles 带 AllocationFlag 重载)。
+pub const PRIMITIVE_ARRAY_TQ_EXTERN_MACROS: &[&str] = &[
+  "CodeStubAssembler::AllocateByteArray",
+  "StoreFixedDoubleArrayUndefined",
+  "AllocateZeroedFixedDoubleArray",
+  "FillFixedDoubleArrayWithZero",
+  "AllocateFixedDoubleArrayWithHoles",
+];
+
+/// v8: src/objects/fixed-primitive-array.tq NewFixedDoubleArray<Iterator> —
+///   length==0 → kEmptyFixedArray; > kFixedDoubleArrayMaxLength → FatalProcessOutOfMemory;
+///   TAGGED_SIZE_8_BYTES 变体多 optional_padding: 0 (本配置登记即 8 字节分支)。
+/// v8: src/objects/fixed-primitive-array.tq ExtractFixedDoubleArray —
+///   容量截取 + 尾部 kDoubleHole 填充 (IteratorSequence + ConstantIterator)。

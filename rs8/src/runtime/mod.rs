@@ -1,0 +1,16 @@
+//! JavaScript 纯 Rust 运行时环境与端到端执行器
+
+pub mod ast;
+pub mod bytecode_bridge;
+pub mod environment;
+pub mod interpreter;
+pub mod lexer;
+pub mod parser;
+pub mod value;
+
+pub use bytecode_bridge::try_execute_with_bytecode;
+pub use environment::Environment;
+pub use interpreter::{
+  ExecMode, ExecStats, Interpreter, run_ast, run_bytecode, run_js, run_strict_bytecode,
+};
+pub use value::JsValue;

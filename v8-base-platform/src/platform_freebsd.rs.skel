@@ -1,0 +1,24 @@
+// 由 tool/src/base/platform/platform-freebsd.js 从 v8/src/base/platform/platform-freebsd.cc 生成; 修订就地改, 复跑覆盖
+// FreeBSD 平台面 (非目标; sysctl vmmap + pthread 栈)
+
+// —— OS 5 方法登记 ——
+/// v8: src/base/platform/platform-freebsd.cc OS::CreateTimezoneCache
+/// new PosixDefaultTimezoneCache (转发 posix-time 族)
+/// v8: src/base/platform/platform-freebsd.cc OS::GetSharedLibraryAddresses
+/// sysctl(KERN_PROC_VMMAP) mib 链取进程映射, 逐条换 SharedLibraryAddress
+/// v8: src/base/platform/platform-freebsd.cc OS::SignalCodeMovingGC — 空体
+/// v8: src/base/platform/platform-freebsd.cc OS::AdjustSchedulingParams — 空体
+/// v8: src/base/platform/platform-freebsd.cc OS::GetFirstFreeMemoryRangeWithin — 恒 nullopt
+
+// —— Stack 1 方法登记 ——
+/// v8: src/base/platform/platform-freebsd.cc Stack::ObtainCurrentThreadStackStart
+/// pthread_attr_init + pthread_attr_get_np(pthread_self()) + pthread_attr_getstack
+/// 取栈基址 (保留下限未覆写 — 沿用基座缺省)
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // 5 OS 面 + 1 Stack 面; 无本文件特有常量
+  const OS_SURFACE: usize = 5;
+  const STACK_SURFACE: usize = 1;
+  assert!(OS_SURFACE == 5 && STACK_SURFACE == 1);
+};

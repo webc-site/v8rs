@@ -1,0 +1,28 @@
+// 由 tool/src/objects/js-segment-iterator.h.js 从 v8/src/objects/js-segment-iterator.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSSegmentIterator + 两数据对象差集骨架
+
+//! JSSegmentIterator: %SegmentIteratorPrototype%; 数据对象与父类共享实例类型
+//! (@hasSameInstanceTypeAsParent), 字段仍按固定槽排布。
+
+/// v8: src/objects/js-segment-iterator.h JSSegmentIterator::icu_iterator_with_text_
+pub const K_IT_ICU_ITERATOR_WITH_TEXT_OFFSET: usize = 24;
+/// v8: src/objects/js-segment-iterator.h JSSegmentIterator::raw_string_
+pub const K_IT_RAW_STRING_OFFSET: usize = 32;
+/// v8: src/objects/js-segment-iterator.h JSSegmentIterator::flags_
+pub const K_IT_FLAGS_OFFSET: usize = 40;
+/// v8: src/objects/js-segment-iterator.h JSSegmentIterator::kHeaderSize
+pub const K_IT_HEADER_SIZE: usize = 48;
+
+// JSSegmentDataObject (V8_IT_REUSE_PARENT + NO_AUTO_CHECKER):
+/// v8: src/objects/js-segment-iterator.h JSSegmentDataObject::segment_
+pub const K_SEGMENT_OFFSET: usize = 24;
+/// v8: src/objects/js-segment-iterator.h JSSegmentDataObject::index_
+pub const K_INDEX_OFFSET: usize = 32;
+/// v8: src/objects/js-segment-iterator.h JSSegmentDataObject::input_
+pub const K_INPUT_OFFSET: usize = 40;
+pub const K_SEGMENT_DATA_OBJECT_SIZE: usize = 48;
+/// v8: src/objects/js-segment-iterator.h JSSegmentDataObjectWithIsWordLike::is_word_like_
+pub const K_IS_WORD_LIKE_OFFSET: usize = 48; // 追加 1 槽
+pub const K_SEGMENT_DATA_OBJECT_WITH_IS_WORD_LIKE_SIZE: usize = 56;
+
+// 方法映射 (语义推迟): Create / Next / GranularityAsString; granularity 复用 JSSegmenter 位域

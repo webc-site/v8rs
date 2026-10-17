@@ -1,0 +1,75 @@
+// 由 tool/src/base/platform/memory-protection-key.js 从 v8/src/base/platform/memory-protection-key.{h,cc} 生成; 修订就地改, 复跑覆盖
+// PKU 内存保护键 (V8_HAS_PKU_SUPPORT 门面; 目标 darwin 无 PKU — 登记骨架)
+
+/// PKU 保护键权限 (原版 enum MemoryProtectionKey::Permission)
+/// v8: src/base/platform/memory-protection-key.h Permission
+/// 值与 glibc 对齐: kDisableAccess == PKEY_DISABLE_ACCESS(1),
+/// kDisableWrite == PKEY_DISABLE_WRITE(2) — 无执行位, 键不能撤执行权
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
+pub enum Permission {
+  /// kNoRestrictions = 0
+  NoRestrictions = 0,
+  /// kDisableAccess = 1 (PKEY_DISABLE_ACCESS)
+  DisableAccess = 1,
+  /// kDisableWrite = 2 (PKEY_DISABLE_WRITE)
+  DisableWrite = 2,
+}
+
+/// 无键哨兵 (原版 kNoMemoryProtectionKey; pkey_alloc 失败返回值, pkey_mprotect(-1) 退化为 mprotect)
+/// v8: src/base/platform/memory-protection-key.h kNoMemoryProtectionKey
+pub const NO_MEMORY_PROTECTION_KEY: i32 = -1;
+/// 默认键 (原版 kDefaultProtectionKey — 用于解除键关联)
+/// v8: src/base/platform/memory-protection-key.h kDefaultProtectionKey
+pub const DEFAULT_PROTECTION_KEY: i32 = 0;
+/// 键容量 (原版 cc 43 行注释: 16 keys on x64, 8 keys on arm64)
+/// v8: src/base/platform/memory-protection-key.cc kMaxAvailableKeys
+pub const MAX_AVAILABLE_KEYS: usize = 16;
+/// 每键寄存器位数 (原版 x64 PKRU: 2 bit/键)
+/// v8: src/base/platform/memory-protection-key.cc kBitsPerKey
+pub const BITS_PER_KEY: i32 = 2;
+
+// —— 活跃键簿记 (原版 std::array<bool, 16> g_active_keys) ——
+/// v8: src/base/platform/memory-protection-key.cc g_active_keys
+/// AllocateKey/RegisterExternallyAllocatedKey 置 true, FreeKey 清 false
+
+// —— 11 静态方法签名骨架 (供 Developer 补语义) ——
+/// v8: src/base/platform/memory-protection-key.cc HasMemoryProtectionKeyAPIs
+/// 廉价探测: pkey_mprotect 非空即真 (其余四符号必齐, CHECK)
+/// v8: src/base/platform/memory-protection-key.cc TestKeyAllocation
+/// 昂贵探测: alloc+free 一轮 (两次系统调用)
+/// v8: src/base/platform/memory-protection-key.cc AllocateKey
+/// pkey_alloc(0, kNoRestrictions); 成功后 CHECK_LT(key,16) 并簿记
+/// v8: src/base/platform/memory-protection-key.cc RegisterExternallyAllocatedKey
+/// 外部键登记 (信号处理器全键默认权限依赖此簿记)
+/// v8: src/base/platform/memory-protection-key.cc FreeKey
+/// pkey_free(key)==0 后清簿记
+/// v8: src/base/platform/memory-protection-key.cc SetPermissionsAndKey
+/// pkey_mprotect(region, prot, key)==0; 失败仅容 ENOMEM (CHECK)
+/// v8: src/base/platform/memory-protection-key.cc SetPermissionsForKey
+/// pkey_set(key, permissions)==0
+/// v8: src/base/platform/memory-protection-key.cc GetKeyPermission
+/// pkey_get(key), 值域限 Permission 三态 (CHECK)
+/// v8: src/base/platform/memory-protection-key.cc ComputeRegisterMaskForPermissionSwitch
+/// x64: permissions << (key * 2); 其余架构 FATAL — 用于生成切权限代码
+/// v8: src/base/platform/memory-protection-key.cc SetDefaultPermissionsForAllKeysInSignalHandler
+/// 异步信号安全: 活跃键统一 kDisableWrite (needs_full_access 时 kNoRestrictions)
+/// v8: src/base/platform/memory-protection-key.cc SetKeyForCurrentThreadsStack
+/// pthread_getattr_np 取栈界; limit_address 页对齐截断;
+/// pkey_mprotect(PROT_READ|PROT_WRITE) 失败重试 +PROT_GROWSDOWN (主线程栈)
+
+// —— PagePermissions ↔ PROT_* 对齐 (原版 4 条 static_assert) ——
+/// v8: src/base/platform/memory-protection-key.cc GetProtectionFromMemoryPermission
+/// kNoAccess==PROT_NONE / kRead==PROT_READ / kWrite==PROT_WRITE / kExecute==PROT_EXEC
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(NO_MEMORY_PROTECTION_KEY, -1);
+  assert_eq!(DEFAULT_PROTECTION_KEY, 0);
+  assert_eq!(Permission::DisableAccess as i32, 1);
+  assert_eq!(Permission::DisableWrite as i32, 2);
+  assert_eq!(MAX_AVAILABLE_KEYS, 16);
+  assert_eq!(BITS_PER_KEY, 2);
+  // x64 掩码: key=0 → 值原样 (0 移位), kBitsPerKey=2 与 PKRU 2bit/键一致
+  assert_eq!((1 << (0 * BITS_PER_KEY)), 1);
+};

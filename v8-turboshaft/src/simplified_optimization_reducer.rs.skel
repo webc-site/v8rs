@@ -1,0 +1,26 @@
+// 由 tool/src/compiler/turboshaft/simplified-optimization-reducer.h.js 从 v8/src/compiler/turboshaft/simplified-optimization-reducer.h 生成; 修订就地改, 复跑覆盖
+// simplified 层小优化: 截断/改写/溢出检查前移
+
+/// 原版 SimplifiedOptimizationReducer — simplified 操作的小步优化
+/// (在 wasm-in-js inlining 后运行)。
+/// v8: src/compiler/turboshaft/simplified-optimization-reducer.h
+pub struct SimplifiedOptimizationReducer;
+
+impl SimplifiedOptimizationReducer {
+  /// REDUCE 面 (5 个):
+  /// v8: simplified-optimization-reducer.h REDUCE(TruncateJSPrimitiveToUntagged)
+  /// v8: simplified-optimization-reducer.h REDUCE(TruncateJSPrimitiveToWord32OrDeopt)
+  /// v8: simplified-optimization-reducer.h REDUCE(ChangeOrDeopt)
+  /// v8: simplified-optimization-reducer.h REDUCE(ObjectIs)
+  /// v8: simplified-optimization-reducer.h REDUCE(WordBinopDeoptOnOverflow)
+  ///
+  /// 语义登记:
+  /// - TruncateJSPrimitiveToUntagged: 按 From / UntaggedKind 决策截断序列
+  ///   (kInt32 恒等回原输入, kBit 转 0/1)
+  /// - TruncateJSPrimitiveToWord32OrDeopt: 不可安全截断时走 Deopt
+  /// - ChangeOrDeopt: 表示变更失败转 DeoptimizeIf
+  /// - ObjectIs: kind+input 双常量折叠 (ShouldSkipOptimizationStep 钩子)
+  /// - WordBinopDeoptOnOverflow: 溢出后恢复原 op 语义
+  /// 每个 REDUCE 以 LABEL_BLOCK(no_change) 收尾 (共 5 处)
+  pub fn reduce(&mut self, op: &SimplifiedOp) -> OpIndex { todo!() }
+}

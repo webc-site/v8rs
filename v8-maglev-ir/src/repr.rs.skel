@@ -1,0 +1,69 @@
+// 由 tool/src/maglev/repr.js 从 v8/src/maglev/maglev-ir.h, src/maglev/maglev-node-type.h, src/maglev/maglev-node-type.cc 生成; 修订就地改, 复跑覆盖
+// 表示双枚举 + NodeType 位表 18+20
+
+//! 表示规则: Phi 解包看 UseRepresentation (TruncatedInt32 允许 Float64 解包, Int32 不行);
+//! NodeType 位运算语义见 NodeTypeIs/CanBe/UnionType/RemoveType, 修订阶段 1:1 转写。
+
+// ── ValueRepresentation (u8, 8 变体; HoleyFloat64 目标配置二选一见 opcodes.js) ──
+//   VREPR kTagged
+//   VREPR kInt32
+//   VREPR kUint32
+//   VREPR kFloat64
+//   VREPR kHoleyFloat64
+//   VREPR kIntPtr
+//   VREPR kRawPtr
+//   VREPR kNone
+
+// ── UseRepresentation (u8, 8 变体; kLast=kNonTruncated; hint-only 修订保留语义) ──
+//   UREPR kTagged
+//   UREPR kTaggedForNumberToString
+//   UREPR kInt32
+//   UREPR kTruncatedInt32
+//   UREPR kUint32
+//   UREPR kFloat64
+//   UREPR kHoleyFloat64
+//   UREPR kNonTruncated
+
+// ── NodeType LEAF (18, 1<<0..1<<17; kNumberOfLeafNodeTypes=18) ──
+//   LEAF Smi = 1<<0
+//   LEAF HeapNumber = 1<<1
+//   LEAF Null = 1<<2
+//   LEAF Undefined = 1<<3
+//   LEAF Boolean = 1<<4
+//   LEAF Symbol = 1<<5
+//   LEAF InternalizedString = 1<<6
+//   LEAF OtherString = 1<<7
+//   LEAF Context = 1<<8
+//   LEAF StringWrapper = 1<<9
+//   LEAF JSArray = 1<<10
+//   LEAF JSFunction = 1<<11
+//   LEAF OtherCallable = 1<<12
+//   LEAF JSDataView = 1<<13
+//   LEAF JSGeneratorObject = 1<<14
+//   LEAF OtherHeapObject = 1<<15
+//   LEAF OtherJSReceiver = 1<<16
+//   LEAF BigInt = 1<<17
+
+// ── NodeType COMBINED (20; Unknown=全叶位, None=0) ──
+//   COMB Unknown
+//   COMB None
+//   COMB Callable
+//   COMB NullOrUndefined
+//   COMB Oddball
+//   COMB Number
+//   COMB Numeric
+//   COMB NumberOrBoolean
+//   COMB NumberOrUndefined
+//   COMB NumberOrOddball
+//   COMB String
+//   COMB StringOrStringWrapper
+//   COMB StringOrOddball
+//   COMB Name
+//   COMB JSPrimitive
+//   COMB JSReceiver
+//   COMB JSReceiverOrNull
+//   COMB JSReceiverOrNullOrUndefined
+//   COMB NotUndetectable
+//   COMB AnyHeapObject
+
+// 对数: 表示针 12 + LEAF 18 + COMBINED 20 全过

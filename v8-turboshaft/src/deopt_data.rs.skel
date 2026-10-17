@@ -1,0 +1,129 @@
+// 由 tool/src/compiler/turboshaft/deopt-data.h.js 从 v8/src/compiler/turboshaft/deopt-data.h 生成; 修订就地改, 复跑覆盖
+// 去优化帧状态: 前序编码指令与 Builder 骨架
+
+/// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Instr
+/// 树前序编码指令 (注释保留原版操作数说明):
+/// kInput,  // 1 Operand: input machine type
+/// kUnusedRegister,
+/// kDematerializedObject,           // 2 Operands: id, field_count
+/// kDematerializedObjectReference,  // 1 Operand: id
+/// kArgumentsElements,              // 1 Operand: type
+/// kArgumentsLength,
+/// kRestLength,
+/// kDematerializedStringConcat,  // 1 Operand: id
+/// kDematerializedStringConcatReference  // 1 Operand: id
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Instr {
+  /// kInput
+  input = 0,
+  /// kUnusedRegister
+  unusedRegister = 1,
+  /// kDematerializedObject
+  dematerializedObject = 2,
+  /// kDematerializedObjectReference
+  dematerializedObjectReference = 3,
+  /// kArgumentsElements
+  argumentsElements = 4,
+  /// kArgumentsLength
+  argumentsLength = 5,
+  /// kRestLength
+  restLength = 6,
+  /// kDematerializedStringConcat
+  dematerializedStringConcat = 7,
+  /// kDematerializedStringConcatReference
+  dematerializedStringConcatReference = 8,
+}
+
+/// v8: src/compiler/turboshaft/deopt-data.h FrameStateData
+pub struct FrameStateData {
+  /// instructions_ — Instr 序列
+  pub instructions: Vec<Instr>,
+  /// machine_types_ — kInput 的机器类型
+  pub machine_types: Vec<()>,
+  /// int_operands_ — Dematerialized/ArgumentsElements 的整型操作数
+  pub int_operands: Vec<u32>,
+  /// inlined_ — 有 parent (kInput 前唯一)
+  pub inlined: bool,
+}
+
+impl FrameStateData {
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder
+  /// Build → (inputs, FrameStateData); inlined 时 inputs 首位是 parent
+  pub fn builder() -> FrameStateDataBuilder {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder
+/// 方法面 (原版 10 AddXxx):
+/// - AddParentFrameState
+/// - AddInput
+/// - AddUnusedRegister
+/// - AddDematerializedObjectReference
+/// - AddDematerializedObject
+/// - AddDematerializedStringConcat
+/// - AddDematerializedStringConcatReference
+/// - AddArgumentsElements
+/// - AddArgumentsLength
+/// - AddRestLength
+pub struct FrameStateDataBuilder;
+
+impl FrameStateDataBuilder {
+  /// 原版 void AddParentFrameState(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddParentFrameState
+  pub fn add_parent_frame_state(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddInput(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddInput
+  pub fn add_input(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddUnusedRegister(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddUnusedRegister
+  pub fn add_unused_register(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddDematerializedObjectReference(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddDematerializedObjectReference
+  pub fn add_dematerialized_object_reference(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddDematerializedObject(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddDematerializedObject
+  pub fn add_dematerialized_object(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddDematerializedStringConcat(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddDematerializedStringConcat
+  pub fn add_dematerialized_string_concat(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddDematerializedStringConcatReference(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddDematerializedStringConcatReference
+  pub fn add_dematerialized_string_concat_reference(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddArgumentsElements(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddArgumentsElements
+  pub fn add_arguments_elements(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddArgumentsLength(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddArgumentsLength
+  pub fn add_arguments_length(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void AddRestLength(...)
+  /// v8: src/compiler/turboshaft/deopt-data.h FrameStateData::Builder::AddRestLength
+  pub fn add_rest_length(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(Instr::Input as u8 == 0);
+  assert!(Instr::DematerializedStringConcatReference as u8 == 8);
+};

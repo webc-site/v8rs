@@ -1,0 +1,21 @@
+// 由 tool/src/compiler/turboshaft/dataview-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/dataview-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// DataView 载入/存储降级 reducer
+
+/// v8: src/compiler/turboshaft/dataview-lowering-reducer.h DataViewLoweringReducer
+/// 字节序处理 + 溢出/截断检查
+pub struct DataViewLoweringReducer {
+  pub placeholder: (),
+}
+
+impl DataViewLoweringReducer {
+  /// 原版 OpIndex REDUCE(LoadDataViewElement)(V<Object> object, V<WordPtr> storage, V<WordPtr> index, V<Word32> is_little_endian, ExternalArrayType element_type)
+  /// v8: src/compiler/turboshaft/dataview-lowering-reducer.h DataViewLoweringReducer::REDUCE(LoadDataViewElement)
+  pub fn reduce_load_data_view_element(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 OpIndex REDUCE(StoreDataViewElement)(V<Object> object, V<WordPtr> storage, V<WordPtr> index, OpIndex value, V<Word32> is_little_endian, ExternalArrayType element_type)
+  /// v8: src/compiler/turboshaft/dataview-lowering-reducer.h DataViewLoweringReducer::REDUCE(StoreDataViewElement)
+  pub fn reduce_store_data_view_element(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

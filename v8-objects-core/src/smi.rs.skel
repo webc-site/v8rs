@@ -1,0 +1,25 @@
+// 由 tool/src/objects/smi.h.js 从 v8/src/objects/smi.h + objects.cc LexicographicCompare 生成; 修订就地改, 复跑覆盖
+// smi.rs 差集骨架, 合并后就地修订
+
+//! 差集骨架: 转换辅助 + 字典序比较
+
+impl Smi {
+  /// Tagged<Object> → int (对应 ToInt)
+  pub const fn to_int(object: Tagged<Object>) -> i32;
+  /// 正 Smi → u32 (对应 ToUInt, DCHECK >= 0)
+  pub const fn to_uint(object: Tagged<Object>) -> u32;
+  /// u32 → Smi (对应 FromUInt)
+  pub const fn from_uint(value: u32) -> Tagged<Self>;
+  /// intptr → Smi (对应 FromIntptr, 超界返回 None)
+  pub const fn from_intptr(value: i64) -> Option<Tagged<Self>>;
+  /// 枚举 → Smi (对应 FromEnum)
+  pub const fn from_enum(value: i32) -> Tagged<Self>;
+  /// 未初始化反序列化哨兵 = kNullAddress (对应 uninitialized_deserialization_value)
+  pub const fn uninitialized_deserialization_value() -> Tagged<Self>;
+  /// 字典序比较两个 Smi 的十进制字符串表示 (对应 LexicographicCompare;
+  /// 原版 isolate 参数仅用于禁 JS 执行, 与算法无关, 省略)
+  pub const fn lexicographic_compare(x: Tagged<Self>, y: Tagged<Self>) -> Tagged<Self>;
+}
+
+/// 10 的幂表 (objects.cc 机械提取)
+const POWERS_OF_10: [u32; 10] = [1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000];

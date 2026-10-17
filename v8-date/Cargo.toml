@@ -1,0 +1,44 @@
+[package]
+name = "v8-date"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-date"
+keywords = []
+categories = []
+
+autobenches = false
+
+[features]
+default = []
+# 单独评测 chrono 对比库
+bench-chrono = []
+# 单独评测 std SystemTime 对照组
+bench-std = []
+# 评测全部对比库
+bench = ["bench-chrono", "bench-std"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+v8-base = { version = "0.1.0", path = "../v8-base" }
+v8-strings = { version = "0.1.0", path = "../v8-strings" }
+
+[dev-dependencies]
+aok = "0.1.18"
+chrono = "0.4.45"
+criterion = "0.8.2"
+ctor = "1.0.13"
+log_init = "0.1.39"
+rusty_alloc-api = { workspace = true }
+
+# criterion 主评测入口, 关闭 libtest harness; 不带 feature 时只评 v8-date 基线
+# test = false: cargo test 不运行 criterion 二进制, 由 cargo bench 专用
+[[bench]]
+name = "main"
+harness = false
+test = false
+

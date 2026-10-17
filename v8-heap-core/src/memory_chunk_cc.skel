@@ -1,0 +1,26 @@
+// 由 tool/src/heap/memory-chunk.cc.js 从 v8/src/heap/memory-chunk.cc 生成; 修订就地改, 复跑覆盖
+// MemoryChunk 实体台账: 8 定义 (目标配置留 5) + 掩码定义 7 + 断言 4 + 三分支索引
+
+// ══ memory-chunk.cc 处置台账 (原版行号实测; 展开侧=目标配置) ══
+// cc:46   MemoryChunk::MemoryChunk(MainThreadFlags flags, BasePage* metadata)
+// cc:67   void MemoryChunk::ClearMetadataPointer(BasePage* metadata)
+// cc:82   uint32_t MemoryChunk::MetadataTableIndex(Address chunk_address)
+// cc:112  bool MemoryChunk::SandboxSafeInReadOnlySpace() const
+// cc:134  void MemoryChunk::InitializationMemoryFence()
+// cc:165  void MemoryChunk::SynchronizedLoad() const
+// cc:190  size_t MemoryChunk::Offset(Address addr) const
+// cc:196  size_t MemoryChunk::OffsetMaybeOutOfRange(Address addr) const
+// 展开实测: SynchronizedLoad (THREAD_SANITIZER, cc:163-186) 与 Offset/OffsetMaybeOutOfRange
+//   (DEBUG, cc:188-201) 在目标配置剥除 → Rust: synchronized_load 为空实现 (h:295 非 TSAN 分支),
+//   offset 取 release 式 addr - address(); DEBUG DCHECK 版登记推迟 (依赖 Metadata area_start/size)
+// constexpr 掩码静态定义 cc:29-44 ×7 → Rust pub const 掩码即定义处, 无需再落
+// ctor cc:46: sandbox 分支写 metadata_pointer_table (IsolateGroup 耦合) →
+//   Rust 落数据面 with_metadata_index; 表写入走 MetadataTableEnv trait (cc:54-61 双引用在模块)
+// MetadataTableIndex cc:82-110: 三分支 (主 cage / trusted cage / code range) →
+//   Rust 泛型 fn metadata_table_index<E: MetadataTableEnv>; 主 cage 纯算术另落
+//   main_cage_metadata_index 供无 env 消费与测试
+// SandboxSafeInReadOnlySpace cc:112-130: ReadOnlyPage 反查 (读只页属他票) → 推迟双引用
+// ClearMetadataPointer cc:67-79: 表读写 + Isolate::FromHeap → 推迟双引用 (trait 面在模块登记)
+// ── rs 侧落地锚 (HC-1R2a 实测台账) ──
+// Landed @ v8-heap-core/src/memory_chunk.rs: 数据面 ctor/三分支索引/fence/空 SynchronizedLoad/offset release 式全落;
+//   推迟台账 3-6 双引用本脚本展开侧剥除清单 (表写入/clear/RO 反查/DEBUG Offset)。

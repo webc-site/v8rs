@@ -1,0 +1,42 @@
+// 由 tool/src/base/numbers/diy-fp.h.js 从 v8/src/base/numbers/diy-fp.h + src/base/numbers/diy-fp.cc 生成; 修订就地改, 复跑覆盖
+// DIY 浮点 (uint64 尾数 × 2^e, 不含 NaN/Inf)
+
+//! v8: src/base/numbers/diy-fp.h/.cc
+
+/// v8: diy-fp.h DiyFp
+/// 归一化约定: 最高有效位置 1; 乘法/减法结果不归一化
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct DiyFp {
+    f: u64,
+    e: i32,
+}
+
+impl DiyFp {
+    /// v8: kSignificandSize = 64
+    pub const SIGNIFICAND_SIZE: i32 = 64;
+
+    /// v8: diy-fp.h DiyFp(f, e)
+    pub const fn new(f: u64, e: i32) -> Self;
+
+    /// v8: diy-fp.h Subtract — 要求 e 相等且 f_ >= other.f_ (双 DCHECK); 结果不归一化
+    pub fn subtract(&mut self, other: &DiyFp);
+
+    /// v8: diy-fp.h Minus — a - b
+    pub fn minus(a: DiyFp, b: DiyFp) -> DiyFp;
+
+    /// v8: diy-fp.h Times — 128 位乘: 取高 64 位 + 低半最高位进位 (lo>>63),
+    ///     指数 a.e + b.e + 64; 结果不归一化
+    pub fn times(a: DiyFp, b: DiyFp) -> DiyFp;
+
+    /// v8: diy-fp.h Normalize — 先按 10 位快移 (0x3FF<<54 探测), 再逐位补到 MSB=1
+    pub fn normalize(&mut self);
+
+    /// v8: diy-fp.h Normalize(a) — 值版本
+    pub fn normalized(a: DiyFp) -> DiyFp;
+
+    /// v8: diy-fp.h f()/e()/set_f/set_e
+    pub const fn f(&self) -> u64;
+    pub const fn e(&self) -> i32;
+    pub const fn set_f(&mut self, v: u64);
+    pub const fn set_e(&mut self, v: i32);
+}

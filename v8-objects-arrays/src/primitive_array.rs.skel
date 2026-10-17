@@ -1,0 +1,48 @@
+// 由 tool/src/objects/fixed-primitive-array.h.js 从 v8/src/objects/fixed-primitive-array.h (+fixed-array-base.h 只读锚点) 生成; 修订就地改, 复跑覆盖
+// FixedPrimitiveArray 族骨架; 语义以 Developer 修订后的 primitive_array.rs 为准
+
+//! 差集骨架: FixedPrimitiveArray 族 (PrimitiveArrayBase CRTP 建模)
+//!
+//! 继承建模: C++ PrimitiveArrayBase<Derived, ElementT_, Super> (CRTP) → Rust trait PrimitiveArray,
+//!   关联常量 DATA_OFFSET (OFFSET_OF_DATA_START) / ELEMENT_SIZE (kElementSize) + 关联类型 Element。
+//!   FixedArrayBase 基类归 AA-1 席; 本席以本地 FixedArrayHeader (repr(C), 16 字节) 表达继承字段。
+
+/// kMaxFixedArrayCapacity (fixed-array-base.h:22, V8_LOWER_LIMITS_MODE 关): 128 * 1024 * 1024
+pub const K_MAX_FIXED_ARRAY_CAPACITY: u32 = 128 * 1024 * 1024;
+/// FixedArrayBase::kLengthOffset = sizeof(HeapObject) (非压缩 = 8)
+pub const K_LENGTH_OFFSET: usize = 8;
+/// FixedArrayBase::kPaddingOffset = kLengthOffset + kUInt32Size (TAGGED_SIZE_8_BYTES)
+pub const K_PADDING_OFFSET: usize = 12;
+/// FixedArrayBase::kHeaderSize = kPaddingOffset + kUInt32Size
+pub const K_FIXED_ARRAY_BASE_HEADER_SIZE: usize = 16;
+
+/// (Trusted)FixedArrayBase 头字段建模 (AA-1 落地后替换为 crate::fixed_array_base 定义)
+struct FixedArrayHeader {
+  map: Tagged<Map>,
+  length_: u32,
+  optional_padding_: u32,
+}
+
+/// trait PrimitiveArray: PrimitiveArrayBase 公共成员 (capacity 族 / get / set /
+/// AllocatedSize / SizeFor / OffsetOfElementAt / begin / end / DataSize /
+/// FromAddressOfFirstElement / MaxRegularLength / IsInBounds / clear_optional_padding)
+trait PrimitiveArray { ... }
+
+/// FixedDoubleArray: DATA_OFFSET=16, kElementSize=8
+/// ByteArray: DATA_OFFSET=16, kElementSize=1
+/// TrustedByteArray: DATA_OFFSET=16, kElementSize=1
+impl FixedDoubleArray { /* get/set/capacity/… 由 PrimitiveArray trait 提供; 详见 primitive_array.rs */ }
+impl ByteArray { /* get/set/capacity/… 由 PrimitiveArray trait 提供; 详见 primitive_array.rs */ }
+impl TrustedByteArray { /* get/set/capacity/… 由 PrimitiveArray trait 提供; 详见 primitive_array.rs */ }
+
+/// FixedIntegerArrayBase<T, B>: ByteArray/TrustedByteArray 字节的定宽整数视图
+/// 别名 8 组 (h:275-282 机械展开):
+/// pub type FixedInt8Array = FixedIntegerArrayBase<i8, ByteArray>;
+/// pub type FixedUInt8Array = FixedIntegerArrayBase<ui8, ByteArray>;
+/// pub type FixedInt16Array = FixedIntegerArrayBase<i16, ByteArray>;
+/// pub type FixedUInt16Array = FixedIntegerArrayBase<ui16, ByteArray>;
+/// pub type FixedInt32Array = FixedIntegerArrayBase<i32, ByteArray>;
+/// pub type FixedUInt32Array = FixedIntegerArrayBase<ui32, ByteArray>;
+/// pub type FixedInt64Array = FixedIntegerArrayBase<i64, ByteArray>;
+/// pub type FixedUInt64Array = FixedIntegerArrayBase<ui64, ByteArray>;
+/// pub type TrustedFixedAddressArray = FixedIntegerArrayBase<Address, TrustedByteArray>;

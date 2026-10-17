@@ -1,0 +1,33 @@
+// 由 tool/src/objects/property-array.tq.js 从 v8/src/objects/property-array.tq 生成; 修订就地改, 复跑覆盖
+// 差集 (h/-inl.h 归 property-array.h.js 席): tq 布局 + 位段交叉锚
+
+//! PropertyArray: 属性数组 (单 Smi 头 length_and_hash 打包长度与哈希)。
+//! 语义面 (Grow/Shrink/CopyUpTo/Hash 计算) 归 v8-objects-maps 的 property_array.rs 既有席。
+
+/// tq 布局: HeapObject 头 (map) + length_and_hash (Smi, offset = kTaggedSize=8)。
+pub const PROPERTY_ARRAY_TQ_FIELDS: &[(&str, &str)] = &[
+  ("length_and_hash", "Smi"),
+];
+
+/// length_and_hash Smi 位段布局 (h 侧 LengthField/HashField 交叉锚;
+/// kSmiValueSize 配置登记: 64 位非压缩 = 32 → HashField bits = 21)。
+pub const LENGTH_FIELD_SHIFT: u32 = 0;
+pub const LENGTH_FIELD_BITS: u32 = 10;
+pub const HASH_FIELD_SHIFT: u32 = 10;
+pub const HASH_FIELD_BITS: u32 = 21;
+
+/// 原版 kMaxLength = LengthField::kMax。
+pub const K_MAX_LENGTH: u32 = 1023;
+
+/// tq 别名: 空属性数组 (kEmptyPropertyArray 单例形态)。
+pub const EMPTY_PROPERTY_ARRAY_ALIAS: &str = "EmptyPropertyArray";
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(LENGTH_FIELD_SHIFT == 0);
+  assert!(LENGTH_FIELD_BITS == 10);
+  assert!(HASH_FIELD_SHIFT == 10);
+  assert!(HASH_FIELD_BITS == 21);
+  assert!(K_MAX_LENGTH == 1023);
+  assert!(PROPERTY_ARRAY_TQ_FIELDS.len() == 1);
+};

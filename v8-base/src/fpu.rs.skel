@@ -1,0 +1,35 @@
+// 由 tool/src/base/fpu.h.js 从 v8/src/base/fpu.h + src/base/fpu.cc 生成; 修订就地改, 复跑覆盖
+// Denormal 刷零控制 (FTZ/DAZ) 与 RAII 恢复
+
+//! v8: src/base/fpu.h/.cc
+
+pub struct Fpu;
+
+impl Fpu {
+    /// v8: src/base/fpu.cc FPU::GetFlushDenormals
+    /// x64: stmxcsr & 0x8040 (FTZ|DAZ); arm64: FPCR bit24; 其他平台恒 false
+    pub fn get_flush_denormals() -> bool;
+    /// v8: src/base/fpu.cc FPU::SetFlushDenormals
+    /// 置/清对应位后回写 (ldmxcsr / msr FPCR / _controlfp_s(_MCW_DN))
+    pub fn set_flush_denormals(value: bool);
+}
+
+// v8: src/base/fpu.cc 常量
+// x64 (GNU): kFlushDenormToZeroBits = 0x8040 (FTZ bit15 | DAZ bit6)
+// arm:       kFlushDenormToZeroBit  = 1 << 24 (FPCR FZ)
+pub const FLUSH_DENORM_TO_ZERO_BITS_X64: u32 = 0x8040;
+pub const FLUSH_DENORM_TO_ZERO_BIT_ARM: u32 = 1 << 24;
+
+/// v8: src/base/fpu.h FlushDenormalsScope
+/// 构造: 记录 old_flush_state_ 并 Set(value); 析构: 还原 — Rust Drop 对应
+pub struct FlushDenormalsScope {
+    old_flush_state: bool,
+}
+
+impl FlushDenormalsScope {
+    pub fn new(value: bool) -> Self;
+}
+impl Drop for FlushDenormalsScope {
+    /// v8: ~FlushDenormalsScope — SetFlushDenormals(old_flush_state_)
+    fn drop(&mut self);
+}

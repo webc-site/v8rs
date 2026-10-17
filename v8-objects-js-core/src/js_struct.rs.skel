@@ -1,0 +1,21 @@
+// 由 tool/src/objects/js-struct.h.js 从 v8/src/objects/js-struct.h + js-struct.cc + js-struct.tq 生成; 修订就地改, 复跑覆盖
+// JSSharedStruct/AlwaysSharedSpaceJSObject/注册表差集骨架
+
+//! 共享结构: 抽象基类零新增字段; 具体字段经 map 的 DescriptorArray 描述, 偏移
+//! kHeaderSize + field_index * kTaggedSize (js-struct.cc CreateInstanceMap)。
+
+/// v8: src/objects/js-struct.h AlwaysSharedSpaceJSObject::kHeaderSize (= JSObject 头)
+pub const K_HEADER_SIZE: usize = 24; // 非压缩 8B; static_assert == sizeof(JSObject)
+/// v8: src/objects/js-struct.h JSSharedStruct::kHeaderSize
+pub const K_SHARED_STRUCT_HEADER_SIZE: usize = 24;
+/// v8: src/objects/js-struct.h SharedStructTypeRegistry::deleted_element
+pub const K_REGISTRY_DELETED_ELEMENT: i32 = 1; // Smi::FromInt(1)
+
+// 方法映射 (语义推迟到 heap/registry 层):
+//   AlwaysSharedSpaceJSObject: PrepareMapNoEnumerableProperties x2 / PrepareMapWithEnumerableProperties /
+//     DefineOwnProperty / HasInstance (6 个, js-struct.cc)
+//   JSSharedStruct: CreateInstanceMap / GetRegistryKey / IsRegistryKeyDescriptor /
+//     GetElementsTemplate / IsElementsTemplateDescriptor (5 个)
+//   SharedStructTypeRegistry: Register / IterateElements / NotifyElementsRemoved (公共) +
+//     RegisterNoThrow / CheckIfEntryMatches / EnsureCapacity (私有), Data 基于 OffHeapHashTableBase,
+//     deleted_element 哨兵 = Smi(1), base::Mutex 全访问互斥

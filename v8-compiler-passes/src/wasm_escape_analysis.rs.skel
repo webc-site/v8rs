@@ -1,0 +1,28 @@
+// 由 tool/src/compiler/wasm-escape-analysis.js 从 v8/src/compiler/wasm-escape-analysis.h + wasm-escape-analysis.cc 生成; 修订就地改, 复跑覆盖
+// 消除仅作 store 目标的分配
+
+//! wasm-escape-analysis — AllocateRaw 无逃逸 (非 store 使用) 即删
+//! (phi/重命名暂不豁免 — 原版注释的 future work)。
+
+/// 原版 WasmEscapeAnalysis — AdvancedReducer
+pub struct WasmEscapeAnalysis<'z> {
+  /// mcgraph_
+  pub mcgraph: &'z MachineGraph<'z>,
+}
+
+impl WasmEscapeAnalysis<'_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "WasmEscapeAnalysis";
+
+  /// 原版 Reduce — 仅 AllocateRaw 进入
+  /// v8: src/compiler/wasm-escape-analysis.cc WasmEscapeAnalysis::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-escape-analysis.cc WasmEscapeAnalysis::Reduce")
+  }
+
+  /// 原版 ReduceAllocateRaw — 使用全为 store → 替换为 dead (store_only 判定: Store 谓词核对在案)
+  /// v8: src/compiler/wasm-escape-analysis.cc WasmEscapeAnalysis::ReduceAllocateRaw
+  fn reduce_allocate_raw(&mut self, call: &Node) -> Reduction {
+    todo!("v8: src/compiler/wasm-escape-analysis.cc WasmEscapeAnalysis::ReduceAllocateRaw")
+  }
+}

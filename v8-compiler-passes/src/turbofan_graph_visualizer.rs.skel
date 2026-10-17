@@ -1,0 +1,102 @@
+// 由 tool/src/compiler/turbofan-graph-visualizer.js 从 v8/src/compiler/turbofan-graph-visualizer.h + turbofan-graph-visualizer.cc 生成; 修订就地改, 复跑覆盖
+// Turbolizer JSON/c1v 图导出
+
+//! turbofan-graph-visualizer — trace-turbo 序列化族
+//!
+//! JsonPrint* 源码输出 5 个; AsJSON 包装结构 10 个
+//! (SourcePositionAsJSON, NodeOriginAsJSON, GraphAsJSON, LiveRangeAsJSON, TopLevelLiveRangeAsJSON, RegisterAllocationDataAsJSON, ...);
+//! operator<< 声明 13 个; JsonOf 转义调用 0 处。
+
+/// 原版 TurboJsonFile — trace 文件 (JSON)
+/// v8: src/compiler/turbofan-graph-visualizer.cc TurboJsonFile
+pub struct TurboJsonFile;
+
+/// 原版 TurboCfgFile — cfg 文件
+/// v8: src/compiler/turbofan-graph-visualizer.cc TurboCfgFile
+pub struct TurboCfgFile;
+
+// —— AsJSON 包装结构清单 ——
+/// v8: src/compiler/turbofan-graph-visualizer.h struct SourcePositionAsJSON
+pub struct SourcePositionAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct NodeOriginAsJSON
+pub struct NodeOriginAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct GraphAsJSON
+pub struct GraphAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct LiveRangeAsJSON
+pub struct LiveRangeAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct TopLevelLiveRangeAsJSON
+pub struct TopLevelLiveRangeAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct RegisterAllocationDataAsJSON
+pub struct RegisterAllocationDataAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct InstructionOperandAsJSON
+pub struct InstructionOperandAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct InstructionAsJSON
+pub struct InstructionAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct InstructionBlockAsJSON
+pub struct InstructionBlockAsJSON;
+/// v8: src/compiler/turbofan-graph-visualizer.h struct InstructionSequenceAsJSON
+pub struct InstructionSequenceAsJSON;
+
+/// 原版 SourceIdAssigner — SFI 去重编号器
+pub struct SourceIdAssigner {
+  /// printed_
+  pub printed: Vec<Handle<SharedFunctionInfo>>,
+  /// source_ids_
+  pub source_ids: Vec<i32>,
+}
+
+impl SourceIdAssigner {
+  /// 原版 GetIdFor — 新 SFI 分配递增 id, 已见则复用
+  /// v8: src/compiler/turbofan-graph-visualizer.cc SourceIdAssigner::GetIdFor
+  pub fn get_id_for(&mut self, shared: &Handle<SharedFunctionInfo>) -> i32 {
+    todo!("v8: src/compiler/turbofan-graph-visualizer.cc SourceIdAssigner::GetIdFor")
+  }
+
+  /// 原版 GetIdAt
+  /// v8: src/compiler/turbofan-graph-visualizer.h SourceIdAssigner::GetIdAt
+  pub fn get_id_at(&self, pos: usize) -> i32 {
+    self.source_ids[pos]
+  }
+}
+
+/// 原版 JsonPrintAllBytecodeSources
+/// v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintAllBytecodeSources
+pub fn json_print_all_bytecode_sources(os: &mut String /*, 按签名 */) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintAllBytecodeSources")
+}
+
+/// 原版 JsonPrintBytecodeSource
+/// v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintBytecodeSource
+pub fn json_print_bytecode_source(os: &mut String /*, 按签名 */) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintBytecodeSource")
+}
+
+/// 原版 JsonPrintAllSourceWithPositions
+/// v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintAllSourceWithPositions
+pub fn json_print_all_source_with_positions(os: &mut String /*, 按签名 */) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintAllSourceWithPositions")
+}
+
+/// 原版 JsonPrintAllSourceWithPositionsWasm
+/// v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintAllSourceWithPositionsWasm
+pub fn json_print_all_source_with_positions_wasm(os: &mut String /*, 按签名 */) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintAllSourceWithPositionsWasm")
+}
+
+/// 原版 JsonPrintFunctionSource
+/// v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintFunctionSource
+pub fn json_print_function_source(os: &mut String /*, 按签名 */) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc JsonPrintFunctionSource")
+}
+
+/// 原版 operator<<(GraphAsJSON) — 全图 JSON (节点/边/源位置/origin)
+/// v8: src/compiler/turbofan-graph-visualizer.cc operator<<(GraphAsJSON)
+pub fn graph_as_json(os: &mut String, g: &TFGraph, positions: &SourcePositionTable, origins: &NodeOriginTable) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc operator<<(GraphAsJSON)")
+}
+
+/// 原版 operator<<(AsC1V) — Sea-of-Nodes c1v 可视化格式
+/// v8: src/compiler/turbofan-graph-visualizer.cc operator<<(AsC1V)
+pub fn as_c1v(os: &mut String, phase: &str, schedule: &Schedule, positions: &SourcePositionTable, types: Option<&Type>, origins: &NodeOriginTable) {
+  todo!("v8: src/compiler/turbofan-graph-visualizer.cc operator<<(AsC1V)")
+}

@@ -1,0 +1,28 @@
+// 由 tool/src/heap/remembered-set.js 从 v8/src/heap/remembered-set.h, src/heap/remembered-set-inl.h 生成; 修订就地改, 复跑覆盖
+// 记忆集: 老生代→新生代等槽位记录
+/// RememberedSetType 定义于 mutable_page.rs (他席):
+/// OLD_TO_NEW / OLD_TO_NEW_BACKGROUND / OLD_TO_OLD / OLD_TO_SHARED /
+/// TRUSTED_TO_CODE / TRUSTED_TO_TRUSTED / TRUSTED_TO_SHARED_TRUSTED /
+/// SURVIVOR_TO_EXTERNAL_POINTER / NUMBER_OF_REMEMBERED_SET_TYPES
+/// 共 8 个实类型。
+
+/// v8: src/heap/remembered-set.h RememberedSetOperations — SlotSet 裸操作
+pub mod remembered_set_operations {
+  /// v8: Insert<access_mode>(slot_set, slot_offset)
+  /// v8: Iterate<access_mode, Callback>(slot_set, chunk, callback, mode)
+  ///     → slot_set->Iterate(chunk->ChunkAddress(), 0, BucketsInSlotSet, ...)
+  /// v8: Remove(slot_set, chunk, slot_addr) — chunk->Offset 后 Remove
+  /// v8: RemoveRange(slot_set, page, start, end, mode) — OffsetMaybeOutOfRange
+  /// v8: CheckNoneInRange(slot_set, chunk, start, end)
+  ///     末桶计算: BucketForSlot(OffsetMaybeOutOfRange(end) - kTaggedSize) + 1
+}
+
+/// v8: src/heap/remembered-set.h RememberedSet<type> (AllStatic)
+/// 静态面 (page 级): Insert/MergeAndDelete(仅 OLD_TO_NEW,
+/// static_assert)/MergeAndDeleteTyped/DeleteTyped/Contains/CheckNoneInRange/
+/// Remove/RemoveRange/Iterate/IterateTyped/EmptyBucketsAfterIterate 等
+/// v8: src/heap/remembered-set-inl.h RememberedSet<type> 实现面
+/// v8: UpdateTypedSlotHelper — typed slot 按种类 (code entry/target/embedded
+///     pointer/cage base) 用 untyped 回调更新
+/// v8: src/heap/remembered-set.h UpdateTypedSlotHelper::{UpdateCodeEntry,
+///     UpdateCodeTarget, UpdateEmbeddedPointer, UpdateCageBase}

@@ -1,0 +1,30 @@
+// 由 tool/src/base/division-by-constant.h.js 从 v8/src/base/division-by-constant.h + src/base/division-by-constant.cc 生成; 修订就地改, 复跑覆盖
+// 乘法代除法魔数 (Hacker's Delight ch.10)
+
+//! v8: src/base/division-by-constant.h/.cc
+
+/// v8: src/base/division-by-constant.h MagicNumbersForDivision<T>
+/// 三元组 (multiplier, shift, add): n / d ≈ 高位乘 mul 后 >> shift (+1 if add)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MagicNumbersForDivision<T> {
+    pub multiplier: T,
+    pub shift: u32,
+    pub add: bool,
+}
+
+/// v8: src/base/division-by-constant.cc SignedDivisionByConstant (unsigned T 核心)
+/// 前置: d ∉ {-1, 0, 1} (按有符号解释); 返回 (neg ? -mul : mul, p - bits, false)
+pub fn signed_division_by_constant_u32(d: u32) -> MagicNumbersForDivision<u32>;
+/// v8: 同上 uint64_t 实例化
+pub fn signed_division_by_constant_u64(d: u64) -> MagicNumbersForDivision<u64>;
+
+/// v8: src/base/division-by-constant.h SignedDivisionByConstant (signed T 包装)
+/// 转 unsigned 求魔数再 cast 回 T
+pub fn signed_division_by_constant_i32(d: i32) -> MagicNumbersForDivision<i32>;
+pub fn signed_division_by_constant_i64(d: i64) -> MagicNumbersForDivision<i64>;
+
+/// v8: src/base/division-by-constant.cc UnsignedDivisionByConstant
+/// 前置: d != 0; leading_zeros 已知 dividend 高位零个数可加速;
+/// 返回 (q2 + 1, p - bits, a)
+pub fn unsigned_division_by_constant_u32(d: u32, leading_zeros: u32) -> MagicNumbersForDivision<u32>;
+pub fn unsigned_division_by_constant_u64(d: u64, leading_zeros: u32) -> MagicNumbersForDivision<u64>;

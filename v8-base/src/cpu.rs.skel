@@ -1,0 +1,59 @@
+// 由 tool/src/base/cpu/cpu.h.js 从 v8/src/base/cpu/cpu.h + src/base/cpu/cpu.cc 生成; 修订就地改, 复跑覆盖
+// 处理器特性查询 (类定义跨架构, 实现分 cpu_<arch>.cc)
+
+//! v8: src/base/cpu/cpu.h/.cc
+//! 架构实现分文件: cpu-x86.cc / cpu-arm.cc (既有脚本), cpu-loong64/mips64/ppc/riscv/s390.cc (本席另脚本)
+
+/// v8: src/base/cpu/cpu.h CPU
+/// vendor_: char[13] (12 字符 + NUL); 其余数值字段见下方常量;
+/// DetectFeatures() 私有探测入口 (构造时调); GetInstance: static const CPU 惰性单例
+#[derive(Debug, Clone)]
+pub struct Cpu {
+    pub vendor: [u8; 13],
+    pub stepping: i32, pub model: i32, pub ext_model: i32,
+    pub family: i32, pub ext_family: i32, pub type_: i32,
+    pub implementer: i32, pub architecture: i32, pub variant: i32, pub part: i32,
+    pub icache_line_size: i32, pub dcache_line_size: i32,
+    pub num_virtual_address_bits: i32,
+    // Developer: 特性位 ~60 项 (x86/arm/mips/riscv/loong 分组), 按 has_xxx_ 字段 1:1 展开
+}
+
+impl Cpu {
+    /// v8: cpu.cc CPU::CPU() — DetectFeatures() 填充
+    pub fn new() -> Self;
+    /// v8: cpu.cc GetInstance — static const CPU (函数级静态, 线程安全 magic static)
+    pub fn get_instance() -> &'static Cpu;
+}
+
+// —— v8: src/base/cpu/cpu.h 常量表 (constexpr) ——
+pub const KARM: i32 = 0x41; // v8: cpu.h kArm
+pub const KNVIDIA: i32 = 0x4e; // v8: cpu.h kNvidia
+pub const KQUALCOMM: i32 = 0x51; // v8: cpu.h kQualcomm
+pub const KNVIDIADENVER: i32 = 0x0; // v8: cpu.h kNvidiaDenver
+pub const KARMCORTEXA5: i32 = 0xc05; // v8: cpu.h kArmCortexA5
+pub const KARMCORTEXA7: i32 = 0xc07; // v8: cpu.h kArmCortexA7
+pub const KARMCORTEXA8: i32 = 0xc08; // v8: cpu.h kArmCortexA8
+pub const KARMCORTEXA9: i32 = 0xc09; // v8: cpu.h kArmCortexA9
+pub const KARMCORTEXA12: i32 = 0xc0c; // v8: cpu.h kArmCortexA12
+pub const KARMCORTEXA15: i32 = 0xc0f; // v8: cpu.h kArmCortexA15
+pub const KNVIDIADENVERV10: i32 = 0x002; // v8: cpu.h kNvidiaDenverV10
+pub const KUNKNOWNCACHELINESIZE: i32 = 0; // v8: cpu.h kUnknownCacheLineSize
+pub const KUNKNOWNNUMVIRTUALADDRESSBITS: i32 = 0; // v8: cpu.h kUnknownNumVirtualAddressBits
+pub const KUNKNOWNVLEN: i32 = 0; // v8: cpu.h kUnknownVlen
+
+/// v8: cpu.h RV_MMU_MODE — riscv_mmu_ 默认 kRiscvSV48
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RvMmuMode {
+    #[default]
+    KRiscvSv39,
+    KRiscvSv48,
+    KRiscvSv57,
+}
+
+// v8: cpu.h enum { kPPCPower9, kPPCPower10, kPPCPower11 } — 匿名枚举序数 0/1/2
+pub const PPC_POWER9: i32 = 0;
+pub const PPC_POWER10: i32 = 1;
+pub const PPC_POWER11: i32 = 2;
+
+// v8: cpu.cc — /proc/cpuinfo 探测 (PATHNAME) 走 CPUInfo/ExtractField/HasListItem (cpu-helper.h 既有);
+//     StarboardDetectCPU 仅 V8_OS_STARBOARD 构建生效, Rust 登记跳过

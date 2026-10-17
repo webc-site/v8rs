@@ -1,0 +1,47 @@
+// 由 tool/src/compiler/value-numbering-reducer.js 从 v8/src/compiler/value-numbering-reducer.h + value-numbering-reducer.cc 生成; 修订就地改, 复跑覆盖
+// 全局部值编号 (纯节点去重)
+
+//! value-numbering-reducer — open-addressing 哈希表上的 GVN
+//!
+//! 键 = (opcode, 参数); 表初始 256 槽, 装填因子过半 Grow 翻倍重插;
+//! 替换候选需类型匹配 (ReplaceIfTypesMatch)。
+
+/// 原版 kInitialCapacity — 初始桶数
+pub const K_INITIAL_CAPACITY: usize = 256;
+
+/// 原版 ValueNumberingReducer — Reducer (temp_zone 建表, graph_zone 分配节点)
+pub struct ValueNumberingReducer<'zt, 'zg> {
+  /// entries_ — open-addressing 槽
+  pub entries: Vec<*mut Node>,
+  /// capacity_
+  pub capacity: usize,
+  /// size_
+  pub size: usize,
+  /// temp_zone_
+  pub temp_zone: &'zt Zone<'zt>,
+  /// graph_zone_
+  pub graph_zone: &'zg Zone<'zg>,
+}
+
+impl ValueNumberingReducer<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "ValueNumberingReducer";
+
+  /// 原版 Reduce — 查表命中且类型匹配 → Replace
+  /// v8: src/compiler/value-numbering-reducer.cc ValueNumberingReducer::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/value-numbering-reducer.cc ValueNumberingReducer::Reduce")
+  }
+
+  /// 原版 ReplaceIfTypesMatch — 类型相容才替换
+  /// v8: src/compiler/value-numbering-reducer.cc ValueNumberingReducer::ReplaceIfTypesMatch
+  fn replace_if_types_match(&self, node: &Node, replacement: &Node) -> Reduction {
+    todo!("v8: src/compiler/value-numbering-reducer.cc ValueNumberingReducer::ReplaceIfTypesMatch")
+  }
+
+  /// 原版 Grow — 翻倍重插
+  /// v8: src/compiler/value-numbering-reducer.cc ValueNumberingReducer::Grow
+  fn grow(&mut self) {
+    todo!("v8: src/compiler/value-numbering-reducer.cc ValueNumberingReducer::Grow")
+  }
+}

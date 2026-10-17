@@ -1,0 +1,33 @@
+[package]
+name = "v8-compiler-broker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-compiler-broker"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+gxhash = "3.5.0"
+log = "0.4.34"
+thiserror = "2.0.21"
+v8-compiler-graph = { version = "0.1.0", path = "../v8-compiler-graph" }
+v8-objects-core = { version = "0.1.0", path = "../v8-objects-core" }
+v8-objects-js-core = { version = "0.1.0", path = "../v8-objects-js-core" }
+v8-objects-js-func = { version = "0.1.0", path = "../v8-objects-js-func" }
+v8-zone = { version = "0.1.0", path = "../v8-zone" }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"
+

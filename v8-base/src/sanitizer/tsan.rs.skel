@@ -1,0 +1,18 @@
+// 由 tool/src/base/sanitizer/tsan.h.js 从 v8/src/base/sanitizer/tsan.h 生成; 修订就地改, 复跑覆盖
+// ThreadSanitizer 宏面
+
+//! v8 侧: 参数化宏 2 (双分支: 注解 vs (void)0); DISABLE_TSAN 1
+//! Rust: TSAN_ACQUIRE/RELEASE ↔ 原子 Ordering::Acquire/Release 语义由编译器映射; 空转默认
+
+/// v8: TSAN_IGNORE_READS_BEGIN / TSAN_IGNORE_READS_END — 读访问忽略区间
+pub fn tsan_ignore_reads_begin() { /* v8: AnnotateIgnoreReadsBegin */ }
+pub fn tsan_ignore_reads_end() { /* v8: AnnotateIgnoreReadsEnd */ }
+
+/// v8: TSAN_ACQUIRE(addr) — happens-before 获取注解
+pub fn tsan_acquire(addr: usize) { let _ = addr; /* v8: __tsan_acquire */ }
+
+/// v8: TSAN_RELEASE(addr) — happens-before 释放注解
+pub fn tsan_release(addr: usize) { let _ = addr; /* v8: __tsan_release */ }
+
+/// v8: DISABLE_TSAN — no_sanitize_thread (Rust 恒空)
+// 宏对账 (v8 解析 2 项): TSAN_ACQUIRE, TSAN_RELEASE

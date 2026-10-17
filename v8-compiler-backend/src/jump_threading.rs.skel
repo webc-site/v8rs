@@ -1,0 +1,21 @@
+// 由 tool/src/compiler/backend/jump-threading.js 从 v8/src/compiler/backend/jump-threading.h + jump-threading.cc 生成; 修订就地改, 复跑覆盖
+// JumpThreading: 空块跳转转发传递闭包 + 指令重写/分支取反
+
+//! 台账: ComputeForwarding — 栈式传递闭包 (state 三态: -1 unvisited/-2 onstack;
+//!   Forward 四分支: 自环终止/递归入栈/破环/转发; 空返回块双缓存槽按帧析构分桶;
+//!   GapJumpRecord (CanForwardGapJump 逐 gap 比对) 缓存防重扫; 末轮二扫自洽化)。
+//!   ApplyForwarding — 跳转/分支目标重写 (可取反分支), ao 号重排, rpo 立即数重定向。
+
+/// v8: JumpThreading::ComputeForwarding — 转发映射 (是否有转发发生)
+// pub fn compute_forwarding(code: &InstructionSequence, frame_at_start: bool) -> (bool, Vec<RpoNumber>)
+/// v8: JumpThreading::ApplyForwarding — 按映射重写跳转/分支
+// pub fn apply_forwarding(forwarding: &[RpoNumber], code: &mut InstructionSequence)
+/// v8: JumpThreadingState::unvisited / onstack — 三态哨兵
+pub const UNVISITED: i32 = -1;
+pub const ON_STACK: i32 = -2;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(UNVISITED == -1);
+  assert!(ON_STACK == -2);
+};

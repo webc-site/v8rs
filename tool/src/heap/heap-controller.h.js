@@ -1,0 +1,200 @@
+#!/usr/bin/env bun
+// tool/src/heap/heap-controller.h.js
+// 机械提取 v8/src/heap/heap-controller.{h,cc}:
+// BaseControllerTrait/V8HeapTrait/GlobalMemoryTrait 常量 + MemoryController
+// ComputeSqrtLimit 公式 (M = L + limit_factor*sqrt(g*s), clamp 上下系数) +
+// GrowingFactor 三模式规则 + HeapLimitBounds clamp 台账。
+
+import { readV8, writeSrc, banner } from "../../lib.js";
+
+const h = readV8("src/heap/heap-controller.h");
+const cc = readV8("src/heap/heap-controller.cc");
+
+// —— Trait 常量锚 ——
+for (const a of [
+  "struct BaseControllerTrait {",
+  "static constexpr double kMinGrowingFactor = 1.1;",
+  "static constexpr double kMaxGrowingFactor = 4.0;",
+  "static constexpr double kConservativeGrowingFactor = 1.3;",
+  "static constexpr double kTargetMutatorUtilization = 0.97;",
+  "struct V8_EXPORT_PRIVATE V8HeapTrait : public BaseControllerTrait {",
+  'static constexpr char kName[] = "HeapController";',
+  "static constexpr size_t kMinimumAllocationLimitGrowingStep = 8 * MB;",
+  "struct V8_EXPORT_PRIVATE GlobalMemoryTrait : public BaseControllerTrait {",
+  'static constexpr char kName[] = "GlobalMemoryController";',
+  "template <typename Trait>",
+  "class V8_EXPORT_PRIVATE MemoryController : public AllStatic {",
+  "static uint64_t ComputeSqrtLimit(uint64_t heap_size_at_last_gc,",
+  "static double GrowingFactor(Isolate* isolate, uint64_t physical_memory,",
+  "static double MaxGrowingFactor(uint64_t physical_memory,",
+  "static double DynamicGrowingFactor(std::optional<double> gc_speed,",
+  "struct HeapLimitBounds {",
+  "return std::clamp(val, minimum_old_generation_allocation_limit,",
+  "return std::clamp(val, minimum_global_allocation_limit,",
+  "void AtLeast(size_t new_min_old_gen_limit, size_t new_min_global_limit) {",
+  "void AtMost(size_t new_max_old_gen_limit, size_t new_max_global_limit) {",
+  "class V8_EXPORT_PRIVATE HeapLimits {",
+  "static size_t GlobalMemorySizeFromV8Size(size_t v8_size);",
+]) {
+  if (!h.includes(a)) throw new Error(`heap-controller.h 锚缺失: ${a}`);
+}
+// —— cc 公式锚 ——
+for (const a of [
+  "uint64_t MemoryController<Trait>::ComputeSqrtLimit(",
+  "heap_size_at_last_gc +",
+  "limit_factor * sqrt(allocation_speed * total_size_of_objects);",
+  "return std::clamp(computed_limit, min_limit, max_limit);",
+  "double MemoryController<Trait>::GrowingFactor(",
+  "factor = std::min({factor, Trait::kConservativeGrowingFactor});",
+  "factor = Trait::kMinGrowingFactor;",
+  "factor = 1.0 + v8_flags.heap_growing_percent / 100.0;",
+  "size_t V8HeapTrait::BoundAllocationLimit(",
+  "size_t GlobalMemoryTrait::BoundAllocationLimit(",
+]) {
+  if (!cc.includes(a)) throw new Error(`heap-controller.cc 锚缺失: ${a}`);
+}
+console.log("HeapController: Trait 常量 7 + MemoryController 4 公式 + Bounds clamp 4");
+
+let rust = banner(
+  "src/heap/heap-controller.h.js",
+  "src/heap/heap-controller.{h,cc}",
+  "堆增长控制器: 平方根上限公式与增长因子",
+);
+
+rust += `
+/// 基础增长常量 (对应 struct BaseControllerTrait)。
+pub const K_MIN_GROWING_FACTOR: f64 = 1.1;
+pub const K_MAX_GROWING_FACTOR: f64 = 4.0;
+pub const K_CONSERVATIVE_GROWING_FACTOR: f64 = 1.3;
+pub const K_TARGET_MUTATOR_UTILIZATION: f64 = 0.97;
+/// 对应 kMinimumAllocationLimitGrowingStep = 8 * MB (V8HeapTrait/GlobalMemoryTrait 同值)。
+pub const K_MINIMUM_ALLOCATION_LIMIT_GROWING_STEP: usize = 8 * 1024 * 1024;
+
+/// 平方根堆上限 (对应 MemoryController::ComputeSqrtLimit, arXiv:2204.10455)。
+/// M = L + limit_factor * sqrt(g*s); 再被 min/max 增长系数钳制。
+/// v8: src/heap/heap-controller.cc MemoryController::ComputeSqrtLimit
+#[must_use]
+pub fn compute_sqrt_limit(
+  heap_size_at_last_gc: u64,
+  allocation_speed: f64,
+  total_size_of_objects: u64,
+  limit_factor: f64,
+  min_growing_factor: f64,
+  max_growing_factor: f64,
+) -> u64 {
+  let computed_limit =
+    heap_size_at_last_gc as f64 + limit_factor * (allocation_speed * total_size_of_objects as f64).sqrt();
+  let min_limit = min_growing_factor * heap_size_at_last_gc as f64;
+  let max_limit = max_growing_factor * heap_size_at_last_gc as f64;
+  computed_limit.clamp(min_limit, max_limit) as u64
+}
+
+/// 增长模式 (对应 Heap::HeapGrowingMode 的 4 值, 取 GrowingFactor switch 臂)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HeapGrowingMode {
+  Default,
+  Conservative,
+  Slow,
+  Minimal,
+}
+
+/// 增长因子 (对应 MemoryController::GrowingFactor):
+/// Conservative/Slow → min(factor, 1.3); Minimal → 1.1; Default → 原值;
+/// heap_growing_percent > 0 时最终覆盖为 1 + percent/100。
+/// v8: src/heap/heap-controller.cc MemoryController::GrowingFactor
+#[must_use]
+pub fn growing_factor(
+  dynamic_factor: f64,
+  mode: HeapGrowingMode,
+  heap_growing_percent: i64,
+) -> f64 {
+  let mut factor = match mode {
+    HeapGrowingMode::Conservative | HeapGrowingMode::Slow => {
+      dynamic_factor.min(K_CONSERVATIVE_GROWING_FACTOR)
+    }
+    HeapGrowingMode::Minimal => K_MIN_GROWING_FACTOR,
+    HeapGrowingMode::Default => dynamic_factor,
+  };
+  if heap_growing_percent > 0 {
+    factor = 1.0 + heap_growing_percent as f64 / 100.0;
+  }
+  factor
+}
+
+/// 限额边界 (对应 struct HeapLimitBounds: 老/全局各一对 min/max + clamp)。
+/// v8: src/heap/heap-controller.h HeapLimitBounds
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HeapLimitBoundsSkeleton {
+  pub minimum_old_generation_allocation_limit: usize,
+  pub maximum_old_generation_allocation_limit: usize,
+  pub minimum_global_allocation_limit: usize,
+  pub maximum_global_allocation_limit: usize,
+}
+
+impl Default for HeapLimitBoundsSkeleton {
+  /// 对应默认: min=0, max=SIZE_MAX
+  fn default() -> Self {
+    Self {
+      minimum_old_generation_allocation_limit: 0,
+      maximum_old_generation_allocation_limit: usize::MAX,
+      minimum_global_allocation_limit: 0,
+      maximum_global_allocation_limit: usize::MAX,
+    }
+  }
+}
+
+impl HeapLimitBoundsSkeleton {
+  /// 对应 bounded_old_generation_allocation_limit: std::clamp
+  pub fn bounded_old_generation_allocation_limit(&self, val: usize) -> usize {
+    val.clamp(
+      self.minimum_old_generation_allocation_limit,
+      self.maximum_old_generation_allocation_limit,
+    )
+  }
+
+  /// 对应 bounded_global_allocation_limit
+  pub fn bounded_global_allocation_limit(&self, val: usize) -> usize {
+    val.clamp(self.minimum_global_allocation_limit, self.maximum_global_allocation_limit)
+  }
+
+  /// 对应 AtLeast: 抬下界 (先 clamp 到自身上下界内)
+  pub fn at_least(&mut self, new_min_old_gen: usize, new_min_global: usize) {
+    self.minimum_old_generation_allocation_limit =
+      self.bounded_old_generation_allocation_limit(new_min_old_gen);
+    self.minimum_global_allocation_limit = self.bounded_global_allocation_limit(new_min_global);
+  }
+
+  /// 对应 AtMost: 压上界
+  pub fn at_most(&mut self, new_max_old_gen: usize, new_max_global: usize) {
+    self.maximum_old_generation_allocation_limit =
+      self.bounded_old_generation_allocation_limit(new_max_old_gen);
+    self.maximum_global_allocation_limit = self.bounded_global_allocation_limit(new_max_global);
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(K_MIN_GROWING_FACTOR, 1.1);
+  assert_eq!(K_MAX_GROWING_FACTOR, 4.0);
+  assert_eq!(K_MINIMUM_ALLOCATION_LIMIT_GROWING_STEP, 8 * 1024 * 1024);
+  // L=100, g*s=4, factor=1 → M=102; 钳制 [110, 400] → 110
+  assert_eq!(compute_sqrt_limit(100, 4.0, 1, 1.0, 1.1, 4.0), 110);
+  // 钳制上限: L=100, factor 巨大 → 400
+  assert_eq!(compute_sqrt_limit(100, 1e18, 1, 1e6, 1.1, 4.0), 400);
+  // 中间值不触钳
+  assert_eq!(compute_sqrt_limit(100, 4.0, 1, 1.0, 1.0, 5.0), 102);
+  assert_eq!(growing_factor(2.0, HeapGrowingMode::Default, 0), 2.0);
+  assert_eq!(growing_factor(2.0, HeapGrowingMode::Conservative, 0), 1.3);
+  assert_eq!(growing_factor(2.0, HeapGrowingMode::Minimal, 0), 1.1);
+  assert_eq!(growing_factor(2.0, HeapGrowingMode::Default, 50), 1.5);
+  let mut b = HeapLimitBoundsSkeleton::default();
+  b.at_least(100, 200);
+  assert_eq!(b.bounded_old_generation_allocation_limit(50), 100);
+  b.at_most(80, 90);
+  assert_eq!(b.bounded_global_allocation_limit(300), 90);
+  assert_eq!(b.bounded_old_generation_allocation_limit(0), 100); // 下界仍生效
+};
+`;
+
+const p = writeSrc("v8-heap-core", "heap_controller.rs.skel", rust);
+console.log(`written ${p}`);

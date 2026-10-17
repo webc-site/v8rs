@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="930" height="500" font-family="monospace">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="16" y="26" font-size="17" font-weight="bold">v8-numbers 评测 (越低越快)</text>
+  <text x="16" y="46" font-size="15" font-weight="bold">dtoa</text>
+  <text x="142" y="81" text-anchor="end" font-size="13">ryu</text>
+  <rect x="150" y="70" width="52.0" height="14" fill="#3b82f6" rx="2"/>
+  <text x="209.96290636950684" y="81" font-size="12">21.0 ns · 3.18x</text>
+  <text x="142" y="103" text-anchor="end" font-size="13">v8-numbers</text>
+  <rect x="150" y="92" width="165.3" height="14" fill="#9ca3af" rx="2"/>
+  <text x="323.2835348749127" y="103" font-size="12">66.8 ns · 1.00x</text>
+  <text x="142" y="125" text-anchor="end" font-size="13">std</text>
+  <rect x="150" y="114" width="520.0" height="14" fill="#f59e0b" rx="2"/>
+  <text x="678" y="125" font-size="12">210.3 ns · 0.32x</text>
+  <text x="16" y="146" font-size="15" font-weight="bold">itos</text>
+  <text x="142" y="181" text-anchor="end" font-size="13">itoa</text>
+  <rect x="150" y="170" width="101.9" height="14" fill="#3b82f6" rx="2"/>
+  <text x="259.90123940967067" y="181" font-size="12">6.0 ns · 1.03x</text>
+  <text x="142" y="203" text-anchor="end" font-size="13">v8-numbers</text>
+  <rect x="150" y="192" width="105.1" height="14" fill="#9ca3af" rx="2"/>
+  <text x="263.09453050862595" y="203" font-size="12">6.2 ns · 1.00x</text>
+  <text x="142" y="225" text-anchor="end" font-size="13">std</text>
+  <rect x="150" y="214" width="520.0" height="14" fill="#f59e0b" rx="2"/>
+  <text x="678" y="225" font-size="12">30.5 ns · 0.20x</text>
+  <text x="16" y="246" font-size="15" font-weight="bold">parse-int</text>
+  <text x="142" y="281" text-anchor="end" font-size="13">std</text>
+  <rect x="150" y="270" width="397.2" height="14" fill="#3b82f6" rx="2"/>
+  <text x="555.1896263254755" y="281" font-size="12">15.3 ns · 1.31x</text>
+  <text x="142" y="303" text-anchor="end" font-size="13">v8-numbers</text>
+  <rect x="150" y="292" width="520.0" height="14" fill="#9ca3af" rx="2"/>
+  <text x="678" y="303" font-size="12">20.0 ns · 1.00x</text>
+  <text x="16" y="324" font-size="15" font-weight="bold">roundtrip</text>
+  <text x="142" y="359" text-anchor="end" font-size="13">v8-numbers</text>
+  <rect x="150" y="348" width="251.2" height="14" fill="#3b82f6" rx="2"/>
+  <text x="409.2113473616032" y="359" font-size="12">137.5 ns · 1.00x</text>
+  <text x="142" y="381" text-anchor="end" font-size="13">std</text>
+  <rect x="150" y="370" width="520.0" height="14" fill="#9ca3af" rx="2"/>
+  <text x="678" y="381" font-size="12">284.7 ns · 0.48x</text>
+  <text x="16" y="402" font-size="15" font-weight="bold">strtod</text>
+  <text x="142" y="437" text-anchor="end" font-size="13">std</text>
+  <rect x="150" y="426" width="160.5" height="14" fill="#3b82f6" rx="2"/>
+  <text x="318.47622734292986" y="437" font-size="12">22.7 ns · 3.24x</text>
+  <text x="142" y="459" text-anchor="end" font-size="13">v8-numbers</text>
+  <rect x="150" y="448" width="520.0" height="14" fill="#9ca3af" rx="2"/>
+  <text x="678" y="459" font-size="12">73.6 ns · 1.00x</text>
+</svg>

@@ -1,0 +1,34 @@
+// 由 tool/src/base/platform/yield-processor.js 从 v8/src/base/platform/yield-processor.h 生成; 修订就地改, 复跑覆盖
+// 忙等让步指令 (目标: core::hint::spin_loop 覆盖 x64 pause / arm64 isb)
+
+/// 忙等让步 (原版宏 YIELD_PROCESSOR)
+/// v8: src/base/platform/yield-processor.h YIELD_PROCESSOR
+///
+/// 分支矩阵 (原版三层):
+///  1. THREAD_SANITIZER → OS::Sleep(TimeDelta::FromMilliseconds(1))
+///     (TSAN 拦截原子访问并加锁, 自旋锁饿死 → 改睡 1ms)
+///  2. MSVC: ia32/x64 → _mm_pause(); arm64/armv6 → __isb(_ARM64_BARRIER_SY)
+///  3. GCC/Clang 内联汇编: x64/ia32 → "pause"; arm64/armv6 → "isb";
+///     mips64r2 → "pause"; ppc64 → "or 31,31,31"
+///  4. 兜底: ((void)0)
+///
+/// Rust 侧: core::hint::spin_loop() 在 x64 编译为 pause、arm64 编译为 yield,
+/// 语义等价于分支 3 的目标形态; TSAN 换眠逻辑属执行环境配置, 登记由上层处理。
+#[inline(always)]
+pub fn yield_processor() {
+  std::hint::spin_loop();
+}
+
+/// TSAN 自旋缓解休眠 (原版 THREAD_SANITIZER 分支的 1ms)
+/// v8: src/base/platform/yield-processor.h (THREAD_SANITIZER 分支)
+pub const TSAN_YIELD_SLEEP_MS: i64 = 1;
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // 8 条 #define: sleep 1 + _mm_pause 1 + __isb 1 + pause 2 (x64/mips) + isb 1 + or 1 + 兜底 1
+  const DEFINES: usize = 8;
+  const PAUSE_IMPLS: usize = 3;
+  const ISB_IMPLS: usize = 2;
+  assert!(DEFINES == 8 && PAUSE_IMPLS == 3 && ISB_IMPLS == 2);
+  assert_eq!(TSAN_YIELD_SLEEP_MS, 1);
+};

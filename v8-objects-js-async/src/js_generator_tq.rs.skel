@@ -1,0 +1,30 @@
+// 由 tool/src/objects/js-generator.tq.js 从 v8/src/objects/js-generator.tq (+js-generator.h 只读哨兵锚点) 生成; 修订就地改, 复跑覆盖
+// JSGenerator 族 tq 布局与 continuation 哨兵
+
+//! 差集骨架: JSGeneratorObject / JSAsyncFunctionObject / JSAsyncGeneratorObject / AsyncGeneratorRequest。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。resume/await 语义面留 Developer (js_generator.rs 已有人工实现)。
+
+// ── continuation 哨兵 (tq generates → h 取值) ──
+/// v8: src/objects/js-generator.tq kGeneratorExecuting → js-generator.h JSGeneratorObject::kGeneratorExecuting
+pub const K_GENERATOR_EXECUTING: i32 = -2;
+/// v8: src/objects/js-generator.tq kGeneratorClosed → js-generator.h JSGeneratorObject::kGeneratorClosed
+pub const K_GENERATOR_CLOSED: i32 = -1;
+/// v8: src/objects/js-generator.tq kGeneratorResumeModeNext → JSGeneratorObject::kNext (ResumeMode 枚举)
+pub const K_RESUME_MODE_NEXT: i32 = 0;
+/// v8: src/objects/js-generator.tq kGeneratorResumeModeThrow → JSGeneratorObject::kThrow
+pub const K_RESUME_MODE_THROW: i32 = 2;
+/// v8: src/objects/js-generator.h enum ResumeMode { kNext=0, kReturn=1, kThrow=2, kRethrow=3 }
+
+// ── 64 位布局 ──
+/// v8: src/objects/js-generator.tq JSGeneratorObject: function 24, context 32, receiver 40,
+///   input_or_debug_pos 48, resume_mode 56, continuation 64, parameters_and_registers 72,
+///   yielded_value 80
+pub const K_JS_GENERATOR_OBJECT_HEADER_SIZE: usize = 88;
+/// v8: src/objects/js-generator.tq JSAsyncFunctionObject: promise 88, await_resolve_closure 96,
+///   await_reject_closure 104 (懒分配, 初值 undefined)
+pub const K_JS_ASYNC_FUNCTION_OBJECT_HEADER_SIZE: usize = 112;
+/// v8: src/objects/js-generator.tq JSAsyncGeneratorObject: queue 88, is_awaiting 96
+pub const K_JS_ASYNC_GENERATOR_OBJECT_HEADER_SIZE: usize = 104;
+/// v8: src/objects/js-generator.tq AsyncGeneratorRequest (Struct 头 8): next 8, resume_mode 16,
+///   value 24, promise 32
+pub const K_ASYNC_GENERATOR_REQUEST_HEADER_SIZE: usize = 40;

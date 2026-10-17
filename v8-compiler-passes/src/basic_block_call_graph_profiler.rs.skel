@@ -1,0 +1,46 @@
+// 由 tool/src/compiler/basic-block-call-graph-profiler.js 从 v8/src/compiler/basic-block-call-graph-profiler.h + src/compiler/basic-block-call-graph-profiler.cc 生成; 修订就地改, 复跑覆盖
+// BasicBlockCallGraphProfiler — builtin 间调用图采集 (reorder_builtins 配套)
+
+//! 遍历 turboshaft 图, 记录 builtin → builtin 的调用边 (带 block id)。
+//!
+//! 规则面: IsBuiltinCall 五重门槛链。
+//! 语义面 (推迟): turboshaft OperationMatcher / BuiltinsCallGraph 落点。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/basic-block-call-graph-profiler.cc IsBuiltinCall
+/// 门槛链 (原文顺序): CallOp|TailCallOp → kCallCodeObject →
+/// MatchHeapConstant → Is<Code> → is_builtin; 通过则写出 builtin_id
+fn is_builtin_call(op: &crate::turboshaft::Operation, graph: &crate::turboshaft::Graph) -> Option<crate::builtins::Builtin> {
+  let (descriptor, callee) = if let Some(call) = op.try_cast_call() {
+    (call.descriptor, call.callee())
+  } else if let Some(tail) = op.try_cast_tail_call() {
+    (tail.descriptor, tail.callee())
+  } else {
+    return None;
+  };
+  if descriptor.descriptor.kind() != crate::CallDescriptorKind::CallCodeObject {
+    return None;
+  }
+  let matcher = crate::turboshaft::OperationMatcher::new(graph);
+  let heap_constant = matcher.match_heap_constant(callee)?;
+  let code = heap_constant.as_code()?;
+  if !code.is_builtin() {
+    return None;
+  }
+  Some(code.builtin_id())
+}
+
+/// v8: src/compiler/basic-block-call-graph-profiler.h BasicBlockCallGraphProfiler::StoreCallGraph
+pub fn store_call_graph(info: &mut crate::OptimizedCompilationInfo, graph: &crate::turboshaft::Graph) {
+  assert!(crate::builtins::is_builtin_id(info.builtin()));
+  let profiler = crate::diagnostics::BuiltinsCallGraph::get();
+  for block in graph.blocks_vector() {
+    let block_id = block.index().id();
+    for op in graph.operations(block) {
+      if let Some(called) = is_builtin_call(op, graph) {
+        profiler.add_builtin_call(info.builtin(), called, block_id);
+      }
+    }
+  }
+}

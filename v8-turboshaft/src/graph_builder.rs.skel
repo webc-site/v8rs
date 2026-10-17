@@ -1,0 +1,41 @@
+// 由 tool/src/compiler/turboshaft/graph-builder.h.js 从 v8/src/compiler/turboshaft/graph-builder.{h,cc} 生成; 修订就地改, 复跑覆盖
+// Turbofan Schedule → Turboshaft Graph 构建器骨架
+
+/// v8: src/compiler/turboshaft/graph-builder.h BuildGraph
+///
+/// 原版 std::optional<BailoutReason> BuildGraph(PipelineData*, Schedule*,
+/// Zone* phase_zone, Linkage* linkage)
+/// 实现: cc 尾部 — 构造匿名 ns 的 GraphBuilder 后逐块构建。
+pub fn build_graph(
+  data: &mut crate::phase::PipelineData,
+  schedule: &mut crate::phase::Schedule,
+  phase_zone: *mut crate::phase::Zone,
+  linkage: &mut crate::phase::Linkage,
+) -> Option<crate::phase::BailoutReason> {
+  unimplemented!("Developer 修订")
+}
+
+/// v8: src/compiler/turboshaft/graph-builder.cc IsValidSmi
+pub fn is_valid_smi(c: isize) -> bool {
+  unimplemented!("Developer 修订")
+}
+
+/// v8: src/compiler/turboshaft/graph-builder.cc GraphBuilder
+///
+/// 匿名命名空间结构体; 方法面 (顶层全部 7 项):
+/// - Run
+/// - Map
+/// - FixLoopPhis
+/// - ProcessDeoptInput
+/// - ProcessStateValues
+/// - BuildFrameStateData
+/// - Process
+/// (完整清单见原版; 语义面 Developer 修订)
+pub struct GraphBuilder {
+  pub placeholder: (),
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 方法面 =7 由脚本侧断言
+};

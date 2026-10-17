@@ -1,0 +1,30 @@
+[package]
+name = "v8-regexp-exec"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-regexp-exec"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+thiserror = "2.0.21"
+v8-base = { version = "0.1.0", path = "../v8-base" }
+v8-common = { version = "0.1.0", path = "../v8-common" }
+v8-flags = { version = "0.1.0", path = "../v8-flags" }
+v8-regexp-syntax = { version = "0.1.0", path = "../v8-regexp-syntax" }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log = "0.4.34"
+log_init = "0.1.39"
+

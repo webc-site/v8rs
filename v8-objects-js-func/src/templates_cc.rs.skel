@@ -1,0 +1,43 @@
+// 由 tool/src/objects/templates.cc.js 从 v8/src/objects/templates.cc 生成; 修订就地改, 复跑覆盖
+// 差集 (h/-inl.h/tq 归 templates.h.js 席): 函数清单 + 缓存/序列号语义骨架
+
+//! 差集骨架: TemplateInfo 族 cc 语义面。
+//! 依赖 (Isolate/NativeContext/ Factory) 未落地, 语义留 Developer 就地修订。
+
+// —— cc 函数清单 (17 类方法) ——
+/// v8: src/objects/templates.cc
+pub const TEMPLATES_CC_METHODS: &[&str] = &[
+  "FunctionTemplateInfo::HasInstanceType",
+  "FunctionTemplateInfo::GetOrCreateSharedFunctionInfo",
+  "FunctionTemplateInfo::IsTemplateFor",
+  "FunctionTemplateInfo::IsLeafTemplateForApiObject",
+  "FunctionTemplateInfo::SealAndPrepareForPromotionToReadOnly",
+  "FunctionTemplateInfo::AllocateFunctionTemplateRareData",
+  "FunctionTemplateInfo::TryGetCachedPropertyName",
+  "FunctionTemplateInfo::GetCFunctionsCount",
+  "FunctionTemplateInfo::GetCFunction",
+  "ObjectTemplateInfo::SealAndPrepareForPromotionToReadOnly",
+  "DictionaryTemplateInfo::Create",
+  "DictionaryTemplateInfo::NewInstance",
+  "TemplateInfo::ProbeInstantiationsCache",
+  "TemplateInfo::CacheTemplateInstantiation",
+  "TemplateInfo::UncacheTemplateInstantiation",
+  "FunctionTemplateInfo::BreakAtEntry",
+  "TemplateInfo::EnsureHasSerialNumber",
+];
+
+// —— 语义规则面 ——
+/// v8: src/objects/templates.cc
+pub const TEMPLATES_CC_SEMANTICS: &[&str] = &[
+  "HasInstanceType: instance_type() != kNoJSApiObjectType",
+  "GetOrCreateSharedFunctionInfo: 模板 → SFI (懒建, 缓存于模板 rare data)",
+  "IsTemplateFor: map.GetConstructor → JSFunction(shared.api_func_data) 或 FunctionTemplateInfo; 沿 GetParentTemplate 继承链上行查找本模板 (IsLeafTemplateForApiObject 为免链快路径)",
+  "SealAndPrepareForPromotionToReadOnly: FunctionTemplateInfo/ObjectTemplateInfo 双实现 — 密封模板并预备晋升只读堆",
+  "AllocateFunctionTemplateRareData: 懒分配 rare data 区",
+  "TryGetCachedPropertyName: 缓存属性名 optional<Name> (合法时 symbol 化加速)",
+  "GetCFunctionsCount/GetCFunction: fast API C 函数表计数与取项",
+  "ProbeInstantiationsCache / CacheTemplateInstantiation / UncacheTemplateInstantiation: 模板实例化三态缓存 (probe 命中复用; cache 登记; uncache 撤销)",
+  "BreakAtEntry: 调试断点入口标志",
+  "EnsureHasSerialNumber: 懒取模板序列号 (0 表示未分配)",
+  "DictionaryTemplateInfo::Create/NewInstance: 字典模板创建与实例化",
+];

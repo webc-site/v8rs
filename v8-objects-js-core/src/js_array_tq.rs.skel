@@ -1,0 +1,43 @@
+// 由 tool/src/objects/js-array.tq.js 从 v8/src/objects/js-array.tq 生成; 修订就地改, 复跑覆盖
+// JSArray 族 tq 布局/迭代器枚举/Witness 骨架
+
+//! 差集骨架: JSArray / JSArrayIterator / TemplateLiteralObject / FastJSArrayWitness (Torque 侧)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。
+
+/// v8: src/objects/js-array.tq extern enum IterationKind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IterationKind { Keys = 0, Values = 1, Entries = 2 }
+
+/// v8: src/objects/js-array.tq JSArrayIterator 迭代终止哨兵: JSArray → kMaxUInt32;
+/// JSTypedArray → Smi::kMaxValue; 其他 JSReceiver → kMaxSafeInteger (语义面留 Developer)
+
+/// v8: src/objects/js-array.tq JSArrayIterator: iterated_object offset=24,
+///   next_index offset=32, kind offset=40
+pub const K_ARRAY_ITERATOR_HEADER_SIZE: usize = 48;
+/// v8: src/objects/js-array.tq JSArray: length offset=24
+pub const K_JS_ARRAY_HEADER_SIZE: usize = 32;
+/// v8: src/objects/js-array.tq TemplateLiteralObject: raw=32,
+///   function_literal_id=40, slot_id=48
+pub const K_TEMPLATE_LITERAL_OBJECT_HEADER_SIZE: usize = 48;
+
+/// v8: src/objects/js-array.tq transient 类型 (protector 守卫的快速路径视图)
+pub const FAST_ARRAY_TRANSIENTS: &[(&str, &str)] = &[
+    ("FastJSArray", "JSArray"),
+    ("FastJSArrayForRead", "JSArray"),
+    ("FastJSArrayForCopy", "FastJSArray"),
+    ("FastJSArrayForConcat", "FastJSArrayForCopy"),
+    ("FastJSArrayWithNoCustomIteration", "FastJSArray"),
+    ("FastJSArrayForReadWithNoCustomIteration", "FastJSArrayForRead"),
+    ("JSArrayForFastToString", "JSArray"),
+];
+
+/// v8: src/objects/js-array.tq struct FastJSArrayWitness (字段 stable, unstable, map, hasDoubles, hasDoubleHoles, hasSmis, arrayIsPushable;
+///   hasDoubleHoles 仅 V8_ENABLE_UNDEFINED_DOUBLE) — 语义面 (Recheck/LoadElementNoHole/
+///   StoreHole/EnsureArrayPushable/ChangeLength/Push/MoveElements) 留 Developer 修订
+pub struct FastJSArrayWitness<'a> { /* stable/unstable/map/hasDoubles/hasSmis/arrayIsPushable */ }
+
+/// v8: src/objects/js-array.tq struct FastJSArrayForReadWitness (Get/Recheck/LoadElementNoHole)
+pub struct FastJSArrayForReadWitness<'a> { /* stable/unstable/map/hasDoubles */ }
+
+/// v8: src/objects/js-array.tq TorqueMoveElements/TorqueMoveElementsSmi/TorqueCopyElements
+/// — elements 搬移入口 (HOLEY_{SMI,DOUBLE,}_ELEMENTS 三通道), 语义面留 Developer

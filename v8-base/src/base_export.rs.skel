@@ -1,0 +1,13 @@
+// 由 tool/src/base/base-export.h.js 从 v8/src/base/base-export.h 生成; 修订就地改, 复跑覆盖
+// DLL 导出宏, Rust 无对应物
+
+//! v8: src/base/base-export.h
+//! 纯链接器可见性宏, Rust crate 系统天然按 pub 控制可见性, 无需转换。
+//! 登记以下 4 个展开分支供审计对数:
+//!
+//! | 条件 | 展开 |
+//! | --- | --- |
+//! | V8_OS_WIN && BUILDING_V8_BASE_SHARED | __declspec(dllexport) |
+//! | V8_OS_WIN && USING_V8_BASE_SHARED | __declspec(dllimport) |
+//! | !V8_OS_WIN && (BUILDING_V8_BASE_SHARED || USING_V8_BASE_SHARED) | __attribute__((visibility("default"))) |
+//! | 其余 | 空 |

@@ -1,0 +1,37 @@
+// 由 tool/src/base/float16.h.js 从 v8/src/base/float16.h 生成; 修订就地改, 复跑覆盖
+// IEEE 半精度位容器 (换算委托 fp16 三方库)
+
+//! v8: src/base/float16.h
+
+/// v8: src/base/float16.h Float16
+/// 纯 uint16_t bits_ 位容器 (sizeof == 2); 换算走 third_party/fp16
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Float16 {
+    bits: u16,
+}
+
+impl Float16 {
+    /// v8: Float16() — bits_(0)
+    pub const fn new() -> Self;
+
+    /// v8: Float16::Read — ReadUnalignedValue<u16>(source) (地址非对齐安全)
+    pub fn read(source: usize) -> Self;
+
+    /// v8: Float16::Write — WriteUnalignedValue<u16>(destination, bits_)
+    pub fn write(&self, destination: usize);
+
+    /// v8: Float16::FromFloat32 — fp16_ieee_from_fp32_value
+    pub fn from_float32(f32: f32) -> Self;
+
+    /// v8: Float16::FromBits
+    pub const fn from_bits(bits: u16) -> Self;
+
+    /// v8: Float16::get_bits
+    pub const fn get_bits(self) -> u16;
+
+    /// v8: Float16::ToFloat32 — fp16_ieee_to_fp32_value
+    pub fn to_float32(self) -> f32;
+}
+
+// v8: 换算内核 fp16_ieee_from_fp32_value / fp16_ieee_to_fp32_value 属三方库,
+//     Rust 侧待 Developer 定: 引 half crate 或手写位级换算, 登记跳过

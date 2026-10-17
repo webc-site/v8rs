@@ -1,0 +1,28 @@
+// 由 tool/src/maglev/passes.js 从 v8/src/maglev/maglev-graph-optimizer.h, src/maglev/maglev-graph-optimizer.cc, src/maglev/maglev-truncation.h, src/maglev/maglev-truncation.cc, src/maglev/maglev-phi-representation-selector.h, src/maglev/maglev-phi-representation-selector.cc, src/maglev/maglev-cse.h, src/maglev/maglev-graph-processor.h, src/maglev/maglev-range.h, src/maglev/maglev-range-analysis.h, src/maglev/maglev-range-verification.h, src/maglev/maglev-range-verification.cc, src/maglev/maglev-post-hoc-optimizations-processors.h, src/maglev/maglev-pre-regalloc-codegen-processors.h, src/maglev/maglev-pipeline-statistics.h, src/maglev/maglev-pipeline-statistics.cc, src/maglev/maglev-tracer.h, src/maglev/turbolev-escape-analysis.h, src/maglev/turbolev-escape-analysis.cc, src/maglev/hamt.h 生成; 修订就地改, 复跑覆盖
+// 优化遍全族 (Phase kPostOptimizer→kRangeAnalysis)
+
+//! 遍序 (禁重排, 与 MaglevPhase 对齐): PostOptimizer → LoopOptimization(LICM) →
+//!   PrePhiUntagging → PhiUntagging → EscapeAnalysis → RangeAnalysis → AnyUseMarking → DeadNodeSweeping。
+
+// ── MaglevGraphOptimizer (总装: kna_processor_ + saved_kna_ 回滚; LoopLabel 内类) ──
+
+// ── 截断双遍 (TruncationPropagation kTruncationPropagation → Truncation kTruncation) ──
+//   PropagateTruncationProcessor; TruncationProcessor
+
+// ── Phi 表示选择 (kPrePhiUntagging/kPhiUntagging; UntaggingKind/RetaggingKind) ──
+//   MaglevPhiRepresentationSelector; 用 UseRepresentation hint (见 repr.js)
+
+// ── CSE + 图处理器底 (maglev-cse.h; graph-processor.h 遍历框架) ──
+
+// ── 区间分析 (Range/LessEqualConstraint/NodeRanges/RangeProcessor + verification) ──
+
+// ── 逃逸分析 Turbolev (CandidateStatus 二态; AssumeMap/AssumeType 消费面) ──
+//   EscapeAnalysis; AssertEscapeAnalysisElided 断言臂
+
+// ── 管线统计 + 追踪 (PipelineStatistics; TraceColor/Tracer/TraceLogger 调试面) ──
+
+// ── HAMT (持久化哈希阵列映射 trie; KNA/逃逸的不可变表底) ──
+
+// ── regalloc 前/后处理器 (pre-regalloc-codegen / post-hoc-optimizations 两头) ──
+
+// 对数: optimizer 1 + 截断 2 + phi 3 + range 4 + tracer 3 + 逃逸 2 + hamt 2 + 统计 1 全过

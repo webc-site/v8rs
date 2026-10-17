@@ -1,0 +1,12 @@
+// 由 tool/src/compiler/turboshaft/wasm-gc-optimize-phase.h.js 从 v8/src/compiler/turboshaft/wasm-gc-optimize-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm GC 优化: 载入消除 + 类型优化
+
+/// 原版 WasmGCOptimizePhase — GC 语言扩展的优化期。
+/// v8: src/compiler/turboshaft/wasm-gc-optimize-phase.{h,cc}
+pub struct WasmGCOptimizePhase;
+
+impl WasmGCOptimizePhase {
+  /// v8: cc Run — UnparkedScopeIfNeeded(broker, trace_reduction) 后
+  /// CopyingPhase<WasmLoadEliminationReducer, WasmGCTypedOptimizationReducer>::Run
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

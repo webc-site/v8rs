@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="910" height="382" viewBox="0 0 910 382" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12">
+<rect width="100%" height="100%" fill="white"/>
+<text x="20" y="28" font-size="16" font-weight="bold">v8-date 评测：各操作平均耗时对比</text>
+<line x1="330.0" y1="54" x2="330.0" y2="338" stroke="#e0e0e0"/>
+<text x="330.0" y="354" text-anchor="middle" fill="#555">0.0 ns</text>
+<line x1="460.0" y1="54" x2="460.0" y2="338" stroke="#e0e0e0"/>
+<text x="460.0" y="354" text-anchor="middle" fill="#555">623.8 ns</text>
+<line x1="590.0" y1="54" x2="590.0" y2="338" stroke="#e0e0e0"/>
+<text x="590.0" y="354" text-anchor="middle" fill="#555">1.25 µs</text>
+<line x1="720.0" y1="54" x2="720.0" y2="338" stroke="#e0e0e0"/>
+<text x="720.0" y="354" text-anchor="middle" fill="#555">1.87 µs</text>
+<line x1="850.0" y1="54" x2="850.0" y2="338" stroke="#e0e0e0"/>
+<text x="850.0" y="354" text-anchor="middle" fill="#555">2.50 µs</text>
+<text x="590.0" y="372" text-anchor="middle" fill="#333">单次迭代耗时（越小越好）</text>
+<text x="320" y="78" text-anchor="end" fill="#222">epoch_ms_to_time_of_day · chrono</text>
+<rect x="330" y="64" width="84.0" height="18" fill="#2e7d32" rx="2"/>
+<text x="422.0" y="78" fill="#333">403.2 ns (2.04x)</text>
+<text x="320" y="102" text-anchor="end" fill="#222">epoch_ms_to_time_of_day · std-systemtime</text>
+<rect x="330" y="88" width="86.1" height="18" fill="#1565c0" rx="2"/>
+<text x="424.1" y="102" fill="#333">413.2 ns (2.09x)</text>
+<text x="320" y="126" text-anchor="end" fill="#222">epoch_ms_to_time_of_day · v8-date</text>
+<rect x="330" y="112" width="41.2" height="18" fill="#ef6c00" rx="2"/>
+<text x="379.2" y="126" fill="#333">197.7 ns (1.00x)</text>
+<text x="320" y="176" text-anchor="end" fill="#222">epoch_ms_to_ymd · chrono</text>
+<rect x="330" y="162" width="159.0" height="18" fill="#2e7d32" rx="2"/>
+<text x="497.0" y="176" fill="#333">763.2 ns (4.95x)</text>
+<text x="320" y="200" text-anchor="end" fill="#222">epoch_ms_to_ymd · std-systemtime</text>
+<rect x="330" y="186" width="175.4" height="18" fill="#1565c0" rx="2"/>
+<text x="513.4" y="200" fill="#333">841.5 ns (5.46x)</text>
+<text x="320" y="224" text-anchor="end" fill="#222">epoch_ms_to_ymd · v8-date</text>
+<rect x="330" y="210" width="32.1" height="18" fill="#ef6c00" rx="2"/>
+<text x="370.1" y="224" fill="#333">154.0 ns (1.00x)</text>
+<text x="320" y="274" text-anchor="end" fill="#222">parse_date_time · chrono</text>
+<rect x="330" y="260" width="520.0" height="18" fill="#2e7d32" rx="2"/>
+<text x="858.0" y="274" fill="#333">2.50 µs (1.67x)</text>
+<text x="320" y="298" text-anchor="end" fill="#222">parse_date_time · v8-date</text>
+<rect x="330" y="284" width="311.2" height="18" fill="#ef6c00" rx="2"/>
+<text x="649.2" y="298" fill="#333">1.49 µs (1.00x)</text>
+</svg>

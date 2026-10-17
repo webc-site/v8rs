@@ -1,0 +1,106 @@
+// 由 tool/src/compiler/turboshaft/copying-phase.h.js 从 v8/src/compiler/turboshaft/copying-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 通用复制 phase 引擎: GraphVisitor 方法面与两 Run 入口签名骨架
+
+/// v8: src/compiler/turboshaft/copying-phase.h CanHavePhis
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CanHavePhis {
+  /// kNo
+  No = 0,
+  /// kYes
+  Yes = 1,
+}
+
+/// v8: src/compiler/turboshaft/copying-phase.h ForCloning
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ForCloning {
+  /// kNo
+  No = 0,
+  /// kYes
+  Yes = 1,
+}
+
+/// 原版 MaybeVariable = std::optional<Variable>
+pub type MaybeVariable = Option<crate::variable::Variable>;
+
+/// v8: src/compiler/turboshaft/copying-phase.h GraphVisitor
+///
+/// 复制引擎核心 (模板 <AfterNext>, 混入 OutputGraphAssembler +
+/// VariableReducer)。字段面 (原版私有域):
+/// - input_graph_: &Graph (modifiable_input_graph)
+/// - current_input_block_: 当前访问块
+/// - op_mapping_ / block_mapping_: 输入→输出映射 sidetable
+/// - blocks_needing_variables_: 块位图
+/// - old_opindex_to_variables_: 旧索引→变量表
+/// - blocks_to_clone_: 待克隆块集合
+pub struct GraphVisitor {
+  pub placeholder: (),
+}
+
+impl GraphVisitor {
+
+  /// 原版 template <bool trace_reduction> void VisitGraph()
+  /// 遍历入口: Asm().Analyze() → VisitAllBlocks
+  pub fn visit_graph(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 void VisitAllBlocks()
+  /// RPO 序遍历块
+  pub fn visit_all_blocks(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 void VisitBlock(const Block* input_block)
+  /// 单块: 前驱汇齐才 VisitBlockBody
+  pub fn visit_block(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 void VisitBlockBody(const Block*, CanHavePhis, const Block* successor)
+  /// 块体: phi 插入 (can_have_phis) + 逐操作
+  pub fn visit_block_body(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 void VisitBlockTerminator(const Operation& terminator, const Block* input_block, Block* current_block)
+  /// 终结操作分发
+  pub fn visit_block_terminator(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 void CloneBlockAndGoto(const Block* input_block)
+  /// 克隆块 + Goto (LoopUnrolling/LoopPeeling)
+  pub fn clone_block_and_goto(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 void CloneAndInlineBlock(const Block* input_block)
+  /// 克隆并内联到当前块
+  pub fn clone_and_inline_block(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 OpIndex MapToNewGraph(OpIndex old_index, int predecessor_index = -1)
+  /// 旧图→新图索引映射
+  pub fn map_to_new_graph(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 OptionalOpIndex MapToNewGraph(OptionalOpIndex old_index, ...)
+  /// 可选索引映射
+  pub fn map_optional(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 static void Run(PipelineData*, Graph& input_graph, Zone* phase_zone, ...) [带 input_graph 版]
+  /// CopyingPhase::Run 入口 1
+  pub fn visit_graph_tpl(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+
+  /// 原版 static void Run(PipelineData* data, Zone* phase_zone) [默认入口]
+  /// CopyingPhase::Run 入口 2: 构造输入/输出图对
+  pub fn run(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

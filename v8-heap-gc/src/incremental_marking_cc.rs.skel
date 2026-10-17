@@ -1,0 +1,62 @@
+// 由 tool/src/heap/incremental-marking.cc.js 从 v8/src/heap/incremental-marking.cc 生成; 修订就地改, 复跑覆盖
+// 增量标记: 步进上限/激活阈值常量与步来源选限
+
+/// 增量标记步来源 (对应 enum class StepOrigin, 声明于 incremental-marking.h —
+/// b 半区族脚本; 此处登记 cc 侧消费面)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StepOrigin {
+  /// kV8: 生成代码/运行时触发
+  V8,
+  /// kTask: 平台任务触发
+  TASK,
+}
+
+/// 分配观察者步长 (kMajorGC{Young,Old}GenerationAllocationObserverStep)。
+pub const K_MAJOR_GC_YOUNG_GENERATION_ALLOCATION_OBSERVER_STEP: usize = 64 * 1024;
+pub const K_MAJOR_GC_OLD_GENERATION_ALLOCATION_OBSERVER_STEP: usize = 256 * 1024;
+
+/// 步最大时长 (kMaxStepSizeOnTask = 1ms / kMaxStepSizeOnAllocation = 5ms;
+/// static_assert(分配上限 <= kMaxSynchronuousGCOperation))。
+pub const K_MAX_STEP_SIZE_ON_TASK_MS: u64 = 1;
+pub const K_MAX_STEP_SIZE_ON_ALLOCATION_MS: u64 = 5;
+
+/// 激活阈值 (非 DEBUG: 8MB/8MB; DEBUG 构建为 0 即立即激活)。
+pub const K_V8_ACTIVATION_THRESHOLD: usize = 8 * 1024 * 1024;
+pub const K_GLOBAL_ACTIVATION_THRESHOLD: usize = 8 * 1024 * 1024;
+pub const K_V8_ACTIVATION_THRESHOLD_DEBUG: usize = 0;
+pub const K_GLOBAL_ACTIVATION_THRESHOLD_DEBUG: usize = 0;
+
+/// 对应 GetMaxDuration(step_origin): kV8 → 分配上限 5ms; kTask → 任务上限 1ms。
+/// v8: src/heap/incremental-marking.cc GetMaxDuration
+#[must_use]
+pub fn get_max_duration_ms(step_origin: StepOrigin) -> u64 {
+  match step_origin {
+    StepOrigin::V8 => K_MAX_STEP_SIZE_ON_ALLOCATION_MS,
+    StepOrigin::TASK => K_MAX_STEP_SIZE_ON_TASK_MS,
+  }
+}
+
+/// 对应 IsBelowActivationThresholds: 任一超阈值即到激活线
+/// (v8 与 global 双阈值, DEBUG 构建阈值 0 → 恒不阻拦)。
+/// v8: src/heap/incremental-marking.cc IncrementalMarking::IsBelowActivationThresholds
+#[must_use]
+pub fn is_below_activation_thresholds(v8_size: usize, global_size: usize, debug_build: bool) -> bool {
+  let (v8t, gt) = if debug_build {
+    (K_V8_ACTIVATION_THRESHOLD_DEBUG, K_GLOBAL_ACTIVATION_THRESHOLD_DEBUG)
+  } else {
+    (K_V8_ACTIVATION_THRESHOLD, K_GLOBAL_ACTIVATION_THRESHOLD)
+  };
+  v8_size < v8t || global_size < gt
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(K_MAJOR_GC_YOUNG_GENERATION_ALLOCATION_OBSERVER_STEP, 64 * 1024);
+  assert_eq!(K_MAJOR_GC_OLD_GENERATION_ALLOCATION_OBSERVER_STEP, 256 * 1024);
+  assert_eq!(get_max_duration_ms(StepOrigin::V8), 5);
+  assert_eq!(get_max_duration_ms(StepOrigin::TASK), 1);
+  // DEBUG: 阈值 0 → 任何正占用都不低于阈值
+  assert!(!is_below_activation_thresholds(1, 1, true));
+  assert!(is_below_activation_thresholds(1, 1, false));
+  assert!(!is_below_activation_thresholds(9 * 1024 * 1024, 0, false));
+};

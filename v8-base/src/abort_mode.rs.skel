@@ -1,0 +1,29 @@
+// 由 tool/src/base/abort-mode.h.js 从 v8/src/base/abort-mode.h + src/base/abort-mode.cc 生成; 修订就地改, 复跑覆盖
+// abort 处理模式枚举与全局开关
+
+//! v8: src/base/abort-mode.h — abort 模式 (OS::Abort 与 DCHECK 行为)
+
+/// v8: src/base/abort-mode.h AbortMode
+/// 原版为 enum class, 无显式赋值, 序数 0..=4
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AbortMode {
+    kExitWithSuccessAndIgnoreDcheckFailures,
+    kExitWithFailureAndIgnoreDcheckFailures,
+    kExitIfNoSecurityImpact,
+    kImmediateCrash,
+    kDefault,
+}
+
+/// v8: src/base/abort-mode.cc g_abort_mode
+/// 原版初值 kDefault; Rust 侧由 Developer 定原子/线程模型
+pub static G_ABORT_MODE: std::sync::atomic::AtomicU8 =
+    std::sync::atomic::AtomicU8::new(AbortMode::KDefault as u8);
+
+/// v8: src/base/abort-mode.h ControlledCrashesAreHarmless
+pub fn controlled_crashes_are_harmless() -> bool;
+
+/// v8: src/base/abort-mode.h DcheckFailuresAreIgnored
+pub fn dcheck_failures_are_ignored() -> bool;
+
+/// v8: src/base/abort-mode.h FatalErrorsWithNoSecurityImpactShouldExit
+pub fn fatal_errors_with_no_security_impact_should_exit() -> bool;

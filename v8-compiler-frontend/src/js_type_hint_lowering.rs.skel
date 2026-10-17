@@ -1,0 +1,89 @@
+// 由 tool/src/compiler/js-type-hint-lowering.js 从 v8/src/compiler/js-type-hint-lowering.h + js-type-hint-lowering.cc 生成; 修订就地改, 复跑覆盖
+// 类型提示早期降级: 建图期直发 speculative simplified 算子
+
+
+bitflags! {
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::Flag
+    /// 注意: kBailoutOnUninitialized = 1u << 1 (此族独用 bit1)
+    pub struct Flags: u32 {
+        const NO_FLAGS = 0;
+        const BAILOUT_ON_UNINITIALIZED = 1 << 1;
+    }
+}
+
+/// 降级结果三态
+/// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::LoweringResultKind
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoweringResultKind {
+    NoChange,
+    SideEffectFree,
+    Exit,
+}
+
+/// 降级结果 — SideEffectFree 带 value/effect/control; Exit 只带 control (连到 End)
+/// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::LoweringResult
+pub enum LoweringResult {
+    /// 未降级, 调用方走 generic 版
+    NoChange,
+    /// 无副作用: value/effect/control 三元组 (op 须 kNoThrow)
+    SideEffectFree { value: NodeRef, effect: NodeRef, control: NodeRef },
+    /// 图出口 (deopt)
+    Exit { control: NodeRef },
+}
+
+/// 早期降级器 — 非标准 reducer 接口, 建图前调用
+/// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering
+pub struct JSTypeHintLowering { broker: JSHeapBrokerRef, jsgraph: JSGraphRef, flags: Flags, feedback_vector: FeedbackVectorRef }
+
+impl JSTypeHintLowering {
+    // —— Reduce 面 (13 个) ——
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceTypeOfOperation
+    pub fn reduce_type_of_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceUnaryOperationWithEmbeddedHint
+    pub fn reduce_unary_operation_with_embedded_hint(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceBinaryOperation
+    pub fn reduce_binary_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceBinaryOperationWithEmbeddedHint
+    pub fn reduce_binary_operation_with_embedded_hint(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceForInNextOperation
+    pub fn reduce_for_in_next_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceForInPrepareOperation
+    pub fn reduce_for_in_prepare_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceToNumberOperation
+    pub fn reduce_to_number_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceConstructOperation
+    pub fn reduce_construct_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceGetIteratorOperation
+    pub fn reduce_get_iterator_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceLoadNamedOperation
+    pub fn reduce_load_named_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceLoadKeyedOperation
+    pub fn reduce_load_keyed_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceStoreNamedOperation
+    pub fn reduce_store_named_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+    /// v8: src/compiler/js-type-hint-lowering.h JSTypeHintLowering::ReduceStoreKeyedOperation
+    pub fn reduce_store_keyed_operation(&self /*, op/operands/effect/control/slot */) -> LoweringResult;
+
+    // —— hint 查询 ——
+    /// v8: src/compiler/js-type-hint-lowering.cc JSTypeHintLowering::GetBinaryOperationHint
+    fn get_binary_operation_hint(&self, slot: FeedbackSlot) -> BinaryOperationHint;
+    /// v8: src/compiler/js-type-hint-lowering.cc JSTypeHintLowering::GetCompareOperationHint
+    fn get_compare_operation_hint(&self, slot: FeedbackSlot) -> CompareOperationHint;
+}
+
+/// BinaryOperationHint → NumberOperationHint (成功 5 路):
+/// kSignedSmall => kSignedSmall
+/// kSignedSmallInputs => kSignedSmallInputs
+/// kNumber => kNumber
+/// kNumberOrOddball => kNumberOrOddball
+/// kAdditiveSafeInteger => 旗标 turbofan_additive_safe_int_feedback ? kAdditiveSafeInteger : kNumber
+/// 其余 (kAny/kNone/kString/kStringOrStringWrapper/kBigInt/kBigInt64) → false
+/// v8: src/compiler/js-type-hint-lowering.cc BinaryOperationHintToNumberOperationHint
+pub fn binary_operation_hint_to_number_operation_hint(hint: BinaryOperationHint) -> Option<NumberOperationHint>;
+
+/// BigInt 变体: 只接 kBigInt/kBigInt64
+/// v8: src/compiler/js-type-hint-lowering.cc BinaryOperationHintToBigIntOperationHint
+pub fn binary_operation_hint_to_big_int_operation_hint(hint: BinaryOperationHint) -> Option<BigIntOperationHint>;
+
+// —— 对数基准 ——
+// Reduce 13 (cc 实现 13) / Number 映射 4 直接 + 1 旗标路

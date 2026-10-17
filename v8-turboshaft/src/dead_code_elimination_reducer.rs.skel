@@ -1,0 +1,20 @@
+// 由 tool/src/compiler/turboshaft/dead-code-elimination-reducer.h.js 从 v8/src/compiler/turboshaft/dead-code-elimination-reducer.h 生成; 修订就地改, 复跑覆盖
+// 死代码消除 reducer
+
+/// v8: src/compiler/turboshaft/dead-code-elimination-reducer.h Liveness — OperationState::Liveness : uint8_t (格 Live>Dead, LeastUpperBound=|; 非 enum class)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Liveness {
+  /// 原版 kDead
+  dead,
+  /// 原版 kLive
+  live,
+}
+
+/// v8: src/compiler/turboshaft/dead-code-elimination-reducer.h DeadCodeEliminationReducer
+/// 不动点活跃分析 (operation/block 双状态)
+pub struct DeadCodeEliminationReducer {
+  pub placeholder: (),
+}
+
+impl DeadCodeEliminationReducer {
+}

@@ -1,0 +1,134 @@
+// 由 tool/src/wasm/baseline/liftoff-assembler.cc.js 从 v8/src/wasm/baseline/liftoff-assembler{.cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// Liftoff 汇编器平台无关层: 溢出槽规则 / merge 枚举 / ptrsize 分派
+
+//! 平台无关规则; 平台发射语义由 Developer 就地修订。
+
+/// 溢出槽下一偏移 (原版 NextSpillOffset 规则):
+/// offset = top + slot_size; 需对齐的类别 (s128 / 引用) 再向上取整到自身槽宽。
+/// v8: src/wasm/baseline/liftoff-assembler-inl.h NextSpillOffset
+#[must_use]
+pub const fn next_spill_offset(top_spill_offset: i32, slot_size: i32, needs_alignment: bool) -> i32 {
+  let offset = top_spill_offset + slot_size;
+  if (needs_alignment) {
+    // RoundUp(offset, slot_size)
+    offset.div_ceil(slot_size) * slot_size
+  } else {
+    offset
+  }
+}
+
+/// 平台相关值类别 (64 位平台取值, 指针压缩开启时 kTaggedSize=4)
+/// v8: src/wasm/baseline/liftoff-assembler.cc kIntPtrKind / kSmiKind
+pub const K_INT_PTR_IS_I64: bool = true;  // kSystemPointerSize(8) != kInt32Size(4)
+pub const K_SMI_IS_I64: bool = false;    // kTaggedSize(4) == kInt32Size(4)
+
+/// merge 策略布尔枚举族 (原版 enum X : bool)
+/// v8: src/wasm/baseline/liftoff-assembler.cc InitMergeRegion 参数面
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum MergeKeepStackSlots {
+  /// kKeepStackSlots
+  K_KEEP_STACK_SLOTS = 1,
+  /// kTurnStackSlotsIntoRegisters
+  K_TURN_STACK_SLOTS_INTO_REGISTERS = 0,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum MergeAllowConstants {
+  /// kConstantsAllowed
+  K_CONSTANTS_ALLOWED = 1,
+  /// kConstantsNotAllowed
+  K_CONSTANTS_NOT_ALLOWED = 0,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum MergeAllowRegisters {
+  /// kRegistersAllowed
+  K_REGISTERS_ALLOWED = 1,
+  /// kRegistersNotAllowed
+  K_REGISTERS_NOT_ALLOWED = 0,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ReuseRegisters {
+  /// kReuseRegisters
+  K_REUSE_REGISTERS = 1,
+  /// kNoReuseRegisters
+  K_NO_REUSE_REGISTERS = 0,
+}
+
+/// 槽类型兼容判定 (原版 CompatibleStackSlotTypes, DEBUG 校验):
+/// 同类兼容; 引用类别内部 (ref / ref null) 互覆兼容。
+/// v8: src/wasm/baseline/liftoff-assembler.cc CompatibleStackSlotTypes
+#[must_use]
+pub const fn compatible_stack_slot_types(same: bool, both_reference: bool) -> bool {
+  same || both_reference
+}
+
+/// ptrsize 发射分派 (64 位平台: 全部落 i64 发射器)
+/// v8: src/wasm/baseline/liftoff-assembler-inl.h emit_ptrsize_* 族
+pub const K_PTRSIZE_EMITS: &[&str] = &[
+  "emit_ptrsize_add",
+  "emit_ptrsize_sub",
+  "emit_ptrsize_and",
+  "emit_ptrsize_shri",
+  "emit_ptrsize_addi",
+  "emit_ptrsize_muli",
+  "emit_ptrsize_set_cond",
+  "emit_ptrsize_cond_jumpi",
+];
+
+/// .cc 定义清单 (col-0 签名, Class::member)
+/// v8: src/wasm/baseline/liftoff-assembler.cc
+pub const CC_FN_DEFS: &[&str] = &[
+  "LiftoffAssembler::MergeIntoNewState",
+  "CacheState::Steal",
+  "CacheState::Split",
+  "CacheState::GetTaggedSlotsForOOLCode",
+  "CacheState::DefineSafepoint",
+  "CacheState::DefineSafepointWithCalleeSavedRegisters",
+  "LiftoffAssembler::GetTotalFrameSlotCountForGC",
+  "LiftoffAssembler::OolSpillCount",
+  "::LiftoffAssembler",
+  "::~LiftoffAssembler",
+  "LiftoffAssembler::LoadToRegister_Slow",
+  "LiftoffAssembler::LoadI64HalfIntoRegister",
+  "LiftoffAssembler::DropExceptionValueAtOffset",
+  "LiftoffAssembler::SpillLoopArgs",
+  "LiftoffAssembler::PrepareForBranch",
+  "LiftoffAssembler::MergeFullStackWith",
+  "LiftoffAssembler::MergeStackWith",
+  "LiftoffAssembler::Spill",
+  "LiftoffAssembler::SpillLocals",
+  "LiftoffAssembler::SpillAllRegisters",
+  "LiftoffAssembler::ClearRegister",
+  "LiftoffAssembler::PrepareBuiltinCall",
+  "LiftoffAssembler::PrepareCall",
+  "LiftoffAssembler::FinishCall",
+  "LiftoffAssembler::Move",
+  "LiftoffAssembler::ParallelRegisterMove",
+  "LiftoffAssembler::MoveToReturnLocations",
+  "LiftoffAssembler::MoveToReturnLocationsMultiReturn",
+  "LiftoffRegList::Print",
+  "LiftoffAssembler::ValidateCacheState",
+  "LiftoffAssembler::SpillOneRegister",
+  "LiftoffAssembler::SpillAdjacentFpRegisters",
+  "LiftoffAssembler::SpillRegister",
+  "LiftoffAssembler::set_num_locals",
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(K_PTRSIZE_EMITS.len() == 8);
+  assert!(next_spill_offset(0, 16, true) == 16);
+  assert!(next_spill_offset(8, 16, true) == 16);   // 8 → 对齐到 16
+  assert!(next_spill_offset(4, 4, false) == 8);    // i32 不对齐直加
+  assert!(next_spill_offset(9, 4, true) == 12);
+  assert!(MergeKeepStackSlots::K_KEEP_STACK_SLOTS as u8 == 1);
+  assert!(compatible_stack_slot_types(false, true));
+  assert!(!compatible_stack_slot_types(false, false));
+  assert!(K_INT_PTR_IS_I64 && !K_SMI_IS_I64);
+};

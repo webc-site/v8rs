@@ -1,0 +1,47 @@
+// 由 tool/src/compiler/backend/bitcast-elider.js 从 v8/src/compiler/backend/bitcast-elider.h + bitcast-elider.cc 生成; 修订就地改, 复跑覆盖
+// BitcastElider: 图遍历消 Bitcast/TruncateInt64ToInt32 冗余节点 (指令选择前处理)
+
+//! 台账: 公有面 ctor/Reduce + 内部 Enqueue/Revisit/VisitNode/ProcessGraph;
+//!   字段 4 (graph_/to_visit_/seen_/is_builtin_);
+//!   IsBitcast 白名单 2 opcode (kBitcastTaggedToWordForTagAndSmiBits,
+//!   kBitcastWordToTaggedSigned — 其余 Bitcast 影响 GC/safepoint 表不可消);
+//!   OwnedByWord32Op 架构三分支: mips64/riscv64=false, loong64=8 opcode 白名单,
+//!   默认(x64/arm64)=6 显式 + MACHINE_BINOP_32_LIST 展开;
+//!   TruncateInt64ToInt32 仅当 OwnedByWord32Op 才消; Replace=改边+Kill。
+
+/// v8: BitcastElider::Reduce — 入口 (ProcessGraph 包装)
+// pub fn reduce(&mut self)
+/// v8: BitcastElider::ProcessGraph — 自 end 起工作队列 BFS
+// fn process_graph(&mut self)
+/// v8: BitcastElider::VisitNode — 逐输入消 Bitcast/Truncate 或入队
+// fn visit_node(&mut self, node)
+/// v8: BitcastElider::Enqueue — seen_ 去重入队
+// fn enqueue(&mut self, node)
+/// v8: BitcastElider::Revisit — 无去重重入队
+// fn revisit(&mut self, node)
+/// v8: OwnedByWord32Op — 默认分支显式 opcode 集 (另含 MACHINE_BINOP_32_LIST 展开)
+pub const OWNED_BY_WORD32_EXPLICIT_DEFAULT: &[&str] = &[
+  "Word32Equal",
+  "Int32LessThan",
+  "Int32LessThanOrEqual",
+  "Uint32LessThan",
+  "Uint32LessThanOrEqual",
+  "ChangeInt32ToInt64",
+];
+/// v8: OwnedByWord32Op — loong64 分支 opcode 白名单 (mips64/riscv64 恒 false)
+pub const OWNED_BY_WORD32_LOONG64: &[&str] = &[
+  "Word32Equal", "Word32Shl", "Word32Shr", "Word32Sar",
+  "Word32Rol", "Word32Ror", "Int32Add", "Int32Sub",
+];
+/// v8: IsBitcast 白名单 — 仅 builtin 路径可消 (GC/safepoint 约束)
+pub const BITCAST_ELIDABLE: &[&str] = &[
+  "BitcastTaggedToWordForTagAndSmiBits",
+  "BitcastWordToTaggedSigned",
+];
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(BITCAST_ELIDABLE.len() == 2);
+  assert!(OWNED_BY_WORD32_LOONG64.len() == 8);
+  assert!(OWNED_BY_WORD32_EXPLICIT_DEFAULT.len() == 6);
+};

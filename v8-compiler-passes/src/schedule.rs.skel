@@ -1,0 +1,155 @@
+// 由 tool/src/compiler/schedule.js 从 v8/src/compiler/schedule.h + schedule.cc 生成; 修订就地改, 复跑覆盖
+// 基本块调度结构与图-调度映射
+
+//! schedule — BasicBlock (节点序列 + 控制尾) + Schedule (RPO 序 + node→block 映射)
+//!
+//! Control 枚举 9 值与原版顺序一致 (判别值参与 JSON 导出);
+//! loop_header/loop_end 双向链支撑 LoopContains; dominator_depth 缓存支配深。
+
+/// 原版 BasicBlock::Control — 块尾控制种类 (顺序 = 判别值)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Control {
+  /// kNone
+  #[default]
+  None,
+  /// kGoto
+  Goto,
+  /// kCall
+  Call,
+  /// kBranch
+  Branch,
+  /// kSwitch
+  Switch,
+  /// kDeoptimize
+  Deoptimize,
+  /// kTailCall
+  TailCall,
+  /// kReturn
+  Return,
+  /// kThrow
+  Throw,
+}
+
+/// 原版 BasicBlock::Id — 块序号 (newtype)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BasicBlockId(pub usize);
+
+/// 原版 BasicBlock — 基本块
+pub struct BasicBlock<'z> {
+  /// nodes_
+  pub nodes: Vec<*mut Node>,
+  /// deferred_ — 含延迟代码
+  pub deferred: bool,
+  /// dominator_depth_
+  pub dominator_depth: i32,
+  /// dominator_
+  pub dominator: Option<*mut BasicBlock<'z>>,
+  /// rpo_next_
+  pub rpo_next: Option<*mut BasicBlock<'z>>,
+  /// loop_header_
+  pub loop_header: Option<*mut BasicBlock<'z>>,
+  /// loop_end_
+  pub loop_end: Option<*mut BasicBlock<'z>>,
+  /// loop_depth_
+  pub loop_depth: i32,
+  /// loop_number_
+  pub loop_number: i32,
+  /// rpo_number_
+  pub rpo_number: i32,
+  /// pgo_execution_count_
+  pub pgo_execution_count: u64,
+  /// control_
+  pub control: Control,
+  /// control_input_
+  pub control_input: *mut Node,
+  /// successors_
+  pub successors: Vec<*mut BasicBlock<'z>>,
+  /// predecessors_
+  pub predecessors: Vec<*mut BasicBlock<'z>>,
+  /// id_
+  pub id: BasicBlockId,
+}
+
+impl BasicBlock<'_> {
+  /// 原版 AddPredecessor / RemovePredecessor
+  /// v8: src/compiler/schedule.cc BasicBlock::AddPredecessor
+  pub fn add_predecessor(&mut self, predecessor: *mut BasicBlock<'_>) {
+    todo!("v8: src/compiler/schedule.cc BasicBlock::AddPredecessor")
+  }
+
+  /// 原版 AddSuccessor
+  /// v8: src/compiler/schedule.cc BasicBlock::AddSuccessor
+  pub fn add_successor(&mut self, successor: *mut BasicBlock<'_>) {
+    todo!("v8: src/compiler/schedule.cc BasicBlock::AddSuccessor")
+  }
+
+  /// 原版 IsLoopHeader — loop_end_ != nullptr
+  /// v8: src/compiler/schedule.h BasicBlock::IsLoopHeader
+  pub fn is_loop_header(&self) -> bool {
+    self.loop_end.is_some()
+  }
+
+  /// 原版 LoopContains — loop_number 区间包含判定
+  /// v8: src/compiler/schedule.cc BasicBlock::LoopContains
+  pub fn loop_contains(&self, block: &BasicBlock<'_>) -> bool {
+    todo!("v8: src/compiler/schedule.cc BasicBlock::LoopContains")
+  }
+
+  /// 原版 GetCommonDominator
+  /// v8: src/compiler/schedule.cc BasicBlock::GetCommonDominator
+  pub fn get_common_dominator(b1: *mut BasicBlock<'_>, b2: *mut BasicBlock<'_>) -> *mut BasicBlock<'_> {
+    todo!("v8: src/compiler/schedule.cc BasicBlock::GetCommonDominator")
+  }
+
+  /// 原版 ResetRPOInfo
+  /// v8: src/compiler/schedule.cc BasicBlock::ResetRPOInfo
+  pub fn reset_rpo_info(&mut self) {
+    todo!("v8: src/compiler/schedule.cc BasicBlock::ResetRPOInfo")
+  }
+}
+
+/// 原版 Schedule — 调度容器 (node→block + RPO)
+pub struct Schedule<'z> {
+  /// all_blocks_ (block Id 索引)
+  pub all_blocks: Vec<Box<BasicBlock<'z>>>,
+  /// rpo_order_
+  pub rpo_order: Vec<*mut BasicBlock<'z>>,
+  /// nodeid_to_block_
+  pub nodeid_to_block: Vec<*mut BasicBlock<'z>>,
+  /// graph_ (装饰器面)
+  pub graph: *mut TFGraph,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+}
+
+impl Schedule<'_> {
+  /// 原版 NewBasicBlock
+  /// v8: src/compiler/schedule.cc Schedule::NewBasicBlock
+  pub fn new_basic_block(&mut self) -> *mut BasicBlock<'_> {
+    todo!("v8: src/compiler/schedule.cc Schedule::NewBasicBlock")
+  }
+
+  /// 原版 PlanNode — 计划加入 (尚未真加)
+  /// v8: src/compiler/schedule.cc Schedule::PlanNode
+  pub fn plan_node(&mut self, block: *mut BasicBlock<'_>, node: *mut Node) {
+    todo!("v8: src/compiler/schedule.cc Schedule::PlanNode")
+  }
+
+  /// 原版 AddNode — 真加入块
+  /// v8: src/compiler/schedule.cc Schedule::AddNode
+  pub fn add_node(&mut self, block: *mut BasicBlock<'_>, node: *mut Node) {
+    todo!("v8: src/compiler/schedule.cc Schedule::AddNode")
+  }
+
+  /// 原版 AddGoto / AddCall / AddBranch / AddSwitch / AddTailCall / AddReturn / AddThrow / AddDeoptimize — 8 个控制尾构造 (28 公有方法面, 均返回 void)
+  /// v8: src/compiler/schedule.cc Schedule::AddBranch
+  pub fn add_branch(&mut self, block: *mut BasicBlock<'_>, branch: *mut Node, tblock: *mut BasicBlock<'_>, fblock: *mut BasicBlock<'_>) {
+    todo!("v8: src/compiler/schedule.cc Schedule::AddBranch (同族 AddGoto/AddCall/AddSwitch/AddTailCall/AddReturn/AddThrow/AddDeoptimize)")
+  }
+
+  /// 原版 block — node → 所在块
+  /// v8: src/compiler/schedule.h Schedule::block
+  pub fn block(&self, node: &Node) -> *mut BasicBlock<'_> {
+    todo!("v8: src/compiler/schedule.h Schedule::block")
+  }
+}

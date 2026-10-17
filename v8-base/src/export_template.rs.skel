@@ -1,0 +1,13 @@
+// 由 tool/src/base/export-template.h.js 从 v8/src/base/export-template.h 生成; 修订就地改, 复跑覆盖
+// 模板显式实例化的导出宏链, Rust 无对应物
+
+//! v8: src/base/export-template.h
+//! 作用: GCC 要求 FOO_EXPORT 放显式实例化声明处, MSVC 要求 dllexport 放定义处;
+//!       宏链按 export 展开值分发 DEFAULT / MSVC_HACK 两风格。
+//! Rust: 无模板显式实例化与 DLL 导出问题, 整文件登记跳过。
+//!
+//! 分发表 (STYLE 判别):
+//! | export 展开 | 风格 | DECLARE | DEFINE |
+//! | --- | --- | --- | --- |
+//! | 空 / __attribute__(...) / __declspec(dllimport) | DEFAULT | export | (空) |
+//! | __declspec(dllexport) | MSVC_HACK | (空) | export |

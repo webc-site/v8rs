@@ -1,0 +1,45 @@
+// 由 tool/src/objects/js-data-object-builder.h.js 从 v8/src/objects/js-data-object-builder.{h,-inl.h,cc} 生成; 修订就地改, 复跑覆盖
+// JSDataObjectBuilder 概念/HeapNumberMode/字段骨架
+
+//! 差集骨架: JSDataObjectBuilder (解析器/描述符 → JSObject 的快路径构建器, 离堆类)。
+//! C++ concept → Rust trait; 值迭代器经 RevisitValues 二次访问。
+
+/// v8: src/objects/js-data-object-builder.h JSDataObjectBuilder::HeapNumberMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HeapNumberMode { NormalHeapNumbers = 0, HeapNumbersGuaranteedUniquelyOwned = 1 }
+
+/// v8: src/objects/js-data-object-builder.h concept JSDataPropertyIteratorWithRawKeys
+///   (kSupportsRawKeys = true): Advance/Done/kMayHaveDuplicateKeys/GetKeyChars/
+///   GetKey(expected_key_hint)/GetValue(will_revisit_value)/RevisitValues
+pub trait PropertyIteratorWithRawKeys { /* 语义面留 Developer */ }
+
+/// v8: src/objects/js-data-object-builder.h concept JSDataPropertyIteratorWithEagerKeys
+///   (kSupportsRawKeys = false): Advance/Done/kMayHaveDuplicateKeys/GetKey/
+///   GetValue(will_revisit_value)/RevisitValues
+pub trait PropertyIteratorWithEagerKeys { /* 语义面留 Developer */ }
+
+/// v8: src/objects/js-data-object-builder.h JSDataObjectBuilder 成员 (11 个):
+///   isolate_, elements_kind_, expected_property_count_, heap_number_mode_,
+///   may_have_duplicate_keys_ = true, map_, current_property_index_ = 0,
+///   extra_heap_numbers_needed_ = 0, object_, expected_final_map_,
+///   property_count_in_expected_final_map_ = 0
+pub struct JSDataObjectBuilder { /* 见上; Rust 侧以 builder 模式重建 */ }
+
+/// v8: src/objects/js-data-object-builder.h 方法签名骨架 (16 组):
+///   JSDataObjectBuilder
+///   BuildFromIterator
+///   CreateAndInitialiseObject
+///   AddSlowProperty
+///   TryAddFastPropertyForValue
+///   TryFastTransitionToPropertyKey
+///   TryAddFastPropertyTransitionForValue
+///   TryGeneralizeFieldToValue
+///   TryInitializeMapFromExpectedFinalMap(
+///   InitializeMapFromZero(
+///   IsOnExpectedFinalMapFastPath() const
+///   RewindExpectedFinalMapFastPathToBeforeCurrent(
+///   RewindExpectedFinalMapFastPathToIncludeCurrent(
+///   RegisterFieldNeedsFreshHeapNumber(
+///   RecalculateExtraHeapNumbersNeeded(
+///   AdvanceToNextProperty(
+/// v8: src/objects/js-data-object-builder-inl.h static_assert(!USE_ALLOCATION_ALIGNMENT_HEAP_NUMBER_BOOL)

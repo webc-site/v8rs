@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-10-11T08:37:00.544Z",
+  "baseline": "bench",
+  "ops": [
+    "parse",
+    "char_ranges",
+    "format_ast"
+  ],
+  "results": [
+    {
+      "op": "parse",
+      "target": "regex-syntax",
+      "mean_ns": 334533.6868254726,
+      "median_ns": 335993.179876161,
+      "slope_ns": 335489.0118466899,
+      "ci_low_ns": 333194.3919831954,
+      "ci_high_ns": 335719.6906392916,
+      "rel": 1
+    },
+    {
+      "op": "parse",
+      "target": "v8rs",
+      "mean_ns": 115121302.1,
+      "median_ns": 115141729,
+      "slope_ns": null,
+      "ci_low_ns": 114942245.19375001,
+      "ci_high_ns": 115298531.3975,
+      "rel": 344.1246924709833
+    },
+    {
+      "op": "char_ranges",
+      "target": "regex-syntax",
+      "mean_ns": 4270.592094104342,
+      "median_ns": 4269.23424826904,
+      "slope_ns": 4270.476849429791,
+      "ci_low_ns": 4267.38769792395,
+      "ci_high_ns": 4274.690990583409,
+      "rel": 1
+    },
+    {
+      "op": "char_ranges",
+      "target": "v8rs",
+      "mean_ns": 5927.2828130002035,
+      "median_ns": 5919.675115740741,
+      "slope_ns": 5956.905194541231,
+      "ci_low_ns": 5907.087537814207,
+      "ci_high_ns": 5948.6489068685505,
+      "rel": 1.3879299831006955
+    },
+    {
+      "op": "format_ast",
+      "target": "regex-syntax",
+      "mean_ns": 1066.1297560348928,
+      "median_ns": 1019.8142831759569,
+      "slope_ns": 1053.6254390070553,
+      "ci_low_ns": 1022.5932602817035,
+      "ci_high_ns": 1124.4905589889424,
+      "rel": 1
+    },
+    {
+      "op": "format_ast",
+      "target": "v8rs",
+      "mean_ns": 67657.47186924235,
+      "median_ns": 67804.58912655972,
+      "slope_ns": 67853.89079822616,
+      "ci_low_ns": 67215.16717056076,
+      "ci_high_ns": 68072.91612180372,
+      "rel": 63.46082311863362
+    }
+  ]
+}

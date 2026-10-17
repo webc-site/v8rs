@@ -1,0 +1,12 @@
+<a href="https://github.com/webc-site/v8rs/blob/main/README.md#en"><img src="https://cdn.jsdmirror.com/gh/webc-site/svg/i18n/en.svg" height="28"></a>
+<a href="https://github.com/webc-site/v8rs/blob/main/readme/zh.md"><img src="https://cdn.jsdmirror.com/gh/webc-site/svg/i18n/zh.svg" height="28"></a>
+
+<a href="https://crates.io/crates/v8rs"><img src="https://img.shields.io/crates/v/v8rs.svg" height="28"></a>
+<a href="https://webc-site.github.io/v8rs/"><img src="https://img.shields.io/badge/website-webc--site.github.io%2Fv8rs-0969da?logo=googlechrome&logoColor=white" height="28"></a>
+<a href="https://github.com/webc-site/v8rs"><img src="https://img.shields.io/badge/github-webc--site%2Fv8rs-181717?logo=github&logoColor=white" height="28"></a>
+
+---
+
+<a id="en"></a>
+
+<+ ./readme/en.md >

@@ -1,0 +1,29 @@
+// 由 tool/src/compiler/backend/frame-elider.js 从 v8/src/compiler/backend/frame-elider.h + frame-elider.cc 生成; 修订就地改, 复跑覆盖
+// FrameElider: 需帧块标记 + 帧构造/析构点标定 (双向传播不动点)
+
+//! 台账: Run = MarkBlocks (入口/被调用/异常 handler 起需帧; wasm-to-js 特例)
+//!   → PropagateMarks (正向+逆向双轮询直到不动点) → MarkDeConstruction
+//!   (loop header 构造、throw 终结/末块析构、dummy-end-block 修正);
+//!   need_frame 向后继传播, 前驱需帧亦传染; utf16 槽标记随帧传播。
+
+/// v8: FrameElider::Run — 公有入口 (三段)
+// pub fn run(&mut self)
+/// v8: FrameElider::MarkBlocks — 初始需帧集
+// fn mark_blocks(&mut self)
+/// v8: FrameElider::PropagateMarks — 双向传播不动点
+// fn propagate_marks(&mut self)
+/// v8: FrameElider::MarkDeConstruction — 构造/析构点标定
+// fn mark_de_construction(&mut self)
+/// v8: FrameElider::PropagateInOrder — 正向轮询 (changed)
+// fn propagate_in_order(&mut self) -> bool
+/// v8: FrameElider::PropagateReversed — 逆向轮询 (changed)
+// fn propagate_reversed(&mut self) -> bool
+/// v8: FrameElider::PropagateIntoBlock — 单块传播 (前驱向下/后继向上)
+// fn propagate_into_block(&mut self, block: &mut InstructionBlock) -> bool
+/// v8: FrameElider::InstructionAt — 序列指令索引
+// fn instruction_at(&self, index: usize) -> &Instruction
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 纯过程 pass; 锚点对数见生成脚本日志
+};

@@ -1,0 +1,30 @@
+// 由 tool/src/compiler/turboshaft/int64-lowering-phase.h.js 从 v8/src/compiler/turboshaft/int64-lowering-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// Int64LoweringPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/int64-lowering-phase.h Int64LoweringPhase
+pub struct Int64LoweringPhase;
+
+impl Int64LoweringPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "Int64Lowering" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftInt64Lowering";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "Int64LoweringReducer",
+  ];
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/int64-lowering-phase.cc Int64LoweringPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<Int64LoweringReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(Int64LoweringPhase::PHASE_NAME == "V8.TFTurboshaftInt64Lowering");
+  assert!(Int64LoweringPhase::REDUCERS.len() == 1);
+  assert!(Int64LoweringPhase::REDUCERS[0] == "Int64LoweringReducer");
+};

@@ -1,0 +1,57 @@
+// 由 tool/src/heap/evacuation-allocator.h.js 从 v8/src/heap/evacuation-allocator.{h,cc,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 压空分配器: GC 期临时分配与最后一个对象回退
+
+/// 压实空间种类 (对应 src/common/globals.h enum class CompactionSpaceKind)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(u8)]
+pub enum CompactionSpaceKind {
+  /// kNone = 0
+  NONE = 0,
+  /// kCompactionSpaceForScavenge = 1
+  COMPACTION_SPACE_FOR_SCAVENGE = 1,
+  /// kCompactionSpaceForMarkCompact = 2
+  COMPACTION_SPACE_FOR_MARK_COMPACT = 2,
+  /// kCompactionSpaceForMinorMarkSweep = 3
+  COMPACTION_SPACE_FOR_MINOR_MARK_SWEEP = 3,
+}
+
+/// 压空分配器骨架 (对应 class EvacuationAllocator)。
+/// GC 期间在压实空间分配; Finalize 由主线程把压实空间并回主空间。
+/// 5 路 MainAllocator 均为 optional (惰性构造, 按需启用)。
+/// v8: src/heap/evacuation-allocator.h EvacuationAllocator
+pub struct EvacuationAllocatorSkeleton {
+  pub kind: CompactionSpaceKind,
+  pub new_space_allocator: Option<()>,
+  pub old_space_allocator: Option<()>,
+  pub code_space_allocator: Option<()>,
+  pub shared_space_allocator: Option<()>,
+  pub trusted_space_allocator: Option<()>,
+}
+
+impl EvacuationAllocatorSkeleton {
+  /// 对应 Allocate: 按空间选路 (new/old/code/shared/trusted 五选一)
+  /// v8: src/heap/evacuation-allocator-inl.h EvacuationAllocator::Allocate
+  pub fn allocate(&mut self, _space: crate::AllocationSpace, _size: usize) -> Result<(), ()> {
+    unimplemented!("骨架: MainAllocator 分配路径待分配器族就位");
+  }
+
+  /// 对应 FreeLast: 撤销该空间最近一次分配 (LAB 回退或 free)
+  /// v8: src/heap/evacuation-allocator.cc EvacuationAllocator::FreeLast
+  pub fn free_last(&mut self, _object: u64, _size: usize) {
+    unimplemented!("骨架: FreeLastInMainAllocator 待 LAB 族就位");
+  }
+
+  /// 对应 Finalize: 主线程收尾, 压实空间并回主空间
+  /// v8: src/heap/evacuation-allocator.cc EvacuationAllocator::Finalize
+  pub fn finalize(&mut self) {
+    unimplemented!("骨架: MergeAndCompact/Birth 等 compaction 收尾待空间族就位");
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(CompactionSpaceKind::NONE as u8, 0);
+  assert_eq!(CompactionSpaceKind::COMPACTION_SPACE_FOR_SCAVENGE as u8, 1);
+  assert_eq!(CompactionSpaceKind::COMPACTION_SPACE_FOR_MARK_COMPACT as u8, 2);
+  assert_eq!(CompactionSpaceKind::COMPACTION_SPACE_FOR_MINOR_MARK_SWEEP as u8, 3);
+};

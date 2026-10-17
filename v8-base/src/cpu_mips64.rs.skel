@@ -1,0 +1,15 @@
+// 由 tool/src/base/cpu/cpu-mips64.cc.js 从 v8/src/base/cpu/cpu-mips64.cc 生成; 修订就地改, 复跑覆盖
+// MIPS64 FPU/MSA 探测 (纯 cpuinfo, 无指令级探测)
+
+//! v8: src/base/cpu/cpu-mips64.cc
+
+impl Cpu {
+    /// v8: cpu-mips64.cc DetectFeatures — Linux /proc/cpuinfo:
+    ///   has_fpu = "cpu model" 字段含 "FPU"
+    ///   has_msa = "ASEs implemented" 字段含 "msa"
+    /// 注: 原版注释 — MIPS 无统一探测设施, 各 OS 自行提供
+    #[cfg(target_arch = "mips64")]
+    fn detect_features(&mut self) {
+        // Developer: CpuInfo::extract_field + has_list_item 组合
+    }
+}

@@ -1,0 +1,14 @@
+// 由 tool/src/objects/js-temporal-zoneinfo64.h.js 从 v8/src/objects/js-temporal-zoneinfo64.h + js-temporal-zoneinfo64.cc 生成; 修订就地改, 复跑覆盖
+// ZoneInfo64Provider 单例差集骨架
+
+//! ZoneInfo64Provider: 时区数据供给 (temporal_rs::Provider 包装), 进程级单例;
+//! ICU4C udata 或内置 zoneinfo64_static_data 两路取数。
+
+/// v8: src/objects/js-temporal-zoneinfo64.h ZoneInfo64Provider::Singleton
+// Rust 侧: std::sync::OnceLock<ZoneInfo64Provider> (对应 C++ 函数内 static 泄漏式单例)
+// pub fn singleton() -> &'static ZoneInfo64Provider
+
+/// v8: src/objects/js-temporal-zoneinfo64.cc zoneinfo64_static_data
+// 数据源二选一: V8_INTL_SUPPORT → UDataMemory (udata_open, 析构 udata_close);
+//   否则 → extern "C" zoneinfo64_static_data[len] (u32 数组, span 接线)
+// Provider(): 解引用 provider 唯一指针; 删除拷贝/移动 (4 个 = delete)

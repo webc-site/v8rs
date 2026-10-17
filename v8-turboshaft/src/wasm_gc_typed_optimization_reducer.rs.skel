@@ -1,0 +1,59 @@
+// 由 tool/src/compiler/turboshaft/wasm-gc-typed-optimization-reducer.h.js 从 v8/src/compiler/turboshaft/wasm-gc-typed-optimization-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm GC 类型优化: 输入图类型驱动化简
+
+/// 原版 WasmGCTypeAnalyzer — 输入图上传播 wasm::ValueType:
+/// types_table_ 为 SparseOpIndexSnapshotTable<wasm::ValueType>,
+/// block_to_snapshot_ 为 FixedBlockSidetable<MaybeSnapshot>;
+/// GetInputTypeOrSentinelType 返回输入类型或哨兵 (bottom = 必 trap)。
+/// Process 分派面 (23 个):
+/// - ProcessBlock
+/// - ProcessOperations
+/// - ProcessTypeCast
+/// - ProcessTypeCheck
+/// - ProcessAssertNotNull
+/// - ProcessIsNull
+/// - ProcessAnyConvertExtern
+/// - ProcessExternConvertAny
+/// - ProcessParameter
+/// - ProcessStructGet
+/// - ProcessStructSet
+/// - ProcessStructAtomicRMW
+/// - ProcessArrayGet
+/// - ProcessArrayLength
+/// - ProcessArrayAtomicRMW
+/// - ProcessGlobalGet
+/// - ProcessRefFunc
+/// - ProcessAllocateArray
+/// - ProcessAllocateStruct
+/// - ProcessPhi
+/// - ProcessTypeAnnotation
+/// - ProcessBranchOnTarget
+/// - ProcessNull
+/// v8: wasm-gc-typed-optimization-reducer.{h,cc} WasmGCTypeAnalyzer
+pub struct WasmGCTypeAnalyzer<'g> {
+  pub types: SparseOpIndexSnapshotTable<CanonicalValueType>,
+}
+
+impl<'g> WasmGCTypeAnalyzer<'g> {
+  /// v8: cc Run — 全图块序扫描 + 快照合并
+  pub fn run(&mut self) { /* ... */ }
+}
+
+/// 原版 WasmGCTypedOptimizationReducer — 消费类型侧表做化简。
+/// ReduceInputGraph 特化面 (9 个):
+/// - ReduceInputGraphWasmTypeCast
+/// - ReduceInputGraphWasmTypeCheck
+/// - ReduceInputGraphAssertNotNull
+/// - ReduceInputGraphIsNull
+/// - ReduceInputGraphStructGet
+/// - ReduceInputGraphStructSet
+/// - ReduceInputGraphArrayLength
+/// - ReduceInputGraphAnyConvertExtern
+/// - ReduceInputGraphExternConvertAny
+/// 输出图 REDUCE 特化面 (1 个):
+/// - REDUCE(AnyConvertExtern)
+/// 典型化简: TypeCheck 已知命中/必败 -> 常量; TypeCast 源类型已兼容 ->
+/// 透传; AssertNotNull 已知非空 -> 移除; StructGet/ArrayLength 用
+/// 精确字段类型替换表示。
+/// v8: wasm-gc-typed-optimization-reducer.h WasmGCTypedOptimizationReducer
+pub struct WasmGCTypedOptimizationReducer;

@@ -1,0 +1,57 @@
+// 由 tool/src/compiler/js-context-specialization.js 从 v8/src/compiler/js-context-specialization.h + js-context-specialization.cc 生成; 修订就地改, 复跑覆盖
+// 上下文特化: Load/StoreContext 常量折叠 + closure/import.meta 折叠
+
+
+/// 外层上下文对 — 上下文及其距参照点的距离
+/// v8: src/compiler/js-context-specialization.h OuterContext
+pub struct OuterContext {
+    pub context: IndirectHandle<Context>,
+    /// 距离默认 0
+    pub distance: usize,
+}
+
+/// JSContextSpecialization — 把 JSGraph 特化到给定上下文:
+/// - 折叠 {LoadContextNoCell} / 削减 {StoreContextNoCell}
+/// - 给定 {closure} 时折叠函数参数
+/// - 对应对象已存在时折叠 import.meta 加载
+/// outer 可为函数进入上下文或任意外层上下文 (由 distance 指示)
+/// v8: src/compiler/js-context-specialization.h JSContextSpecialization
+pub struct JSContextSpecialization {
+    jsgraph: JSGraphRef,
+    outer: Option<OuterContext>,
+    closure: Option<Handle<JSFunction>>,
+    broker: JSHeapBrokerRef,
+}
+
+impl JSContextSpecialization {
+    /// 总分派 Reduce — 按 IrOpcode (10 路):
+    // kParameter / // kJSLoadContextNoCell / // kJSLoadContext / // kJSStoreContextNoCell / // kJSStoreContext / // kJSGetImportMeta / // kHeapConstant / // kParameter / // kHeapConstant / // kParameter
+    /// v8: src/compiler/js-context-specialization.cc JSContextSpecialization::Reduce
+
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::ReduceParameter
+    fn reduce_parameter(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::ReduceJSLoadContextNoCell
+    fn reduce_jsload_context_no_cell(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::ReduceJSLoadContext
+    fn reduce_jsload_context(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::ReduceJSStoreContextNoCell
+    fn reduce_jsstore_context_no_cell(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::ReduceJSStoreContext
+    fn reduce_jsstore_context(&mut self, node: &Node) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::ReduceJSGetImportMeta
+    fn reduce_jsget_import_meta(&mut self, node: &Node) -> Reduction;
+
+    // —— Simplify 家族 (4): 换 context + 深度重算, 距离不够则补 Load ——
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::SimplifyJSLoadContextNoCell
+    fn simplify_jsload_context_no_cell(&mut self, node: &Node, new_context: NodeRef, new_depth: usize) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::SimplifyJSLoadContext
+    fn simplify_jsload_context(&mut self, node: &Node, new_context: NodeRef, new_depth: usize) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::SimplifyJSStoreContextNoCell
+    fn simplify_jsstore_context_no_cell(&mut self, node: &Node, new_context: NodeRef, new_depth: usize) -> Reduction;
+    /// v8: src/compiler/js-context-specialization.h JSContextSpecialization::SimplifyJSStoreContext
+    fn simplify_jsstore_context(&mut self, node: &Node, new_context: NodeRef, new_depth: usize) -> Reduction;
+}
+
+// —— 对数基准 ——
+// Reduce 6 / Simplify 4 / cc 实现 11
+// 分派 case 10: Parameter,JSLoadContextNoCell,JSLoadContext,JSStoreContextNoCell,JSStoreContext,JSGetImportMeta,HeapConstant,Parameter,HeapConstant,Parameter

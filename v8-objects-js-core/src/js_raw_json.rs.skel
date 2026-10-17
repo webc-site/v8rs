@@ -1,0 +1,13 @@
+// 由 tool/src/objects/js-raw-json.h.js 从 v8/src/objects/js-raw-json.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSRawJson 零字段 shape 类差集骨架
+
+//! JSRawJson: 无自有 C++ 存储; "rawJSON" 住 JSObject in-object 槽 0 (偏移 = sizeof(JSRawJson))。
+
+/// v8: src/objects/js-raw-json.h JSRawJson (kHeaderSize = sizeof = JSObject::kHeaderSize)
+pub const K_HEADER_SIZE: usize = 24; // 非压缩 8B: JSObject 头 3 槽
+/// v8: src/objects/js-raw-json.cc JSRawJson::Create — rawJSON in-object 槽偏移
+pub const K_RAW_JSON_VALUE_OFFSET: usize = K_HEADER_SIZE;
+
+// Create 流程 (cc): ToString → Flatten → CheckRawJson(1/2 字节宽) → NewJSObjectFromMap(js_raw_json_map)
+//   → InObjectPropertyPutAtOffset(sizeof(JSRawJson), flat) → SetIntegrityLevel(FROZEN)
+// HasInitialLayout (inl): map() == isolate->js_raw_json_map()

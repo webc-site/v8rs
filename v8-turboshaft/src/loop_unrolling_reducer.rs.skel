@@ -1,0 +1,129 @@
+// 由 tool/src/compiler/turboshaft/loop-unrolling-reducer.h.js 从 v8/src/compiler/turboshaft/loop-unrolling-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 循环展开: 静态规范 for 循环匹配与展开状态机骨架
+
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h IterationCountKind — IterationCount::Kind (Exact 可全展开 / Approx 可去栈检查 / Unknown)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IterationCountKind {
+  /// kExact
+  /// kApprox
+  /// kUnknown
+}
+
+impl IterationCountKind {
+  pub const ALL: &'static [IterationCountKind] = &[
+    IterationCountKind::exact,
+    IterationCountKind::approx,
+    IterationCountKind::unknown,
+  ];
+}
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h CmpOp — StaticCanonicalForLoopMatcher::CmpOp (9 种比较)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CmpOp {
+  /// kEqual
+  /// kSignedLessThan
+  /// kSignedLessThanOrEqual
+  /// kUnsignedLessThan
+  /// kUnsignedLessThanOrEqual
+  /// kSignedGreaterThan
+  /// kSignedGreaterThanOrEqual
+  /// kUnsignedGreaterThan
+  /// kUnsignedGreaterThanOrEqual
+}
+
+impl CmpOp {
+  pub const ALL: &'static [CmpOp] = &[
+    CmpOp::equal,
+    CmpOp::signedLessThan,
+    CmpOp::signedLessThanOrEqual,
+    CmpOp::unsignedLessThan,
+    CmpOp::unsignedLessThanOrEqual,
+    CmpOp::signedGreaterThan,
+    CmpOp::signedGreaterThanOrEqual,
+    CmpOp::unsignedGreaterThan,
+    CmpOp::unsignedGreaterThanOrEqual,
+  ];
+}
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h BinOp — StaticCanonicalForLoopMatcher::BinOp (含溢出检查变体)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BinOp {
+  /// kAdd
+  /// kMul
+  /// kSub
+  /// kBitwiseAnd
+  /// kBitwiseOr
+  /// kBitwiseXor
+  /// kOverflowCheckedAdd
+  /// kOverflowCheckedMul
+  /// kOverflowCheckedSub
+}
+
+impl BinOp {
+  pub const ALL: &'static [BinOp] = &[
+    BinOp::add,
+    BinOp::mul,
+    BinOp::sub,
+    BinOp::bitwiseAnd,
+    BinOp::bitwiseOr,
+    BinOp::bitwiseXor,
+    BinOp::overflowCheckedAdd,
+    BinOp::overflowCheckedMul,
+    BinOp::overflowCheckedSub,
+  ];
+}
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h UnrollingStatus — LoopUnrollingReducer 状态机 (kRemoveLoop 双语义: 末次 header / 删环)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UnrollingStatus {
+  /// kNotUnrolling
+  /// kUnrolling
+  /// kRemoveLoop
+}
+
+impl UnrollingStatus {
+  pub const ALL: &'static [UnrollingStatus] = &[
+    UnrollingStatus::notUnrolling,
+    UnrollingStatus::unrolling,
+    UnrollingStatus::removeLoop,
+  ];
+}
+
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h IterationCount
+/// kind + count 载体; 构造: Exact(count)/Approx(count)/Unknown()
+pub struct IterationCount {
+  pub kind: IterationCountKind,
+  pub count: usize,
+}
+
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h StaticCanonicalForLoopMatcher
+/// 静态规范 for 循环匹配器 (phi 比较 + 溢出检查二元组), cc 定义面:
+/// MatchPhiCompareCst / MatchCheckedOverflowBinop / MatchWordBinop
+pub struct StaticCanonicalForLoopMatcher;
+
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.cc LoopUnrollingAnalyzer
+/// DetectUnrollableLoops / GetLoopIterationCount / CanUnrollAtLeastOneLoop
+pub struct LoopUnrollingAnalyzer;
+
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h LoopStackCheckElisionReducer
+/// 小迭代数 (Approx) 循环的栈检查消除
+pub struct LoopStackCheckElisionReducer;
+
+/// v8: src/compiler/turboshaft/loop-unrolling-reducer.h LoopUnrollingReducer
+pub struct LoopUnrollingReducer;
+
+impl LoopUnrollingReducer {
+  /// 原版 bool RemoveLoop(const Block* header)
+  pub fn remove_loop(&mut self) -> bool {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 bool FullyUnrollLoop(const Block* header)
+  pub fn fully_unroll_loop(&mut self) -> bool {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(IterationCountKind::ALL.len() == 3);
+  assert!(CmpOp::ALL.len() == 9);
+  assert!(BinOp::ALL.len() == 9);
+  assert!(UnrollingStatus::ALL.len() == 3);
+};

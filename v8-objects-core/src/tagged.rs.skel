@@ -1,0 +1,50 @@
+// 由 tool/src/objects/tagged-impl.h.js 从 v8/src/objects/tagged-impl.h + tagged-impl-inl.h + tagged-index.h 生成; 修订就地改, 复跑覆盖
+// tagged.rs 差集骨架, 合并后就地修订; 复跑覆盖本 skel
+
+//! 差集骨架: 弱引用谓词族 / 取出族 / MakeWeak 系列 / TaggedIndex
+
+// ===== 常量 (globals.h 提取) =====
+/// 已清除弱引用值的低 32 位 (3 = 0b11)
+pub const CLEARED_WEAK_HEAP_OBJECT_LOWER32: u32 = 3;
+/// 弱引用位掩码 (bit 1)
+pub const WEAK_HEAP_OBJECT_MASK: usize = 1 << 1;
+
+// ===== 谓词 (宏展开: HAS_*) =====
+// is_smi:          (self.ptr() & SMI_TAG_MASK) == SMI_TAG
+// is_strong_tag:   (self.ptr() & HEAP_OBJECT_TAG_MASK) == HEAP_OBJECT_TAG
+// is_weak_tag:     (self.ptr() & HEAP_OBJECT_TAG_MASK) == WEAK_HEAP_OBJECT_TAG
+
+impl Tagged<MaybeObject> {
+  pub const fn is_smi(&self) -> bool { (self.ptr() & SMI_TAG_MASK) == SMI_TAG }
+  pub const fn is_cleared(&self) -> bool {
+    (self.ptr() as u32) == CLEARED_WEAK_HEAP_OBJECT_LOWER32
+  }
+  pub const fn is_weak_or_cleared(&self) -> bool { (self.ptr() & HEAP_OBJECT_TAG_MASK) == WEAK_HEAP_OBJECT_TAG }
+  pub const fn is_weak(&self) -> bool { self.is_weak_or_cleared() && !self.is_cleared() }
+  pub const fn is_strong(&self) -> bool { (self.ptr() & HEAP_OBJECT_TAG_MASK) == HEAP_OBJECT_TAG }
+  pub const fn is_strong_or_weak(&self) -> bool { !self.is_smi() && !self.is_cleared() }
+  pub const fn is_strong_or_smi(&self) -> bool { (self.ptr() & HEAP_OBJECT_TAG_MASK) != WEAK_HEAP_OBJECT_TAG }
+  pub const fn is_object(&self) -> bool { !self.is_weak_or_cleared() }
+  // 取出族 (tagged-impl-inl.h)
+  pub fn get_heap_object_if_strong(&self) -> Option<Tagged<HeapObject>>;
+  pub fn get_heap_object_if_weak(&self) -> Option<Tagged<HeapObject>>;
+  pub fn get_heap_object(&self) -> Option<Tagged<HeapObject>>;
+  pub fn get_heap_object_or_smi(&self) -> Tagged<Object>;
+  pub fn as_smi(&self) -> Option<Tagged<Smi>>;
+}
+
+// ===== 自由函数 (tagged.h:912-932) =====
+pub fn make_weak<T>(value: Tagged<T>) -> Tagged<Weak<T>>;
+pub fn make_weak_or_smi<T>(value: Tagged<T>) -> Tagged<MaybeObject>;
+pub fn make_strong<T>(value: Tagged<T>) -> Tagged<T>;
+
+// ===== TaggedIndex (tagged-index.h) =====
+pub const TAGGED_INDEX_VALUE_SIZE: usize = 31;
+pub const TAGGED_INDEX_MIN: i64 = -1073741824;
+pub const TAGGED_INDEX_MAX: i64 = 1073741823;
+pub struct TaggedIndex;
+impl TaggedIndex {
+  pub const fn from_intptr(value: isize) -> Tagged<Self>;
+  pub const fn is_valid(value: isize) -> bool;
+  pub const fn value(tagged: Tagged<Self>) -> isize;
+}

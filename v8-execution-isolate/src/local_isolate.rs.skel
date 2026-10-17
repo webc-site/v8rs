@@ -1,0 +1,12 @@
+// 由 tool/src/execution/local-isolate.js 从 v8/src/execution/local-isolate.h, src/execution/local-isolate.cc, src/execution/local-isolate-inl.h, src/execution/thread-local-top.h, src/execution/thread-local-top.cc 生成; 修订就地改, 复跑覆盖
+// LocalIsolate 受限视图; 回调经 IsolateHeapEnv 窄 trait
+
+//! 破环登记: LocalIsolate 不直持 Isolate 裸指针 — 后台任务经 IsolateHeapEnv 泛型参数取堆面。
+
+// ── LocalIsolate 类面 (local-isolate.h:47; Isolate 受限视图, 后台线程用) ──
+//   explicit LocalIsolate(Isolate*, ThreadKind) / heap() / roots_table() / root()
+//   修订阶段转窄 trait 泛型 (LocalIsolate 不直持 Isolate 裸指针语义)
+
+// ── ThreadLocalTop (thread-local-top.h; kSizeInBytes = 28*kSystemPointerSize; static_assert==sizeof) ──
+
+// 对数: local-isolate 类面针 4 + ThreadLocalTop 针 4 全过

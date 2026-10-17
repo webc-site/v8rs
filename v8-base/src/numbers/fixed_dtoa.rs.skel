@@ -1,0 +1,139 @@
+// 由 tool/src/base/numbers/fixed-dtoa.h.js 从 v8/src/base/numbers/fixed-dtoa.h + .cc 生成; 修订就地改, 复跑覆盖
+// 定点小数打印: FastFixedDtoa 规则面
+
+//! v8 侧: 导出函数 1 (FastFixedDtoa) + static 辅助 7 个; 分支 6 个
+//! Rust 策略: buffer → &mut [u8], length/decimal_point → 返回元组
+
+/// v8: src/base/numbers/fixed-dtoa.h kDoubleSignificandSize (cc L45, 含隐藏位)
+pub const K_DOUBLE_SIGNIFICAND_SIZE: i32 = 53;
+
+/// v8: src/base/numbers/fixed-dtoa.cc kTen7 = 10000000 (函数内局部)
+pub const K_TEN7: u32 = 10000000;
+/// v8: src/base/numbers/fixed-dtoa.cc kTen7 = 10000000 (函数内局部)
+pub const K_TEN7: u32 = 10000000;
+/// v8: src/base/numbers/fixed-dtoa.cc kMaxUInt32 = 0xFFFFFFFF (函数内局部)
+pub const K_MAX_UINT32: u32 = 0xFFFFFFFF;
+
+// ---- static 辅助 (v8 侧 7 个) ----
+/// v8: src/base/numbers/fixed-dtoa.cc FillDigits32FixedLength()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+/// v8: src/base/numbers/fixed-dtoa.cc FillDigits32()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+/// v8: src/base/numbers/fixed-dtoa.cc FillDigits64FixedLength()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+/// v8: src/base/numbers/fixed-dtoa.cc FillDigits64()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+/// v8: src/base/numbers/fixed-dtoa.cc DtoaRoundUp()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+/// v8: src/base/numbers/fixed-dtoa.cc FillFractionals()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+/// v8: src/base/numbers/fixed-dtoa.cc TrimZeros()
+/// 语义面就地修订 (数字填充/进位/小数尾部/去零)
+// 对账: FillDigits32FixedLength, FillDigits32, FillDigits64FixedLength, FillDigits64, DtoaRoundUp, FillFractionals, TrimZeros
+
+/// v8: src/base/numbers/fixed-dtoa.h FastFixedDtoa(v, fractional_count, buffer, length*, decimal_point*)
+/// 语义: v = significand * 2^exponent; 5 分支分派 (原文见尾):
+///   exponent > 20 / fractional_count > 20 → false (不处理)
+///   exponent + 53 > 64 → 除以 5^17 分解 (kFive17 路径)
+///   0 <= exponent <= 11 → 整数左移直接填
+///   -53 < exponent < 0 → 整数/小数拆分 (integrals/fractionals)
+///   exponent < -128 → 全零
+/// 四舍五入向远离 0 (away from zero); buffer 需容 length+1
+#[allow(clippy::too_many_arguments)]
+pub fn fast_fixed_dtoa(v: f64, fractional_count: i32, buffer: &mut [u8]) -> Option<(usize, i32)> {
+    // 返回 (length, decimal_point); None = 参数不支持
+    /// v8: 分派分支计数 = 6
+    todo!()
+}
+
+// ---- v8 主函数原文 (分支证据, Developer 对照) ----
+// bool FastFixedDtoa(double v, int fractional_count, Vector<char> buffer,
+//                    int* length, int* decimal_point) {
+//   const uint32_t kMaxUInt32 = 0xFFFFFFFF;
+//   uint64_t significand = Double(v).Significand();
+//   int exponent = Double(v).Exponent();
+//   // v = significand * 2^exponent (with significand a 53bit integer).
+//   // If the exponent is larger than 20 (i.e. we may have a 73bit number) then we
+//   // don't know how to compute the representation. 2^73 ~= 9.5*10^21.
+//   // If necessary this limit could probably be increased, but we don't need
+//   // more.
+//   if (exponent > 20) return false;
+//   if (fractional_count > 20) return false;
+//   *length = 0;
+//   // At most kDoubleSignificandSize bits of the significand are non-zero.
+//   // Given a 64 bit integer we have 11 0s followed by 53 potentially non-zero
+//   // bits:  0..11*..0xxx..53*..xx
+//   if (exponent + kDoubleSignificandSize > 64) {
+//     // The exponent must be > 11.
+//     //
+//     // We know that v = significand * 2^exponent.
+//     // And the exponent > 11.
+//     // We simplify the task by dividing v by 10^17.
+//     // The quotient delivers the first digits, and the remainder fits into a 64
+//     // bit number.
+//     // Dividing by 10^17 is equivalent to dividing by 5^17*2^17.
+//     const uint64_t kFive17 = 0xB1'A2BC'2EC5;  // 5^17
+//     uint64_t divisor = kFive17;
+//     int divisor_power = 17;
+//     uint64_t dividend = significand;
+//     uint32_t quotient;
+//     uint64_t remainder;
+//     // Let v = f * 2^e with f == significand and e == exponent.
+//     // Then need q (quotient) and r (remainder) as follows:
+//     //   v            = q * 10^17       + r
+//     //   f * 2^e      = q * 10^17       + r
+//     //   f * 2^e      = q * 5^17 * 2^17 + r
+//     // If e > 17 then
+//     //   f * 2^(e-17) = q * 5^17        + r/2^17
+//     // else
+//     //   f  = q * 5^17 * 2^(17-e) + r/2^e
+//     if (exponent > divisor_power) {
+//       // We only allow exponents of up to 20 and therefore (17 - e) <= 3
+//       dividend <<= exponent - divisor_power;
+//       quotient = static_cast<uint32_t>(dividend / divisor);
+//       remainder = (dividend % divisor) << divisor_power;
+//     } else {
+//       divisor <<= divisor_power - exponent;
+//       quotient = static_cast<uint32_t>(dividend / divisor);
+//       remainder = (dividend % divisor) << exponent;
+//     }
+//     FillDigits32(quotient, buffer, length);
+//     FillDigits64FixedLength(remainder, divisor_power, buffer, length);
+//     *decimal_point = *length;
+//   } else if (exponent >= 0) {
+//     // 0 <= exponent <= 11
+//     significand <<= exponent;
+//     FillDigits64(significand, buffer, length);
+//     *decimal_point = *length;
+//   } else if (exponent > -kDoubleSignificandSize) {
+//     // We have to cut the number.
+//     uint64_t integrals = significand >> -exponent;
+//     uint64_t fractionals = significand - (integrals << -exponent);
+//     if (integrals > kMaxUInt32) {
+//       FillDigits64(integrals, buffer, length);
+//     } else {
+//       FillDigits32(static_cast<uint32_t>(integrals), buffer, length);
+//     }
+//     *decimal_point = *length;
+//     FillFractionals(fractionals, exponent, fractional_count, buffer, length,
+//                     decimal_point);
+//   } else if (exponent < -128) {
+//     // This configuration (with at most 20 digits) means that all digits must be
+//     // 0.
+//     DCHECK_LE(fractional_count, 20);
+//     buffer[0] = '\0';
+//     *length = 0;
+//     *decimal_point = -fractional_count;
+//   } else {
+//     *decimal_point = 0;
+//     FillFractionals(significand, exponent, fractional_count, buffer, length,
+//                     decimal_point);
+//   }
+//   TrimZeros(buffer, length, decimal_point);
+//   buffer[*length] = '\0';
+//   if ((*length) == 0) {
+//     // The string is empty and the decimal_point thus has no importance. Mimick
+//     // Gay's dtoa and and set it to -fractional_count.
+//     *decimal_point = -fractional_count;
+//   }
+//   return true;

@@ -1,0 +1,28 @@
+// 由 tool/src/heap/marking-state.js 从 v8/src/heap/marking-state.h, src/heap/marking-state-inl.h 生成; 修订就地改, 复跑覆盖
+// 标记状态门面: 原子/非原子两实例化
+/// 访问模式参数: 原文模板参数 AccessMode::ATOMIC / NON_ATOMIC
+/// v8: src/heap/marking-state.h MarkingStateBase
+pub struct MarkingStateBase {
+  /// v8: isolate_
+  pub isolate: *const Isolate,
+}
+
+/// v8: src/heap/marking-state.h MarkingState (AccessMode::ATOMIC, 标记 visitor 用)
+pub type MarkingState = MarkingStateBase;
+/// v8: src/heap/marking-state.h NonAtomicMarkingState (AccessMode::NON_ATOMIC)
+pub type NonAtomicMarkingState = MarkingStateBase;
+
+impl MarkingStateBase {
+  /// v8: src/heap/marking-state-inl.h MarkingStateBase<...,ATOMIC>::TryMark
+  /// 语义: bitmap->MarkBitFromAddress(...).template Set<mode>() — 0→1 返回 true
+  pub fn try_mark(&self, obj: TaggedHeapObject) -> bool { todo!() }
+  /// v8: src/heap/marking-state-inl.h TryMarkAndAccountLiveBytes(obj)
+  /// TryMark 成功 → MutablePage::IncrementLiveBytesAtomically
+  pub fn try_mark_and_account_live_bytes(&self, obj: TaggedHeapObject) -> bool { todo!() }
+  /// v8: src/heap/marking-state-inl.h TryMarkAndAccountLiveBytes(obj, object_size)
+  pub fn try_mark_and_account_live_bytes_with_size(&self, obj: TaggedHeapObject, object_size: u32) -> bool { todo!() }
+  /// v8: src/heap/marking-state-inl.h IsMarked
+  pub fn is_marked(&self, obj: TaggedHeapObject) -> bool { todo!() }
+  /// v8: src/heap/marking-state-inl.h IsUnmarked
+  pub fn is_unmarked(&self, obj: TaggedHeapObject) -> bool { todo!() }
+}

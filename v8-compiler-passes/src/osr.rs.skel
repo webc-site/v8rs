@@ -1,0 +1,35 @@
+// 由 tool/src/compiler/osr.js 从 v8/src/compiler/osr.h + osr.cc 生成; 修订就地改, 复跑覆盖
+// OSR (栈上替换) 帧布局辅助
+
+//! osr — OSR 编译的帧准备
+//!
+//! FirstStackSlotIndex = 1 + parameter_count (receiver + 参数;
+//! TurboFan 环境不含 context)。UnoptimizedFrameSlots 返回未优化帧槽位数。
+
+/// 原版 OsrHelper — OSR 细节封装
+pub struct OsrHelper {
+  /// parameter_count_
+  pub parameter_count: usize,
+  /// stack_slot_count_
+  pub stack_slot_count: usize,
+}
+
+impl OsrHelper {
+  /// 原版 FirstStackSlotIndex — 首栈槽的环境索引 (receiver + params)
+  /// v8: src/compiler/osr.h OsrHelper::FirstStackSlotIndex
+  pub fn first_stack_slot_index(parameter_count: i32) -> i32 {
+    1 + parameter_count
+  }
+
+  /// 原版 UnoptimizedFrameSlots — 未优化帧的栈槽数
+  /// v8: src/compiler/osr.h OsrHelper::UnoptimizedFrameSlots
+  pub fn unoptimized_frame_slots(&self) -> usize {
+    self.stack_slot_count
+  }
+
+  /// 原版 SetupFrame — 依 OSR 值栈信息准备 frame
+  /// v8: src/compiler/osr.cc OsrHelper::SetupFrame
+  pub fn setup_frame(&self, frame: &mut Frame) {
+    todo!("v8: src/compiler/osr.cc OsrHelper::SetupFrame")
+  }
+}

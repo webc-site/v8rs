@@ -1,0 +1,118 @@
+// 由 tool/src/compiler/pipeline.js 从 v8/src/compiler/pipeline.h + pipeline.cc 生成; 修订就地改, 复跑覆盖
+// TurboFan 编译管线编排 (相位注册表 + Run 模板循环)
+
+//! pipeline — AllStatic 门面 + 相位结构体注册表
+//!
+//! 相位结构 25 个, DECL_PIPELINE_PHASE_CONSTANTS 相位名
+//! 24 个 (1:1 于 Run<Phase> 调用面);
+//! Run<Phase>: 统计 PhaseScope → phase.Run(data) → RunPrintAndVerify。
+//! 相位清单: BytecodeGraphBuilder, Inlining, JSWasmInlining, JSWasmLowering, EarlyGraphTrimming, Typer, Untyper, TypedLowering, EscapeAnalysis, TypeAssertions, SimplifiedLowering, LoopPeeling, LoopExitElimination, GenericLowering, EarlyOptimization, LoadElimination, MemoryOptimization, WasmTyping, WasmGCOptimization, WasmGCLowering, WasmOptimization, Scheduling, PrintGraph, VerifyGraph。
+
+/// 原版 InstructionRangesAsJSON — JSON 辅助 (h)
+/// v8: src/compiler/pipeline.h InstructionRangesAsJSON
+pub struct InstructionRangesAsJSON<'a> {
+  /// ranges
+  pub ranges: &'a [InstructionRange],
+}
+
+/// 相位 trait — 原版各 struct XxxPhase 的公共面
+/// v8: src/compiler/pipeline.cc struct XxxPhase (DECL_PIPELINE_PHASE_CONSTANTS)
+pub trait PipelinePhase {
+  /// phase_name() = "V8.TF"#Name
+  const PHASE_NAME: &'static str;
+  /// kKind (PhaseKind)
+  const KIND: PhaseKind;
+  /// 相位体
+  /// v8: src/compiler/pipeline.cc <Phase>::Run
+  fn run(&mut self, data: &mut TFPipelineData<'_, '_>);
+}
+
+// —— 相位注册表 (25 结构体 ↔ 24 相位名) ——
+/// v8: src/compiler/pipeline.cc 相位结构体清单
+pub enum KnownPhase {
+  /// struct BytecodeGraphBuilderPhase
+  BytecodeGraphBuilder,
+  /// struct InliningPhase
+  Inlining,
+  /// struct JSWasmInliningPhase
+  JSWasmInlining,
+  /// struct JSWasmLoweringPhase
+  JSWasmLowering,
+  /// struct EarlyGraphTrimmingPhase
+  EarlyGraphTrimming,
+  /// struct TyperPhase
+  Typer,
+  /// struct UntyperPhase
+  Untyper,
+  /// struct TypedLoweringPhase
+  TypedLowering,
+  /// struct EscapeAnalysisPhase
+  EscapeAnalysis,
+  /// struct TypeAssertionsPhase
+  TypeAssertions,
+  /// struct SimplifiedLoweringPhase
+  SimplifiedLowering,
+  /// struct LoopPeelingPhase
+  LoopPeeling,
+  /// struct LoopExitEliminationPhase
+  LoopExitElimination,
+  /// struct GenericLoweringPhase
+  GenericLowering,
+  /// struct EarlyOptimizationPhase
+  EarlyOptimization,
+  /// struct LoadEliminationPhase
+  LoadElimination,
+  /// struct MemoryOptimizationPhase
+  MemoryOptimization,
+  /// struct WasmTypingPhase
+  WasmTyping,
+  /// struct WasmGCOptimizationPhase
+  WasmGCOptimization,
+  /// struct WasmGCLoweringPhase
+  WasmGCLowering,
+  /// struct WasmOptimizationPhase
+  WasmOptimization,
+  /// struct SchedulingPhase
+  Scheduling,
+  /// struct PrintGraphPhase
+  PrintGraph,
+  /// struct VerifyGraphPhase
+  VerifyGraph,
+}
+
+impl KnownPhase {
+  /// 原版 phase_name — "V8.TF"#Name
+  /// v8: src/compiler/pipeline.cc DECL_PIPELINE_PHASE_CONSTANTS
+  pub fn phase_name(self) -> &'static str {
+    todo!("v8: src/compiler/pipeline.cc DECL_PIPELINE_PHASE_CONSTANTS")
+  }
+}
+
+/// 原版 Pipeline — AllStatic 门面
+pub struct Pipeline;
+
+impl Pipeline {
+  /// 原版 NewCompilationJob — 编译作业工厂 (turbofan-enabled.cc 入口)
+  /// v8: src/compiler/pipeline.cc Pipeline::NewCompilationJob
+  pub fn new_compilation_job(isolate: &Isolate, function: &JSFunction, code_kind: CodeKind, has_script: bool, osr_offset: BytecodeOffset) -> Box<dyn TurbofanCompilationJob> {
+    todo!("v8: src/compiler/pipeline.cc Pipeline::NewCompilationJob")
+  }
+
+  /// 原版 Run<Phase> — 单相位执行 (PipelineRunScope + SYNCHRONIZATION_POINT + phase.Run)
+  /// v8: src/compiler/pipeline.cc PipelineImpl::Run
+  pub fn run<P: PipelinePhase>(data: &mut TFPipelineData<'_, '_>, phase_name: &str) {
+    todo!("v8: src/compiler/pipeline.cc PipelineImpl::Run (RunScope → P::run → RunPrintAndVerify)")
+  }
+
+  /// 原版 RunPrintAndVerify — trace 图 + DEBUG 校验
+  /// v8: src/compiler/pipeline.cc PipelineImpl::RunPrintAndVerify
+  pub fn run_print_and_verify(data: &TFPipelineData<'_, '_>, phase_name: &str, untyped: bool) {
+    todo!("v8: src/compiler/pipeline.cc PipelineImpl::RunPrintAndVerify")
+  }
+
+  /// 原版 GenerateCodeForTesting 族 — 测试入口
+  /// v8: src/compiler/pipeline.cc Pipeline::GenerateCodeForTesting
+  pub fn generate_code_for_testing(info: &OptimizedCompilationInfo) -> MaybeHandle<Code> {
+    todo!("v8: src/compiler/pipeline.cc Pipeline::GenerateCodeForTesting (多重载)")
+  }
+}

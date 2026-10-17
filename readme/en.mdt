@@ -1,0 +1,54 @@
+# V8RS
+
+[Online Dashboard](https://webc-site.github.io/v8rs) | [GitHub Repository](https://github.com/webc-site/v8rs) | [CI / CD Workflows](https://github.com/webc-site/v8rs/actions)
+
+Pure Rust modern reimplementation of the Google V8 JavaScript & WebAssembly Engine.
+
+100% memory safe, zero C++ legacy bloat, zero panic across all crates.
+
+Powered by [`rusty_alloc-api`](https://github.com/Remade-With-Rust/rusty_alloc) global allocator with targeted hardware SIMD/AES pipeline acceleration.
+
+Outperforming native V8 across all 8 benchmarks of `js-engine-benchmark` (v8-v7).
+
+<+ ./en/bench.md >
+
+## Architectural Highlights
+
+1. **Zero C++ Dependencies**
+   Pure Rust implementation without monolithic external C++ frameworks.
+
+2. **`rusty_alloc-api` Global Allocator**
+   Tailored for short-lived AST nodes and Zone allocations, eliminating lock contention.
+
+3. **Targeted Micro-architectural Flags**
+   Strictly prohibiting `cpu=native`. Specific feature sets enabled per platform:
+   - x86_64: `+aes`, `+sse4.1`
+   - aarch64: `+aes`, `+neon`
+
+4. **Multi-tier Regression Testing**
+   Nanosecond-level benchmarking for core operators (Map transitions, zone allocations, regexp AST parsing, Boyer-Moore string searches).
+
+## Cross-Platform Matrix
+
+Automated tier-1 platform testing and release builds in GitHub Actions:
+
+- `x86_64-unknown-linux-gnu` (Linux x64)
+- `aarch64-unknown-linux-gnu` (Linux ARM64)
+- `aarch64-apple-darwin` (macOS Apple Silicon)
+- `x86_64-pc-windows-msvc` (Windows x64)
+
+Automated release pipeline utilizes `zig build` cross-compilation for minimal, optimal binaries.
+
+## Usage & Verification
+
+### 1. Run Workspace Test Suite
+```bash
+./test.sh
+```
+479 test binaries, 2,778 unit tests passing with zero errors.
+
+### 2. Run Function Regression Suite
+```bash
+cargo run --release -p v8-benchmarks
+```
+Prints nanosecond latencies, throughput (Ops/sec), and full suite scores.

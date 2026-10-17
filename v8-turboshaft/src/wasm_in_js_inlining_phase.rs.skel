@@ -1,0 +1,15 @@
+// 由 tool/src/compiler/turboshaft/wasm-in-js-inlining-phase.h.js 从 v8/src/compiler/turboshaft/wasm-in-js-inlining-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// wasm-in-JS 内联期: 小/热 wasm 函数进 JS 管线
+
+/// 原版 WasmInJSInliningPhase — 属 JS 管线 (非 wasm 管线),
+/// 把足够小/热的 wasm 函数体内联进调用方 JS 函数。
+/// v8: src/compiler/turboshaft/wasm-in-js-inlining-phase.{h,cc}
+pub struct WasmInJSInliningPhase;
+
+impl WasmInJSInliningPhase {
+  /// v8: cc Run — UnparkedScopeIfNeeded(broker, DEBUG_BOOL) 后
+  /// CopyingPhase<WasmInJSInliningReducer, SimplifiedOptimizationReducer, ValueNumberingReducer>::Run
+  /// GVN 目的 (cc 注释): 跨多个被内联函数去重 wasm 操作,
+  /// 亦利于后续 WasmGC 类型优化 / wasm 载入消除。
+  pub fn run(&mut self, data: &mut PipelineData, temp_zone: &mut Zone) { todo!() }
+}

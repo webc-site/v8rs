@@ -1,0 +1,33 @@
+// 由 tool/src/base/unique-array.h.js 从 v8/src/base/unique-array.h 生成; 修订就地改, 复跑覆盖
+// 带长度独占数组 (unique_ptr<T[]> + size)
+
+//! v8 侧: 静态构造 5; 视图方法 7
+//! Rust 策略: Box<[T]> 原生等价 (ptr + len 胖指针); 保留 API 面做迁移对账
+
+/// v8: src/base/unique-array.h class UniqueArray<T> final
+/// v8 动机: unique_ptr<T[]> 不记 size; Rust Box<[T]> 胖指针自带
+pub struct UniqueArray<T> {
+    /// v8: data_ + length_
+    data: Box<[T]>,
+}
+
+impl<T: Clone> UniqueArray<T> {
+    /// v8: New(size) — 值初始化 (Rust: vec!宏填 T::default 后转 Box)
+    pub fn new(size: usize) -> Self where T: Default { todo!() }
+    /// v8: New(size, init) — fill_n 赋 init
+    pub fn new_with(size: usize, init: T) -> Self { todo!() }
+    /// v8: NewForOverwrite(size) — 默认初始化不填零 (Rust: MaybeUninit 语义, 安全侧退化为 new)
+    pub fn new_for_overwrite(size: usize) -> Self where T: Default { todo!() }
+    /// v8: CopiedFrom(data, size) / CopiedFrom(span)
+    pub fn copied_from(data: &[T]) -> Self { todo!() }
+}
+
+impl<T> UniqueArray<T> {
+    /// v8: size() / empty() / begin() / end() / operator[] / as_span()
+    /// 对账 (解析 7 项): size, empty, begin, end, data, rbegin, rend
+    pub fn size(&self) -> usize { self.data.len() }
+    pub fn empty(&self) -> bool { self.data.is_empty() }
+    pub fn as_slice(&self) -> &[T] { &self.data }
+    pub fn as_mut_slice(&mut self) -> &mut [T] { &mut self.data }
+}
+// v8: UniqueArray<U>&& 跨型移动 (T→const T 转换) — Rust 生命周期/可变性天然覆盖

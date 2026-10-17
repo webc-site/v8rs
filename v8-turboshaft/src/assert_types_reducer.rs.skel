@@ -1,0 +1,11 @@
+// 由 tool/src/compiler/turboshaft/assert-types-reducer.h.js 从 v8/src/compiler/turboshaft/assert-types-reducer.h 生成; 修订就地改, 复跑覆盖
+// 类型断言插入 reducer (依赖 TypeInference)
+
+/// v8: src/compiler/turboshaft/assert-types-reducer.h AssertTypesReducer
+/// UniformReducerAdapter 适配
+pub struct AssertTypesReducer {
+  pub placeholder: (),
+}
+
+impl AssertTypesReducer {
+}

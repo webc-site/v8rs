@@ -1,0 +1,27 @@
+// 由 tool/src/heap/allocation-observer.cc.js 从 v8/src/heap/allocation-observer.cc 生成; 修订就地改, 复跑覆盖
+// AllocationCounter 4 定义 1:1 落地; PauseScope 2 定义 → PauseEnv 窄 trait 承接
+
+// ══ allocation-observer.cc 台账 (原版行号实测) ══
+// AllocationCounter::AddAllocationObserver                       cc:15
+// AllocationCounter::RemoveAllocationObserver                    cc:45
+// AllocationCounter::AdvanceAllocationObservers                  cc:75
+// AllocationCounter::InvokeAllocationObservers                   cc:82
+// PauseAllocationObserversScope::PauseAllocationObserversScope   cc:161
+// PauseAllocationObserversScope::~PauseAllocationObserversScope  cc:168
+// 处置: Add/Remove/Advance/Invoke — 落地 (纯计数逻辑, 无 Isolate; 逐行对照原版)
+//   PauseScope ctor/cc:161 (DCHECK gc_state + allocator pause + depth++) 与
+//   dtor/cc:168 (depth-- + allocator resume) — Heap 硬耦合 → trait PauseEnv 承接,
+//   原版引用 cc:161-171 ↔ Rust allocation_observer.rs PauseScope 区 (双引用在模块注释)
+// Invoke 内 DisallowGarbageCollection cc:99 — GC 禁入 scope 属 Heap 票面 → 推迟登记 (回调步内
+//   观察者不得触发分配折叠的语义由上层在 Step 实现侧保证; Rust 侧 scope 以回调闭包承接)
+// DEBUG-only: Add 的重复注册 find_if 预检 cc:16-22 → cfg(debug_assertions) 落地
+
+// ── rs 侧落地锚 (HC-1R 实测台账) ──
+// Landed @ v8-heap-core/src/allocation_observer.rs: cc 六定义中四定义 (Add/Remove/Advance/Invoke)
+//   逻辑体逐行 1:1 (双行号 doc 各在案), PauseScope 二定义 → PauseEnv 窄 trait (decl+call 成对 10 锚) +
+//   impl Drop 承接 RAII dtor; CHECK(step_run) 以 check_with_msg (abort) 承接, DCHECK 面 18 处全落
+//   debug_assert*; 原版 remove_if 以 Vec::retain 等价; pending_added_ push_back+clear 以 append 等价。
+// 推迟登记 (双行号): cc:99 DisallowGarbageCollection no_gc ↔ 本文件 Invoke 循环前注释 (GC 禁入 scope 属 Heap 票);
+//   cc:161-171 Heap::gc_state/allocator/pause_depth ↔ PauseEnv trait (具体 Heap 实现属 Heap 票)。
+// 测试面: tests/allocation_observer_unittest.rs 1:1 迁移 allocation-observer-unittest.cc
+//   (AddAndRemoveUnusedObservers / Step 两轮逐数值, RecursiveAdd/Remove 重入面如实申报推迟)。

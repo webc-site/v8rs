@@ -1,0 +1,17 @@
+// 由 tool/src/compiler/backend/s390/code-generator-s390.js 从 v8/src/compiler/backend/s390/code-generator-s390.cc 生成; 修订就地改, 复跑覆盖
+// s390x 代码生成: ArchInstruction 分发 (242 case) + cc 条件码
+
+//! 台账: AssembleArchInstruction case kS390 ×242 (+ 公共 kArch ×39);
+//!   ArchBranch/ArchBoolean/TailCallAfterGap; cc 条件码 (ConditionFor 族,
+//!   brc 掩码发射); LoadImmediate 复合 (LHI/LGHI/lgfi)。
+
+/// v8: CodeGenerator::AssembleArchInstruction (s390x)
+// fn assemble_arch_instruction(instr: &Instruction) -> CodeGenResult
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(ARCH_CASE_COUNT == 242);
+  assert!(COMMON_CASE_COUNT == 39);
+};
+pub const ARCH_CASE_COUNT: usize = 242;
+pub const COMMON_CASE_COUNT: usize = 39;

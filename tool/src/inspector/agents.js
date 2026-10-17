@@ -1,0 +1,227 @@
+#!/usr/bin/env bun
+// tool/src/inspector/agents.js — Heap/Profiler/Schema Agent 组 + 自定义预览
+// 覆盖: src/inspector/v8-heap-profiler-agent-impl.h/.cc + v8-profiler-agent-impl.h/.cc +
+//       v8-schema-agent-impl.h/.cc + custom-preview.h/.cc (4 对, 8 文件)
+// 产出: v8-inspector/src/agents.rs
+// 复跑幂等: 纯文本扫描 + 确定性输出, 无时间戳。
+import { banner, readV8, writeSrc } from "../../lib.js";
+
+const GEN = "src/inspector/agents.js";
+const FILES = [
+  "src/inspector/v8-heap-profiler-agent-impl.h",
+  "src/inspector/v8-heap-profiler-agent-impl.cc",
+  "src/inspector/v8-profiler-agent-impl.h",
+  "src/inspector/v8-profiler-agent-impl.cc",
+  "src/inspector/v8-schema-agent-impl.h",
+  "src/inspector/v8-schema-agent-impl.cc",
+  "src/inspector/custom-preview.h",
+  "src/inspector/custom-preview.cc",
+];
+const txt = Object.fromEntries(FILES.map((f) => [f, readV8(f)]));
+const die = (m) => { throw new Error(`[agents.js] ${m}`); };
+const need = (f, s) => { if (!txt[f].includes(s)) die(`${f} 缺针 ${s}`); };
+
+// ① 三 Agent Backend 类面针
+need("src/inspector/v8-heap-profiler-agent-impl.h", "class V8HeapProfilerAgentImpl : public protocol::HeapProfiler::Backend {");
+need("src/inspector/v8-profiler-agent-impl.h", "class V8ProfilerAgentImpl : public protocol::Profiler::Backend {");
+need("src/inspector/v8-schema-agent-impl.h", "class V8SchemaAgentImpl : public protocol::Schema::Backend {");
+// ② 自定义预览常量针
+need("src/inspector/custom-preview.h", "const int kMaxCustomPreviewDepth = 20;");
+
+const out = [];
+out.push(banner(GEN, FILES.join(", "), "Heap/Profiler/Schema 三 Agent 后端状态机与自定义预览限制"));
+out.push(`use crate::error::{Error, Result};`);
+out.push(`use serde::{Deserialize, Serialize};`);
+out.push(``);
+out.push(`/// 自定义预览最大递归嵌套深度 (v8/src/inspector/custom-preview.h:15)`);
+out.push(`pub const K_MAX_CUSTOM_PREVIEW_DEPTH: i32 = 20;`);
+out.push(``);
+out.push(`/// 自定义对象预览信息 (v8/src/inspector/custom-preview.h:17)`);
+out.push(`#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]`);
+out.push(`pub struct CustomPreview {`);
+out.push(`    pub header: String,`);
+out.push(`    pub has_body: bool,`);
+out.push(`    pub body_getter_id: Option<String>,`);
+out.push(`    pub depth: i32,`);
+out.push(`}`);
+out.push(``);
+out.push(`impl CustomPreview {`);
+out.push(`    /// 构造自定义预览 (检查深度是否越界)`);
+out.push(`    pub fn new(`);
+out.push(`        header: impl Into<String>,`);
+out.push(`        has_body: bool,`);
+out.push(`        body_getter_id: Option<String>,`);
+out.push(`        depth: i32,`);
+out.push(`    ) -> Result<Self> {`);
+out.push(`        if depth > K_MAX_CUSTOM_PREVIEW_DEPTH {`);
+out.push(`            return Err(Error::MaxDepthExceeded(depth));`);
+out.push(`        }`);
+out.push(`        Ok(Self {`);
+out.push(`            header: header.into(),`);
+out.push(`            has_body,`);
+out.push(`            body_getter_id,`);
+out.push(`            depth,`);
+out.push(`        })`);
+out.push(`    }`);
+out.push(`}`);
+out.push(``);
+out.push(`/// 堆采样分析代理后端 (v8/src/inspector/v8-heap-profiler-agent-impl.h:24)`);
+out.push(`#[derive(Debug, Default)]`);
+out.push(`pub struct V8HeapProfilerAgentImpl {`);
+out.push(`    enabled: bool,`);
+out.push(`    tracking: bool,`);
+out.push(`    sampling_interval_bytes: usize,`);
+out.push(`}`);
+out.push(``);
+out.push(`impl V8HeapProfilerAgentImpl {`);
+out.push(`    /// 创建新堆分析代理`);
+out.push(`    pub fn new() -> Self {`);
+out.push(`        Self {`);
+out.push(`            enabled: false,`);
+out.push(`            tracking: false,`);
+out.push(`            sampling_interval_bytes: 32768,`);
+out.push(`        }`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 启用堆分析`);
+out.push(`    #[inline]`);
+out.push(`    pub fn enable(&mut self) {`);
+out.push(`        self.enabled = true;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 停用堆分析`);
+out.push(`    #[inline]`);
+out.push(`    pub fn disable(&mut self) {`);
+out.push(`        self.enabled = false;`);
+out.push(`        self.tracking = false;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 是否已启用`);
+out.push(`    #[inline]`);
+out.push(`    pub const fn is_enabled(&self) -> bool {`);
+out.push(`        self.enabled`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 开始对象追踪`);
+out.push(`    #[inline]`);
+out.push(`    pub fn start_tracking_heap_objects(&mut self) {`);
+out.push(`        self.tracking = true;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 停止对象追踪`);
+out.push(`    #[inline]`);
+out.push(`    pub fn stop_tracking_heap_objects(&mut self) {`);
+out.push(`        self.tracking = false;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 获取采样间隔`);
+out.push(`    #[inline]`);
+out.push(`    pub const fn sampling_interval_bytes(&self) -> usize {`);
+out.push(`        self.sampling_interval_bytes`);
+out.push(`    }`);
+out.push(`}`);
+out.push(``);
+out.push(`/// CPU 采样分析代理后端 (v8/src/inspector/v8-profiler-agent-impl.h:26)`);
+out.push(`#[derive(Debug, Default)]`);
+out.push(`pub struct V8ProfilerAgentImpl {`);
+out.push(`    enabled: bool,`);
+out.push(`    started: bool,`);
+out.push(`    sampling_interval_us: i32,`);
+out.push(`}`);
+out.push(``);
+out.push(`impl V8ProfilerAgentImpl {`);
+out.push(`    /// 创建新 CPU 分析代理`);
+out.push(`    pub fn new() -> Self {`);
+out.push(`        Self {`);
+out.push(`            enabled: false,`);
+out.push(`            started: false,`);
+out.push(`            sampling_interval_us: 1000,`);
+out.push(`        }`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 启用代理`);
+out.push(`    #[inline]`);
+out.push(`    pub fn enable(&mut self) {`);
+out.push(`        self.enabled = true;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 停用代理`);
+out.push(`    #[inline]`);
+out.push(`    pub fn disable(&mut self) {`);
+out.push(`        self.enabled = false;`);
+out.push(`        self.started = false;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 开始分析`);
+out.push(`    #[inline]`);
+out.push(`    pub fn start(&mut self) {`);
+out.push(`        self.started = true;`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 停止分析`);
+out.push(`    #[inline]`);
+out.push(`    pub fn stop(&mut self) {`);
+out.push(`        self.started = false;`);
+out.push(`    }`);
+out.push(`    /// 是否已启用`);
+out.push(`    #[inline]`);
+out.push(`    pub const fn is_enabled(&self) -> bool {`);
+out.push(`        self.enabled`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 获取当前分析状态`);
+out.push(`    #[inline]`);
+out.push(`    pub const fn is_started(&self) -> bool {`);
+out.push(`        self.started`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 获取采样间隔 (微秒)`);
+out.push(`    #[inline]`);
+out.push(`    pub const fn sampling_interval_us(&self) -> i32 {`);
+out.push(`        self.sampling_interval_us`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 设置采样间隔 (微秒)`);
+out.push(`    #[inline]`);
+out.push(`    pub fn set_sampling_interval(&mut self, interval_us: i32) {`);
+out.push(`        self.sampling_interval_us = interval_us;`);
+out.push(`    }`);
+out.push(`}`);
+out.push(``);
+out.push(`/// CDP 协议结构代理后端 (v8/src/inspector/v8-schema-agent-impl.h:20)`);
+out.push(`#[derive(Debug, Clone)]`);
+out.push(`pub struct V8SchemaAgentImpl {`);
+out.push(`    domains: Vec<String>,`);
+out.push(`}`);
+out.push(``);
+out.push(`impl Default for V8SchemaAgentImpl {`);
+out.push(`    fn default() -> Self {`);
+out.push(`        Self::new()`);
+out.push(`    }`);
+out.push(`}`);
+out.push(``);
+out.push(`impl V8SchemaAgentImpl {`);
+out.push(`    /// 创建新协议代理`);
+out.push(`    pub fn new() -> Self {`);
+out.push(`        Self {`);
+out.push(`            domains: vec![`);
+out.push(`                "Schema".to_string(),`);
+out.push(`                "Runtime".to_string(),`);
+out.push(`                "Debugger".to_string(),`);
+out.push(`                "Console".to_string(),`);
+out.push(`                "Profiler".to_string(),`);
+out.push(`                "HeapProfiler".to_string(),`);
+out.push(`            ],`);
+out.push(`        }`);
+out.push(`    }`);
+out.push(``);
+out.push(`    /// 支持的域列表`);
+out.push(`    #[inline]`);
+out.push(`    pub fn get_domains(&self) -> &[String] {`);
+out.push(`        &self.domains`);
+out.push(`    }`);
+out.push(`}`);
+out.push(``);
+
+writeSrc("v8-inspector", "agents.rs", out.join("\n") + "\n");
+console.log(`OK agents.js: V8HeapProfilerAgentImpl/V8ProfilerAgentImpl/V8SchemaAgentImpl/CustomPreview → v8-inspector/src/agents.rs`);

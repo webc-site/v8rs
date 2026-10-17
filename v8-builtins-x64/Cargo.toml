@@ -1,0 +1,28 @@
+[package]
+name = "v8-builtins-x64"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-builtins-x64"
+keywords = []
+categories = []
+
+[features]
+default = []
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+strum = { version = "0.28.0", features = ["derive"] }
+v8-builtins-core = { version = "0.1.0", path = "../v8-builtins-core" }
+v8-codegen-x64 = { version = "0.1.0", path = "../v8-codegen-x64" }
+v8-execution-frames = { version = "0.1.0", path = "../v8-execution-frames" }
+
+[dev-dependencies]
+aok = "0.1.18"
+ctor = "1.0.13"
+log_init = "0.1.39"
+

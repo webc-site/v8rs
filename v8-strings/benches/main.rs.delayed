@@ -1,0 +1,72 @@
+// v8-strings criterion 主评测入口 (genbench 第 3 步)。
+// 由 StringBench trait 泛型驱动: v8rs 本体 + std 对照恒参评;
+// 对比库经 --features bench-<库名> 开关加入, bench = 全部。
+
+use std::{env::var_os, fs::File};
+mod base;
+
+use std::path::{Path, PathBuf};
+
+use base::{BenchMeta, corpora, register};
+use criterion::Criterion;
+use humansize::{BINARY, format_size};
+
+/// criterion 输出目录: 与 criterion 默认逻辑同序 (CRITERION_HOME → CARGO_TARGET_DIR/criterion
+/// → target/criterion), bench.js 按此路径解析 estimates.json。
+fn criterion_dir() -> PathBuf {
+  if let Some(home) = var_os("CRITERION_HOME") {
+    return PathBuf::from(home);
+  }
+  match var_os("CARGO_TARGET_DIR") {
+    Some(dir) => PathBuf::from(dir).join("criterion"),
+    None => PathBuf::from("target/criterion"),
+  }
+}
+
+/// manifest 落盘: bench id → 样本规模, 供 bench.js 计算吞吐 (id 段均为受控字符, 手写 JSON)。
+fn write_manifest(dir: &Path, metas: &[BenchMeta]) {
+  let mut body = String::from("{\"entries\":[");
+  for (k, m) in metas.iter().enumerate() {
+    if k > 0 {
+      body.push(',');
+    }
+    body.push_str(&format!(
+      "{{\"op\":\"{}\",\"impl\":\"{}\",\"sample\":\"{}\",\"elems\":{}}}",
+      m.op, m.imp, m.sample, m.elems
+    ));
+  }
+  body.push_str("]}");
+  if let Ok(mut file) = File::create(dir.join("bench_manifest.json")) {
+    use std::io::Write;
+    let _ = file.write_all(body.as_bytes());
+  }
+}
+
+fn main() {
+  let mut c = Criterion::default().configure_from_args();
+  let corpora = corpora();
+  let corpus_bytes: usize = corpora.iter().map(|co| co.bytes.len()).sum();
+  let mut metas: Vec<BenchMeta> = Vec::new();
+
+  register::<base::V8rsBench>(&mut c, &corpora, &mut metas);
+  register::<base::StdBench>(&mut c, &corpora, &mut metas);
+  #[cfg(feature = "bench-memchr")]
+  register::<base::MemchrBench>(&mut c, &corpora, &mut metas);
+  #[cfg(feature = "bench-unicode-ident")]
+  register::<base::UnicodeIdentBench>(&mut c, &corpora, &mut metas);
+  #[cfg(feature = "bench-unicode-normalization")]
+  register::<base::UnicodeNormBench>(&mut c, &corpora, &mut metas);
+
+  let dir = criterion_dir();
+  write_manifest(&dir, &metas);
+
+  // 核心信息一行: 语料规模; 明细见 criterion 输出与 bench.js 汇总。
+  println!(
+    "v8-strings bench: {} 项评测, 语料共 {}/样本 x {}",
+    metas.len(),
+    format_size(corpus_bytes as u64, BINARY),
+    corpora.len()
+  );
+
+  c.final_summary();
+}

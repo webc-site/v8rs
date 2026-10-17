@@ -1,0 +1,93 @@
+// 由 tool/src/compiler/js-create-lowering.js 从 v8/src/compiler/js-create-lowering.h + js-create-lowering.cc 生成; 修订就地改, 复跑覆盖
+// JSCreate 降级: 内联分配替换对象创建算子
+
+
+/// JSCreateLowering — 把 JSCreate 级算子降为快速 (内联) 分配
+/// v8: src/compiler/js-create-lowering.h JSCreateLowering
+pub struct JSCreateLowering { jsgraph: JSGraphRef, broker: JSHeapBrokerRef, zone: ZoneRef }
+
+impl JSCreateLowering {
+    /// 总分派 Reduce (按 IrOpcode)
+    /// v8: src/compiler/js-create-lowering.cc JSCreateLowering::Reduce
+    fn reduce(&mut self, node: &Node) -> Reduction;
+
+    // —— JSCreate* 削减面 (25 个) ——
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreate
+    fn jscreate(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateArguments
+    fn jscreate_arguments(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateArray
+    fn jscreate_array(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateArrayIterator
+    fn jscreate_array_iterator(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateAsyncFunctionObject
+    fn jscreate_async_function_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateCollectionIterator
+    fn jscreate_collection_iterator(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateBoundFunction
+    fn jscreate_bound_function(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateClosure
+    fn jscreate_closure(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateIterResultObject
+    fn jscreate_iter_result_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateStringIterator
+    fn jscreate_string_iterator(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateKeyValueArray
+    fn jscreate_key_value_array(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreatePromise
+    fn jscreate_promise(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateLiteralArrayOrObject
+    fn jscreate_literal_array_or_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateEmptyLiteralObject
+    fn jscreate_empty_literal_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateEmptyLiteralArray
+    fn jscreate_empty_literal_array(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateLiteralRegExp
+    fn jscreate_literal_reg_exp(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateFunctionContext
+    fn jscreate_function_context(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateWithContext
+    fn jscreate_with_context(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateCatchContext
+    fn jscreate_catch_context(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateBlockContext
+    fn jscreate_block_context(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateGeneratorObject
+    fn jscreate_generator_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSGetTemplateObject
+    fn jsget_template_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceNewArray
+    fn reduce_new_array(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateObject
+    fn jscreate_object(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::ReduceJSCreateStringWrapper
+    fn jscreate_string_wrapper(&mut self, node: &Node /*, 重载差异参数见原版 */) -> Reduction;
+
+    // —— TryAllocate 家族 (5 个): 返回 None = 参数过多放弃内联 ——
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::TryAllocateArguments
+    fn try_allocate_arguments(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> Option<NodeRef>;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::TryAllocateRestArguments
+    fn try_allocate_rest_arguments(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> Option<NodeRef>;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::TryAllocateAliasedArguments
+    fn try_allocate_aliased_arguments(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> Option<NodeRef>;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::TryAllocateFastLiteral
+    fn try_allocate_fast_literal(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> Option<NodeRef>;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::TryAllocateFastLiteralElements
+    fn try_allocate_fast_literal_elements(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> Option<NodeRef>;
+
+    // —— Allocate 元素/正则 (2 个) ——
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::AllocateElements
+    fn allocate_elements(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> NodeRef;
+    /// v8: src/compiler/js-create-lowering.h JSCreateLowering::AllocateLiteralRegExp
+    fn allocate_literal_reg_exp(&mut self, effect: NodeRef, control: NodeRef, /* ... */) -> NodeRef;
+}
+
+// —— 快字面量内联上限 (本 cc 仅使用, 定义在 compiler/globals.h) ——
+/// v8: src/compiler/globals.h kMaxFastLiteralDepth (= 3)
+pub const K_MAX_FAST_LITERAL_DEPTH: i32 = 3;
+/// v8: src/compiler/globals.h kMaxFastLiteralProperties (= JSObject::kMaxInObjectProperties)
+pub const K_MAX_FAST_LITERAL_PROPERTIES: i32 = JSObject::MAX_IN_OBJECT_PROPERTIES;
+
+// —— 对数基准 ——
+// Reduce 25 / TryAllocate 5 / Allocate 2
+// 上限常量使用 2 处

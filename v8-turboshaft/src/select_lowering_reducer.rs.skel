@@ -1,0 +1,30 @@
+// 由 tool/src/compiler/turboshaft/select-lowering-reducer.h.js 从 v8/src/compiler/turboshaft/select-lowering-reducer.h 生成; 修订就地改, 复跑覆盖
+// Select 降低: 三目选择到菱形控制流
+
+/// 原版 SelectLoweringReducer — 把 Select(cond, vtrue, vfalse) 降为
+/// if/else 菱形 (Loop 不变量 Variable 承载结果), 除非目标机支持 CMove。
+/// v8: src/compiler/turboshaft/select-lowering-reducer.h
+pub struct SelectLoweringReducer;
+
+impl SelectLoweringReducer {
+  /// v8: select-lowering-reducer.h REDUCE(Select)
+  pub fn reduce_select(
+    &mut self, cond: V<Word32>, vtrue: V<Any>, vfalse: V<Any>,
+    rep: RegisterRepresentation, hint: BranchHint,
+    implem: SelectImplementation,
+  ) -> V<Any> {
+    // 决策表 (原版 switch):
+    // - kForceBranch -> 菱形
+    // - kForceCMove  -> 透传 Next::ReduceSelect(kForceCMove)
+    // - kAny         -> 按表示查 SupportedOperations:
+    //   Word32: word32_select()
+    //   Word64: word64_select()
+    //   Float32: float32_select()
+    //   Float64: float64_select()
+    //   Tagged / Compressed / Simd128: false (不用 CMove)
+    // 若走菱形: result = NewLoopInvariantVariable(rep);
+    //   IF(cond) SetVariable(result, vtrue) ELSE SetVariable(result, vfalse)
+    //   return GetVariable(result)
+    todo!()
+  }
+}

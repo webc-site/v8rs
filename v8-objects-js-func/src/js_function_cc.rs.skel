@@ -1,0 +1,76 @@
+// 由 tool/src/objects/js-function.cc.js 从 v8/src/objects/js-function.{cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSFunction 族 tq 布局与 cc 方法清单骨架 (h 差集归 js-function.h.js 席)
+
+//! 差集骨架: JSFunction / JSBoundFunction / JSWrappedFunction / JSClassConstructor。
+//! 配置: 64 位非压缩 (kTaggedSize=8, JSFunction.dispatch_handle(4)+padding(4))。
+//! tier 管理 / 初始 map / bound name&length 语义面留 Developer (js_function.rs 已有人工实现)。
+
+// ── 64 位布局 ──
+/// v8: src/objects/js-function.tq JSBoundFunction: bound_target_function offset=24,
+///   bound_this 32 (JSAny|SourceTextModule), bound_arguments 40 (FixedArray)
+pub const K_JS_BOUND_FUNCTION_HEADER_SIZE: usize = 48;
+/// v8: src/objects/js-function.tq JSWrappedFunction: wrapped_target_function offset=24, context 32
+pub const K_JS_WRAPPED_FUNCTION_HEADER_SIZE: usize = 40;
+/// v8: src/objects/js-function.tq JSFunction: dispatch_handle offset=24 (int32) +
+///   padding 28 (uint32, TAGGED_SIZE_8_BYTES), shared_function_info 32, context 40, feedback_cell 48
+pub const K_JS_FUNCTION_HEADER_SIZE: usize = 56;
+/// v8: src/objects/js-function.tq JSFunctionWithPrototype: prototype_or_initial_map offset=56
+///   (TheHole | JSReceiver | Map | Tuple2 四态)
+pub const K_JS_FUNCTION_WITH_PROTOTYPE_HEADER_SIZE: usize = 64;
+
+/// v8: src/objects/js-function.tq operator '.prototype_or_initial_map' / '.prototype_or_initial_map='
+///   — LoadJSFunctionPrototypeOrInitialMap / StoreJSFunctionPrototypeOrInitialMap
+
+// ── cc 方法清单 (45 个类方法 + 5 自由函数) ──
+/// v8: src/objects/js-function.cc
+pub const JS_FUNCTION_CC_METHODS: &[&str] = &[
+    "JSFunction::GetAttachedCodeKinds",
+    "JSFunction::GetAvailableCodeKinds",
+    "JSFunction::TraceOptimizationStatus",
+    "JSFunction::HasAttachedOptimizedCode",
+    "JSFunction::HasAvailableHigherTierCodeThan",
+    "JSFunction::HasAvailableHigherTierCodeThanWithFilter",
+    "JSFunction::HasAvailableOptimizedCode",
+    "JSFunction::HasAttachedCodeKind",
+    "JSFunction::HasAvailableCodeKind",
+    "JSFunction::GetActiveTier",
+    "JSFunction::ActiveTierIsIgnition",
+    "JSFunction::ActiveTierIsBaseline",
+    "JSFunction::ActiveTierIsMaglev",
+    "JSFunction::ActiveTierIsTurbofan",
+    "JSFunction::CanDiscardCompiled",
+    "JSFunction::GetFunctionPrototype",
+    "JSFunction::RequestOptimization",
+    "JSFunction::SetInterruptBudget",
+    "JSFunctionOrBoundFunctionOrWrappedFunction::CopyNameAndLength",
+    "JSBoundFunction::GetName",
+    "JSBoundFunction::GetLength",
+    "JSBoundFunction::ToString",
+    "JSWrappedFunction::GetName",
+    "JSWrappedFunction::GetLength",
+    "JSWrappedFunction::ToString",
+    "JSWrappedFunction::Create",
+    "JSFunction::GetName",
+    "JSFunction::EnsureClosureFeedbackCellArray",
+    "JSFunction::EnsureFeedbackVector",
+    "JSFunction::CreateAndAttachFeedbackVector",
+    "JSFunction::InitializeFeedbackCell",
+    "JSFunction::SetPrototype",
+    "JSFunction::SetInitialMap",
+    "JSFunction::EnsureHasInitialMap",
+    "JSFunction::GetDerivedMap",
+    "JSFunction::GetDerivedRabGsabTypedArrayMap",
+    "JSFunction::GetDerivedRabGsabDataViewMap",
+    "JSFunction::ComputeInstanceSizeWithMinSlack",
+    "JSFunction::PrintName",
+    "JSFunction::GetDebugName",
+    "JSFunction::SetName",
+    "JSFunction::ToString",
+    "JSFunction::CalculateExpectedNofProperties",
+    "JSFunction::CalculateInstanceSizeHelper",
+    "JSFunction::ClearAllTypeFeedbackInfoForTesting",
+];
+
+/// v8: src/objects/js-function.cc GetAttachedCodeKinds/GetAvailableCodeKinds:
+///   CodeKinds 位集 = kind_flag | (kind_flag - 1) 取连续低 tier; highest_tier_log2 语义面留锚
+/// v8: src/objects/js-function.cc JSBoundFunction::GetLength — nof_bound_arguments 上限 Smi::kMaxValue

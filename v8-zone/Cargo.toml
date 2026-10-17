@@ -1,0 +1,51 @@
+[package]
+name = "v8-zone"
+version.workspace = true
+edition.workspace = true
+autobenches = false
+
+license.workspace = true
+repository.workspace = true
+description = "v8-zone"
+keywords = []
+categories = []
+
+[features]
+default = []
+# 对应原版 V8_ENABLE_PRECISE_ZONE_STATS 构建开关: 开启后记录 freed/tracing 计数
+precise-zone-stats = []
+# 单独评测对比库 bumpalo (内核对照)
+bench-bumpalo = []
+# 单独评测对比库 std (Vec 批量分配, 通用分配器对照)
+bench-std = []
+# 全部对比库评测
+bench = ["bench-bumpalo", "bench-std"]
+
+[[bench]]
+name = "main"
+harness = false
+
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+thiserror = "2.0.21"
+
+[dev-dependencies]
+aok = "0.1.18"
+bumpalo = { version = "3.20.3", features = ["collections"] }
+criterion = "0.8.2"
+ctor = "1.0.13"
+fastrand = "2.5.0"
+log = "0.4.34"
+log_init = "0.1.39"
+static_assertions = "1.1.0"
+rusty_alloc-api = { workspace = true }
+[lints.clippy]
+# mut_from_ref: Zone 分配器核心设计 (D4) —— &self + Cell 内部可变 + 'z 借出凭据,
+# 对应 C++ Zone* 共享 + position_ 内部可变; 多容器共享同一 Zone 是 V8 常态,
+# &mut 化与之类型级不兼容 (实测容器层 E0596 连锁)。clippy 当前版对 unsafe fn
+# 无豁免 (2026-10 实测), 此为 arena 模式 false positive, 非绕过。
+mut_from_ref = "allow"

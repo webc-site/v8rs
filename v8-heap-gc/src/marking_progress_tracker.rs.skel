@@ -1,0 +1,49 @@
+// 由 tool/src/heap/marking-progress-tracker.js 从 v8/src/heap/marking-progress-tracker.h 生成; 修订就地改, 复跑覆盖
+// 大对象分块标记进度跟踪 (启用后不可再禁用)
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+/// v8: src/heap/marking-progress-tracker.h MarkingProgressTracker
+/// kChunkSize = kMaxRegularHeapObjectSize (对象按最大常规对象大小分块, 并行认领)
+pub struct MarkingProgressTracker {
+  /// v8: overall_chunks_ = 0 (0 表示禁用)
+  overall_chunks: usize,
+  /// v8: current_chunk_ (atomic, acq_rel fetch_add 认领)
+  current_chunk: AtomicUsize,
+}
+
+impl MarkingProgressTracker {
+  /// v8: MarkingProgressTracker::kChunkSize
+  pub const K_CHUNK_SIZE: usize = K_MAX_REGULAR_HEAP_OBJECT_SIZE;
+
+  /// v8: MarkingProgressTracker::Enable(size)
+  /// overall_chunks_ = (size + kChunkSize - 1) / kChunkSize; current_chunk_ = 0
+  pub fn enable(&mut self, size: usize) {
+    assert!(!self.is_enabled());
+    self.overall_chunks = (size + Self::K_CHUNK_SIZE - 1) / Self::K_CHUNK_SIZE;
+    self.current_chunk.store(0, Ordering::Relaxed);
+  }
+
+  /// v8: MarkingProgressTracker::IsEnabled — overall_chunks_ != 0
+  pub fn is_enabled(&self) -> bool { self.overall_chunks != 0 }
+
+  /// v8: MarkingProgressTracker::GetNextChunkToMark
+  /// fetch_add(1, acq_rel), 原文 DCHECK_LT(new_chunk, overall_chunks_)
+  pub fn get_next_chunk_to_mark(&self) -> usize {
+    let new_chunk = self.current_chunk.fetch_add(1, Ordering::AcqRel);
+    assert!(new_chunk < self.overall_chunks);
+    new_chunk
+  }
+
+  /// v8: MarkingProgressTracker::TotalNumberOfChunks
+  pub fn total_number_of_chunks(&self) -> usize { self.overall_chunks }
+
+  /// v8: MarkingProgressTracker::ResetIfEnabled
+  pub fn reset_if_enabled(&mut self) {
+    if self.is_enabled() { self.current_chunk.store(0, Ordering::Relaxed); }
+  }
+
+  /// v8: MarkingProgressTracker::GetCurrentChunkForTesting (relaxed load)
+  pub fn get_current_chunk_for_testing(&self) -> usize {
+    self.current_chunk.load(Ordering::Relaxed)
+  }
+}

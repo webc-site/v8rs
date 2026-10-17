@@ -1,0 +1,33 @@
+// 由 tool/src/objects/js-temporal-helpers.h.js 从 v8/src/objects/js-temporal-helpers.h + js-temporal-helpers.cc 生成; 修订就地改, 复跑覆盖
+// temporal DurationRecord 记录与校验差集骨架
+
+//! 非堆对象记录 (Rust struct); Table 8 遍历按属性名字典序 days..years。
+
+/// v8: src/objects/js-temporal-helpers.h temporal::TimeDurationRecord
+#[derive(Clone, Copy, Default)]
+pub struct TimeDurationRecord {
+    pub days: f64,
+    pub hours: f64,
+    pub minutes: f64,
+    pub seconds: f64,
+    pub milliseconds: f64,
+    pub microseconds: f64,
+    pub nanoseconds: f64,
+}
+
+/// v8: src/objects/js-temporal-helpers.h temporal::DurationRecord
+#[derive(Clone, Copy, Default)]
+pub struct DurationRecord {
+    pub years: f64,
+    pub months: f64,
+    pub weeks: f64,
+    pub time_duration: TimeDurationRecord,
+}
+
+// cc 校验语义 (js-temporal-helpers.cc):
+//   IsValidDuration: 全字段有限 + 符号一致 (sign>0 ⇒ 无负分量; sign<0 ⇒ 无正分量) +
+//     |years| < 2^32 / |days| < 2^32 / 其余 < 2^53 (kPower32Of2 / kPower53Of2)
+//   DurationRecord::Sign: 10 字段全零 → 0, 否则按首非零分量符号
+//   ToIntegerWithoutRounding: NaN/±0 → 0; 非积分 → RangeError
+//   IterateDurationRecordFieldsTable: 10 行 Table 8 (days..years 字典序) 逐属性 Get
+// 宏映射: NEW_TEMPORAL_TYPE_ERROR/_RANGE_ERROR(_WITH_ARG) → MessageTemplate::kTemporal(_WithArg)

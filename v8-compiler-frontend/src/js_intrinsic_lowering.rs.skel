@@ -1,0 +1,68 @@
+// 由 tool/src/compiler/js-intrinsic-lowering.js 从 v8/src/compiler/js-intrinsic-lowering.h + js-intrinsic-lowering.cc 生成; 修订就地改, 复跑覆盖
+// JS 运行时内建调用降级: JSCallRuntime → stub/simplified 节点
+
+
+/// JSIntrinsicLowering — 只吃 IrOpcode::kJSCallRuntime, 按函数 id 分派
+/// v8: src/compiler/js-intrinsic-lowering.h JSIntrinsicLowering
+pub struct JSIntrinsicLowering { jsgraph: JSGraphRef, broker: JSHeapBrokerRef }
+
+/// 帧态需求旗标 (Change 走 Callable 重载时的参数)
+/// v8: src/compiler/js-intrinsic-lowering.h JSIntrinsicLowering::FrameStateFlag
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FrameStateFlag {
+    NeedsFrameState,
+    DoesNotNeedFrameState,
+}
+
+impl JSIntrinsicLowering {
+    /// 分派总闸: 非 INLINE intrinsic_type 直接 NoChange
+    /// v8: src/compiler/js-intrinsic-lowering.cc JSIntrinsicLowering::Reduce
+    fn reduce(&mut self, node: &Node) -> Reduction {
+        match runtime_function_id(node) {
+            // Runtime::IsBeingInterpreted => reduce_is_being_interpreted() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::IsBeingInterpreted
+            // Runtime::MajorGCForCompilerTesting => reduce_major_gcfor_compiler_testing() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::MajorGCForCompilerTesting
+            // Runtime::TurbofanStaticAssert => reduce_turbofan_static_assert() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::TurbofanStaticAssert
+            // Runtime::VerifyType => reduce_verify_type() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::VerifyType
+            // Runtime::CheckTurboshaftTypeOf => reduce_check_turboshaft_type_of() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::CheckTurboshaftTypeOf
+            _ => {}
+        }
+        if !is_inline_intrinsic(node) { return NoChange; }
+        match runtime_function_id(node) {
+            // Runtime::InlineCopyDataProperties => reduce_copy_data_properties() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineCopyDataProperties
+            // Runtime::InlineCopyDataPropertiesWithExcludedPropertiesOnStack => reduce_copy_data_properties_with_excluded_properties_on_stack() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineCopyDataPropertiesWithExcludedPropertiesOnStack
+            // Runtime::InlineCreateIterResultObject => reduce_create_iter_result_object() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineCreateIterResultObject
+            // Runtime::InlineGeneratorYieldResult => reduce_generator_yield_result() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineGeneratorYieldResult
+            // Runtime::InlineDeoptimizeNow => reduce_deoptimize_now() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineDeoptimizeNow
+            // Runtime::InlineGeneratorClose => reduce_generator_close() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineGeneratorClose
+            // Runtime::InlineCreateJSGeneratorObject => reduce_create_jsgenerator_object() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineCreateJSGeneratorObject
+            // Runtime::InlineAsyncFunctionAwait => reduce_async_function_await() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncFunctionAwait
+            // Runtime::InlineAsyncFunctionEnter => reduce_async_function_enter() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncFunctionEnter
+            // Runtime::InlineAsyncFunctionReject => reduce_async_function_reject() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncFunctionReject
+            // Runtime::InlineAsyncFunctionResolve => reduce_async_function_resolve() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncFunctionResolve
+            // Runtime::InlineAsyncGeneratorAwait => reduce_async_generator_await() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncGeneratorAwait
+            // Runtime::InlineAsyncGeneratorReject => reduce_async_generator_reject() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncGeneratorReject
+            // Runtime::InlineAsyncGeneratorResolve => reduce_async_generator_resolve() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncGeneratorResolve
+            // Runtime::InlineAsyncGeneratorYieldWithAwait => reduce_async_generator_yield_with_await() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAsyncGeneratorYieldWithAwait
+            // Runtime::InlineGeneratorGetResumeMode => reduce_generator_get_resume_mode() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineGeneratorGetResumeMode
+            // Runtime::InlineIncBlockCounter => reduce_inc_block_counter() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineIncBlockCounter
+            // Runtime::InlineAddLhsIsStringConstantInternalize => reduce_add_lhs_is_string_constant_internalize() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAddLhsIsStringConstantInternalize
+            // Runtime::InlineAddRhsIsStringConstantInternalize => reduce_add_rhs_is_string_constant_internalize() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineAddRhsIsStringConstantInternalize
+            // Runtime::InlineGetImportMetaObject => reduce_get_import_meta_object() /// v8: src/compiler/js-intrinsic-lowering.cc case Runtime::InlineGetImportMetaObject
+            _ => {}
+        }
+        NoChange
+    }
+
+    // Change 四型: (op) / (op,a,b) / (op,a,b,c) / (op,a,b,c,d)
+    /// v8: src/compiler/js-intrinsic-lowering.h JSIntrinsicLowering::Change
+    fn change(&mut self, node: &Node, op: &Operator, /* vars: &[NodeRef] */);
+    /// v8: src/compiler/js-intrinsic-lowering.h JSIntrinsicLowering::Change (Callable 重载)
+    fn change_callable(&mut self, node: &Node, callable: Callable, stack_parameter_count: i32, frame_state_flag: FrameStateFlag);
+}
+
+// —— 分派表对数 (RUNTIME 5 + INLINE 20 = 25) ——
+// h 声明 31 个 Reduce* vs cc 实现 30 个
+// 未实现于分派 (直接走 helper): ReduceCopyDataPropertiesWithExcludedPropertiesOnStack
+
+// —— 对数基准 ——
+// 分派 25 路 / 声明 31 / 实现 30

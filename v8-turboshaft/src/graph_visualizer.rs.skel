@@ -1,0 +1,46 @@
+// 由 tool/src/compiler/turboshaft/graph-visualizer.h.js 从 v8/src/compiler/turboshaft/graph-visualizer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// JSON 图可视化: 节点/边/块三段打印骨架
+
+/// v8: src/compiler/turboshaft/graph-visualizer.h TurboshaftGraphAsJSON
+/// 字段面: turboshaft_graph / origins: NodeOriginTable* / temp_zone
+/// 构造: AsJSON(graph, origins, temp_zone) 辅助函数
+pub struct TurboshaftGraphAsJson<'a> {
+  pub turboshaft_graph: &'a crate::graph::Graph,
+  pub origins: Option<&'a mut ()>,
+  pub temp_zone: *mut crate::phase::Zone,
+}
+
+/// v8: src/compiler/turboshaft/graph-visualizer.h JSONTurboshaftGraphWriter
+/// 方法面 (cc 定义 4 项): Print / PrintNodes / PrintEdges / PrintBlocks
+pub struct JsonTurboshaftGraphWriter<'a> {
+  pub graph: &'a crate::graph::Graph,
+}
+
+impl<'a> JsonTurboshaftGraphWriter<'a> {
+  /// 原版 void Print() — 总入口
+  pub fn print(&mut self) {
+    unimplemented!("Developer 修订: Print → Nodes/Edges/Blocks 序列")
+  }
+  /// 原版 void PrintNodes() — 节点段
+  pub fn print_nodes(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void PrintEdges() — 边段
+  pub fn print_edges(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 void PrintBlocks() — 块段
+  pub fn print_blocks(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/graph-visualizer.cc PrintTurboshaftCustomDataPerOperation
+pub fn print_turboshaft_custom_data_per_operation() {
+  unimplemented!("签名骨架, Developer 修订")
+}
+
+/// v8: src/compiler/turboshaft/graph-visualizer.cc PrintTurboshaftCustomDataPerBlock
+pub fn print_turboshaft_custom_data_per_block() {
+  unimplemented!("签名骨架, Developer 修订")
+}

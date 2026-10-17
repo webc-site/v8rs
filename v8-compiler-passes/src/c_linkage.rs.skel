@@ -1,0 +1,66 @@
+// 由 tool/src/compiler/c-linkage.js 从 v8/src/compiler/c-linkage.cc 生成; 修订就地改, 复跑覆盖
+// Linkage::GetSimplifiedCDescriptor — 简化 C 调用约定 (平台寄存器表 + 参数定位器)
+
+//! C 调用约定的 CallDescriptor 装配。
+//!
+//! 规则面: ARM64 寄存器表 (GP 8 + FP 8),
+//! 三种 BuildParameterLocations 变体的定位规则。
+//! 语义面 (推迟): LinkageLocation/LocationSignature (linkage.h 族),
+//! Register code 映射 (codegen 层)。
+
+#![allow(dead_code)]
+
+/// v8: src/compiler/c-linkage.cc ARM64 PARAM_REGISTERS
+pub const C_PARAM_REGISTERS: &[&str] = &["x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7"];
+/// v8: src/compiler/c-linkage.cc ARM64 FP_PARAM_REGISTERS
+pub const C_FP_PARAM_REGISTERS: &[&str] = &["d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7"];
+/// v8: src/compiler/c-linkage.cc ARM64 FP_RETURN_REGISTER
+pub const C_FP_RETURN_REGISTER: &str = "d0";
+/// x64 SysV (对照): rdi, rsi, rdx, rcx, r8, r9 / xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7
+
+/// v8: src/compiler/c-linkage.cc BuildParameterLocations (通用双计数版, ARM64 走此)
+/// 规则: GP/FP 各自计数; 溢出 → ForCallerFrameSlot(-1 - stack_offset) 且
+/// stack_offset 先增; Win-x64/MIPS64 用单计数 (i 同标), Loong64 FP 溢出可回落
+/// GP (ForNullRegister 负编码)。
+pub fn build_parameter_locations(
+  msig: &crate::MachineSignature,
+  out_locations: &mut crate::linkage::LocationSignatureBuilder,
+) {
+  let mut stack_offset: i32 = 0; // STACK_SHADOW_WORDS 仅 Win-x64 = 4
+  let mut num_params = 0usize;
+  let mut num_fp_params = 0usize;
+  for i in 0..msig.parameter_count() {
+    let ty = msig.get_param(i);
+    let spill = if crate::is_floating_point(ty.representation()) {
+      num_fp_params >= C_FP_PARAM_REGISTERS.len()
+    } else {
+      num_params >= C_PARAM_REGISTERS.len()
+    };
+    if spill {
+      out_locations.add_param(crate::LinkageLocation::for_caller_frame_slot(-1 - stack_offset, ty));
+      stack_offset += 1;
+    } else if crate::is_floating_point(ty.representation()) {
+      out_locations.add_param(crate::LinkageLocation::for_register(num_fp_params as i32, ty));
+      num_fp_params += 1;
+    } else {
+      out_locations.add_param(crate::LinkageLocation::for_register(num_params as i32, ty));
+      num_params += 1;
+    }
+  }
+}
+
+/// v8: src/compiler/c-linkage.cc Linkage::GetSimplifiedCDescriptor
+/// 装配常量: kind=kCallAddress, tag=kInvalidEntrypointTag,
+/// target=Pointer() ForAnyRegister, flags|=kNoAllocate, 名 "c-call";
+/// 前置: properties ∈ {kNoThrow, kPure}, 返回数 ≤ 2,
+/// 第二返回必须非浮点 (走 kReturnRegister1)。
+pub fn get_simplified_c_descriptor(
+  zone: &mut crate::zone::Zone,
+  msig: &crate::MachineSignature,
+  flags: crate::CallDescriptorFlags,
+  properties: crate::operator::Properties,
+) -> *mut crate::CallDescriptor {
+  debug_assert!(properties == crate::operator::Properties::NoThrow || properties == crate::operator::Properties::Pure);
+  debug_assert!(msig.parameter_count() <= crate::K_MAX_C_PARAMETERS);
+  todo!("locations 装配 + BuildParameterLocations + CallDescriptor::new(kCallAddress, …, \"c-call\")")
+}

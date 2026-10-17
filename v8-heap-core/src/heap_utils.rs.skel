@@ -1,0 +1,13 @@
+// 由 tool/src/heap/heap-utils.h.js 从 v8/src/heap/heap-utils.{h,-inl.h} 生成; 修订就地改, 复跑覆盖
+// 堆工具: 对象→所属 Heap 归属查询
+
+/// 堆工具集 (对应 class HeapUtils final : public AllStatic)。
+pub struct HeapUtils;
+
+impl HeapUtils {
+  /// 对应 GetOwnerHeap: 对象所在页 (MemoryChunk) 的元数据 (Metadata) 里的 heap。
+  /// v8: src/heap/heap-utils-inl.h HeapUtils::GetOwnerHeap
+  pub fn get_owner_heap(_object: u64) -> *mut () {
+    unimplemented!("骨架: MemoryChunk::FromHeapObject + Metadata 待 memory-chunk 族就位");
+  }
+}

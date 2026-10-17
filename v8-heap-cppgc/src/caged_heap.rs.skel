@@ -1,0 +1,60 @@
+// 由 tool/src/heap/cppgc-internal/caged-heap.js 从 v8/src/heap/cppgc-internal/caged-heap.h + src/heap/cppgc-internal/caged-heap.cc 生成; 修订就地改, 复跑覆盖
+// 笼堆骨架: 预留/红区/有界页分配
+
+#![allow(dead_code)]
+
+pub mod constants {
+    /// v8: src/heap/cppgc-internal/caged-heap.cc kUnmapSubregions
+    /// !LEAK_SANITIZER && !V8_OS_WIN → true (目标配置)
+    pub const K_UNMAP_SUBREGIONS: bool = true;
+    /// v8: src/heap/cppgc-internal/caged-heap.cc kAllocationTries
+    pub const K_ALLOCATION_TRIES: usize = 4;
+    /// v8: src/heap/cppgc-internal/caged-heap.cc kMinRedZoneSize
+    /// 防栈上小整数解压成堆指针的假阳性红区
+    pub const K_MIN_RED_ZONE_SIZE: usize = 32 * crate::constants::K_MB;
+}
+
+/// v8: src/heap/cppgc-internal/caged-heap.h CagedHeap
+pub struct CagedHeap {
+    /// v8: reservation_ (memory + offset_into_cage_start)
+    reservation: Reservation,
+    /// v8: page_bounded_allocator_ — 线程安全, 免外部同步
+    page_bounded_allocator: BoundedPageAllocator,
+}
+
+/// v8: src/heap/cppgc-internal/caged-heap.h CagedHeap::Reservation
+pub struct Reservation {
+    pub memory: VirtualMemory,
+    /// v8: offset_into_cage_start — 压缩指针半区选择时非 0
+    pub offset_into_cage_start: usize,
+}
+
+impl CagedHeap {
+    /// v8: src/heap/cppgc-internal/caged-heap.h CagedHeap::OffsetFromAddress
+    pub fn offset_from_address(address: *const core::ffi::c_void) -> usize {
+        (address as usize) & (K_CAGED_HEAP_RESERVATION_ALIGNMENT - 1)
+    }
+
+    /// v8: src/heap/cppgc-internal/caged-heap.h CagedHeap::BaseFromAddress
+    pub fn base_from_address(address: *const core::ffi::c_void) -> usize {
+        (address as usize) & !(K_CAGED_HEAP_RESERVATION_ALIGNMENT - 1)
+    }
+
+    /// v8: src/heap/cppgc-internal/caged-heap.h CagedHeap::Instance
+    pub fn instance() -> &'static CagedHeap { todo!("LeakyObject 单例") }
+
+    /// v8: src/heap/cppgc-internal/caged-heap.h CagedHeap::IsOnHeap
+    pub fn is_on_heap(&self, address: *const core::ffi::c_void) -> bool {
+        Self::base_from_address(address) == self.reservation.memory.address() as usize
+    }
+
+    /// v8: src/heap/cppgc-internal/caged-heap.cc CagedHeap::CagedHeap (构造)
+    /// total = clamp(bit_ceil(desired), DefaultReservation, MaxReservation);
+    /// allocatable 起点抬升 max(local_data_size, K_MIN_RED_ZONE_SIZE) 后按 kPageSize 对齐;
+    /// BoundedPageAllocator(ZeroInitialized, MakeInaccessible)。
+    /// v8: src/heap/cppgc-internal/caged-heap.cc CagedHeap::ReserveCagedHeap
+    /// 压缩指针: 预留 2x, 取 LSB=1 的半区 (符号扩展省一次 or); 失败退回原额尝试 4 次。
+    /// v8: src/heap/cppgc-internal/caged-heap.cc CagedHeap::CommitAgeTable
+    /// g_heap_base_ 起 g_age_table_size_ (按提交页对齐) 设 ReadWrite。
+    pub fn reserve_and_init() { todo!("ReserveCagedHeap + 构造 + CommitAgeTable 语义面") }
+}

@@ -1,0 +1,54 @@
+// 由 tool/src/heap/zapping.cc.js 从 v8/src/heap/zapping.{h,cc} + src/common/globals.h (配置支) 生成; 修订就地改, 复跑覆盖
+// zap 块步进算术与门控规则; zap 值常量在 zapping.rs
+
+//! ZapCodeBlock / ZapBlock 的机械规则面。
+//!
+//! - ZapCodeBlock 仅 DEBUG 构建有实体 (cc:#ifdef DEBUG), 对齐 kIntSize, 逐 int 写 kCodeZapValue
+//! - ZapBlock 双对齐 kTaggedSize (start 与 size), MemsetTagged 长度 size >> kTaggedSizeLog2
+//! - zap 值常量 (kZapValue/kCodeZapValue/kClearedFreeMemoryValue) 已在 zapping.rs, 不重复
+
+/// 目标配置: 指针压缩开 → kTaggedSize = kInt32Size (globals.h:580)
+pub const K_TAGGED_SIZE: usize = 4;
+/// kTaggedSizeLog2 (globals.h:581)
+pub const K_TAGGED_SIZE_LOG2: u32 = 2;
+/// sizeof(int) (globals.h:450)
+pub const K_INT_SIZE: i32 = 4;
+
+/// ZapCodeBlock 写入字数 — 原版循环上界 size_in_bytes / kIntSize
+/// v8: src/heap/zapping.cc:20
+#[must_use]
+pub const fn zap_code_block_word_count(size_in_bytes: i32) -> i32 {
+  size_in_bytes / K_INT_SIZE
+}
+
+/// ZapBlock 写入槽数 — 原版 MemsetTagged 长度 size >> kTaggedSizeLog2
+/// v8: src/heap/zapping.cc:32
+#[must_use]
+pub const fn zap_block_tagged_count(size: usize) -> usize {
+  size >> K_TAGGED_SIZE_LOG2
+}
+
+/// 签名骨架: 代码块 zap (DEBUG 门控 + CodePageMemoryModificationScopeForDebugging + 逐 int 写)
+/// 原版签名: void ZapCodeBlock(Address start, int size_in_bytes)
+/// v8: src/heap/zapping.cc:14
+pub fn zap_code_block(_start: u64, _size_in_bytes: i32) {
+  todo!("就地修订: DEBUG 门控 + 代码页写权限域 + 逐 int 写 K_CODE_ZAP_VALUE")
+}
+
+/// 签名骨架: 常规块 zap (MemsetTagged 填 zap_value)
+/// 原版签名: void ZapBlock(Address start, size_t size, uintptr_t zap_value)
+/// v8: src/heap/zapping.cc:26
+pub fn zap_block(_start: u64, _size: usize, _zap_value: u64) {
+  todo!("就地修订: MemsetTagged 填充")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(K_TAGGED_SIZE == 4);
+  assert!(K_TAGGED_SIZE_LOG2 == 2);
+  assert!(K_INT_SIZE == 4);
+  assert!(zap_code_block_word_count(64) == 16);
+  assert!(zap_code_block_word_count(0) == 0);
+  assert!(zap_block_tagged_count(96) == 24);
+  assert!(zap_block_tagged_count(4) == 1);
+};

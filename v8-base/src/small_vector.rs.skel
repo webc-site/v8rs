@@ -1,0 +1,55 @@
+// 由 tool/src/base/small-vector.h.js 从 v8/src/base/small-vector.h 生成; 修订就地改, 复跑覆盖
+// 内联优先小向量 (inline 存储 + 溢出转堆)
+
+//! v8 侧: 构造 10; 方法 22; 布局成员 0; grow 族 3
+//! Rust 策略: enum { Inline(MaybeUninit<[T; kSize]>, len), Heap(Box<RawVec>)} 或 ArrayVec crate 对齐
+
+/// v8: src/base/small-vector.h class SmallVector<T, kSize, Allocator>
+/// v8 布局: begin_/end_/end_of_storage_ 三指针; 小容量时指向 inline_[] 数组
+/// v8: kHasTrivialElement = trivially_copyable && trivially_destructible (拷贝路径分派)
+pub struct SmallVector<T, const K_SIZE: usize> {
+    /// v8: begin_..end_of_storage_ (当前 len/cap 由指针差导出)
+    inline_storage: [core::mem::MaybeUninit<T>; K_SIZE],
+    /// v8: 溢出后 begin_ 指向堆
+    heap: Option<Box<[core::mem::MaybeUninit<T>]>>,
+    len: usize,
+    /// v8: inline 容量 kInlineSize = kSize
+    pub inline_capacity: usize,
+}
+
+impl<T, const K_SIZE: usize> SmallVector<T, K_SIZE> {
+    /// v8: SmallVector(size) — 默认初始化 (注意非值初始化)
+    /// v8: SmallVector(size, initial_value) — 值初始化版
+    /// v8: SmallVector(initializer_list / Vector<const T>)
+    /// 对账: 构造 10 个 (含拷贝/移动 ×2)
+    pub fn new() -> Self { todo!() }
+
+    /// v8: push_back(x) — 满 then grow_and_push_back
+    pub fn push_back(&mut self, x: T) { todo!() }
+    /// v8: emplace_back(args...) — 就地构造
+    pub fn emplace_back(&mut self, x: T) { todo!() }
+    /// v8: pop_back(count=1)
+    pub fn pop_back(&mut self, count: usize) { todo!() }
+    /// v8: insert(pos, value|count,value|range|init_list|container) — 4 重载
+    pub fn insert(&mut self, pos: usize, x: T) { todo!() }
+    /// v8: erase(first, last) / erase(pos) — 返回删除后 pos 迭代器
+    pub fn erase(&mut self, start: usize, end: usize) { todo!() }
+    /// v8: resize(new_size) / resize(new_size, init) / resize_no_init
+    pub fn resize(&mut self, new_size: usize) { todo!() }
+    /// v8: reserve(new_capacity) — 仅扩容
+    pub fn reserve(&mut self, new_capacity: usize) { todo!() }
+    /// v8: clear() — 析构元素, 容量保留
+    pub fn clear(&mut self) { todo!() }
+
+    pub fn size(&self) -> usize { self.len }
+    pub fn empty(&self) -> bool { self.len == 0 }
+    /// v8: capacity() = end_of_storage_ - begin_
+    pub fn capacity(&self) -> usize { todo!() }
+}
+
+// ---- v8 方法对账 (解析 22 项) ----
+// SmallVector, data, begin, end, rbegin, rend, size, empty, capacity, emplace_back, push_back, pop_back, insert, erase, resize_no_init, resize, reserve, clear, AllocateDynamicStorage, reset_to_inline_storage, is_big, inline_storage_begin
+
+// ---- grow 族 (v8: 容量翻倍, V8_PRESERVE_MOST 冷路径) ----
+// emplace_back_unchecked, grow_and_emplace_back, grow_and_push_back
+// 语义: Grow(0) 容量翻倍; grow_and_emplace_back/grow_and_push_back — Developer 补

@@ -1,0 +1,47 @@
+// 由 tool/src/regexp/arm64/regexp-macro-assembler-arm64.cc.js 从 v8/src/regexp/arm64/regexp-macro-assembler-arm64.cc 生成; 修订就地改, 复跑覆盖
+// arm64 宏汇编实现面台账: 寄存器角色表 + 定义全集 + SIMD/叶帧常量 (帧数值同源 frame_layout.rs)
+
+//! RegExpMacroAssemblerARM64 — 原生码生成器。帧数值见 frame_layout.rs (已交叉)。
+
+/// 寄存器角色约定 (cc:24-46 逐条; w=32 位视图)
+pub const REGISTER_ROLES: &[(&str, &str)] = &[
+  ("x19", "Address of the regexp stack's thread-local block, which holds"),
+  ("x20", "Pointer to the current InstructionStream object,"),
+  ("w21", "Current position in input, as negative offset from"),
+  ("w22", "Currently loaded character. Must be loaded using"),
+  ("x23", "Points to tip of backtrack stack."),
+  ("w24", "Position of the first character minus one: non_position_value."),
+  ("x25", "Address at the end of the input string: input_end."),
+  ("x26", "Address at the start of the input string: input_start."),
+  ("w27", "Where to start in the input string."),
+  ("x28", "Output array pointer."),
+  ("x29/fp", "Frame pointer. Used to access arguments, local variables and"),
+  ("x16/x17", "IP registers, used by assembler. Very volatile."),
+  ("sp", "Points to tip of C stack."),
+];
+
+/// 成对缓存捕获寄存器数 (x0-x7 = 16 半槽, h:205; ≤16 且 2 整除)
+pub const K_NUM_CACHED_REGISTERS: usize = 16;
+/// 小叶帧免入口栈检查阈值 (寄存器数 ≤32 即 32×4B=128B 帧)
+pub const K_MAX_REGISTERS_WITHOUT_STACK_CHECK: i32 = 32;
+/// SIMD 向量宽 (v 寄存器 16B; 4 处 int + 1 处 kQRegSize)
+pub const K_VECTOR_SIZE: i32 = 16;
+/// SIMD 前瞻位置槽偏移 (4 处)
+pub const K_CHECK_POSITION_OFFSET: i32 = -1;
+/// 每 SIMD 加载字符数 (uc16 ×4)
+pub const K_CHARS_PER_LOAD: i32 = 4;
+/// w 寄存器每 x 寄存器数 (8/4)
+pub const K_W_REG_PER_X_REG: i32 = 2;
+
+const _: () = assert!(K_NUM_CACHED_REGISTERS <= 16);
+const _: () = assert!(K_NUM_CACHED_REGISTERS % 2 == 0);
+
+// ── 定义处置表 (88 顶层; 签名见 cc) ──
+// /// v8: cc ctor — num_saved_registers_ 初始化 + kNumCachedRegisters 不变式
+// /// v8: cc AdvanceRegister/Read/WriteCurrentPositionFromRegister — 缓存槽
+//   (x0-x7 成对, start_reg < kNumCachedRegisters 走缓存, 余走栈) 双通道
+// /// v8: cc CheckPosition 系 — w21 字节偏移约定 (非字符偏移!) + w22 预载前提
+// /// v8: cc Succeed/Fail/GoTo/Backtrack — backtrack (x23) 压弹协议
+// /// v8: cc CallCheckStackGuardState/CheckStackGuardState — Native 层转发
+// /// v8: cc 叶帧优化 — kMaxRegistersWithoutStackCheck 阈值下免入口栈检查
+// /// v8: cc 大小写折叠 — Orr(wN, wN, 0x20) ASCII 小写化通道

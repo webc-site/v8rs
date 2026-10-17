@@ -1,0 +1,33 @@
+// 由 tool/src/wasm/code-space-access.h.js 从 v8/src/wasm/code-space-access.{h,cc} 生成; 修订就地改, 复跑覆盖
+// CodeSpaceWriteScope W^X 写域契约
+
+//! wasm 代码空间写保护作用域: 组合复用 RwxMemoryWriteScope, 自身无状态。
+/// v8: src/wasm/code-space-access.h CodeSpaceWriteScope
+
+/// 传给底层 RwxMemoryWriteScope 的 reason 字符串
+/// v8: src/wasm/code-space-access.cc CodeSpaceWriteScope::CodeSpaceWriteScope
+pub const CODE_SPACE_WRITE_SCOPE_REASON: &str = "For wasm::CodeSpaceWriteScope.";
+
+/// 三种平台策略枚举 (原版注释归档, 运行时按平台择一)
+/// v8: src/wasm/code-space-access.h 类注释
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodeSpaceWriteImplementation {
+    /// Apple Silicon: APRR/MAP_JIT, 线程本地, 真 W^X
+    AppleMprrMapJit,
+    /// Intel PKU: 保护键切换写权限, 线程本地, 可执行权限不可收回
+    IntelPku,
+    /// 兜底: mprotect 在 R-X 与 RWX 间切换, 进程级, 慢
+    Mprotect,
+}
+
+/// RAII 域骨架: 进入取写权限, 离开恢复 (可嵌套计数)
+/// v8: src/wasm/code-space-access.h CodeSpaceWriteScope
+pub struct CodeSpaceWriteScope {
+    /// v8: 成员 rwx_write_scope_ (组合)
+    rwx_write_scope: RwxMemoryWriteScope,
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(CODE_SPACE_WRITE_SCOPE_REASON, "For wasm::CodeSpaceWriteScope.");
+};

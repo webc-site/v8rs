@@ -1,0 +1,109 @@
+// 由 tool/src/heap/memory-pool.cc.js 从 v8/src/heap/memory-pool.cc 生成; 修订就地改, 复跑覆盖
+// MemoryPool 实体台账: 定义 43 (PooledPage 5 + PoolImpl 11 + Large 6 + MemoryPool 21) + 嵌套 task 类; 展开侧 DCHECK 0 残留/CHECK brk 保留/恒等式剥除 4 区
+
+// ══ memory-pool.cc 处置台账 (原版行号实测; 展开侧=目标配置 CP+SANDBOX+ECS, DEBUG/TSAN 关) ══
+// cc:  20 PooledPage::PooledPage(void* uninitialized_metadata, VirtualMemory reservation,
+// cc:  27 PooledPage PooledPage::Create(NormalPage* metadata, Epoch epoch) {
+// cc:  56 PooledPage PooledPage::Create(LargePage* metadata, Epoch epoch) {
+// cc:  76 PooledPage::~PooledPage() {
+// cc:  87 PooledPage::Result PooledPage::ToResult() {
+// cc:  98 void MemoryPool::PoolImpl<PoolEntry>::TearDown() {
+// cc: 106 void MemoryPool::PoolImpl<PoolEntry>::PutLocal(Isolate* isolate,
+// cc: 113 std::optional<PoolEntry> MemoryPool::PoolImpl<PoolEntry>::Get(
+// cc: 147 bool MemoryPool::PoolImpl<PoolEntry>::MoveLocalToShared(Isolate* isolate) {
+// cc: 161 void MemoryPool::PoolImpl<PoolEntry>::ReleaseShared() {
+// cc: 167 void MemoryPool::PoolImpl<PoolEntry>::ReleaseLocal() {
+// cc: 173 void MemoryPool::PoolImpl<PoolEntry>::ReleaseLocal(Isolate* isolate) {
+// cc: 179 size_t MemoryPool::PoolImpl<PoolEntry>::Size() const {
+// cc: 190 size_t MemoryPool::PoolImpl<PoolEntry>::LocalSize(Isolate* isolate) const {
+// cc: 197 size_t MemoryPool::PoolImpl<PoolEntry>::SharedSize() const {
+// cc: 203 MemoryPool::PoolReleaseStats MemoryPool::PoolImpl<PoolEntry>::ReleaseUpTo(
+// cc: 236 bool MemoryPool::LargePagePoolImpl::Add(std::vector<LargePage*>& pages,
+// cc: 260 std::optional<PooledPage::Result> MemoryPool::LargePagePoolImpl::Remove(
+// cc: 290 void MemoryPool::LargePagePoolImpl::ReleaseAll() {
+// cc: 296 MemoryPool::PoolReleaseStats MemoryPool::LargePagePoolImpl::ReleaseUpTo(
+// cc: 320 size_t MemoryPool::LargePagePoolImpl::ComputeTotalSize() const {
+// cc: 330 void MemoryPool::LargePagePoolImpl::TearDown() { CHECK(pages_.empty()); }
+// cc: 332 PooledPage MemoryPool::CreatePooledPage(NormalPage* metadata) {
+// cc: 337 MemoryPool::MemoryPool(Config config)
+// cc: 344 MemoryPool::~MemoryPool() = default;
+// cc: 346 void MemoryPool::ReleaseOnTearDown(Isolate* isolate) {
+// cc: 357 void MemoryPool::ReleaseImmediately(Isolate* isolate) {
+// cc: 363 void MemoryPool::ReleaseAllImmediately() {
+// cc: 371 void MemoryPool::TearDown() {
+// cc: 379 MemoryPool::ReleaseStats MemoryPool::ReleaseUpTo(Epoch release_epoch) {
+// cc: 393 size_t MemoryPool::GetCount(Isolate* isolate) const {
+// cc: 397 size_t MemoryPool::GetSharedCount() const { return page_pool_.SharedSize(); }
+// cc: 399 size_t MemoryPool::GetTotalCount() const { return page_pool_.Size(); }
+// cc: 401 void MemoryPool::Add(Isolate* isolate, MutablePage* page) {
+// cc: 410 std::optional<PooledPage::Result> MemoryPool::Remove(Isolate* isolate) {
+// cc: 419 void MemoryPool::AddLarge(Isolate* isolate, std::vector<LargePage*>& pages) {
+// cc: 423 std::optional<PooledPage::Result> MemoryPool::RemoveLarge(Isolate* isolate,
+// cc: 428 void MemoryPool::AddZoneReservation(Isolate* isolate,
+// cc: 437 std::optional<VirtualMemory> MemoryPool::RemoveZoneReservation(
+// cc: 491 void MemoryPool::PostDelayedReleaseTask(Isolate* isolate,
+// cc: 514 void MemoryPool::PostDelayedReleaseTaskIfNeeded(Isolate* isolate) {
+// cc: 531 void MemoryPool::CancelAndWaitForTaskToFinishForTesting() {
+// cc: 536 void MemoryPool::ReenableTaskForTesting() { task_disabled_.store(false); }
+// 展开实测: DCHECK ×28 → ((void)0) (TearDown/MoveLocalToShared/Add/Large-ReleaseUpTo 四区逐验);
+//   独立 CHECK(pages_.empty()) cc:330 目标配置保留 → __builtin_expect+brk 条件实体 (台账内逐形);
+//   placement dtor (cc:49-50/70-71) 与 DiscardSealedMemoryScope (cc:81) 文本保留 (Create 族推迟 台账 1);
+//   MemoryPool::~MemoryPool() = default (cc:344) 非 DEBUG 保留 → Rust 字段递归落释无自定义 Drop。
+// 行为族: MutexGuard 14 → mutex.lock_guard() 作用域; erase_if 4 → 索引循环/retain 等价 (空键即删,
+//   预算内入池移除入参、超预算原地留下); total_size_ 恒等式 5 → debug_assert 反证;
+//   epoch() <= release_epoch 2 → 锁外 entries_to_free 出作用域释放 (cc:232/316 注释语义);
+//   best-fit 严格小于 (cc:274) → min_by_key 同值取先者; Remove 形参 isolate 原版未消费 (cc:261)。
+// 心跳任务: 真实投递 (cc:502-510) 与 IsolateGroup 打点选点 (cc:469-476) 属他票 → ReleaseTaskHost
+//   窄 trait (台账 4/5); 文案面 cc:472-475 已落 ReleaseStats::message; CTM 直用 v8-tasks 落地面。
+// ── 双行号台账 (cc 行号 ↔ rs 行号, 实测查行 51 对) ──
+//   cc: 20 ↔ rs: 102  PooledPage ctor 承接位
+//   cc: 27 ↔ rs: 980  Create(NormalPage*) 推迟 (台账 1)
+//   cc: 76 ↔ rs: 142  PooledPage dtor → Drop
+//   cc: 81 ↔ rs:  16  DiscardSealedMemoryScope 消费
+//   cc: 84 ↔ rs:  19  free(uninitialized_metadata_) 消费
+//   cc: 87 ↔ rs: 125  ToResult → to_result
+//   cc: 98 ↔ rs: 299  PoolImpl::TearDown
+//   cc:106 ↔ rs: 310  PoolImpl::PutLocal
+//   cc:113 ↔ rs: 316  PoolImpl::Get (本地→共享→窃取)
+//   cc:137 ↔ rs: 336  Get 空键即删 (retain 等价)
+//   cc:147 ↔ rs: 353  PoolImpl::MoveLocalToShared
+//   cc:161 ↔ rs: 364  PoolImpl::ReleaseShared
+//   cc:167 ↔ rs: 370  PoolImpl::ReleaseLocal 无参
+//   cc:173 ↔ rs: 376  PoolImpl::ReleaseLocal(isolate)
+//   cc:179 ↔ rs: 382  PoolImpl::Size
+//   cc:190 ↔ rs: 393  PoolImpl::LocalSize
+//   cc:197 ↔ rs: 402  PoolImpl::SharedSize
+//   cc:203 ↔ rs: 408  PoolImpl::ReleaseUpTo (锁外释)
+//   cc:209 ↔ rs: 408  epoch <= release_epoch 判据
+//   cc:236 ↔ rs: 495  Large::Add (erase_if 预算)
+//   cc:242 ↔ rs: 219  max_large_page_pool_size * MB
+//   cc:260 ↔ rs: 531  Large::Remove best-fit
+//   cc:290 ↔ rs: 565  Large::ReleaseAll
+//   cc:296 ↔ rs: 572  Large::ReleaseUpTo
+//   cc:320 ↔ rs: 489  Large::ComputeTotalSize
+//   cc:330 ↔ rs: 604  Large::TearDown CHECK 承接
+//   cc:332 ↔ rs: 794  CreatePooledPage 承接面 (台账 2)
+//   cc:337 ↔ rs: 739  MemoryPool ctor (CTM make_unique)
+//   cc:344 ↔ rs: 974  MemoryPool dtor = default 说明
+//   cc:346 ↔ rs: 842  ReleaseOnTearDown
+//   cc:357 ↔ rs: 854  ReleaseImmediately
+//   cc:363 ↔ rs: 862  ReleaseAllImmediately
+//   cc:371 ↔ rs: 871  MemoryPool::TearDown (先取消)
+//   cc:379 ↔ rs: 879  MemoryPool::ReleaseUpTo 三池汇总
+//   cc:393 ↔ rs: 895  GetCount
+//   cc:397 ↔ rs: 900  GetSharedCount
+//   cc:399 ↔ rs: 905  GetTotalCount
+//   cc:401 ↔ rs: 771  Add (台账 1 产物入参)
+//   cc:410 ↔ rs: 787  Remove
+//   cc:419 ↔ rs: 801  AddLarge (台账 1)
+//   cc:423 ↔ rs: 814  RemoveLarge
+//   cc:428 ↔ rs: 823  AddZoneReservation
+//   cc:437 ↔ rs: 836  RemoveZoneReservation
+//   cc:445 ↔ rs: 645  ReleasePooledChunksTask 类型
+//   cc:464 ↔ rs: 676  RunInternal → run
+//   cc:472 ↔ rs: 262  trace 文案 → ReleaseStats::message
+//   cc:491 ↔ rs: 910  PostDelayedReleaseTask
+//   cc:514 ↔ rs: 938  PostDelayedReleaseTaskIfNeeded
+//   cc:517 ↔ rs: 736  kTimeSlack 常量
+//   cc:531 ↔ rs: 962  CancelAndWaitForTaskToFinishForTesting
+//   cc:536 ↔ rs: 968  ReenableTaskForTesting

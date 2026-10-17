@@ -1,0 +1,15 @@
+// 由 tool/src/regexp/regexp-interpreter.h.js 从 v8/src/regexp/regexp-interpreter.h 生成; 修订就地改, 复跑覆盖
+// 签名骨架基线 (审计专用): 类面 77 行逐项 1:1; 落地以 regexp_interpreter.rs 就地修订为准
+
+//! regexp-interpreter.h → regexp_interpreter.rs 处置表 (骨架票 REG-1b1):
+//! - IrregexpInterpreter (AllStatic) → 模块级项 (类即命名空间)
+//! - Result 枚举 5 值 (h:21-27) → pub enum Result {Failure=0,Success=1,Exception=-1,Retry=-2,FallbackToExperimental=-3}
+//! - RegExp::CallOrigin (regexp.h:112-113) → pub enum CallOrigin (h 签名依赖, 双引用)
+//! - MatchForCallFromRuntime (h:31) / MatchForCallFromJs (h:51) / MatchInternal (h:58) /
+//!   Match (h:67 私有) → 推迟 [P-1 入口批] (Isolate/DirectHandle/FlatContent 硬耦合, 不生成桩体)
+//! - h:29-30/38-50 结果协议注释 → Result 文档区承接 (StackOverflow/RETRY/outputs 语义)
+
+// pub enum Result (5 值 + SMALLEST 界)
+// pub enum CallOrigin (2 值)
+// 落地核心语义面 (非 isolate, 详见 cc.js 对数): Bytecode 枚举 61 项 /
+//   BacktrackStack / InterpreterRegisters / 寻址纯函数 / 字符辅助函数

@@ -1,0 +1,49 @@
+// 由 tool/src/base/hashmap.h.js 从 v8/src/base/hashmap.h 生成; 修订就地改, 复跑覆盖
+// 自研开放寻址哈希表 (避 STL 调试锁, 信号处理器安全)
+
+//! v8: src/base/hashmap.h
+//! 动机: STL unordered_map 调试构建用 mutex 池, 异步信号处理器下会死锁
+
+/// v8: src/base/hashmap.h kDefaultHashMapCapacity = 8 (须 2 的幂)
+pub const DEFAULT_HASHMAP_CAPACITY: u32 = 8;
+
+/// v8: src/base/hashmap.h TemplateHashMapImpl<Key, Value, MatchFun, AllocationPolicy>
+/// 开放寻址 + 线性探测:
+///   Probe: hash &= 0x7FFFFFFF; i = hash & (cap-1); 冲突时 i = (i+1) & (cap-1)
+///   FillEmptyEntry: placement-new; occupancy + occupancy/4 >= capacity 即 Resize(×2)
+///   Remove: 开放寻址回填环 (Wikipedia Open addressing 算法), 避免断链
+///   Clear: memset 0 (hash_and_exists_ 的 exists 位清空)
+pub struct TemplateHashMapImpl<K, V, M, A> { /* Developer: entries + capacity + occupancy */ }
+
+impl<K, V, M, A> TemplateHashMapImpl<K, V, M, A> {
+    /// v8: Lookup — Probe 后 exists() ? entry : null
+    pub fn lookup(&self, key: &K, hash: u32) -> Option<&Entry<K, V>>;
+    /// v8: LookupOrInsert(key, hash) — 缺省值版
+    /// v8: LookupOrInsert(key, hash, value_func) — 闭包造值版
+    /// v8: LookupOrInsert(lookup_key, hash, key_func, value_func) — 异构键版
+    pub fn lookup_or_insert(&mut self, key: &K, hash: u32) -> &mut Entry<K, V>;
+    /// v8: InsertNew — 不查重, 直接填 Probe 命中的空位
+    pub fn insert_new(&mut self, key: &K, hash: u32) -> &mut Entry<K, V>;
+    /// v8: Remove(key, hash) / Remove(entry) — 回填环删除, 返回旧值
+    pub fn remove(&mut self, key: &K, hash: u32) -> Option<V>;
+    /// v8: Clear — 全部标记空, occupancy 归 0
+    pub fn clear(&mut self);
+    /// v8: Invalidate — 释放表并置不可用
+    pub fn invalidate(&mut self);
+    /// v8: occupancy — 非空条目数
+    pub fn occupancy(&self) -> u32;
+    /// v8: capacity — 装载因子上界 80%
+    pub fn capacity(&self) -> u32;
+    /// v8: Start/Next — C 式迭代对; Rust 侧用 iter() 迭代器代替
+    pub fn iter(&self) -> impl Iterator<Item = &Entry<K, V>>;
+}
+
+/// v8: src/base/hashmap.h DefaultAllocationPolicy — base::Malloc/Free 数组分配
+pub struct DefaultAllocationPolicy;
+
+/// v8: src/base/hashmap.h HashEqualityThenKeyMatcher<Key, MatchFun>
+/// hash 相等且 match(key1, key2) 才算命中 (先比哈希省贵键比较)
+/// v8: KeyEqualityMatcher<Key> — 仅比 key1 == key2 (忽略 hash 形参)
+/// v8: CustomMatcherTemplateHashMapImpl<void*,void*> → CustomMatcherHashMap
+/// v8: PointerTemplateHashMapImpl<void*,void*> → HashMap (指针键直比)
+/// v8: TemplateHashMap<Key,Value> — STL 风格 (value_type{first,second}, find(key, insert=false))

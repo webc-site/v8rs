@@ -1,0 +1,63 @@
+// 由 tool/src/wasm/interpreter/arm64/interpreter-builtins-arm64.cc.js 从 v8/src/wasm/interpreter/arm64/interpreter-builtins-arm64.cc 生成; 修订就地改, 复跑覆盖
+// arm64 解释器 builtin: 入口寄存器约定与 load/store handler 族
+
+//! Drumbrake 解释器的 arm64 汇编 builtin。
+/// v8: src/wasm/interpreter/arm64/interpreter-builtins-arm64.cc Builtins::Generate_*
+
+/// WasmInterpreterEntry 输入寄存器
+/// v8: src/wasm/interpreter/arm64/interpreter-builtins-arm64.cc Generate_WasmInterpreterEntry
+pub mod interpreter_entry_regs {
+    /// v8: x7 (kWasmImplicitArgRegister) — wasm_instance
+    pub const WASM_INSTANCE: &str = "x7";
+    /// v8: x12 — array_start
+    pub const ARRAY_START: &str = "x12";
+    /// v8: x13 — result_start
+    pub const RESULT_START: &str = "x13";
+    /// v8: x14 — ref_params_array
+    pub const REF_PARAMS_ARRAY: &str = "x14";
+    /// v8: w15 — function_index
+    pub const FUNCTION_INDEX: &str = "w15";
+}
+
+/// 入口帧槽 (args[0..4], GC 扫描 args[0]/args[1])
+/// v8: Generate_WasmInterpreterEntry 帧布局注释
+pub const ENTRY_ARGS_GC_SCANNED: usize = 2;
+pub const ENTRY_RUNTIME_ARGC: usize = 5;
+pub const ENTRY_FRAME_MARKER: &str = "StackFrame::WASM_INTERPRETER_ENTRY";
+
+/// 手写 builtin (4 个)
+/// v8: Builtins::Generate_WasmInterpreterEntry / JSToWasmInterpreterWrapperAsm / WasmInterpreterCWasmEntry / GenericWasmToJSInterpreterWrapper
+pub const HANDWRITTEN_BUILTINS: &[&str] = &[
+    "WasmInterpreterEntry",
+    "JSToWasmInterpreterWrapperAsm",
+    "WasmInterpreterCWasmEntry",
+    "GenericWasmToJSInterpreterWrapper",
+];
+
+/// X-macro handler 条目数 (INT_LOADSTORE + FLOAT_LOADMEM)
+/// v8: FOREACH_INT_LOADSTORE_BUILTIN / FOREACH_FLOAT_LOADMEM_BUILTIN
+pub const HANDLER_V_ENTRIES: usize = 96;
+
+/// 每条目生成 _s/_l 双变体 (small/large 内存偏移寻径)
+/// v8: GENERATE_INT_LOADSTORE_BUILTIN / GENERATE_FLOAT_LOADMEM_BUILTIN
+pub const VARIANTS_PER_ENTRY: usize = 2;
+
+/// 生成 handler 总数 = 条目 × 变体
+/// v8: FOREACH_*(GENERATE_*) 展开
+pub const TOTAL_HANDLER_BUILTINS: usize = HANDLER_V_ENTRIES * VARIANTS_PER_ENTRY;
+
+/// 操作数流向前缀: reg→stack / stack→stack / reg→reg / stack→reg
+/// v8: V(r2s_.../s2s_.../r2r_.../s2r_...) 命名
+pub const OPERAND_FLOW_PREFIXES: &[&str] = &["r2r", "r2s", "s2r", "s2s"];
+
+/// 沙箱构建下受信字段走 DecompressProtected, 否则 LoadTaggedField
+/// v8: LoadWasmInstanceFromFunctionData
+pub const SANDBOX_DUAL_PATH: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert_eq!(HANDWRITTEN_BUILTINS.len(), 4);
+    assert_eq!(HANDLER_V_ENTRIES, 96);
+    assert_eq!(TOTAL_HANDLER_BUILTINS, 192);
+    assert_eq!(ENTRY_RUNTIME_ARGC, 5);
+};

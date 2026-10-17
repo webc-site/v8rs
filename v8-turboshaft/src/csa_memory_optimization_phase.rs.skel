@@ -1,0 +1,33 @@
+// 由 tool/src/compiler/turboshaft/csa-memory-optimization-phase.h.js 从 v8/src/compiler/turboshaft/csa-memory-optimization-phase.{h,cc} 生成; 修订就地改, 复跑覆盖
+// CsaMemoryOptimizationPhase reducer 链编排骨架
+
+/// v8: src/compiler/turboshaft/csa-memory-optimization-phase.h CsaMemoryOptimizationPhase
+pub struct CsaMemoryOptimizationPhase;
+
+impl CsaMemoryOptimizationPhase {
+  /// 原版 kPhaseName = "V8.TF" "Turboshaft" "CsaMemoryOptimization" (宏拼接展开)
+  pub const PHASE_NAME: &'static str = "V8.TFTurboshaftCsaMemoryOptimization";
+
+  /// CopyingPhase 无条件 reducer 链 (保序, 原版模板参数序)
+  pub const REDUCERS: &'static [&'static str] = &[
+    "PretenuringPropagationReducer",
+    "MachineOptimizationReducer",
+    "MemoryOptimizationReducer",
+    "ValueNumberingReducer",
+  ];
+
+
+  /// 原版 void Run(PipelineData* data, Zone* temp_zone)
+  /// v8: src/compiler/turboshaft/csa-memory-optimization-phase.cc CsaMemoryOptimizationPhase::Run
+  pub fn run(data: &mut crate::phase::PipelineData, temp_zone: &mut crate::phase::Zone) {
+    // 原版: CopyingPhase<PretenuringPropagationReducer, MachineOptimizationReducer, MemoryOptimizationReducer, ValueNumberingReducer>::Run(data, temp_zone);
+    unimplemented!("Developer 修订: 编排 CopyingPhase 链")
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(CsaMemoryOptimizationPhase::PHASE_NAME == "V8.TFTurboshaftCsaMemoryOptimization");
+  assert!(CsaMemoryOptimizationPhase::REDUCERS.len() == 4);
+  assert!(CsaMemoryOptimizationPhase::REDUCERS[0] == "PretenuringPropagationReducer");
+};

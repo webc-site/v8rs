@@ -1,0 +1,74 @@
+// 由 tool/src/heap/cppgc-internal/free-list.js 从 v8/src/heap/cppgc-internal/free-list.cc + src/heap/cppgc-internal/free-list.h 生成; 修订就地改, 复跑覆盖
+// 2^k 桶自由链; Entry 挂 HeapObjectHeader
+
+#![allow(dead_code)]
+
+/// v8: src/heap/cppgc-internal/free-list.cc BucketIndexForSize
+/// 桶号 = WhichPowerOfTwo(bit_floor(size)) — 桶 k 的最小条目尺寸 2^k
+pub fn bucket_index_for_size(size: u32) -> u32 {
+    // bit_floor: 保留最高位; WhichPowerOfTwo → trailing_zeros
+    (size & size.wrapping_neg()).trailing_zeros()
+}
+
+/// v8: src/heap/cppgc-internal/free-list.h FreeList::Block
+#[derive(Clone, Copy)]
+pub struct Block {
+    pub address: *mut u8,
+    pub size: usize,
+}
+
+/// v8: src/heap/cppgc-internal/free-list.cc FreeList::Entry
+/// 头即 HeapObjectHeader(size, kFreeListGCInfoIndex=0) + next 指针; sizeof == 2*usize。
+struct Entry {
+    header: HeapObjectHeader,
+    next: *mut Entry,
+}
+
+/// v8: src/heap/cppgc-internal/free-list.h FreeList
+pub struct FreeList {
+    /// v8: free_list_heads_ [kPageSizeLog2]
+    heads: [*mut Entry; K_PAGE_SIZE_LOG2],
+    /// v8: free_list_tails_ [kPageSizeLog2]
+    tails: [*mut Entry; K_PAGE_SIZE_LOG2],
+    /// v8: biggest_free_list_index_ = 0
+    biggest_free_list_index: usize,
+}
+
+impl FreeList {
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::Add → AddReturningUnusedBounds
+    /// size < sizeof(Entry)(2 字) → Filler 占位, 返回 (filler_end, filler_end);
+    /// 否则建 Entry 入桶 (桶号 BucketIndexForSize), 更新 biggest, 返回 (payload_start, address+size)。
+    pub fn add_returning_unused_bounds(&mut self, block: Block) -> (*mut u8, *mut u8) {
+        debug_assert!(K_PAGE_SIZE > block.size);
+        debug_assert!(core::mem::size_of::<HeapObjectHeader>() <= block.size);
+        todo!("Entry::CreateAt + Link + tail/biggest 维护")
+    }
+
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::Allocate
+    /// 自最大桶向下找; 末桶 (allocation_size > bucket_size) 只查首条目, 不线性扫;
+    /// 命中即 Unlink 并返回 {entry, entry->AllocatedSize()}, 未命中 {null, 0}。
+    pub fn allocate(&mut self, allocation_size: usize) -> Block {
+        todo!("自顶向下桶扫描")
+    }
+
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::Append
+    /// 逐桶: 对方 tail 接我方 head; 我方空尾则领养对方尾; 清空对方; biggest 取 max。
+    pub fn append(&mut self, other: &mut FreeList) { todo!("逐桶拼接") }
+
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::Clear
+    pub fn clear(&mut self) {
+        self.heads.fill(core::ptr::null_mut());
+        self.tails.fill(core::ptr::null_mut());
+        self.biggest_free_list_index = 0;
+    }
+
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::Size — 全链累计 AllocatedSize
+    pub fn size(&self) -> usize { todo!("遍历累加") }
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::IsEmpty — 全桶头空
+    pub fn is_empty(&self) -> bool { self.heads.iter().all(|e| e.is_null()) }
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::ContainsForTesting
+    pub fn contains_for_testing(&self, block: Block) -> bool { todo!("区间包含查询") }
+    /// v8: src/heap/cppgc-internal/free-list.cc FreeList::IsConsistent
+    /// head/tail 同空, 或同非空且 tail->Next()==null
+    fn is_consistent(&self, index: usize) -> bool { todo!("头尾一致性") }
+}

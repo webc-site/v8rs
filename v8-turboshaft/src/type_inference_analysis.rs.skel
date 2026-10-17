@@ -1,0 +1,36 @@
+// 由 tool/src/compiler/turboshaft/type-inference-analysis.h.js 从 v8/src/compiler/turboshaft/type-inference-analysis.h 生成; 修订就地改, 复跑覆盖
+// 类型推断分析: 输入图类型 fixpoint
+
+/// 原版 TypeInferenceAnalysis — 输入图上的类型不动点分析,
+/// 值表复用 SnapshotTable<Type>; 循环以 loop_needs_revisit 二扫。
+/// v8: src/compiler/turboshaft/type-inference-analysis.h
+pub struct TypeInferenceAnalysis<'g> {
+  pub graph: &'g Graph,
+  pub table: SnapshotTable<Type>,
+}
+
+impl<'g> TypeInferenceAnalysis<'g> {
+  /// v8: Run — 返回 GrowingOpIndexSidetable<Type> (类型结果)
+  pub fn run(&mut self) -> Vec<Type> { todo!() }
+  /// v8: ProcessBlock — 块内 Process* 分派; uint32_t* unprocessed_index
+  /// 驱动工作队列
+  pub fn process_block(&mut self, block: &Block, unprocessed: &mut u32) { todo!() }
+
+  /// Process* 分派面 (9 个):
+  /// v8: ProcessBlock
+  /// v8: ProcessCheckTurboshaftTypeOf
+  /// v8: ProcessComparison
+  /// v8: ProcessConstant
+  /// v8: ProcessFloatBinop
+  /// v8: ProcessOverflowCheckedBinop
+  /// v8: ProcessPhi
+  /// v8: ProcessProjection
+  /// v8: ProcessWordBinop
+  ///
+  /// 另有:
+  /// - RefineTypesAfterBranch: 按 Branch 条件精化 then/else 两侧类型
+  ///   (Typer::BranchRefinements 承担具体规则)
+  /// - RefineOperationType / SetType(allow_narrowing): 写回与收窄
+  /// - ProcessLoopPhi 返回 bool (是否需重扫)
+  pub fn refine_types_after_branch(&mut self, branch: &BranchOp, then_branch: bool) { todo!() }
+}

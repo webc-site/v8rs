@@ -1,0 +1,49 @@
+// 由 tool/src/objects/js-disposable-stack.h.js 从 v8/src/objects/js-disposable-stack.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSDisposableStackBase 枚举/status 位域/资源槽编码骨架
+
+//! 差集骨架: JSDisposableStackBase (explicit resource management) + Sync/Async 两子类。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。dispose 语义面留 Developer。
+
+/// v8: src/objects/js-disposable-stack.h DisposableStackState
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisposableStackState { Disposed = 0, Pending = 1 }
+
+/// v8: src/objects/js-disposable-stack.h DisposeMethodCallType
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisposeMethodCallType { ValueIsReceiver = 0, ValueIsArgument = 1 }
+
+/// v8: src/objects/js-disposable-stack.h DisposeMethodHint
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisposeMethodHint { SyncDispose = 0, AsyncDispose = 1 }
+
+/// v8: src/objects/js-disposable-stack.h DisposableStackResourcesType
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisposableStackResourcesType { AllSync = 0, AtLeastOneAsync = 1 }
+
+// ── status_ 位域 (uint31 Smi; h BitField = tq DisposableStackStatus, inl torque_asserts 校平) ──
+pub const K_STATE_MASK: u32 = 0x1;
+pub const K_NEEDS_AWAIT_SHIFT: u32 = 1;
+pub const K_NEEDS_AWAIT_MASK: u32 = 0x1 << 1;
+pub const K_HAS_AWAITED_SHIFT: u32 = 2;
+pub const K_HAS_AWAITED_MASK: u32 = 0x1 << 2;
+pub const K_SUPPRESSED_ERROR_CREATED_SHIFT: u32 = 3;
+pub const K_SUPPRESSED_ERROR_CREATED_MASK: u32 = 0x1 << 3;
+/// v8: src/objects/js-disposable-stack.h LengthBits (int32, 27 位)
+pub const K_LENGTH_SHIFT: u32 = 4;
+pub const K_LENGTH_BITS: u32 = 27;
+pub const K_LENGTH_MASK: u32 = ((1 << 27) - 1) << 4;
+
+/// v8: src/objects/js-disposable-stack.h DisposeCallTypeBit(bit0) + DisposeHintBit(bit1):
+///   stack_[i+2] = SmiTag(encode(type) | encode(hint)) — 资源三元组第三槽编码
+pub const K_DISPOSE_CALL_TYPE_MASK: u32 = 0x1;
+pub const K_DISPOSE_HINT_SHIFT: u32 = 1;
+pub const K_DISPOSE_HINT_MASK: u32 = 0x1 << 1;
+
+/// v8: src/objects/js-disposable-stack.h JSDisposableStackBase: stack_ offset=24 (FixedArray,
+///   三元组 [value, method, type|hint]), status_ 32 (Smi), error_ 40 (Object|Hole),
+///   error_message_ 48 (Object|Hole)
+pub const K_JS_DISPOSABLE_STACK_BASE_HEADER_SIZE: usize = 56;
+
+/// v8: src/objects/js-disposable-stack.h AsyncDisposableStackContextSlots (kStack/kOuterPromise/kLength)
+/// v8: src/objects/js-disposable-stack.h AsyncDisposeFromSyncDisposeContextSlots (kMethod/kLength)
+pub struct JSDisposableStackBase { /* stack_, status_, error_, error_message_ */ }

@@ -1,0 +1,100 @@
+// 由 tool/src/compiler/machine-graph.js 从 v8/src/compiler/machine-graph.h + src/compiler/machine-graph.cc + src/compiler/machine-graph-verifier.h + src/compiler/machine-graph-verifier.cc 生成; 修订就地改, 复跑覆盖
+// MachineGraph — 机器层图 facade (常量工厂双轨) + MachineGraphVerifier
+
+//! MachineGraph: 图 + 公共/机器算子构建器 + 常量缓存。
+//! 常量双轨: Unique* 不缓存 (每次新节点), 普通 *Constant 走
+//! CommonNodeCache 规范化缓存; Uint32/Uint64 以位重解释委托有符号版。
+//!
+//! 规则面: 工厂方法 18 + Verifier 入口。
+//! 语义面 (推迟): Verifier 的表示校验表 (vcc 数百行 match)。
+
+#![allow(dead_code, unused_variables)]
+
+/// v8: src/compiler/machine-graph.h MachineGraph
+pub struct MachineGraph {
+  /// 原 graph_
+  pub graph: *mut crate::graph::TFGraph,
+  /// 原 common_
+  pub common: *mut crate::common_operator::CommonOperatorBuilder,
+  /// 原 machine_
+  pub machine: *mut crate::machine_operator::MachineOperatorBuilder,
+  /// 原 cache_ — CommonNodeCache
+  pub cache: crate::common_node_cache::CommonNodeCache,
+  /// 原 call_counts_
+  pub call_counts: std::collections::HashMap<crate::node::Node, usize>,
+}
+
+impl MachineGraph {
+  /// v8: src/compiler/machine-graph.cc MachineGraph::UniqueInt32Constant
+  /// 原文: cache_->FindInt32Constant(value) 命中空位 → 图新节点并回填
+  /// (unique: 相同值也各建新节点? 否 — Unique 语义 = 未命中缓存才建,
+  /// 建后登记, 但允许多副本分叉; 见 cc 原文)
+  pub fn unique_int32_constant(&mut self, value: i32) -> crate::node::Node {
+    todo!("查缓存 miss 即建")
+  }
+
+  /// v8: src/compiler/machine-graph.cc MachineGraph::UniqueInt64Constant
+  pub fn unique_int64_constant(&mut self, value: i64) -> crate::node::Node {
+    let _ = value;
+    todo!("64 位版")
+  }
+
+  /// v8: src/compiler/machine-graph.cc MachineGraph::Int32Constant
+  /// 原文: 缓存命中即复用 (规范化)
+  pub fn int32_constant(&mut self, value: i32) -> crate::node::Node {
+    todo!("FindInt32Constant 复用")
+  }
+
+  /// v8: src/compiler/machine-graph.h MachineGraph::Uint32Constant (内联)
+  /// 原文: return Int32Constant(base::bit_cast<int32_t>(value));
+  pub fn uint32_constant(&mut self, value: u32) -> crate::node::Node {
+    self.int32_constant(value as i32)
+  }
+
+  /// v8: src/compiler/machine-graph.cc MachineGraph::Int64Constant
+  pub fn int64_constant(&mut self, value: i64) -> crate::node::Node {
+    let _ = value;
+    todo!("FindInt64Constant 复用")
+  }
+  /// v8: src/compiler/machine-graph.h MachineGraph::Uint64Constant (内联)
+  /// 原文: return Int64Constant(base::bit_cast<int64_t>(value));
+  pub fn uint64_constant(&mut self, value: u64) -> crate::node::Node {
+    self.int64_constant(value as i64)
+  }
+
+  /// v8: src/compiler/machine-graph.cc MachineGraph::IntPtrConstant
+  /// 原文: 64 位 → Int64Constant
+  pub fn intptr_constant(&mut self, value: isize) -> crate::node::Node {
+    self.int64_constant(value as i64)
+  }
+  /// v8: src/compiler/machine-graph.h MachineGraph::UintPtrConstant
+  pub fn uintptr_constant(&mut self, value: usize) -> crate::node::Node {
+    self.uint64_constant(value as u64)
+  }
+  /// v8: src/compiler/machine-graph.cc MachineGraph::UniqueIntPtrConstant
+  pub fn unique_intptr_constant(&mut self, value: isize) -> crate::node::Node {
+    self.unique_int64_constant(value as i64)
+  }
+
+  // 其余工厂 (Float32/Float64/ExternalConstant/HeapConstant/Relocatable…)
+  // 见 .h:60-160 与 cc 对应实现, 语义面随常量缓存层落地
+}
+
+/// v8: src/compiler/machine-graph-verifier.h MachineGraphVerifier
+/// 校验调度后图的输入表示正确性; 实现 (vcc) 为逐 opcode 表示表
+pub struct MachineGraphVerifier;
+
+impl MachineGraphVerifier {
+  /// v8: src/compiler/machine-graph-verifier.cc MachineGraphVerifier::Run
+  pub fn run(
+    graph: &mut crate::graph::TFGraph,
+    schedule: &crate::schedule::Schedule,
+    linkage: &mut crate::linkage::Linkage,
+    is_stub: bool,
+    name: &str,
+    temp_zone: &mut crate::zone::Zone,
+  ) {
+    let _ = (graph, schedule, linkage, is_stub, name, temp_zone);
+    todo!("逐块逐节点表示校验 (UNREACHABLE 失败路径)")
+  }
+}

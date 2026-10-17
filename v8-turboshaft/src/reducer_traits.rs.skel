@@ -1,0 +1,44 @@
+// 由 tool/src/compiler/turboshaft/reducer-traits.h.js 从 v8/src/compiler/turboshaft/reducer-traits.h 生成; 修订就地改, 复跑覆盖
+// reducer 栈类型操作面
+
+/// 原版 reducer_list 与配套 type-level 操作 — Rust 侧以编译期
+/// 类型队列 (tuple + trait) 或直接用嵌套泛型承载:
+///
+/// - reducer_list
+/// - reducer_list_length
+/// - reducer_list_contains
+/// - reducer_list_starts_with
+/// - reducer_list_index_of
+/// - reducer_list_insert_at
+/// - reducer_list_append
+/// - reducer_list_to_stack
+/// - next_reducer_is
+/// - next_contains_reducer
+/// - next_is_bottom_of_assembler_stack
+///
+/// 语义对照:
+/// - reducer_list_length_v<RL>        => 队列长度
+/// - reducer_list_contains_v<RL, R>   => 队列含 R
+/// - reducer_list_starts_with_v<RL,R> => index_of == 0
+/// - reducer_list_index_of_v<RL, R, Otherwise> => 位置或 SIZE_MAX
+/// - reducer_list_insert_at_t / append_t => 插入/追加
+/// - reducer_list_to_stack_t<RL, Bottom> => fold_right instantiate 嵌套栈
+/// - next_reducer_is_v<Next, Rs...>   => Next 是 Rs 之一的实例化
+/// - next_contains_reducer_v<Next, R> => 栈中含 R (递归剥壳)
+/// - next_is_bottom_of_assembler_stack => Next ∈ {EmitProjectionReducer,
+///   AssemblerOpInterface, ReducerBase, GraphEmitter}
+///
+/// v8: src/compiler/turboshaft/reducer-traits.h (全部定义)
+pub trait ReducerList {
+  /// v8: reducer-traits.h reducer_list_length_v
+  const LEN: usize;
+  /// v8: reducer-traits.h reducer_list_contains_v
+  fn contains<R: Reducer>() -> bool;
+  /// v8: reducer-traits.h reducer_list_index_of_v — Otherwise = SIZE_MAX
+  fn index_of<R: Reducer>() -> usize;
+}
+
+/// v8: reducer-traits.h next_is_bottom_of_assembler_stack
+/// 栈底四件套: EmitProjectionReducer / AssemblerOpInterface /
+/// ReducerBase / GraphEmitter (BuildReducerStack 注入)
+pub trait IsBottomOfAssemblerStack {}

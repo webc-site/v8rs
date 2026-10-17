@@ -1,0 +1,73 @@
+// 由 tool/src/wasm/wasm-import-wrapper-cache.h.js 从 v8/src/wasm/wasm-import-wrapper-cache.{h,cc} 生成; 修订就地改, 复跑覆盖
+// WasmImportWrapperCache 键、builtin 短路与编译分派
+
+//! Wasm-to-JS 导入 wrapper 进程级缓存 + builtin 短路。
+/// v8: src/wasm/wasm-import-wrapper-cache.h WasmImportWrapperCache
+
+/// 缓存键四元组
+/// v8: src/wasm/wasm-import-wrapper-cache.h ImportWrapperCacheKey
+#[derive(Debug)]
+pub struct ImportWrapperCacheKey<'a> {
+    /// v8: ImportCallKind kind
+    pub kind: ImportCallKind,
+    /// v8: const CanonicalSig* sig
+    pub sig: &'a CanonicalSig,
+    /// v8: int expected_arity
+    pub expected_arity: i32,
+    /// v8: Suspend suspend
+    pub suspend: Suspend,
+}
+
+/// hash 组合: (u8)kind ⊕ sig.index ⊕ expected_arity (suspend 不入 hash)
+/// v8: src/wasm/wasm-import-wrapper-cache.h ImportWrapperCacheKey::Hash
+pub fn key_hash(kind: u8, sig_index: u32, expected_arity: i32) -> u64 {
+    hash_combine(&[kind as u64, sig_index as u64, expected_arity as u64])
+}
+
+/// builtin 短路表 (仅 kJSFunction kind)
+/// v8: src/wasm/wasm-import-wrapper-cache.cc BuiltinForWrapper
+pub fn builtin_for_wrapper(kind: ImportCallKind, js_compatible: bool, use_generic: bool) -> Option<&'static str> {
+    if kind != ImportCallKind::JSFunction {
+        return None;
+    }
+    if !js_compatible {
+        return Some("kWasmToJsWrapperInvalidSig");
+    }
+    if use_generic {
+        return Some("kWasmToJsWrapperAsm");
+    }
+    None
+}
+
+/// 需要真编译的 kind → 产物代码类别
+/// v8: src/wasm/wasm-import-wrapper-cache.cc CompileWrapper
+pub fn compile_kind(kind: ImportCallKind) -> Option<&'static str> {
+    Some(match kind {
+        ImportCallKind::JSFunction
+        | ImportCallKind::UseCallBuiltin
+        | ImportCallKind::RuntimeTypeError => "kWasmToJsWrapper",
+        ImportCallKind::WasmToCapi => "kWasmToCapiWrapper",
+        ImportCallKind::LinkError | ImportCallKind::WasmToWasm | ImportCallKind::WasmToJSFastApi => {
+            return None // UNREACHABLE
+        }
+    })
+}
+
+/// fast-call wrapper 与实例化绑定, 不进缓存
+/// v8: src/wasm/wasm-import-wrapper-cache.cc CompileWasmJsFastCallWrapper
+pub const FAST_CALL_WRAPPER_NOT_CACHED: bool = true;
+
+/// handle 生命周期: 构造时占用 code pointer 表项, 析构时释放并 DecRef
+/// v8: src/wasm/wasm-import-wrapper-cache.cc WasmWrapperHandle 构造/析构
+pub const HANDLE_OWNS_TABLE_ENTRY: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(FAST_CALL_WRAPPER_NOT_CACHED);
+    assert_eq!(compile_kind(ImportCallKind::WasmToCapi), Some("kWasmToCapiWrapper"));
+    assert_eq!(compile_kind(ImportCallKind::LinkError), None);
+    assert_eq!(
+        builtin_for_wrapper(ImportCallKind::JSFunction, false, true),
+        Some("kWasmToJsWrapperInvalidSig")
+    );
+};

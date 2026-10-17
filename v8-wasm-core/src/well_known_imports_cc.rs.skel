@@ -1,0 +1,108 @@
+// 由 tool/src/wasm/well-known-imports.cc.js 从 v8/src/wasm/well-known-imports.cc 生成; 修订就地改, 复跑覆盖
+// WellKnownImportName 名字表 + Update/Initialize 语义
+
+//! well-known 导入的名字台账与状态更新规则; 枚举本体在 well_known_imports.rs。
+
+/// WellKnownImportName 名字表 (60 名 / 79 case, fall-through 共享名字)
+/// v8: src/wasm/well-known-imports.cc WellKnownImportName
+#[rustfmt::skip]
+pub static WELL_KNOWN_IMPORT_NAMES: &[(&[&str], &str)] = &[
+  (&["Uninstantiated"], "uninstantiated"),
+  (&["Generic"], "generic"),
+  (&["LinkError"], "LinkError"),
+  (&["DataViewGetBigInt64"], "DataView.getBigInt64"),
+  (&["DataViewGetBigUint64"], "DataView.getBigUint64"),
+  (&["DataViewGetFloat32"], "DataView.getFloat32"),
+  (&["DataViewGetFloat64"], "DataView.getFloat64"),
+  (&["DataViewGetInt8"], "DataView.getInt8"),
+  (&["DataViewGetInt16"], "DataView.getInt16"),
+  (&["DataViewGetInt32"], "DataView.getInt32"),
+  (&["DataViewGetUint8"], "DataView.getUint8"),
+  (&["DataViewGetUint16"], "DataView.getUint16"),
+  (&["DataViewGetUint32"], "DataView.getUint32"),
+  (&["DataViewSetBigInt64"], "DataView.setBigInt64"),
+  (&["DataViewSetBigUint64"], "DataView.setBigUint64"),
+  (&["DataViewSetFloat32"], "DataView.setFloat32"),
+  (&["DataViewSetFloat64"], "DataView.setFloat64"),
+  (&["DataViewSetInt8"], "DataView.setInt8"),
+  (&["DataViewSetInt16"], "DataView.setInt16"),
+  (&["DataViewSetInt32"], "DataView.setInt32"),
+  (&["DataViewSetUint8"], "DataView.setUint8"),
+  (&["DataViewSetUint16"], "DataView.setUint16"),
+  (&["DataViewSetUint32"], "DataView.setUint32"),
+  (&["DataViewByteLength"], "DataView.byteLength"),
+  (&["MathF64Acos"], "Math.acos"),
+  (&["MathF64Asin"], "Math.asin"),
+  (&["MathF64Atan"], "Math.atan"),
+  (&["MathF64Atan2"], "Math.atan2"),
+  (&["MathF64Cos"], "Math.cos"),
+  (&["MathF64Sin"], "Math.sin"),
+  (&["MathF64Tan"], "Math.tan"),
+  (&["MathF64Exp"], "Math.exp"),
+  (&["MathF64Log"], "Math.log"),
+  (&["MathF64Pow"], "Math.pow"),
+  (&["MathF64Sqrt"], "Math.sqrt"),
+  (&["DoubleToString"], "DoubleToString"),
+  (&["IntToString"], "IntToString"),
+  (&["ParseFloat"], "ParseFloat"),
+  (&["StringIndexOf", "StringIndexOfImported"], "String.indexOf"),
+  (&["StringToLocaleLowerCaseStringref"], "String.toLocaleLowerCase"),
+  (&["StringToLowerCaseStringref", "StringToLowerCaseImported"], "String.toLowerCase"),
+  (&["StringCast", "StringCastShared"], "js-string:cast"),
+  (&["StringCharCodeAt", "StringCharCodeAtShared"], "js-string:charCodeAt"),
+  (&["StringCodePointAt", "StringCodePointAtShared"], "js-string:codePointAt"),
+  (&["StringCompare", "StringCompareShared"], "js-string:compare"),
+  (&["StringConcat", "StringConcatShared"], "js-string:concat"),
+  (&["StringEquals", "StringEqualsShared"], "js-string:equals"),
+  (&["StringFromCharCode", "StringFromCharCodeShared"], "js-string:fromCharCode"),
+  (&["StringFromCodePoint", "StringFromCodePointShared"], "js-string:fromCodePoint"),
+  (&["StringFromUtf8Array", "StringFromUtf8ArrayShared"], "text-decoder:decodeStringFromUTF8Array"),
+  (&["StringFromWtf16Array", "StringFromWtf16ArrayShared"], "js-string:fromCharCodeArray"),
+  (&["StringIntoUtf8Array", "StringIntoUtf8ArrayShared"], "text-encoder:encodeStringIntoUTF8Array"),
+  (&["StringToUtf8Array", "StringToUtf8ArrayShared"], "text-encoder:encodeStringToUTF8Array"),
+  (&["StringLength", "StringLengthShared"], "js-string:length"),
+  (&["StringMeasureUtf8", "StringMeasureUtf8Shared"], "text-encoder:measureStringAsUTF8"),
+  (&["StringSubstring", "StringSubstringShared"], "js-string:substring"),
+  (&["StringTest", "StringTestShared"], "js-string:test"),
+  (&["StringToWtf16Array", "StringToWtf16ArrayShared"], "js-string:intoCharCodeArray"),
+  (&["ConfigureAllPrototypes"], "js-prototypes:configureAll"),
+  (&["FastAPICall"], "fast API call"),
+];
+
+/// 头侧枚举中不出现在 switch 的别名 (与 kStringCast 等同值)
+/// v8: src/wasm/well-known-imports.h WellKnownImport
+#[rustfmt::skip]
+pub static ENUM_ONLY_ALIASES: &[&str] = &[
+  "FirstCompileTimeImport",
+  "LastCompileTimeImport",
+];
+
+/// WellKnownImportsList::Update 规则
+/// v8: src/wasm/well-known-imports.cc WellKnownImportsList::Update
+pub mod update_rules {
+    /// 旧值为 kGeneric: 保持不变
+    pub const GENERIC_STAYS: bool = true;
+    /// 旧值等于新值: 保持不变
+    pub const SAME_STAYS: bool = true;
+    /// 旧值为 kUninstantiated: 直接写入新值
+    pub const UNINITIALIZED_OVERWRITES: bool = true;
+    /// 其它冲突: 除 compile-time import (保留状态) 外全部回落 kGeneric, 返回 kFoundIncompatibility
+    pub const CONFLICT_FALLS_BACK_TO_GENERIC: bool = true;
+    /// 全部兼容时返回 kOK
+    pub const ALL_COMPATIBLE_RETURNS_OK: bool = true;
+    /// 读写均为 memory_order_relaxed
+    pub const MEMORY_ORDER_RELAXED: bool = true;
+}
+
+/// WellKnownImportsList::Initialize: 逐项写入 (要求旧值全为 kUninstantiated)
+/// v8: src/wasm/well-known-imports.cc WellKnownImportsList::Initialize
+pub const INITIALIZE_EXPECTS_UNINSTANTIATED: bool = true;
+
+// —— 提取不变式断言 ——
+const _: () = {
+    assert!(WELL_KNOWN_IMPORT_NAMES.len() == 60);
+    assert!(WELL_KNOWN_IMPORT_NAMES.iter().map(|(cs, _)| cs.len()).sum::<usize>() == 79);
+    assert!(WELL_KNOWN_IMPORT_NAMES[0].1 == "uninstantiated");
+    assert!(WELL_KNOWN_IMPORT_NAMES[2].1 == "LinkError");
+    assert!(INITIALIZE_EXPECTS_UNINSTANTIATED);
+};

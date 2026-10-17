@@ -1,0 +1,46 @@
+// 由 tool/src/objects/struct-inl.h.js 从 v8/src/objects/struct-inl.h 生成; 修订就地改, 复跑覆盖
+// -inl 合并指引; Rust 无 inl, 语义并入 struct_.rs 就地修订
+
+//! -inl 合并指引 (23 个定义, 构造/tag 重载映射登记)
+//!
+//! 命名与语义映射:
+//!   1. X::X(构造) → X::new(map, ...) 头结构体构造; AllocationWitness/ReadOnlyRoots
+//!      未落地 → map 由调用方显式传入 (偏差登记); roots().null_value() → Tagged::NULL
+//!      哨兵 (roots 落地后替换); Smi::FromInt → Smi::from_int
+//!   2. 普通 load/store → Relaxed 原子读 + store(this,value,mode) → Relaxed 写 + 屏障桩
+//!      (C++ 普通字段访问在并发标记配置下即 V8_ATOMIC_OBJECT_FIELD_WRITES=Relaxed,
+//!      同 core TaggedMember / fixed_array 先例)
+//!   3. Relaxed_Load/Relaxed_Store/Acquire_Load/Release_Store → 方法后缀
+//!      _relaxed/_acquire/_release (tag 参数重载消解)
+//!   4. AccessorPair::get/set(component) → 分派 getter/setter; AccessorComponent
+//!      复用 v8_objects_core::objects::AccessorComponent (ACCESSOR_GETTER →
+//!      AccessorGetter)
+//!   5. IsNull(v) → v.is_null() (Tagged::NULL 哨兵, roots 落地后替换)
+//!   6. ClassPositions start_/end_ → Smi::from_int 编码写入; start()/end() 返回
+//!      i32 (= .load().value() 解包)
+//!   7. DECL_PRINTER/DECL_VERIFIER/BriefPrintDetails (L4 诊断) 与
+//!      StructBodyDescriptor (heap 层 BodyDescriptor) → 推迟不落地 (票单)
+//!   8. AccessorPair::Copy/GetComponent (Isolate/Handle/NativeContext) → 推迟 (票单)
+// Struct::Struct → impl Tagged<Struct>::new
+// Tuple2::Tuple2 → impl Tagged<Tuple2>::new
+// Tuple2::value1 → impl Tagged<Tuple2>::value1
+// Tuple2::set_value1 → impl Tagged<Tuple2>::set_value1
+// Tuple2::value2 → impl Tagged<Tuple2>::value2
+// Tuple2::set_value2 → impl Tagged<Tuple2>::set_value2
+// AccessorPair::AccessorPair → impl Tagged<AccessorPair>::new
+// AccessorPair::get → impl Tagged<AccessorPair>::get
+// AccessorPair::set → impl Tagged<AccessorPair>::set
+// AccessorPair::getter → impl Tagged<AccessorPair>::getter
+// AccessorPair::set_getter → impl Tagged<AccessorPair>::set_getter
+// AccessorPair::setter → impl Tagged<AccessorPair>::setter
+// AccessorPair::set_setter → impl Tagged<AccessorPair>::set_setter
+// AccessorPair::SetComponents → impl Tagged<AccessorPair>::_set_components
+// AccessorPair::Equals → impl Tagged<AccessorPair>::_equals
+// ClassPositions::ClassPositions → impl Tagged<ClassPositions>::new
+// ClassPositions::start → impl Tagged<ClassPositions>::start
+// ClassPositions::end → impl Tagged<ClassPositions>::end
+// ForInEnumeratorHolder::ForInEnumeratorHolder → impl Tagged<ForInEnumeratorHolder>::new
+// ForInEnumeratorHolder::enum_cache_map → impl Tagged<ForInEnumeratorHolder>::enum_cache_map
+// ForInEnumeratorHolder::named_keys → impl Tagged<ForInEnumeratorHolder>::named_keys
+// ForInEnumeratorHolder::elements_length → impl Tagged<ForInEnumeratorHolder>::elements_length
+// ForInEnumeratorHolder::cache_length → impl Tagged<ForInEnumeratorHolder>::cache_length

@@ -1,0 +1,25 @@
+// 由 tool/src/regexp/gen-regexp-special-case.cc.js 从 v8/src/regexp/gen-regexp-special-case.cc 生成; 修订就地改, 复跑覆盖
+// special-case.h 生成器算法台账 (Canonicalize/PrintSpecial/PrintSet); 数据面落地在 special_case.rs
+
+//! 生成器 = 独立 main (icu 依赖), Rust 侧不复刻运行, 本 skel 登记算法不变式:
+//! - BMP 主循环跳过代理区 [kSurrogateStart, kSurrogateEnd], 种子 [\p{Lu}] 仅验证用
+//! - Canonicalize = ECMA-2020 21.2.2.8.2 step 3: root Locale toUpper → 单码元?
+//!   → (ch>=128 && cu<128)? ch : cu; BMP 断言 CHECK_LE(ch, 0xffff)
+//! - 每码点 closeOver(USET_SIMPLE_CASE_INSENSITIVE) 后剥补充面 (Unicode 18 起
+//!   BMP 大小写折叠可含补充码点, 如 U+1DF95 → U+00DF; 非 unicode ignoreCase
+//!   按 UTF-16 码元比对, 补充码点永不匹配 BMP 字符 → RemoveSupplementary)
+//! - 类内全部同典 → ignore (加备选时可直接跳过); 类内存在异典 → special_add
+//! - 验证循环: special_add 每成员的 closeOver - ignore 余集应全同典 (CHECK_EQ);
+//!   该不变式是 CaseFolding::CloseOver 可从结果只删 IgnoreSet 的前提
+
+pub const SURROGATE_START: u32 = 55296;
+pub const SURROGATE_END: u32 = 57343;
+pub const NON_BMP_START: u32 = 65536;
+/// v8: cc RemoveSupplementary kFirstSupplementary
+pub const FIRST_SUPPLEMENTARY: u32 = 65536;
+
+// /// v8: cc Canonicalize — 五步 1:1 (icu toUpper → Rust 侧由 special_case.rs 静态表承接)
+// /// v8: cc PrintSpecial — 4 集合: current/special_add/ignore/supplementary_equivalents
+// /// v8: cc PrintSet — 4 段模板 (Build/Data/CaseFolding 访问器/LazyInstance);
+//   Rust 落地省略 LazyInstance, IGNORE_SET / SUPPLEMENTARY_EQUIVALENTS_SET 为
+//   const 表 (同源: tool/src/regexp/special-case.h.js 交叉)

@@ -1,0 +1,53 @@
+// 由 tool/src/heap/new-spaces.js 从 v8/src/heap/new-spaces.cc, src/heap/new-spaces-inl.h (族 .h: src/heap/new-spaces.h) 生成; 修订就地改, 复跑覆盖
+// 新生代空间: 半空间/分页新生代
+/// v8: src/heap/new-spaces.h SemiSpaceId
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(i32)]
+pub enum SemiSpaceId {
+  /// kFromSpace = 0
+  FROMSPACE = 0,
+  /// kToSpace = 1
+  TOSPACE = 1,
+}
+
+/// v8: src/heap/new-spaces.h SemiSpace
+pub struct SemiSpace {
+  /// v8: current_capacity_ = 0 — 已提交容量 (Relaxed_Load 原子读变体)
+  pub current_capacity: usize,
+  /// v8: committed_physical_memory_ = 0
+  pub committed_physical_memory: usize,
+  /// v8: id_
+  pub id: SemiSpaceId,
+  /// v8: current_page_ = nullptr
+  pub current_page: *mut NormalPage,
+  /// v8: quarantined_pages_count_ = 0 — 隔离页挂链表头
+  pub quarantined_pages_count: usize,
+}
+
+impl SemiSpace {
+  /// v8: SemiSpace::Swap(from, to) — 交换两半空间内容 (static)
+  pub fn swap(from: &mut SemiSpace, to: &mut SemiSpace) { todo!() }
+  /// v8: AdvancePage(target_capacity) — 推进当前页
+  pub fn advance_page(&mut self, target_capacity: usize) -> bool { todo!() }
+  /// v8: space_start / page_low / page_high — 首页与当前页边界
+  /// v8: ContainsSlow / Uncommit / IsCommitted / CommittedPhysicalMemory
+  /// v8: RemovePage / MovePageToTheEnd / InitializePage / GetObjectIterator
+  /// v8: AllocateFreshPage / RewindPages / FixPagesFlags / ShrinkCapacityTo / Reset
+  /// v8: MoveQuarantinedPage / AddRangeToActiveSystemPages
+  /// v8: Size/SizeOfObjects/Available — UNREACHABLE (半空间不独立计量)
+  /// v8: AssertValidRange (#ifdef DEBUG) / VerifyPages (#ifdef VERIFY_HEAP)
+  pub fn current_capacity_safe(&self) -> usize { self.current_capacity }
+}
+
+/// v8: src/heap/new-spaces.h SemiSpaceObjectIterator — 遍历活跃半空间对象
+/// v8: src/heap/new-spaces.h NewSpace (SpaceWithLinearArea 基类)
+/// v8: src/heap/new-spaces.h SemiSpaceNewSpace — to/from 两半 + Flip/Swap语义
+/// v8: src/heap/new-spaces.h PagedSpaceForNewSpace — MinorMS 用分页新生代
+/// v8: src/heap/new-spaces.h PagedNewSpace
+/// v8: src/heap/new-spaces.cc 各实现 + src/heap/new-spaces-inl.h 内联面
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(SemiSpaceId::FROM_SPACE == 0);
+  assert!(SemiSpaceId::TO_SPACE == 1);
+};

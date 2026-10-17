@@ -1,0 +1,31 @@
+// 由 tool/src/compiler/turboshaft/instruction-selection-normalization-reducer.h.js 从 v8/src/compiler/turboshaft/instruction-selection-normalization-reducer.h 生成; 修订就地改, 复跑覆盖
+// 指令选择规范化 reducer
+
+/// v8: src/compiler/turboshaft/instruction-selection-normalization-reducer.h InstructionSelectionNormalizationReducer
+/// 匹配后端期望的操作数形态
+pub struct InstructionSelectionNormalizationReducer {
+  pub placeholder: (),
+}
+
+impl InstructionSelectionNormalizationReducer {
+  /// 原版 V<Word> REDUCE(WordBinop)(V<Word> left, V<Word> right, WordBinopOp::Kind kind, WordRepresentation rep)
+  /// v8: src/compiler/turboshaft/instruction-selection-normalization-reducer.h InstructionSelectionNormalizationReducer::REDUCE(WordBinop)
+  pub fn reduce_word_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Word32> REDUCE(Comparison)(V<Any> left, V<Any> right, ComparisonOp::Kind kind, RegisterRepresentation rep)
+  /// v8: src/compiler/turboshaft/instruction-selection-normalization-reducer.h InstructionSelectionNormalizationReducer::REDUCE(Comparison)
+  pub fn reduce_comparison(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Simd128> REDUCE(Simd128LoadTransform)(V<WordPtr> base, V<WordPtr> index, Simd128LoadTransformOp::LoadKind load_kind, Simd128LoadTransformOp::TransformKind transform_kind, int offset)
+  /// v8: src/compiler/turboshaft/instruction-selection-normalization-reducer.h InstructionSelectionNormalizationReducer::REDUCE(Simd128LoadTransform)
+  pub fn reduce_simd128_load_transform(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+  /// 原版 V<Simd128> REDUCE(Simd128Binop)(V<Simd128> left, V<Simd128> right, Simd128BinopOp::Kind kind)
+  /// v8: src/compiler/turboshaft/instruction-selection-normalization-reducer.h InstructionSelectionNormalizationReducer::REDUCE(Simd128Binop)
+  pub fn reduce_simd128_binop(&mut self) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}

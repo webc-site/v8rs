@@ -1,0 +1,48 @@
+// 由 tool/src/compiler/js-heap-broker.cc.js 从 v8/src/compiler/js-heap-broker.h + js-heap-broker.cc 生成; 修订就地改, 复跑覆盖
+// broker 薄镜像: 前端反馈访问面 (本体在 v8-compiler-broker)
+
+
+/// 前端反馈访问面 — 委托冻结 broker crate, FeedbackNexus 回退路径推迟
+/// v8: src/compiler/js-heap-broker.h JSHeapBroker (差集)
+pub struct BrokerFeedbackAccess;
+
+impl BrokerFeedbackAccess {
+  /// HasFeedback — processed feedback 快照存在性
+  /// v8: src/compiler/js-heap-broker.cc JSHeapBroker::HasFeedback
+  pub fn has_feedback<'z>(
+    broker: &v8_compiler_broker::JSHeapBroker<'z, '_>,
+    source: &crate::feedback_source::FeedbackSource,
+  ) -> bool {
+    broker.get_feedback(source).is_some()
+  }
+
+  /// GetFeedback — processed 反馈快照
+  /// v8: src/compiler/js-heap-broker.cc JSHeapBroker::GetFeedback
+  pub fn get_feedback<'z>(
+    broker: &v8_compiler_broker::JSHeapBroker<'z, '_>,
+    source: &crate::feedback_source::FeedbackSource,
+  ) -> Option<&'z v8_compiler_broker::ProcessedFeedbackSnapshot<'z>> {
+    broker.get_feedback(source)
+  }
+
+  /// GetFeedbackSlotKind — 有快照走快照, 否则 FeedbackNexus 实读
+  /// v8: src/compiler/js-heap-broker.cc JSHeapBroker::GetFeedbackSlotKind
+  pub fn get_feedback_slot_kind<'z>(
+    _broker: &v8_compiler_broker::JSHeapBroker<'z, '_>,
+    _source: &crate::feedback_source::FeedbackSource,
+  ) -> crate::Result<v8_objects_rest::feedback_vector::FeedbackSlotKind> {
+    todo!() // 推迟台账: FeedbackNexus (v8-objects-rest) 实读面
+  }
+
+  /// FeedbackIsInsufficient — 快照 IsInsufficient 或 nexus IsUninitialized
+  /// v8: src/compiler/js-heap-broker.cc JSHeapBroker::FeedbackIsInsufficient
+  pub fn feedback_is_insufficient<'z>(
+    _broker: &v8_compiler_broker::JSHeapBroker<'z, '_>,
+    _source: &crate::feedback_source::FeedbackSource,
+  ) -> bool {
+    todo!() // 推迟台账: FeedbackNexus::IsUninitialized
+  }
+}
+
+// —— 对数基准 ——
+// cc 定义面 52 项 (本体归 v8-compiler-broker, 前端取用 3 条访问面)

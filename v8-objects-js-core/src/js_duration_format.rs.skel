@@ -1,0 +1,60 @@
+// 由 tool/src/objects/js-duration-format.h.js 从 v8/src/objects/js-duration-format.{h,-inl.h,cc,tq} 生成; 修订就地改, 复跑覆盖
+// JSDurationFormat 枚举/双 flags 位布局骨架
+
+//! 差集骨架: JSDurationFormat (DurationFormat 10 字段 display+style 压缩进两个 Smi flags)。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。ICU 数字格式化语义面留 Developer。
+
+/// v8: src/objects/js-duration-format.h JSDurationFormat::Display
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Display { Auto = 0, Always = 1 }
+
+/// v8: src/objects/js-duration-format.h JSDurationFormat::Style
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Style { Long = 0, Short = 1, Narrow = 2, Digital = 3 }
+
+/// v8: src/objects/js-duration-format.h JSDurationFormat::Separator
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Separator { Colon = 0, FullStop = 1, FullwidthColon = 2, ArabicDecimalSeparator = 3 }
+
+/// v8: src/objects/js-duration-format.h JSDurationFormat::FieldStyle
+///   (kStyle3Max = kNarrow=2, kStyle4Max = kFractional=5, kStyle5Max = k2Digit=4)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FieldStyle { Long = 0, Short = 1, Narrow = 2, Numeric = 3, TwoDigit = 4, Fractional = 5, Undefined = 6 }
+
+/// v8: src/objects/js-duration-format.h kUndefinedFractionalDigits (4 位全 1 哨兵)
+pub const K_UNDEFINED_FRACTIONAL_DIGITS: u32 = 15;
+
+// ── style_flags_ 位布局 (uint31 Smi, 总 30 位; h BitField 链 = tq StyleFlags) ──
+pub const K_STYLE_SHIFT: u32 = 0; // 2 bits
+pub const K_YEARS_STYLE_SHIFT: u32 = 2; // 2 bits
+pub const K_MONTHS_STYLE_SHIFT: u32 = 4; // 2 bits
+pub const K_WEEKS_STYLE_SHIFT: u32 = 6; // 2 bits
+pub const K_DAYS_STYLE_SHIFT: u32 = 8; // 2 bits
+pub const K_HOURS_STYLE_SHIFT: u32 = 10; // 3 bits
+pub const K_MINUTES_STYLE_SHIFT: u32 = 13; // 3 bits
+pub const K_SECONDS_STYLE_SHIFT: u32 = 16; // 3 bits
+pub const K_MILLISECONDS_STYLE_SHIFT: u32 = 19; // 3 bits
+pub const K_MICROSECONDS_STYLE_SHIFT: u32 = 22; // 3 bits
+pub const K_NANOSECONDS_STYLE_SHIFT: u32 = 25; // 3 bits
+pub const K_SEPARATOR_SHIFT: u32 = 28; // 2 bits
+
+// ── display_flags_ 位布局 (uint31 Smi, 总 14 位; = tq DisplayFlags) ──
+pub const K_YEARS_DISPLAY_SHIFT: u32 = 0; // 1 bits
+pub const K_MONTHS_DISPLAY_SHIFT: u32 = 1; // 1 bits
+pub const K_WEEKS_DISPLAY_SHIFT: u32 = 2; // 1 bits
+pub const K_DAYS_DISPLAY_SHIFT: u32 = 3; // 1 bits
+pub const K_HOURS_DISPLAY_SHIFT: u32 = 4; // 1 bits
+pub const K_MINUTES_DISPLAY_SHIFT: u32 = 5; // 1 bits
+pub const K_SECONDS_DISPLAY_SHIFT: u32 = 6; // 1 bits
+pub const K_MILLISECONDS_DISPLAY_SHIFT: u32 = 7; // 1 bits
+pub const K_MICROSECONDS_DISPLAY_SHIFT: u32 = 8; // 1 bits
+pub const K_NANOSECONDS_DISPLAY_SHIFT: u32 = 9; // 1 bits
+pub const K_FRACTIONAL_DIGITS_SHIFT: u32 = 10; // 4 bits
+
+/// v8: src/objects/js-duration-format.h JSDurationFormat: style_flags_ offset=24 (Smi),
+///   display_flags_ 32 (Smi), icu_locale_ 40 (Foreign), icu_number_formatter_ 48 (Foreign)
+pub const K_JS_DURATION_FORMAT_HEADER_SIZE: usize = 56;
+
+/// v8: src/objects/js-duration-format-inl.h set_fractional_digits/fractional_digits +
+///   宏展开 22 组 display/style setter-getter
+pub struct JSDurationFormat { /* style_flags_, display_flags_, icu_locale_, icu_number_formatter_ */ }

@@ -1,0 +1,35 @@
+// 由 tool/src/base/debug/stack_trace.h.js 从 v8/src/base/debug/stack_trace.h + src/base/debug/stack_trace.cc 生成; 修订就地改, 复跑覆盖
+// 栈回溯捕获与符号化输出 (Chromium 移植)
+
+//! v8: src/base/debug/stack_trace.h/.cc
+//! 平台后端: posix/android/fuchsia/win/zos 各自 .cc (本席另脚本)
+
+/// v8: stack_trace.h EnableInProcessStackDumping — 异常/信号时转储栈并立即退出 (仅测试用)
+pub fn enable_in_process_stack_dumping() -> bool;
+/// v8: stack_trace.h DisableSignalStackDump
+pub fn disable_signal_stack_dump();
+
+/// v8: stack_trace.h StackTrace
+/// trace_: void*[62]; count_: 有效帧数
+pub struct StackTrace {
+    trace: [usize; MAX_TRACES],
+    count: usize,
+}
+
+/// v8: stack_trace.h kMaxTraces = 62 (MSDN: FramesToSkip+FramesToCapture < 63)
+pub const MAX_TRACES: usize = 62;
+
+impl StackTrace {
+    /// v8: stack_trace.h StackTrace() — 从当前位置捕获 (平台后端实现)
+    pub fn capture() -> Self;
+    /// v8: stack_trace.cc StackTrace(trace, count) — 外部指针数组, count 截到 kMaxTraces
+    pub fn from_addresses(trace: &[usize]) -> Self;
+    /// v8: stack_trace.cc Addresses — 返回有效帧切片 (count_==0 返回空)
+    pub fn addresses(&self) -> &[usize];
+    /// v8: stack_trace.h Print — 打到 stderr
+    pub fn print(&self);
+    /// v8: stack_trace.h OutputToStream — 符号化写流 (posix: backtrace_symbols)
+    pub fn output_to_stream(&self, os: &mut dyn std::io::Write);
+    /// v8: stack_trace.cc ToString — OutputToStream 到 stringstream
+    pub fn to_string(&self) -> String;
+}

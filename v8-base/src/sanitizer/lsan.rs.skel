@@ -1,0 +1,16 @@
+// 由 tool/src/base/sanitizer/lsan.h.js 从 v8/src/base/sanitizer/lsan.h 生成; 修订就地改, 复跑覆盖
+// LeakSanitizer 宏面
+
+//! v8 侧: 宏 1 个, 双分支; 启用门 = V8_USE_ADDRESS_SANITIZER && !V8_OS_WIN
+//! (LSan 无独立编译开关, 随 ASan detect_leaks=1; Windows 无 LSan)
+
+/// v8: LSAN_IGNORE_OBJECT(ptr)
+/// 启用: __lsan_ignore_object(ptr); 空转: static_assert 可转 const void*
+#[cfg(feature = "asan")]
+pub fn lsan_ignore_object<T>(ptr: &T) {
+    extern "C" { fn __lsan_ignore_object(a: *const core::ffi::c_void); }
+    unsafe { __lsan_ignore_object(ptr as *const T as _) }
+}
+
+#[cfg(not(feature = "asan"))]
+pub fn lsan_ignore_object<T>(ptr: &T) { let _ = ptr as *const T as *const core::ffi::c_void; }

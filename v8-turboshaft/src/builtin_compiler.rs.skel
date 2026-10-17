@@ -1,0 +1,25 @@
+// 由 tool/src/compiler/turboshaft/builtin-compiler.cc.js 从 v8/src/compiler/turboshaft/builtin-compiler.cc 生成; 修订就地改, 复跑覆盖
+// builtin 编译编排: TSA 生成器 → 指令码单入口骨架
+
+/// 原版 kBuiltinCompilationZoneName
+pub const BUILTIN_COMPILATION_ZONE_NAME: &'static str = "builtin-compilation-zone";
+
+/// v8: src/compiler/turboshaft/builtin-compiler.cc BuildWithTurboshaftAssemblerImpl
+///
+/// 编排流 (原版 11 锚):
+/// 1. DCHECK: BYTECODE_HANDLER ↔ bytecode_handler_data 成对
+/// 2. ZoneStats + ZoneWithName(builtin-compilation-zone)
+/// 3. OptimizedCompilationInfo(name, zone, code_kind, builtin)
+/// 4. PipelineData(kTSABuiltin) + InitializeBuiltinComponent(call_descriptor)
+/// 5. InitializeGraphComponent(nullptr, kPureTurboshaft)
+/// 6. temp_zone (kTempZoneName) → generator 回调填图
+/// 7. Pipeline::GenerateCodeForTurboshaftBuiltin(..., ProfileDataFromFile::TryRead(name))
+///    → ToHandleChecked
+pub fn build_with_turboshaft_assembler_impl() -> () {
+  unimplemented!("Developer 修订: 按编排流组装")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(BUILTIN_COMPILATION_ZONE_NAME == "builtin-compilation-zone");
+};

@@ -1,0 +1,116 @@
+// 由 tool/src/compiler/state-values-utils.js 从 v8/src/compiler/state-values-utils.h + state-values-utils.cc 生成; 修订就地改, 复跑覆盖
+// StateValues 树构建缓存与稀疏遍历
+
+//! state-values-utils — 帧状态值树的共享子树缓存 + 深度遍历
+//!
+//! 树节点输入数上限 8 (kMaxInputCount), 遍历栈深上限 8
+//! (kMaxInlineDepth); 稀疏编码由 SparseInputMask 位掩码承载。
+
+/// 原版 kMaxInputCount — 单个 StateValues 节点输入上限
+pub const K_MAX_INPUT_COUNT: usize = 8;
+/// 原版 kMaxInlineDepth — 遍历内联栈深上限
+pub const K_MAX_INLINE_DEPTH: i32 = 8;
+
+/// 原版 StateValuesCache::StateValuesKey — 子树缓存键 (count/mask/values)
+pub struct StateValuesKey<'n> {
+  /// count
+  pub count: usize,
+  /// mask
+  pub mask: SparseInputMask,
+  /// values
+  pub values: &'n [*mut Node],
+}
+
+/// 原版 StateValuesCache — 共享子树缓存 (CustomMatcherZoneHashMap)
+pub struct StateValuesCache<'z, 'g> {
+  /// hash_map_
+  pub hash_map: CustomMatcherZoneHashMap<'z>,
+  /// working_space_ — 每层一个工作缓冲
+  pub working_space: Vec<[NodeSlot; K_MAX_INPUT_COUNT]>,
+  /// empty_state_values_
+  pub empty_state_values: *mut Node,
+  /// js_graph_
+  pub js_graph: &'g JSGraph<'z>,
+}
+
+impl StateValuesCache<'_, '_> {
+  /// 原版 GetNodeForValues — 值数组 → (缓存共享的) StateValues 树
+  /// v8: src/compiler/state-values-utils.cc StateValuesCache::GetNodeForValues
+  pub fn get_node_for_values(&mut self, values: &[*mut Node], liveness: Option<&BytecodeLivenessState>) -> *mut Node {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesCache::GetNodeForValues")
+  }
+
+  /// 原版 FillBufferWithValues — 稀疏填充一层缓冲并返回位掩码
+  /// v8: src/compiler/state-values-utils.cc StateValuesCache::FillBufferWithValues
+  fn fill_buffer_with_values(&mut self, node_buffer: &mut [NodeSlot; K_MAX_INPUT_COUNT], node_count: &mut usize, values_idx: &mut usize, values: &[*mut Node], count: usize, liveness: Option<&BytecodeLivenessState>) -> SparseInputMask {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesCache::FillBufferWithValues")
+  }
+
+  /// 原版 BuildTree — 逐层递归建树
+  /// v8: src/compiler/state-values-utils.cc StateValuesCache::BuildTree
+  fn build_tree(&mut self, values_idx: &mut usize, values: &[*mut Node], count: usize, liveness: Option<&BytecodeLivenessState>, level: usize) -> *mut Node {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesCache::BuildTree")
+  }
+}
+
+/// 原版 StateValuesAccess::TypedNode — (node, machine type) 对
+pub struct TypedNode<'n> {
+  /// node
+  pub node: &'n Node,
+  /// type
+  pub type_: MachineType,
+}
+
+/// 原版 StateValuesAccess::iterator — 深度优先扁平遍历 (栈深 ≤ 8)
+pub struct StateValuesIterator<'n> {
+  /// stack_ — SparseInputMask::InputIterator 栈
+  pub stack: [SparseInputIterator<'n>; K_MAX_INLINE_DEPTH as usize],
+  /// current_depth_
+  pub current_depth: i32,
+}
+
+impl StateValuesIterator<'_> {
+  /// 原版 operator++ / Advance — 步进 (跳过空槽由 AdvanceTillNotEmpty 承担)
+  /// v8: src/compiler/state-values-utils.cc StateValuesAccess::iterator::operator++
+  pub fn advance(&mut self) {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesAccess::iterator::operator++")
+  }
+
+  /// 原版 operator* — 当前 TypedNode
+  /// v8: src/compiler/state-values-utils.cc StateValuesAccess::iterator::operator*
+  pub fn current(&mut self) -> TypedNode<'_> {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesAccess::iterator::operator*")
+  }
+
+  /// 原版 done — current_depth_ < 0
+  /// v8: src/compiler/state-values-utils.h StateValuesAccess::iterator::done
+  pub fn done(&self) -> bool {
+    self.current_depth < 0
+  }
+
+  /// 原版 AdvanceTillNotEmpty — 跳过空节点并返回跳过数
+  /// v8: src/compiler/state-values-utils.cc StateValuesAccess::iterator::AdvanceTillNotEmpty
+  pub fn advance_till_not_empty(&mut self) -> usize {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesAccess::iterator::AdvanceTillNotEmpty")
+  }
+}
+
+/// 原版 StateValuesAccess — StateValues 树遍历门面
+pub struct StateValuesAccess<'n> {
+  /// node_
+  pub node: &'n Node,
+}
+
+impl StateValuesAccess<'_> {
+  /// 原版 size — 叶子计数
+  /// v8: src/compiler/state-values-utils.cc StateValuesAccess::size
+  pub fn size(&self) -> usize {
+    todo!("v8: src/compiler/state-values-utils.cc StateValuesAccess::size")
+  }
+
+  /// 原版 begin_without_receiver — 跳过 receiver
+  /// v8: src/compiler/state-values-utils.h StateValuesAccess::begin_without_receiver
+  pub fn begin_without_receiver(&self) -> StateValuesIterator<'_> {
+    todo!("v8: src/compiler/state-values-utils.h StateValuesAccess::begin_without_receiver")
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "crate": "v8-date",
+  "generated_at": "2026-10-11T08:24:39.101Z",
+  "bench_args": [
+    "--warm-up-time",
+    "2",
+    "--measurement-time",
+    "3",
+    "--sample-size",
+    "20"
+  ],
+  "criterion_dir": "/Users/z/git/js/v8rs/.qoder/worktrees/agent-general-purpose-085b0415/target/bench-date/criterion",
+  "benches": [
+    {
+      "name": "chrono/epoch_ms_to_time_of_day",
+      "group": "chrono",
+      "bench": "epoch_ms_to_time_of_day",
+      "mean_ns": 403.2359366592912,
+      "median_ns": 403.21487870927746,
+      "std_err_ns": 0.08819057024741846,
+      "ci_low_ns": 403.0670252196767,
+      "ci_high_ns": 403.41151736929027,
+      "slope_ns": 403.2395539087467
+    },
+    {
+      "name": "chrono/epoch_ms_to_ymd",
+      "group": "chrono",
+      "bench": "epoch_ms_to_ymd",
+      "mean_ns": 763.2182834602172,
+      "median_ns": 639.4709259754143,
+      "std_err_ns": 65.85810404964327,
+      "ci_low_ns": 646.2107418246944,
+      "ci_high_ns": 902.6231916552196,
+      "slope_ns": 628.1130858304919
+    },
+    {
+      "name": "chrono/parse_date_time",
+      "group": "chrono",
+      "bench": "parse_date_time",
+      "mean_ns": 2495.39185797627,
+      "median_ns": 2495.45580456654,
+      "std_err_ns": 1.8191976903489329,
+      "ci_low_ns": 2491.9236059229984,
+      "ci_high_ns": 2499.04400246529,
+      "slope_ns": 2493.123349166956
+    },
+    {
+      "name": "std-systemtime/epoch_ms_to_time_of_day",
+      "group": "std-systemtime",
+      "bench": "epoch_ms_to_time_of_day",
+      "mean_ns": 413.1689603742997,
+      "median_ns": 408.3496698429017,
+      "std_err_ns": 2.8182105112567086,
+      "ci_low_ns": 408.9529771331552,
+      "ci_high_ns": 419.6064279299086,
+      "slope_ns": 416.86725205348245
+    },
+    {
+      "name": "std-systemtime/epoch_ms_to_ymd",
+      "group": "std-systemtime",
+      "bench": "epoch_ms_to_ymd",
+      "mean_ns": 841.5122140607785,
+      "median_ns": 836.4595450943698,
+      "std_err_ns": 2.0191512181862947,
+      "ci_low_ns": 837.8282125354046,
+      "ci_high_ns": 845.6971324357793,
+      "slope_ns": 836.2348979160074
+    },
+    {
+      "name": "v8-date/epoch_ms_to_time_of_day",
+      "group": "v8-date",
+      "bench": "epoch_ms_to_time_of_day",
+      "mean_ns": 197.6567978798828,
+      "median_ns": 194.669697649104,
+      "std_err_ns": 2.9545368714712144,
+      "ci_low_ns": 194.50885363528909,
+      "ci_high_ns": 203.8058707054757,
+      "slope_ns": 195.97727384191813
+    },
+    {
+      "name": "v8-date/epoch_ms_to_ymd",
+      "group": "v8-date",
+      "bench": "epoch_ms_to_ymd",
+      "mean_ns": 154.03067445427135,
+      "median_ns": 151.7708660314359,
+      "std_err_ns": 1.7135391282289976,
+      "ci_low_ns": 151.76085821281478,
+      "ci_high_ns": 157.87408584936742,
+      "slope_ns": 157.38113970273992
+    },
+    {
+      "name": "v8-date/parse_date_time",
+      "group": "v8-date",
+      "bench": "parse_date_time",
+      "mean_ns": 1493.3171989528287,
+      "median_ns": 1469.146542774462,
+      "std_err_ns": 36.06011404306199,
+      "ci_low_ns": 1426.7491807342383,
+      "ci_high_ns": 1567.528048021885,
+      "slope_ns": 1472.8455872015973
+    }
+  ]
+}

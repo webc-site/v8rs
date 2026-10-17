@@ -1,0 +1,12 @@
+// 由 tool/src/base/numerics/math_constants.h.js 从 v8/src/base/numerics/math_constants.h 生成; 修订就地改, 复跑覆盖
+// 数学常量表
+
+//! v8 侧常量计数: 2
+
+/// 地球平均重力加速度 m/s^2
+/// v8: src/base/numerics/math_constants.h kMeanGravityDouble = 9.80665
+pub const MEANGRAVITYDOUBLE_MEAN_GRAVITY: f64 = 9.80665;
+
+/// 地球平均重力加速度 m/s^2
+/// v8: src/base/numerics/math_constants.h kMeanGravityFloat = 9.80665f
+pub const MEANGRAVITYFLOAT_MEAN_GRAVITY: f32 = 9.80665_f32;

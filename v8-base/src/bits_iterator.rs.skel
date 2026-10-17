@@ -1,0 +1,26 @@
+// 由 tool/src/base/bits-iterator.h.js 从 v8/src/base/bits-iterator.h 生成; 修订就地改, 复跑覆盖
+// 置位位迭代器 (LSB→MSB / MSB→LSB)
+
+//! v8: src/base/bits-iterator.h
+
+/// v8: src/base/bits-iterator.h BitsIterator<T, kMSBFirst>
+/// operator* : kMSBFirst ? sizeof(T)*8-1-CLZ(bits) : CTZ(bits)
+/// operator++: bits &= ~(1 << *self)  (清除当前位, 0 为终哨兵)
+/// Rust 侧语义等价物 (供 Developer 采纳):
+///   (0..bits.count_zeros() 无关; 正确为) 遍历 bits.trailing_zeros() 循环清除
+pub struct BitsIterator<T> {
+    bits: T,
+    msb_first: bool,
+}
+
+impl<T: PrimInt> Iterator for BitsIterator<T> {
+    type Item = u32;
+    /// v8: operator* — MSB 序取 8*sizeof(T)-1-CountLeadingZeros, LSB 序取 CountTrailingZeros
+    fn next(&mut self) -> Option<u32>;
+}
+
+/// v8: src/base/bits-iterator.h IterateBits — LSB → MSB 的置位位序
+pub fn iterate_bits<T: PrimInt>(bits: T) -> impl Iterator<Item = u32>;
+
+/// v8: src/base/bits-iterator.h IterateBitsBackwards — MSB → LSB 的置位位序
+pub fn iterate_bits_backwards<T: PrimInt>(bits: T) -> impl Iterator<Item = u32>;

@@ -1,0 +1,44 @@
+[package]
+name = "v8-parsing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "v8-parsing"
+keywords = []
+categories = []
+# base.rs 是 trait/实现库文件, 由 benches/main.rs 以 mod 引入, 关闭 bench 自动发现
+autobenches = false
+
+[features]
+default = []
+# 单独评测对比项: 单遍手写简易 tokenizer
+bench-naive = []
+# 全量评测 (包含全部对比项)
+bench = ["bench-naive"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+phf = { version = "0.14.0", features = ["macros"] }
+thiserror = "2.0.21"
+v8-ast = { version = "0.1.0", path = "../v8-ast" }
+v8-strings = { version = "0.1.0", path = "../v8-strings" }
+
+[dev-dependencies]
+aok = "0.1.18"
+criterion = "0.8.2"
+ctor = "1.0.13"
+humansize = "2.1.3"
+log = "0.4.34"
+log_init = "0.1.39"
+rusty_alloc-api = { workspace = true }
+
+[[bench]]
+name = "parsing_bench"
+path = "benches/main.rs"
+harness = false
+required-features = ["bench"]
+

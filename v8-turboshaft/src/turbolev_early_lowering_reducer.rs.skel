@@ -1,0 +1,40 @@
+// 由 tool/src/compiler/turboshaft/turbolev-early-lowering-reducer-inl.h.js 从 v8/src/compiler/turboshaft/turbolev-early-lowering-reducer-inl.h 生成; 修订就地改, 复跑覆盖
+// Turbolev 前置降低: maglev 操作的提前降低 helper
+
+/// 原版 TurbolevEarlyLoweringReducer — TurbolevGraphBuildingPhase 期间
+/// 降低部分 maglev 操作的 helper 集 (非正式 REDUCE 面, 见类注释)。
+/// v8: src/compiler/turboshaft/turbolev-early-lowering-reducer-inl.h
+pub struct TurbolevEarlyLoweringReducer;
+
+impl TurbolevEarlyLoweringReducer {
+  /// v8: CheckInstanceType(input, frame_state, feedback, first, last, check_smi)
+  /// - check_smi 先 DeoptimizeIf(IsSmi)
+  /// - first == last 且 V8_STATIC_ROOTS_BOOL:
+  ///     UniqueMapOfInstanceType -> RootEqual 直接判
+  /// - 区间且静态根: UniqueMapRangeOfInstanceTypeRange ->
+  ///     压缩 map 的 Uint32LessThanOrEqual 区间判
+  /// - 否则 LoadMapField + LoadInstanceTypeField + 区间比较
+  pub fn check_instance_type(&mut self) { todo!() }
+
+  /// 其余 helper 面 (15 个):
+  /// v8: turbolev-early-lowering-reducer-inl.h CheckInstanceType
+  /// v8: turbolev-early-lowering-reducer-inl.h CheckedInternalizedString
+  /// v8: turbolev-early-lowering-reducer-inl.h CheckValueEqualsString
+  /// v8: turbolev-early-lowering-reducer-inl.h CheckConstructResult
+  /// v8: turbolev-early-lowering-reducer-inl.h CheckDerivedConstructResult
+  /// v8: turbolev-early-lowering-reducer-inl.h UpdateJSArrayLength
+  /// v8: turbolev-early-lowering-reducer-inl.h TransitionMultipleElementsKind
+  /// v8: turbolev-early-lowering-reducer-inl.h TransitionElementsKind
+  /// v8: turbolev-early-lowering-reducer-inl.h JSAnyIsNotPrimitive
+  /// v8: turbolev-early-lowering-reducer-inl.h HasInPrototypeChain
+  /// v8: turbolev-early-lowering-reducer-inl.h MigrateMapIfNeeded
+  /// v8: turbolev-early-lowering-reducer-inl.h ExtendPropertiesBackingStore
+  /// v8: turbolev-early-lowering-reducer-inl.h GeneratorStore
+  /// v8: turbolev-early-lowering-reducer-inl.h ObjectIsArray
+  /// v8: turbolev-early-lowering-reducer-inl.h CheckInstanceTypeIsInRange
+  pub fn helper(&mut self) { todo!() }
+}
+
+/// 位掩码常量依赖 (语义锚):
+/// - kIsNotStringMask | kIsNotInternalizedMask: 判非内化字符串
+/// - kThinStringTagBit (popcount==1): 判 ThinString, 取 actual 字段

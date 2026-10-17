@@ -1,0 +1,96 @@
+// 由 tool/src/regexp/experimental/experimental.cc.js 从 v8/src/regexp/experimental/experimental.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 实验引擎顶层入口: 9 静态方法签名骨架 + 编译/执行通道处置表 (审计基线)
+
+
+//! ExperimentalRegExp (AllStatic) — 实验引擎对外入口面。
+//! 通道: CompileImpl(解析+ExperimentalCompiler::Compile+VectorToByteArray)
+//!   → SetBytecodeForExperimental; ExecRawImpl → ExperimentalRegExpInterpreter::FindMatches;
+//!   Exec/OneshotExec 的 do-while 重试环消化 kInternalRegExpRetry。
+
+/// v8: src/regexp/experimental/experimental.h ExperimentalRegExp::kSupportsUnicode
+pub const SUPPORTS_UNICODE: bool = false;
+
+/// 9 方法处置表 (h 声明 == cc 定义, 逐名 1:1):
+/// - CanBeHandled → 委托 ExperimentalCompiler::can_be_handled (trace 拒绝打印 1)
+/// - Initialize → factory SetRegExpExperimentalData (JSRegExp 层)
+/// - IsCompiled → type_tag==EXPERIMENTAL && has_bytecode(kIsLatin1=true)
+/// - Compile → CompileImpl + SetBytecodeForExperimental + set_capture_name_map
+/// - MatchForCallFromJs → 沙箱出口 (ExitSandboxScope) + SbxCast + ExecRaw(kFromJs)
+/// - Exec → IsCompiled?→Compile→Flatten→ExecRaw 环 (kFromRuntime)
+/// - ExecRaw → bytecode(kIsLatin1) + ExecRawImpl
+/// - OneshotExecRaw → CHECK(on_excessive_backtracks) + CompileImpl 现算现执行
+/// - OneshotExec → 同 Exec 环但 OneshotExecRaw
+pub struct ExperimentalRegExp;
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::CanBeHandled
+  pub fn canbehandled(/* bool — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::Initialize
+  pub fn initialize(/* void — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::IsCompiled
+  pub fn iscompiled(/* bool — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::Compile
+  pub fn compile(/* bool — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::MatchForCallFromJs
+  pub fn matchforcallfromjs(/* int32_t — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::Exec
+  pub fn exec(/* std::optional<int> — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::ExecRaw
+  pub fn execraw(/* int32_t — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::OneshotExec
+  pub fn oneshotexec(/* std::optional<int> — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+impl ExperimentalRegExp {
+  /// v8: src/regexp/experimental/experimental.cc ExperimentalRegExp::OneshotExecRaw
+  pub fn oneshotexecraw(/* int32_t — 签名见 cc; 参数面 8 通道异构, 落地时按调用方收窄 */) {
+    unimplemented!("登记骨架")
+  }
+}
+
+// 文件级辅助 5 件 (cc 匿名/具名 namespace):
+// /// v8: cc VectorToByteArray<T> — trivial T 数组 → TrustedByteArray (MemCopy)
+// /// v8: cc struct CompilationResult { bytecode, capture_name_map }
+// /// v8: cc CompileImpl — Parser::ParseRegExpFromHeapString + 失败仅 kStackOverflow
+// /// v8: cc AsInstructionSequence — u8 视图按 sizeof(Instruction) 重解释 (对齐前提)
+// /// v8: cc ExecRawImpl — RegistersForCaptureCount + FindMatches
+// 条件编译: #ifdef VERIFY_HEAP ×3 (排除), 沙箱硬件 DISABLE_ASAN ×1 (排除);
+//   kIsLatin1=true 恒真 (实验引擎无 uc16 字节码两态)。
+

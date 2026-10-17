@@ -1,0 +1,293 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.1.0)"
+        required: false
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-release:
+    name: build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            use_zig: true
+            zig_target: x86_64-linux-gnu.2.17
+            pgo: true
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            use_zig: true
+            zig_target: x86_64-linux-musl
+            pgo: true
+
+          # Linux ARM64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            use_zig: true
+            zig_target: aarch64-linux-gnu.2.17
+            pgo: false
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            use_zig: true
+            zig_target: aarch64-linux-musl
+            pgo: false
+
+          # Linux ARMv7
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            use_zig: true
+            zig_target: arm-linux-gnueabihf.2.17
+            pgo: false
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-musleabihf
+            use_zig: true
+            zig_target: arm-linux-musleabihf
+            pgo: false
+
+          # Linux RISC-V 64
+          - os: ubuntu-latest
+            target: riscv64gc-unknown-linux-gnu
+            use_zig: true
+            zig_target: riscv64-linux-gnu.2.27
+            pgo: false
+
+          # macOS (Apple Silicon + Intel)
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            use_zig: false
+            pgo: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            use_zig: false
+            pgo: true
+
+          # Windows (x64 + ARM64)
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            use_zig: false
+            pgo: true
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            use_zig: false
+            pgo: false
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          components: llvm-tools-preview
+
+      - name: Setup Zig & cargo-zigbuild (for Linux cross-compilation)
+        if: matrix.use_zig
+        uses: mlugg/setup-zig@v1
+        with:
+          version: 0.13.0
+
+      - name: Install cargo-zigbuild
+        if: matrix.use_zig
+        run: cargo install --locked cargo-zigbuild
+
+      - name: Cache cargo registry & index
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}-release
+
+      - name: Build binary and C-API (with PGO for native targets)
+        shell: bash
+        run: |
+          LLVM_OPTS="-C llvm-args=-inline-threshold=275 -C llvm-args=-inlinehint-threshold=450 -C llvm-args=-enable-dfa-jump-thread=true -C llvm-args=-extra-vectorizer-passes=true -C llvm-args=-enable-loop-flatten=true -C llvm-args=-enable-gvn-sink=true -C llvm-args=-unroll-threshold=300 -C llvm-args=-simplifycfg-sink-common=true -C llvm-args=-simplifycfg-hoist-common=true -C llvm-args=-enable-ext-tsp-block-placement=true -C llvm-args=-tail-dup-placement=true"
+          FLAGS="-C opt-level=3 -C codegen-units=1 -C panic=abort ${LLVM_OPTS}"
+          case "${{ matrix.target }}" in
+            x86_64*)
+              FLAGS="${FLAGS} -C target-feature=+aes,+sse4.1"
+              ;;
+            aarch64*)
+              FLAGS="${FLAGS} -C target-feature=+aes,+neon"
+              ;;
+            *)
+              ;;
+          esac
+
+          if [ "${{ matrix.pgo }}" = "true" ]; then
+            echo "=== Step 1: PGO Instrumentation Build ==="
+            PGO_DIR="${RUNNER_TEMP:-/tmp}/pgo-data"
+            rm -rf "$PGO_DIR"
+            mkdir -p "$PGO_DIR"
+            export RUSTFLAGS="${FLAGS} -Cprofile-generate=${PGO_DIR}"
+            if [ "${{ matrix.use_zig }}" = "true" ]; then
+              cargo zigbuild -p rs8 -p rs8-capi --release --target ${{ matrix.target }}
+            else
+              cargo build -p rs8 -p rs8-capi --release --target ${{ matrix.target }}
+            fi
+
+            echo "=== Step 2: Run Training Workload ==="
+            BIN_PATH="target/${{ matrix.target }}/release/rs8"
+            if [ "${{ runner.os }}" = "Windows" ]; then
+              BIN_PATH="${BIN_PATH}.exe"
+            fi
+            "$BIN_PATH" tool/pgo_train.js
+
+            echo "=== Step 3: Merge Profiles ==="
+            PROFDATA_BIN="$(find "$(rustc --print sysroot)" -name "llvm-profdata*" -type f | head -n 1)"
+            "$PROFDATA_BIN" merge -o "${PGO_DIR}/merged.profdata" "$PGO_DIR"
+
+            echo "=== Step 4: Final PGO Optimized Build ==="
+            export RUSTFLAGS="${FLAGS} -Cprofile-use=${PGO_DIR}/merged.profdata"
+            if [ "${{ matrix.use_zig }}" = "true" ]; then
+              cargo zigbuild -p rs8 -p rs8-capi --release --target ${{ matrix.target }}
+            else
+              cargo build -p rs8 -p rs8-capi --release --target ${{ matrix.target }}
+            fi
+          else
+            echo "=== Standard Optimized Build ==="
+            export RUSTFLAGS="${FLAGS}"
+            if [ "${{ matrix.use_zig }}" = "true" ]; then
+              cargo zigbuild -p rs8 -p rs8-capi --release --target ${{ matrix.target }}
+            else
+              cargo build -p rs8 -p rs8-capi --release --target ${{ matrix.target }}
+            fi
+          fi
+
+      - name: Package artifacts (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          BIN_DIR="target/${{ matrix.target }}/release"
+          PKG_NAME="rs8-${{ matrix.target }}"
+          mkdir -p "dist/${PKG_NAME}"
+          cp "${BIN_DIR}/rs8" "dist/${PKG_NAME}/"
+          strip "dist/${PKG_NAME}/rs8" || true
+          cd dist
+          tar -czvf "${PKG_NAME}.tar.gz" "${PKG_NAME}"
+          cd ..
+
+          # 打包 rs8-capi 共享库、静态库、头文件与 pkg-config
+          CAPI_PKG="rs8-capi-${{ matrix.target }}"
+          mkdir -p "dist/${CAPI_PKG}/include"
+          mkdir -p "dist/${CAPI_PKG}/lib"
+          cp include/rs8-capi.h "dist/${CAPI_PKG}/include/"
+          cp rs8-capi.pc "dist/${CAPI_PKG}/"
+          cp "${BIN_DIR}"/librs8_capi.* "dist/${CAPI_PKG}/lib/" 2>/dev/null || true
+          cd dist
+          tar -czvf "${CAPI_PKG}.tar.gz" "${CAPI_PKG}"
+          cd ..
+
+      - name: Package artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          BIN_DIR="target/${{ matrix.target }}/release"
+          PKG_NAME="rs8-${{ matrix.target }}"
+          mkdir -p "dist/${PKG_NAME}"
+          cp "${BIN_DIR}/rs8.exe" "dist/${PKG_NAME}/"
+          cd dist
+          7z a "${PKG_NAME}.zip" "${PKG_NAME}"
+          cd ..
+
+          # 打包 Windows 平台 rs8-capi DLL 与 LIB
+          CAPI_PKG="rs8-capi-${{ matrix.target }}"
+          mkdir -p "dist/${CAPI_PKG}/include"
+          mkdir -p "dist/${CAPI_PKG}/lib"
+          cp include/rs8-capi.h "dist/${CAPI_PKG}/include/"
+          cp rs8-capi.pc "dist/${CAPI_PKG}/"
+          cp "${BIN_DIR}"/*rs8_capi*.dll "dist/${CAPI_PKG}/lib/" 2>/dev/null || true
+          cp "${BIN_DIR}"/*rs8_capi*.lib "dist/${CAPI_PKG}/lib/" 2>/dev/null || true
+          cd dist
+          7z a "${CAPI_PKG}.zip" "${CAPI_PKG}"
+          cd ..
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: artifacts-${{ matrix.target }}
+          path: dist/*.*
+
+  publish-release:
+    name: publish-release
+    needs: [build-release]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: release-assets/*
+          tag_name: ${{ github.ref_name || inputs.tag }}
+          name: "Release ${{ github.ref_name || inputs.tag }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+
+  benchmark-and-update-docs:
+    name: benchmark-and-update-docs
+    needs: [publish-release]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Install latest stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js (for Native C++ V8 baseline)
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Cache cargo registry & target
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run real JavaScript benchmarks & update documentation
+        run: ./tool/benchRun.js
+
+      - name: Commit and push benchmark regression reports to main
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add readme/ README.md
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(bench): update benchmark regression reports [skip ci]"
+            git push origin main
+          else
+            echo "No benchmark report changes to commit."
+          fi

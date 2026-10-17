@@ -1,0 +1,77 @@
+// 由 tool/src/compiler/js-call-reducer.js 从 v8/src/compiler/js-call-reducer.h + js-call-reducer.cc 生成; 修订就地改, 复跑覆盖
+// JSCall/JSConstruct 强度削减: 内建方法逐个特化
+
+
+/// JSCallReducer — 对 {JSConstruct}/{JSCall} 做强度削减, 为内联等铺路
+/// v8: src/compiler/js-call-reducer.h JSCallReducer
+pub struct JSCallReducer { /* AdvancedReducer + jsgraph/broker/temp_zone/flags/waitlist */ }
+
+bitflags! {
+    /// 操作模式位标志
+    /// v8: src/compiler/js-call-reducer.h JSCallReducer::Flag
+    pub struct Flags: u32 {
+        const NO_FLAGS = 0x0;
+        const BAILOUTONUNINITIALIZED = 1 << 1;
+        const INLINEJSTOWASMCALLS = 1 << 1;
+    }
+}
+
+impl JSCallReducer {
+    /// String.prototype.startsWith 整段匹配序列内联的最大串长
+    /// v8: src/compiler/js-call-reducer.h JSCallReducer::kMaxInlineMatchSequence
+    pub const MAX_INLINE_MATCH_SEQUENCE: i32 = 3;
+
+    /// 图组装器协作面
+    /// v8: src/compiler/js-call-reducer.h JSCallReducer::RevisitForGraphAssembler
+    /// v8: src/compiler/js-call-reducer.h JSCallReducer::ZoneForGraphAssembler
+    /// v8: src/compiler/js-call-reducer.h JSCallReducer::JSGraphForGraphAssembler
+
+    /// waitlist 收尾再试一轮
+    /// v8: src/compiler/js-call-reducer.h JSCallReducer::Finalize
+    fn finalize(&mut self);
+}
+
+// —— 内嵌枚举 (3 个) ——
+/// v8: src/compiler/js-call-reducer.h JSCallReducer::ArrayIteratorKind
+pub enum ArrayIteratorKind { ArrayLike, TypedArray }
+
+/// v8: src/compiler/js-call-reducer.h JSCallReducer::StringIndexOfIncludesVariant
+pub enum StringIndexOfIncludesVariant { Includes, IndexOf }
+
+/// v8: src/compiler/js-call-reducer.h JSCallReducer::DataViewAccess
+pub enum DataViewAccess { Get, Set }
+
+// —— Reduce* 方法面 (私有, 119 个去重) ——
+// .cc 实现核对: 119 声明 / 114 实现
+// 代表签名 (全部为 Reduction fn(Node* node, ...), 参数差异见原版 h):
+// fn ReduceBooleanConstructor(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceBooleanConstructor
+// fn ReduceCallApiFunction(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceCallApiFunction
+// fn ReduceCallWasmFunction(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceCallWasmFunction
+// fn ReduceFunctionPrototypeApply(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceFunctionPrototypeApply
+// fn ReduceFunctionPrototypeBind(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceFunctionPrototypeBind
+// fn ReduceFunctionPrototypeCall(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceFunctionPrototypeCall
+// fn ReduceFunctionPrototypeHasInstance(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceFunctionPrototypeHasInstance
+// fn ReduceObjectConstructor(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceObjectConstructor
+// fn ReduceObjectGetPrototype(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceObjectGetPrototype
+// fn ReduceObjectGetPrototypeOf(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceObjectGetPrototypeOf
+// fn ReduceObjectIs(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceObjectIs
+// fn ReduceObjectPrototypeGetProto(node: &Node, ...) -> Reduction /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReduceObjectPrototypeGetProto
+// ... 其余 107 个同面
+
+// —— 辅助面 (10 个) ——
+// ReplaceWithSubgraph / ReleaseEffectAndControlFromAssembler / DoPromiseChecks /
+// CreateClosureFromBuiltinSharedFunctionInfo / CheckIfElementsKind /
+// LoadReceiverElementsKind / IsBuiltinOrApiFunction / CheckArrayLength /
+// CheckIfConstructor / ConvertHoleToUndefined
+// TryReduceJSCallMathMinMaxWithArrayLike /// v8: src/compiler/js-call-reducer.h JSCallReducer::TryReduceJSCallMathMinMaxWithArrayLike
+// ReleaseEffectAndControlFromAssembler /// v8: src/compiler/js-call-reducer.h JSCallReducer::ReleaseEffectAndControlFromAssembler
+// DoPromiseChecks /// v8: src/compiler/js-call-reducer.h JSCallReducer::DoPromiseChecks
+// CreateClosureFromBuiltinSharedFunctionInfo /// v8: src/compiler/js-call-reducer.h JSCallReducer::CreateClosureFromBuiltinSharedFunctionInfo
+
+// —— .cc Builtin 分派面: 168 个 case Builtin::k* ——
+// (Math/Array/String/Promise/TypedArray/Collection/Reflect/Object 全家)
+// 例: kArrayConstructor / kBooleanConstructor / kFunctionPrototypeApply / kFastFunctionPrototypeBind / kFunctionPrototypeCall ...
+
+// —— 对数基准 ——
+// Flag 3 / 内嵌枚举 3 (ArrayIteratorKind,StringIndexOfIncludesVariant,DataViewAccess)
+// Reduce 声明 119 vs 实现 114 / Builtin case 168

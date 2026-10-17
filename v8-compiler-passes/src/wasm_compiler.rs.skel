@@ -1,0 +1,91 @@
+// 由 tool/src/compiler/wasm-compiler.js 从 v8/src/compiler/wasm-compiler.h + wasm-compiler.cc 生成; 修订就地改, 复跑覆盖
+// wasm→TF 图编译入口与共享数据
+
+//! wasm-compiler — wrapper/入口编译 + (cc 内) BuildWasmNode 主编译器
+//!
+//! CWasmEntry 签名: 1 返回 + 4 参数 (Pointer/Uint32/AnyTagged/Pointer/Pointer);
+//! 入口 6 个; WasmCompilationData 字段 8;
+//! cc Build* 工厂 0 个, 继承类 0。
+
+/// 原版 kCWasmEntrySigTypes — CWasmEntry 桩签名表
+/// (return, target, object_ref, argv, c_entry_fp)
+pub const K_C_WASM_ENTRY_SIG_TYPES: [MachineType; 5] = [
+  MachineType::Pointer,
+  MachineType::Uint32,
+  MachineType::AnyTagged,
+  MachineType::Pointer,
+  MachineType::Pointer,
+];
+
+/// 原版 WasmLoopInfo — 循环信息 (嵌套深度 + 无内环估计)
+pub struct WasmLoopInfo {
+  /// header
+  pub header: *mut Node,
+  /// nesting_depth
+  pub nesting_depth: u32,
+  /// can_be_innermost — 无内环 (内联后可能失效)
+  pub can_be_innermost: bool,
+}
+
+/// 原版 WasmCompilationData — 编译共享数据
+pub struct WasmCompilationData<'z> {
+  /// func_body
+  pub func_body: Placeholder,
+  /// wire_bytes_storage
+  pub wire_bytes_storage: Placeholder,
+  /// node_origins
+  pub node_origins: Placeholder,
+  /// loop_infos
+  pub loop_infos: Placeholder,
+  /// assumptions
+  pub assumptions: Placeholder,
+  /// source_positions
+  pub source_positions: Placeholder,
+  /// func_index
+  pub func_index: Placeholder,
+  /// validate_callees
+  pub validate_callees: Placeholder,
+  /// 其余字段见 v8: src/compiler/wasm-compiler.h WasmCompilationData
+}
+
+/// 原版 CompileWasmImportCallWrapper
+/// v8: src/compiler/wasm-compiler.cc CompileWasmImportCallWrapper
+pub fn compile_wasm_import_call_wrapper(/* 按签名 */) -> WasmCompilationResult {
+  todo!("v8: src/compiler/wasm-compiler.cc CompileWasmImportCallWrapper")
+}
+
+/// 原版 CompileWasmStackEntryWrapper
+/// v8: src/compiler/wasm-compiler.cc CompileWasmStackEntryWrapper
+pub fn compile_wasm_stack_entry_wrapper(/* 按签名 */) -> WasmCompilationResult {
+  todo!("v8: src/compiler/wasm-compiler.cc CompileWasmStackEntryWrapper")
+}
+
+/// 原版 CompileWasmCapiCallWrapper
+/// v8: src/compiler/wasm-compiler.cc CompileWasmCapiCallWrapper
+pub fn compile_wasm_capi_call_wrapper(/* 按签名 */) -> WasmCompilationResult {
+  todo!("v8: src/compiler/wasm-compiler.cc CompileWasmCapiCallWrapper")
+}
+
+/// 原版 CompileWasmJSFastCallWrapper
+/// v8: src/compiler/wasm-compiler.cc CompileWasmJSFastCallWrapper
+pub fn compile_wasm_jsfast_call_wrapper(/* 按签名 */) -> WasmCompilationResult {
+  todo!("v8: src/compiler/wasm-compiler.cc CompileWasmJSFastCallWrapper")
+}
+
+/// 原版 NewJSToWasmCompilationJob
+/// v8: src/compiler/wasm-compiler.cc NewJSToWasmCompilationJob
+pub fn new_jsto_wasm_compilation_job(/* 按签名 */) -> WasmCompilationResult {
+  todo!("v8: src/compiler/wasm-compiler.cc NewJSToWasmCompilationJob")
+}
+
+/// 原版 CompileCWasmEntry
+/// v8: src/compiler/wasm-compiler.cc CompileCWasmEntry
+pub fn compile_cwasm_entry(/* 按签名 */) -> WasmCompilationResult {
+  todo!("v8: src/compiler/wasm-compiler.cc CompileCWasmEntry")
+}
+
+/// 原版 CWasmEntrySignature — CWasmEntry 桩签名单例
+/// v8: src/compiler/wasm-compiler.h CWasmEntrySignature
+pub fn c_wasm_entry_signature() -> &'static MachineSignature {
+  todo!("v8: src/compiler/wasm-compiler.h CWasmEntrySignature (kCWasmEntrySig: 1 返回 + 4 参数)")
+}

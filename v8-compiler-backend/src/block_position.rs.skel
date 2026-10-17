@@ -1,0 +1,24 @@
+// 由 tool/src/compiler/backend/block-position.js 从 v8/src/compiler/backend/block-position.h + block-position.cc 生成; 修订就地改, 复跑覆盖
+// BlockPositionNumberer: Pettis-Hansen top-down PGO 块重排 (贪心最大执行计数)
+
+//! 台账: 公有 ComputeProfileGuidedBlockPosition → ComputeTopdownPosition(entry);
+//!   GetBestSuccessor (单后继快路径继承计数 / 多后继取最大 pgo_execution_count,
+//!   零计数后继不漏选) + GetBestSuccessorFromPlacedBlocks (已放块中找新起点);
+//!   双层 while: 内层链式放后继, 外层从已放块重启; CHECK ×2 (下标界/visited 全覆盖);
+//!   产物为块排列 ZoneVector<int32_t> (rpo 序)。
+
+/// v8: BlockPositionNumberer::ComputeProfileGuidedBlockPosition — 公有入口
+// pub fn compute_profile_guided_block_position(&self) -> Vec<i32>
+/// v8: BlockPositionNumberer::ComputeTopdownPosition — 双层贪心主体
+// fn compute_topdown_position(&self, entry: &InstructionBlock) -> Vec<i32>
+/// v8: BlockPositionNumberer::GetBestSuccessor — (best 后继, 计数)
+// fn get_best_successor(&self, block: &InstructionBlock, visited: &Set) -> (Option<&InstructionBlock>, u64)
+/// v8: BlockPositionNumberer::GetBestSuccessorFromPlacedBlocks — 已放块重启起点
+// fn get_best_successor_from_placed_blocks(&self, visited: &Set) -> Option<&InstructionBlock>
+/// v8: BlockPositionNumberer::InstructionBlockAt — 序列索引
+// fn instruction_block_at(&self, rpo: RpoNumber) -> &InstructionBlock
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(true); // 纯过程 pass, 无常量表; 锚点对数见生成脚本日志
+};

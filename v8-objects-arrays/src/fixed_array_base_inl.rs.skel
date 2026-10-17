@@ -1,0 +1,30 @@
+// 由 tool/src/objects/fixed-array-base-inl.h.js 从 v8/src/objects/fixed-array-base-inl.h 生成; 修订就地改, 复跑覆盖
+// 对数骨架 (审计专用): 14 inline def 全集处置表; 落地以 fixed_array_base.rs 就地修订为准
+
+//! fixed-array-base-inl.h → fixed_array_base.rs 合并指引
+//!
+//! 对数处置 (14 def 全覆盖, 0 缺项):
+//! - FixedArrayBase::length → base.rs 双 trait ×2
+//! - (T)FixedArrayBase::ulength → base.rs 双 trait ×2
+//! - (T)FixedArrayBase::length(Acquire) → base.rs 双 trait ×2
+//! - (T)FixedArrayBase::length(Relaxed) → base.rs 双 trait ×2
+//! - (T)FixedArrayBase::set_length → base.rs 双 trait ×2
+//! - (T)FixedArrayBase::set_length(Release) → base.rs 双 trait ×2
+//! - FixedArrayBase::GetMaxLengthForNewSpaceAllocation → shift 参数注入版 ×1
+//! - FixedArrayBase::IsCowArray → cow map 参数注入版 (fixed_array.rs) ×1
+
+pub trait FixedArrayBaseExt: Copy {
+  pub unsafe fn length(&self) -> u32;          // FixedArrayBase::length (plain→Relaxed)
+  pub unsafe fn ulength(&self) -> u32;         // FixedArrayBase::ulength
+  pub unsafe fn length_acquire(&self) -> u32;  // length(AcquireLoadTag)
+  pub unsafe fn length_relaxed(&self) -> u32;  // length(RelaxedLoadTag)
+  pub unsafe fn set_length(&self, value: u32); // set_length (plain→Relaxed)
+  pub unsafe fn set_length_release(&self, value: u32); // set_length(ReleaseStoreTag)
+}
+pub trait TrustedFixedArrayBaseExt: Copy { /* 同上 6 方法, 镜像落地 */ }
+impl FixedArrayBase {
+  pub const fn max_length_for_new_space_allocation(shift_size: u32) -> usize;
+  // GetMaxLengthForNewSpaceAllocation — ElementsKindToShiftSize 参数注入 (h 脚本头登记)
+}
+// FixedArrayBase::IsCowArray → fixed_array.rs TaggedArrayExt::is_cow_array
+//   — ReadOnlyRoots::unchecked_fixed_cow_array_map 参数注入 (h 脚本头登记)

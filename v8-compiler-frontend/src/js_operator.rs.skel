@@ -1,0 +1,31 @@
+// 由 tool/src/compiler/js-operator.cc.js 从 v8/src/compiler/js-operator.h + js-operator.cc 生成; 修订就地改, 复跑覆盖
+// JS 算子前端差集: ForInMode / JSWasmCallParameters (主面在 v8-compiler-ops)
+
+
+/// for-in 遍历模式
+/// v8: src/compiler/js-operator.h ForInMode
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum ForInMode {
+  /// 枚举缓存 keys+indices
+  /// v8: src/compiler/js-operator.h ForInMode::kUseEnumCacheKeysAndIndices
+  UseEnumCacheKeysAndIndices = 0,
+  /// 枚举缓存 keys
+  /// v8: src/compiler/js-operator.h ForInMode::kUseEnumCacheKeys
+  UseEnumCacheKeys = 1,
+  /// 通用
+  /// v8: src/compiler/js-operator.h ForInMode::kGeneric
+  Generic = 2,
+}
+
+/// wasm 调用算子参数 — native module 指针 + slot
+/// v8: src/compiler/js-operator.h JSWasmCallParameters
+pub struct JSWasmCallParameters {
+  /// 原版 wasm::NativeModule* (执行面, 推迟)
+  pub native_module: *const (),
+  pub slot: u64,
+  pub signature: i32,
+}
+
+// —— 对数基准 ——
+// ForInMode 3 项 / cc 工厂定义面 62 项 (归 v8-compiler-ops JSOperatorBuilder)

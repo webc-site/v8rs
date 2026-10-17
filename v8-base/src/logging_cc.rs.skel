@@ -1,0 +1,50 @@
+// 由 tool/src/base/logging.cc.js 从 v8/src/base/logging.cc 生成; 修订就地改, 复跑覆盖
+// 日志后端 (回调注入 + 栈上 FailureMessage + OOM/Fatal 处理)
+
+//! v8: src/base/logging.cc — 对应 logging.h 声明 (归 base-core 顶层)
+
+// v8: 匿名命名空间回调全局 (Rust: static mut / OnceLock<fn>)
+// g_print_stack_trace = null; g_dcheck_function = DefaultDcheckHandler; g_fatal_function = null
+
+/// v8: logging.cc SetPrintStackTrace / SetDcheckFunction (null 回落默认) / SetFatalFunction
+pub fn set_print_stack_trace(f: Option<fn()>);
+pub fn set_dcheck_function(f: Option<fn(&'static str, i32, &'static str)>);
+pub fn set_fatal_function(f: Option<fn(&'static str, i32, &'static str)>);
+
+/// v8: logging.cc PrettyPrintChar — 10 个转义字符 X-macro 案 ('\0' '\'' '\\' '\a' '\b' '\f' '\n' '\r' '\t' '\v');
+/// 其余 isprint 则 'c', 否则 \xNN
+pub fn pretty_print_char(ch: u8) -> String;
+
+/// v8: logging.cc FatalOOM(type, msg)
+/// kProcess → "process", 否则 "JavaScript"; 打印后按 abort-mode 选 ExitProcess(-1) 或 Abort()
+pub fn fatal_oom(type_: OomType, msg: &str) -> !;
+
+/// v8: logging.cc FatalNoSecurityImpact(format, ...)
+/// 同 FatalOOM 的 abort-mode 分叉, 面向无安全影响的致命错
+pub fn fatal_no_security_impact(args: std::fmt::Arguments) -> !;
+
+/// v8: logging.cc V8_Fatal (V8_LOGGING_LEVEL==2 双签名: 带/不带 file,line)
+/// 流程: FailureMessage 入栈 → g_fatal_function 可选接管 → ControlledCrashesAreHarmless
+///       分支打 "Safely terminating" 前缀 → 打消息与对象地址 → 栈回溯 → Abort
+pub fn v8_fatal(file: &str, line: i32, args: std::fmt::Arguments) -> !;
+
+/// v8: logging.cc V8_Dcheck — DcheckFailuresAreIgnored 则仅打印并返回, 否则走 g_dcheck_function
+pub fn v8_dcheck(file: &str, line: i32, message: &str);
+
+/// v8: logging.cc FailureMessage — 栈上定长消息, 首尾哨兵供崩溃处理器从栈中取回
+pub struct FailureMessage {
+    /// v8: kStartMarker = 0xdecade10
+    pub start_marker: usize,
+    /// v8: kMessageBufferSize = 512
+    pub message: [u8; 512],
+    /// v8: kEndMarker = 0xdecade11
+    pub end_marker: usize,
+}
+
+pub const START_MARKER: usize = 0xdecade10; // v8: FailureMessage::kStartMarker
+pub const END_MARKER: usize = 0xdecade11;   // v8: FailureMessage::kEndMarker
+pub const MESSAGE_BUFFER_SIZE: usize = 512; // v8: FailureMessage::kMessageBufferSize
+
+// v8: PrintCheckOperand 特化 (char/signed char/unsigned char → PrettyPrintChar;
+//     char*/const char* → 按 void* 指针打印而非字符串)
+// v8: MakeCheckOpString 显式实例化 7 类型: int, long, long long, unsigned int, unsigned long, unsigned long long, void const*

@@ -1,0 +1,23 @@
+// 由 tool/src/objects/js-segmenter.h.js 从 v8/src/objects/js-segmenter.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSSegmenter 槽位/Granularity 位域差集骨架
+
+//! JSSegmenter: Intl.Segmenter; icu_break_iterator_ 为 Foreign 槽承载
+//! Managed<icu::BreakIterator>。Granularity 三值共享给 JSSegments/JSSegmentIterator。
+
+/// v8: src/objects/js-segmenter.h JSSegmenter::locale_
+pub const K_LOCALE_OFFSET: usize = 24;
+/// v8: src/objects/js-segmenter.h JSSegmenter::icu_break_iterator_
+pub const K_ICU_BREAK_ITERATOR_OFFSET: usize = 32;
+/// v8: src/objects/js-segmenter.h JSSegmenter::flags_
+pub const K_FLAGS_OFFSET: usize = 40;
+/// v8: src/objects/js-segmenter.h JSSegmenter::kHeaderSize
+pub const K_HEADER_SIZE: usize = 48;
+
+/// v8: src/objects/js-segmenter.h JSSegmenter::Granularity
+#[derive(Clone, Copy, PartialEq)]
+pub enum Granularity { Grapheme = 0, Word = 1, Sentence = 2 } // GranularityBits: bit 0, 宽 2
+pub const K_GRANULARITY_SHIFT: u32 = 0;
+pub const K_GRANULARITY_BITS: u32 = 2;
+
+// 方法映射 (语义推迟, 依赖 ICU/Isolate): New / ResolvedOptions / GetAvailableLocales /
+//   GranularityAsString / GetGranularityString ("grapheme"|"word"|"sentence")

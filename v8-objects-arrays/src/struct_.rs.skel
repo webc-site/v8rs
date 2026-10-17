@@ -1,0 +1,49 @@
+// 由 tool/src/objects/struct.h.js 从 v8/src/objects/struct.h + struct.tq 生成; 修订就地改, 复跑覆盖
+// Struct 族骨架; 语义以 Developer 修订后的 struct_.rs 为准
+
+//! 差集骨架: Struct 标记类 + Tuple2/AccessorPair/ClassPositions/ForInEnumeratorHolder
+//!
+//! 继承建模: Struct repr(transparent) 包 HeapObject (无新增字段, 尺寸编译期对数);
+//! 子类 repr(C) 包 Struct, 字段自偏移 8 起按 Tagged 槽 (8 字节) 顺序排布;
+//! 堆语义经 Tagged<X> 裸槽原子访问 (Relaxed/Acquire/Release 序 + 写屏障桩)。
+
+/// Struct: 简单结构类的抽象标记基类 (struct.h:22-31)
+#[repr(transparent)]
+pub struct Struct { pub header: HeapObject }
+const _: () = assert!(size_of::<Struct>() == size_of::<HeapObject>());
+
+/// Tuple2 (struct.h:34-70): 2 Object 槽, 偏移 8/16
+#[repr(C)]
+pub struct Tuple2 { pub struct_: Struct, pub value1: Tagged<Object>, // 偏移 8
+    pub value2: Tagged<Object>, // 偏移 16 }
+
+/// AccessorPair (struct.h:78-127): getter_/setter_ 偏移 8/16;
+/// Copy/GetComponent 依赖 Isolate/NativeContext → 推迟 (票单); AccessorComponent 复用 core
+#[repr(C)]
+pub struct AccessorPair { pub struct_: Struct, pub getter: Tagged<Object>, // 偏移 8
+    pub setter: Tagged<Object>, // 偏移 16 }
+
+/// ClassPositions (struct.h:129-149): const Smi 槽, 偏移 8/16
+#[repr(C)]
+pub struct ClassPositions { pub struct_: Struct, pub start: Tagged<Smi>, // 偏移 8
+    pub end: Tagged<Smi>, // 偏移 16 }
+
+/// ForInEnumeratorHolder (struct.h:151-177): 4 槽, 偏移 8/16/24/32
+#[repr(C)]
+pub struct ForInEnumeratorHolder { pub struct_: Struct, pub enum_cache_map: Tagged<Map>, // 偏移 8
+    pub named_keys: Tagged<FixedArray>, // 偏移 16
+    pub elements_length: Tagged<Smi>, // 偏移 24
+    pub cache_length: Tagged<Smi>, // 偏移 32 }
+
+// ObjectTraits<ForInEnumeratorHolder> offsetof 常量 (struct.h:179-189)
+pub const K_ENUM_CACHE_MAP_OFFSET: usize = 8;
+pub const K_NAMED_KEYS_OFFSET: usize = 16;
+pub const K_ELEMENTS_LENGTH_OFFSET: usize = 24;
+pub const K_CACHE_LENGTH_OFFSET: usize = 32;
+
+// 方法映射 (struct.h 声明 → Tagged<X> inherent impl, 语义细节见 struct-inl.h.js 指引):
+//   Tuple2: value1/value2 + set 族 (load/store/relaxed/acquire/release)
+//   AccessorPair: get/set(component)/getter/setter(+acquire/release)/set_components/equals
+//   ClassPositions: start()/end() (Smi 解包)
+//   ForInEnumeratorHolder: 4 只读访问器
+//   推迟: BriefPrintDetails/DECL_VERIFIER/DECL_PRINTER (L4 诊断), StructBodyDescriptor (heap 层)

@@ -1,0 +1,64 @@
+// 由 tool/src/compiler/turboshaft/decompression-optimization.h.js 从 v8/src/compiler/turboshaft/decompression-optimization.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 指针解压优化: 逆向使用分析 + 就地压缩改写骨架
+
+/// v8: src/compiler/turboshaft/decompression-optimization.cc DecompressionAnalyzer
+///
+/// 逆向使用分析: 自后向前遍历, 标记需要解压的值; 环 phi 需定点
+/// (重访环回块), candidates 记录可能变化的操作避免全图重扫。
+/// 字段面: graph / phase_zone / needs_decompression: u8 侧表 / candidates: Vec<OpIndex>
+pub struct DecompressionAnalyzer {
+  pub needs_decompression: Vec<u8>,
+  pub candidates: Vec<crate::index::OpIndex>,
+}
+
+impl DecompressionAnalyzer {
+  /// 原版 Run(): 逆块序; Loop 块走 ProcessBlock<true>(phi 定点), 其余 <false>
+  pub fn run(&mut self) {
+    unimplemented!("Developer 修订: 逆块序 ProcessBlock + ProcessOperation")
+  }
+
+  /// ProcessOperation 一级分派表 (保序, 原版 10 case):
+  ///   kStore
+  ///   kFrameState
+  ///   kPhi
+  ///   kComparison
+  ///   kWordBinop
+  ///   kShift
+  ///   kChange
+  ///   kTaggedBitcast
+  ///   kConstant
+  ///   kLoad
+  /// default: 全部 inputs 标记 NeedsDecompression
+  pub fn process_operation(&mut self, op: &crate::operations::Operation) {
+    unimplemented!("Developer 修订: 按分派表处理")
+  }
+
+  /// MarkAddressingBase: Load 基址若可走复杂寻址模式保持压缩
+  /// (DECOMPRESS_POINTER_BY_ADDRESSING_MODE 下, phi 输入全为可压缩 Load 且唯一使用者)
+  pub fn mark_addressing_base(&mut self, base_idx: crate::index::OpIndex) {
+    unimplemented!("签名骨架, Developer 修订")
+  }
+}
+
+/// v8: src/compiler/turboshaft/decompression-optimization.h RunDecompressionOptimization
+///
+/// 非 CopyingPhase: 分析后对 candidates 就地改写操作选项。改写表 (4 case):
+/// - kConstant
+/// - kPhi
+/// - kLoad
+/// - kTaggedBitcast
+/// - kConstant: kHeapObject → kCompressedHeapObject
+/// - kPhi: rep Tagged → Compressed
+/// - kLoad: loaded_rep 可压缩时 result_rep → Compressed
+/// - kTaggedBitcast: from Tagged → Compressed / to WordPtr|kSmi → Word32
+pub fn run_decompression_optimization(graph: &mut crate::graph::Graph, phase_zone: *mut crate::phase::Zone) {
+  unimplemented!("Developer 修订: analyzer.run() + candidates 就地改写")
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert!(ANALYSIS_CASES.len() == 10);
+  assert!(REWRITE_CASES.len() == 4);
+};
+const ANALYSIS_CASES: &[&str] = &["Store", "FrameState", "Phi", "Comparison", "WordBinop", "Shift", "Change", "TaggedBitcast", "Constant", "Load"];
+const REWRITE_CASES: &[&str] = &["Constant", "Phi", "Load", "TaggedBitcast"];

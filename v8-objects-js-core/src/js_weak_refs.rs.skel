@@ -1,0 +1,55 @@
+// 由 tool/src/objects/js-weak-refs.h.js 从 v8/src/objects/js-weak-refs.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// Weak Refs 三类槽位与 GC 链表差集骨架
+
+//! JSFinalizationRegistry: active/cleared 双链 + key_map; WeakCell 同时挂
+//! registry 链与 key 链 (key_list_prev/next); target/unregister_token 为弱引用。
+
+// JSFinalizationRegistry (7 槽 @24..72):
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::native_context_
+pub const K_NATIVE_CONTEXT_OFFSET: usize = 24;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::cleanup_
+pub const K_CLEANUP_OFFSET: usize = 32;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::active_cells_
+pub const K_ACTIVE_CELLS_OFFSET: usize = 40;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::cleared_cells_
+pub const K_CLEARED_CELLS_OFFSET: usize = 48;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::key_map_
+pub const K_KEY_MAP_OFFSET: usize = 56;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::next_dirty_
+pub const K_NEXT_DIRTY_OFFSET: usize = 64;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::flags_
+pub const K_FLAGS_OFFSET: usize = 72;
+pub const K_FR_HEADER_SIZE: usize = 80;
+/// v8: src/objects/js-weak-refs.h JSFinalizationRegistry::ScheduledForCleanupBit
+pub const K_SCHEDULED_FOR_CLEANUP_SHIFT: u32 = 0;
+pub const K_SCHEDULED_FOR_CLEANUP_MASK: u32 = 1;
+pub const K_FLAG_COUNT: usize = 1;
+
+// WeakCell (8 槽 @8..64, HeapObject 直继):
+/// v8: src/objects/js-weak-refs.h WeakCell::finalization_registry_
+pub const K_WC_FINALIZATION_REGISTRY_OFFSET: usize = 8;
+/// v8: src/objects/js-weak-refs.h WeakCell::holdings_
+pub const K_WC_HOLDINGS_OFFSET: usize = 16;
+/// v8: src/objects/js-weak-refs.h WeakCell::target_
+pub const K_WC_TARGET_OFFSET: usize = 24;
+/// v8: src/objects/js-weak-refs.h WeakCell::unregister_token_
+pub const K_WC_UNREGISTER_TOKEN_OFFSET: usize = 32;
+/// v8: src/objects/js-weak-refs.h WeakCell::prev_
+pub const K_WC_PREV_OFFSET: usize = 40;
+/// v8: src/objects/js-weak-refs.h WeakCell::next_
+pub const K_WC_NEXT_OFFSET: usize = 48;
+/// v8: src/objects/js-weak-refs.h WeakCell::key_list_prev_
+pub const K_WC_KEY_LIST_PREV_OFFSET: usize = 56;
+/// v8: src/objects/js-weak-refs.h WeakCell::key_list_next_
+pub const K_WC_KEY_LIST_NEXT_OFFSET: usize = 64;
+pub const K_WC_HEADER_SIZE: usize = 72;
+
+// JSWeakRef (1 槽):
+/// v8: src/objects/js-weak-refs.h JSWeakRef::target_
+pub const K_WR_TARGET_OFFSET: usize = 24;
+pub const K_WR_HEADER_SIZE: usize = 32;
+
+// 方法映射 (GC 协作, 语义推迟): RegisterWeakCellWithUnregisterToken / Unregister /
+//   RemoveUnregisterToken (kRemoveMatchedCellsFromRegistry|kKeepMatchedCellsInRegistry) /
+//   NeedsCleanup / PopClearedCell / ShrinkKeyMap / Cleanup / RemoveCellFromUnregisterTokenMap;
+//   WeakCell::Nullify (GC 期改槽, gc_notify_updated_slot 回调) / relaxed_target / relaxed_unregister_token

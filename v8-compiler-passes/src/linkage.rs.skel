@@ -1,0 +1,116 @@
+// 由 tool/src/compiler/linkage.js 从 v8/src/compiler/linkage.h + src/compiler/linkage.cc 生成; 修订就地改, 复跑覆盖
+// CallDescriptor + Linkage — 调用约定描述 (Kind ${kinds.length}/Flag ${flags.length} 位)
+
+//! 调用描述符: 目标类别 + 位置签名 + callee-save 集 + 标志位。
+//! 低 9 位 Flag 编码进 InstructionCode (kFlagsBitsEncodedInInstructionCode)。
+
+#![allow(dead_code, non_camel_case_types)]
+
+/// v8: src/compiler/linkage.h CallDescriptor::Kind
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Kind {
+  /// kCallCodeObject
+  CallCodeObject,
+  /// kCallJSFunction
+  CallJSFunction,
+  /// kCallAddress
+  CallAddress,
+  /// kCallWasmCapiFunction (V8_ENABLE_WEBASSEMBLY)
+  CallWasmCapiFunction,
+  /// kCallWasmFunction (V8_ENABLE_WEBASSEMBLY)
+  CallWasmFunction,
+  /// kCallWasmFunctionIndirect (V8_ENABLE_WEBASSEMBLY)
+  CallWasmFunctionIndirect,
+  /// kCallWasmImportWrapper (V8_ENABLE_WEBASSEMBLY)
+  CallWasmImportWrapper,
+  /// kResumeWasmContinuation (V8_ENABLE_WEBASSEMBLY)
+  ResumeWasmContinuation,
+  /// kCallBuiltinPointer
+  CallBuiltinPointer,
+}
+
+/// v8: src/compiler/linkage.h kFlagsBitsEncodedInInstructionCode
+pub const K_FLAGS_BITS_ENCODED_IN_INSTRUCTION_CODE: i32 = 9;
+
+// v8: src/compiler/linkage.h CallDescriptor::Flag (位标志)
+pub const K_NO_FLAGS: u32 = 0;
+pub const K_NEEDS_FRAME_STATE: u32 = 1;
+pub const K_HAS_EXCEPTION_HANDLER: u32 = 2;
+pub const K_CAN_USE_ROOTS: u32 = 4;
+pub const K_INITIALIZE_ROOT_REGISTER: u32 = 8;
+pub const K_NO_ALLOCATE: u32 = 16;
+pub const K_FIXED_TARGET_REGISTER: u32 = 32;
+pub const K_CALLER_SAVED_REGISTERS: u32 = 64;
+pub const K_CALLER_SAVED_FPREGISTERS: u32 = 128;
+pub const K_IS_TAIL_CALL_FOR_TIER_UP: u32 = 256;
+pub const K_NO_FUNCTION_DESCRIPTOR: u32 = 512;
+/// v8: src/compiler/linkage.h kHasEffectHandler — 与 kNoAllocate (=16) 复用同位, 指令选择期语义不同
+pub const K_HAS_EFFECT_HANDLER: u32 = K_NO_ALLOCATE;
+
+/// v8: src/compiler/linkage.h CallDescriptor
+pub struct CallDescriptor {
+  /// 原 kind_
+  pub kind: Kind,
+  /// 原 tag_ (CodeEntrypointTag)
+  pub tag: u64,
+  /// 原 target_type_ / target_loc_
+  pub target_type: crate::machine_type::MachineType,
+  pub target_loc: crate::linkage_location::LinkageLocation,
+  /// 原 location_sig_
+  pub location_sig: *mut crate::linkage_location::LocationSignature,
+  /// 原 stack_param_count (param_slot_count_)
+  pub param_slot_count: usize,
+  /// 原 properties_
+  pub properties: crate::operator::Properties,
+  /// 原 callee_saved_registers_ / callee_saved_fp_registers_
+  pub callee_saved_registers: crate::reg_list::RegList,
+  pub callee_saved_fp_registers: crate::reg_list::DoubleRegList,
+  /// 原 flags_
+  pub flags: u32,
+  /// 原 debug_name_
+  pub debug_name: &'static str,
+  /// 原 allocatable_registers_
+  pub allocatable_registers: crate::reg_list::RegList,
+  /// 原 return_slot_count_
+  pub return_slot_count: usize,
+  /// 原 signature_hash_
+  pub signature_hash: u64,
+  /// 原 expected_parameter_count_ (kDontAdaptArgumentsSentinel)
+  pub expected_parameter_count: u16,
+}
+
+/// v8: src/compiler/linkage.h Linkage — 常量与 JS 参数下标公式
+pub mod linkage {
+  /// v8: src/compiler/linkage.h Linkage::kOsrContextSpillSlotIndex
+  pub const K_OSR_CONTEXT_SPILL_SLOT_INDEX: i32 = -1;
+  /// v8: src/compiler/linkage.h Linkage::kOsrAccumulatorRegisterIndex
+  pub const K_OSR_ACCUMULATOR_REGISTER_INDEX: i32 = -1;
+  /// v8: src/compiler/linkage.h Linkage::kJSCallClosureParamIndex
+  pub const K_JS_CALL_CLOSURE_PARAM_INDEX: i32 = 0;
+
+  /// v8: src/compiler/linkage.h Linkage::GetJSCallNewTargetParamIndex
+  /// 原文: return parameter_count + 0;
+  pub const fn get_js_call_new_target_param_index(parameter_count: i32) -> i32 {
+    parameter_count + 0
+  }
+  /// v8: src/compiler/linkage.h Linkage::GetJSCallArgCountParamIndex
+  /// 原文: GetJSCallNewTargetParamIndex(pc) + 1
+  pub const fn get_js_call_arg_count_param_index(parameter_count: i32) -> i32 {
+    get_js_call_new_target_param_index(parameter_count) + 1
+  }
+  /// v8: src/compiler/linkage.h Linkage::GetJSCallDispatchHandleParamIndex
+  /// 原文: GetJSCallArgCountParamIndex(pc) + 1 (仅 V8_JS_LINKAGE_INCLUDES_DISPATCH_HANDLE)
+  pub const fn get_js_call_dispatch_handle_param_index(parameter_count: i32) -> i32 {
+    get_js_call_arg_count_param_index(parameter_count) + 1
+  }
+  /// v8: src/compiler/linkage.h Linkage::GetJSCallContextParamIndex
+  /// 原文: 开 dispatch handle 时 = GetJSCallDispatchHandleParamIndex(pc)+1 (pc+3);
+  /// 关时 = GetJSCallArgCountParamIndex(pc)+1 (pc+2)
+  pub const fn get_js_call_context_param_index(parameter_count: i32) -> i32 {
+    if cfg!(feature = "js_linkage_includes_dispatch_handle") {
+      get_js_call_dispatch_handle_param_index(parameter_count) + 1
+    } else {
+      get_js_call_arg_count_param_index(parameter_count) + 1
+    }
+  }
+}

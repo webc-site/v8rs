@@ -1,0 +1,32 @@
+// 由 tool/src/heap/evacuation-verifier.h.js 从 v8/src/heap/evacuation-verifier.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 压空校验 (仅 VERIFY_HEAP): 全部转发地址有效性的访问者
+
+/// 压空校验器骨架 (对应 class EvacuationVerifier final, VERIFY_HEAP 专用)。
+/// Run 驱动序: VerifyRoots → new/old/code (+shared 若有) 逐空间 VerifyEvacuation。
+/// v8: src/heap/evacuation-verifier.cc EvacuationVerifier::Run
+pub struct EvacuationVerifierSkeleton;
+
+impl EvacuationVerifierSkeleton {
+  /// 对应 Run(): 根 + 四空间扫描
+  pub fn run(&mut self) {
+    self.verify_roots();
+    // VerifyEvacuation(heap_->new_space()); old_space(); code_space();
+    // if (heap_->shared_space()) VerifyEvacuation(...)
+    unimplemented!("骨架: 空间迭代待空间族就位");
+  }
+
+  /// 对应 VerifyRoots: 扫全部根
+  pub fn verify_roots(&mut self) {
+    unimplemented!("骨架: isolate 根表待 roots 族就位");
+  }
+
+  /// 对应 VisitMapPointer → VerifyHeapObjectImpl(object->map())
+  pub fn visit_map_pointer(&mut self, _object: u64) {
+    unimplemented!("骨架: map 对象校验待对象族就位");
+  }
+
+  /// 对应 VisitPointers (ObjectSlot/MaybeObjectSlot) → VerifyPointersImpl
+  pub fn visit_pointers(&mut self, _start: u64, _end: u64) {
+    unimplemented!("骨架: 槽迭代待 slot 族就位");
+  }
+}

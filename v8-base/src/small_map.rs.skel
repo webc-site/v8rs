@@ -1,0 +1,39 @@
+// 由 tool/src/base/small-map.h.js 从 v8/src/base/small-map.h 生成; 修订就地改, 复跑覆盖
+// 小 map (数组直查, 超 kArraySize 转 NormalMap)
+
+//! v8 侧: 内部结构 2; 迭代器类 2; map 面方法 13
+//! 哨兵: size_ == usize::MAX (kUsingFullMapSentinel) 表示已切全 map
+//! Rust 策略: enum { Array(Vec<(K, V)>) — 上限 kArraySize, Map(BTreeMap/HashMap) } 状态机
+
+/// v8: src/base/small-map.h internal::has_key_equal — SFINAE 探测 key_equal
+/// v8: internal::select_equal_key — 无 key_equal 时由 key_comp 双比合成等值 (!comp(a,b) && !comp(b,a))
+/// Rust: Eq trait 显式, 无需 SFINAE 探测
+
+/// v8: class SmallMap<NormalMap, kArraySize, EqualKey, MapInit>
+/// v8 布局: size_ + array_[kArraySize] + map_ (union 语义, size_==MAX 时 array_ 未初始化)
+/// 迭代器跨增删失效 (v8 IMPORTANT 注)
+pub enum SmallMap<K, V, const K_ARRAY_SIZE: usize> {
+    /// v8: size_ < kUsingFullMapSentinel — 线性数组暴力查 (双比或 EqualKey)
+    Array { entries: [(K, V); K_ARRAY_SIZE], len: usize },
+    /// v8: size_ == kUsingFullMapSentinel — 超限后 MapInit placement-new 出 NormalMap
+    Map(std::collections::HashMap<K, V>),
+}
+
+impl<K: Eq + std::hash::Hash, V, const N: usize> SmallMap<K, V, N> {
+    /// v8: find(key) — 数组态线性扫 (compare), map 态委托
+    pub fn find(&self, key: &K) -> Option<&V> { todo!() }
+    /// v8: operator[](key) — 不存在则插入 value_type(key, data_type()); 满则 ConvertToMap
+    pub fn get_or_insert(&mut self, key: K) -> &mut V where V: Default { todo!() }
+    /// v8: insert(x) → (iterator, bool); 重复返回 false
+    pub fn insert(&mut self, k: K, v: V) -> bool { todo!() }
+    /// v8: insert(f, l) — 区间插入; emplace(args...)
+    /// v8: erase(key) / erase(it); size() / empty(); begin()/end() 迭代器
+    pub fn erase(&mut self, key: &K) -> usize { todo!() }
+    pub fn size(&self) -> usize { todo!() }
+    pub fn empty(&self) -> bool { todo!() }
+    /// v8: ConvertToMap — 数组搬进 NormalMap 后置哨兵
+    fn convert_to_map(&mut self) { todo!() }
+}
+
+// ---- v8 map 面方法对账 (解析 13 项) ----
+// operator, insert, emplace, try_emplace, clear, erase, count, size, empty, UsingFullMap, ConvertToRealMap, InitFrom, Destroy

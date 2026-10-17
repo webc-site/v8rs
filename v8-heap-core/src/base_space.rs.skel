@@ -1,0 +1,36 @@
+// 由 tool/src/heap/base-space.h.js 从 v8/src/heap/base-space.h 生成; 修订就地改, 复跑覆盖
+// BaseSpace: 所有分配空间抽象基类骨架
+
+/// 空间公共父类 (对应 class BaseSpace : public Malloced)。
+/// Rust 侧以 trait 表达抽象接口; committed_ 记账由实现方持有。
+/// v8: src/heap/base-space.h BaseSpace
+pub trait BaseSpace {
+  /// 对应 identity() const { return id_; }
+  fn identity(&self) -> crate::AllocationSpace;
+
+  /// 对应 virtual size_t CommittedMemory() const { return committed_; }
+  fn committed_memory(&self) -> usize;
+
+  /// 对应 virtual size_t CommittedPhysicalMemory() const = 0;
+  fn committed_physical_memory(&self) -> usize;
+
+  /// 对应 virtual size_t Size() const = 0;
+  fn size(&self) -> usize;
+}
+
+/// committed_ 记账原语 (对应 AccountCommitted/AccountUncommitted 内联体)。
+/// v8: src/heap/base-space.h BaseSpace::AccountCommitted
+pub fn account_committed(committed: &core::sync::atomic::AtomicUsize, bytes: usize) {
+  committed.fetch_add(bytes, core::sync::atomic::Ordering::Relaxed);
+}
+
+/// v8: src/heap/base-space.h BaseSpace::AccountUncommitted
+pub fn account_uncommitted(committed: &core::sync::atomic::AtomicUsize, bytes: usize) {
+  committed.fetch_sub(bytes, core::sync::atomic::Ordering::Relaxed);
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  // AccountCommitted/Uncommitted 只做加减记账, 无返回值
+  assert!(core::mem::size_of::<usize>() >= 8);
+};

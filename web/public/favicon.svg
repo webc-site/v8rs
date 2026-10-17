@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <circle cx="32" cy="32" r="30" fill="#0F172A" stroke="#3B82F6" stroke-width="2"/>
+  <path d="M32 10 L38 24 L52 24 L41 33 L45 47 L32 38 L19 47 L23 33 L12 24 L26 24 Z" fill="#F59E0B"/>
+  <circle cx="32" cy="32" r="8" fill="#1E293B" stroke="#60A5FA" stroke-width="2"/>
+  <text x="32" y="36" font-size="11" font-weight="900" text-anchor="middle" fill="#38BDF8" font-family="monospace">RS8</text>
+</svg>

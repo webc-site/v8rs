@@ -1,0 +1,24 @@
+// 由 tool/src/objects/js-plural-rules.h.js 从 v8/src/objects/js-plural-rules.h + -inl.h + .cc + .tq 生成; 修订就地改, 复跑覆盖
+// JSPluralRules 槽位/Type 位域差集骨架
+
+//! JSPluralRules: Intl.PluralRules; 两个 ICU 句柄均以 Foreign 槽承载 Managed。
+
+/// v8: src/objects/js-plural-rules.h JSPluralRules::locale_
+pub const K_LOCALE_OFFSET: usize = 24;
+/// v8: src/objects/js-plural-rules.h JSPluralRules::flags_ (SmiTagged<JSPluralRulesFlags>)
+pub const K_FLAGS_OFFSET: usize = 32;
+/// v8: src/objects/js-plural-rules.h JSPluralRules::icu_plural_rules_
+pub const K_ICU_PLURAL_RULES_OFFSET: usize = 40;
+/// v8: src/objects/js-plural-rules.h JSPluralRules::icu_number_formatter_
+pub const K_ICU_NUMBER_FORMATTER_OFFSET: usize = 48;
+/// v8: src/objects/js-plural-rules.h JSPluralRules::kHeaderSize
+pub const K_HEADER_SIZE: usize = 56;
+
+/// v8: src/objects/js-plural-rules.h JSPluralRules::Type
+#[derive(Clone, Copy, PartialEq)]
+pub enum Type { Cardinal = 0, Ordinal = 1 } // TypeBit: bit 0, 宽 1
+pub const K_TYPE_SHIFT: u32 = 0;
+pub const K_TYPE_BITS: u32 = 1;
+
+// 方法映射 (语义推迟, 依赖 ICU/Isolate): New / ResolvedOptions / ResolvePlural /
+//   ResolvePluralRange / GetAvailableLocales / TypeAsString ("cardinal"|"ordinal")

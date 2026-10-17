@@ -1,0 +1,259 @@
+// 由 tool/src/compiler/typed-optimization.js 从 v8/src/compiler/typed-optimization.h + typed-optimization.cc 生成; 修订就地改, 复跑覆盖
+// 静态类型驱动的图优化
+
+//! typed-optimization — 类型信息消除检查/折叠计算/化简比较
+//!
+//! 分派面 33 个 Reduce* (cc 定义 1:1 核对通过);
+//! 依赖 CompilationDependencies 登记编译依赖。
+
+/// 原版 TypedOptimization — AdvancedReducer
+pub struct TypedOptimization<'z, 'g> {
+  /// dependencies_
+  pub dependencies: *mut CompilationDependencies,
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// broker_
+  pub broker: *mut JSHeapBroker,
+  /// true_type_
+  pub true_type: Type,
+  /// false_type_
+  pub false_type: Type,
+  /// type_cache_
+  pub type_cache: *const TypeCache,
+}
+
+impl TypedOptimization<'_, '_> {
+  /// 原版 reducer_name
+  pub const REDUCER_NAME: &'static str = "TypedOptimization";
+
+  /// 原版 Reduce — opcode → Reduce* 分派
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::Reduce
+  pub fn reduce(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::Reduce")
+  }
+
+  // 原版声明未独立实现 (由 ReduceSpeculativeNumberBinop 统一处理): ReduceSpeculativeNumberMultiply
+  // 原版声明未独立实现 (由 ReduceSpeculativeNumberBinop 统一处理): ReduceSpeculativeNumberPow
+
+  /// 原版 ReduceConvertReceiver
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceConvertReceiver
+  fn reduce_convertreceiver(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceConvertReceiver")
+  }
+
+  /// 原版 ReduceMaybeGrowFastElements
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceMaybeGrowFastElements
+  fn reduce_maybegrowfastelements(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceMaybeGrowFastElements")
+  }
+
+  /// 原版 ReduceCheckBounds
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckBounds
+  fn reduce_checkbounds(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckBounds")
+  }
+
+  /// 原版 ReduceCheckHeapObject
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckHeapObject
+  fn reduce_checkheapobject(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckHeapObject")
+  }
+
+  /// 原版 ReduceCheckMaps
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckMaps
+  fn reduce_checkmaps(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckMaps")
+  }
+
+  /// 原版 ReduceCheckNumber
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckNumber
+  fn reduce_checknumber(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckNumber")
+  }
+
+  /// 原版 ReduceCheckNumberFitsInt32
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckNumberFitsInt32
+  fn reduce_checknumberfitsint32(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckNumberFitsInt32")
+  }
+
+  /// 原版 ReduceCheckString
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckString
+  fn reduce_checkstring(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckString")
+  }
+
+  /// 原版 ReduceCheckStringOrStringWrapper
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckStringOrStringWrapper
+  fn reduce_checkstringorstringwrapper(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckStringOrStringWrapper")
+  }
+
+  /// 原版 ReduceCheckEqualsInternalizedString
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckEqualsInternalizedString
+  fn reduce_checkequalsinternalizedstring(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckEqualsInternalizedString")
+  }
+
+  /// 原版 ReduceCheckEqualsSymbol
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckEqualsSymbol
+  fn reduce_checkequalssymbol(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckEqualsSymbol")
+  }
+
+  /// 原版 ReduceLoadField
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceLoadField
+  fn reduce_loadfield(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceLoadField")
+  }
+
+  /// 原版 ReduceNumberFloor
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberFloor
+  fn reduce_numberfloor(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberFloor")
+  }
+
+  /// 原版 ReduceNumberRoundop
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberRoundop
+  fn reduce_numberroundop(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberRoundop")
+  }
+
+  /// 原版 ReduceNumberSilenceNaN
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberSilenceNaN
+  fn reduce_numbersilencenan(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberSilenceNaN")
+  }
+
+  /// 原版 ReduceNumberToUint8Clamped
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberToUint8Clamped
+  fn reduce_numbertouint8clamped(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceNumberToUint8Clamped")
+  }
+
+  /// 原版 ReducePhi
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReducePhi
+  fn reduce_phi(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReducePhi")
+  }
+
+  /// 原版 ReduceReferenceEqual
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceReferenceEqual
+  fn reduce_referenceequal(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceReferenceEqual")
+  }
+
+  /// 原版 ReduceStringComparison
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceStringComparison
+  fn reduce_stringcomparison(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceStringComparison")
+  }
+
+  /// 原版 ReduceStringLength
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceStringLength
+  fn reduce_stringlength(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceStringLength")
+  }
+
+  /// 原版 ReduceSameValue
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSameValue
+  fn reduce_samevalue(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSameValue")
+  }
+
+  /// 原版 ReduceSelect
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSelect
+  fn reduce_select(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSelect")
+  }
+
+  /// 原版 ReduceSpeculativeToNumber
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeToNumber
+  fn reduce_speculativetonumber(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeToNumber")
+  }
+
+  /// 原版 ReduceCheckNotTaggedHole
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckNotTaggedHole
+  fn reduce_checknottaggedhole(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceCheckNotTaggedHole")
+  }
+
+  /// 原版 ReduceTypedArrayLength
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceTypedArrayLength
+  fn reduce_typedarraylength(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceTypedArrayLength")
+  }
+
+  /// 原版 ReduceTypeOf
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceTypeOf
+  fn reduce_typeof(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceTypeOf")
+  }
+
+  /// 原版 ReduceToBoolean
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceToBoolean
+  fn reduce_toboolean(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceToBoolean")
+  }
+
+  /// 原版 ReduceSpeculativeNumberAdd
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberAdd
+  fn reduce_speculativenumberadd(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberAdd")
+  }
+
+  /// 原版 ReduceSpeculativeNumberMultiply
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberMultiply
+  fn reduce_speculativenumbermultiply(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberMultiply")
+  }
+
+  /// 原版 ReduceSpeculativeNumberPow
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberPow
+  fn reduce_speculativenumberpow(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberPow")
+  }
+
+  /// 原版 ReduceSpeculativeNumberBinop
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberBinop
+  fn reduce_speculativenumberbinop(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberBinop")
+  }
+
+  /// 原版 ReduceSpeculativeNumberComparison
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberComparison
+  fn reduce_speculativenumbercomparison(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceSpeculativeNumberComparison")
+  }
+
+  /// 原版 ReduceTransitionElementsKindOrCheckMap
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceTransitionElementsKindOrCheckMap
+  fn reduce_transitionelementskindorcheckmap(&mut self, node: &Node) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ReduceTransitionElementsKindOrCheckMap")
+  }
+
+  /// 原版 TryReduceStringComparisonOfStringFromSingleCharCode
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::TryReduceStringComparisonOfStringFromSingleCharCode
+  fn try_reduce_stringcomparisonofstringfromsinglecharcode(&mut self /* ... */) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::TryReduceStringComparisonOfStringFromSingleCharCode")
+  }
+
+  /// 原版 TryReduceStringComparisonOfStringFromSingleCharCodeToConstant
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::TryReduceStringComparisonOfStringFromSingleCharCodeToConstant
+  fn try_reduce_stringcomparisonofstringfromsinglecharcodetoconstant(&mut self /* ... */) -> Reduction {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::TryReduceStringComparisonOfStringFromSingleCharCodeToConstant")
+  }
+
+  /// 原版 NumberComparisonFor — 比较算子的数域变体选择
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::NumberComparisonFor
+  fn number_comparison_for(&mut self, op: &Operator) -> &Operator {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::NumberComparisonFor")
+  }
+
+  /// 原版 ConvertPlainPrimitiveToNumber
+  /// v8: src/compiler/typed-optimization.cc TypedOptimization::ConvertPlainPrimitiveToNumber
+  fn convert_plain_primitive_to_number(&mut self, node: &Node) -> *mut Node {
+    todo!("v8: src/compiler/typed-optimization.cc TypedOptimization::ConvertPlainPrimitiveToNumber")
+  }
+}

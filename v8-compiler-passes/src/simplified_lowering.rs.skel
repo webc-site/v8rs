@@ -1,0 +1,162 @@
+// 由 tool/src/compiler/simplified-lowering.js 从 v8/src/compiler/simplified-lowering.h + simplified-lowering.cc 生成; 修订就地改, 复跑覆盖
+// Simplified→Machine 表示选择与降低
+
+//! simplified-lowering — 两层: SimplifiedLowering 门面 + RepresentationSelector
+//!
+//! 门面 Do* 11 个 (Max/Min/ToBit/Uint8Clamped 族);
+//! 数值辅助: Float64(Float64Round/Float64Sign) Int32(Int32Abs/Int32Div/Int32Mod/Int32Sign) Uint32(Uint32Div/Uint32Mod);
+//! SetOnce 缓存 6 个; Selector: setter 面 2 / visit 面 28。
+/// 原版 SimplifiedLowering — 门面 (jsgraph + 源位置 + origin + 观察)
+pub struct SimplifiedLowering<'z, 'g> {
+  /// jsgraph_
+  pub jsgraph: &'g JSGraph<'z>,
+  /// broker_
+  pub broker: *mut JSHeapBroker,
+  /// zone_
+  pub zone: &'z Zone<'z>,
+  /// type_cache_
+  pub type_cache: *const TypeCache,
+  /// to_number_code_ 等 SetOnce 缓存 (to_number_code_/to_number_convert_big_int_code_/to_numeric_code_/to_number_operator_/to_number_convert_big_int_operator_/to_numeric_operator_)  pub caches: SimplifiedLoweringCaches,
+  /// source_positions_
+  pub source_positions: *mut SourcePositionTable,
+  /// node_origins_
+  pub node_origins: *mut NodeOriginTable,
+  /// tick_counter_
+  pub tick_counter: *mut TickCounter,
+  /// linkage_
+  pub linkage: *mut Linkage,
+  /// info_
+  pub info: *mut OptimizedCompilationInfo,
+  /// observe_node_manager_
+  pub observe_node_manager: *mut ObserveNodeManager,
+}
+
+/// SetOnce 缓存包 (6 字段)
+pub struct SimplifiedLoweringCaches {
+  /// to_number_code_
+  pub to_number_code_: SetOncePtr<()>,
+  /// to_number_convert_big_int_code_
+  pub to_number_convert_big_int_code_: SetOncePtr<()>,
+  /// to_numeric_code_
+  pub to_numeric_code_: SetOncePtr<()>,
+  /// to_number_operator_
+  pub to_number_operator_: SetOncePtr<()>,
+  /// to_number_convert_big_int_operator_
+  pub to_number_convert_big_int_operator_: SetOncePtr<()>,
+  /// to_numeric_operator_
+  pub to_numeric_operator_: SetOncePtr<()>,
+}
+
+impl SimplifiedLowering<'_, '_> {
+  /// 原版 LowerAllNodes — 建 RepresentationSelector 跑图
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::LowerAllNodes
+  pub fn lower_all_nodes(&mut self) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::LowerAllNodes")
+  }
+
+  /// 原版 DoMax
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoMax
+  pub fn do_max(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoMax")
+  }
+
+  /// 原版 DoMin
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoMin
+  pub fn do_min(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoMin")
+  }
+
+  /// 原版 DoJSToNumberOrNumericTruncatesToFloat64
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoJSToNumberOrNumericTruncatesToFloat64
+  pub fn do_jsto_number_or_numeric_truncates_to_float64(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoJSToNumberOrNumericTruncatesToFloat64")
+  }
+
+  /// 原版 DoJSToNumberOrNumericTruncatesToWord32
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoJSToNumberOrNumericTruncatesToWord32
+  pub fn do_jsto_number_or_numeric_truncates_to_word32(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoJSToNumberOrNumericTruncatesToWord32")
+  }
+
+  /// 原版 DoIntegral32ToBit
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoIntegral32ToBit
+  pub fn do_integral32_to_bit(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoIntegral32ToBit")
+  }
+
+  /// 原版 DoOrderedNumberToBit
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoOrderedNumberToBit
+  pub fn do_ordered_number_to_bit(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoOrderedNumberToBit")
+  }
+
+  /// 原版 DoNumberToBit
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoNumberToBit
+  pub fn do_number_to_bit(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoNumberToBit")
+  }
+
+  /// 原版 DoIntegerToUint8Clamped
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoIntegerToUint8Clamped
+  pub fn do_integer_to_uint8_clamped(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoIntegerToUint8Clamped")
+  }
+
+  /// 原版 DoNumberToUint8Clamped
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoNumberToUint8Clamped
+  pub fn do_number_to_uint8_clamped(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoNumberToUint8Clamped")
+  }
+
+  /// 原版 DoSigned32ToUint8Clamped
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoSigned32ToUint8Clamped
+  pub fn do_signed32_to_uint8_clamped(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoSigned32ToUint8Clamped")
+  }
+
+  /// 原版 DoUnsigned32ToUint8Clamped
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoUnsigned32ToUint8Clamped
+  pub fn do_unsigned32_to_uint8_clamped(&mut self, node: &Node /*, op/rep/selector 按签名 */) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::DoUnsigned32ToUint8Clamped")
+  }
+
+  /// 原版 Float64Round/Float64Sign — Float64Round, Float64Sign
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::Float64Round
+  fn float64_round(&mut self, node: &Node) -> *mut Node {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::Float64Round (同族 Float64Round/Float64Sign)")
+  }
+
+  /// 原版 Int32Abs/Int32Div/Int32Mod/Int32Sign — 降低辅助
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::Int32Abs
+  fn int32_abs(&mut self, node: &Node) -> *mut Node {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::Int32Abs (同族 Int32Abs/Int32Div/Int32Mod/Int32Sign)")
+  }
+
+  /// 原版 Uint32Div/Uint32Mod
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::Uint32Div
+  fn uint32_div(&mut self, node: &Node) -> *mut Node {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::Uint32Div (同族 Uint32Div/Uint32Mod)")
+  }
+
+  /// 原版 ChangeOp — NodeProperties::ChangeOp 的观察通知包装
+  /// v8: src/compiler/simplified-lowering.cc SimplifiedLowering::ChangeOp
+  fn change_op(&mut self, node: &Node, new_op: &Operator) {
+    todo!("v8: src/compiler/simplified-lowering.cc SimplifiedLowering::ChangeOp")
+  }
+}
+
+/// 原版 RepresentationSelector — 表示选择器 (simplified-lowering.cc 内部类)
+/// setter 面 (2): SetAndCheckInput, SetOutput
+/// visit 面 (28): VisitInputs, VisitReturn, VisitUnused, VisitNoop, VisitBinop, VisitBinop, VisitSpeculativeInt32Binop, VisitUnop, VisitLeaf, VisitFloat64Binop, VisitInt64Binop, VisitWord32TruncatingBinop, VisitSelect, VisitPhi, VisitObjectIs, VisitCheck, VisitCall, VisitStateValues, VisitFrameState, VisitObjectState...
+pub struct RepresentationSelector<'z, 'g> {
+  /// 关联的 lowering
+  pub lowering: *mut SimplifiedLowering<'z, 'g>,
+}
+
+impl RepresentationSelector<'_, '_> {
+  /// 原版 Run — 两遍: 遍历定表示 → 遍历改节点
+  /// v8: src/compiler/simplified-lowering.cc RepresentationSelector::Run
+  pub fn run(&mut self, phase_name: &str) {
+    todo!("v8: src/compiler/simplified-lowering.cc RepresentationSelector::Run (propagation + retry / lowering)")
+  }
+}

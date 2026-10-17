@@ -1,0 +1,20 @@
+// 由 tool/src/base/debug/stack_trace_fuchsia.cc.js 从 v8/src/base/debug/stack_trace_fuchsia.cc 生成; 修订就地改, 复跑覆盖
+// Fuchsia 后端 (系统 crashlogger 代劳, 进程内不捕获)
+
+//! v8: src/base/debug/stack_trace_fuchsia.cc — 仅 Fuchsia 构建
+
+/// v8: fuchsia EnableInProcessStackDumping — 恒 false: 系统崩溃日志器抓回溯,
+///     host 侧 addr2line 符号化; 设备上无符号, 进程内捕获无意义
+pub fn enable_in_process_stack_dumping() -> bool { false }
+
+/// v8: fuchsia DisableSignalStackDump — 空
+pub fn disable_signal_stack_dump() {}
+
+impl StackTrace {
+    /// v8: fuchsia StackTrace() — 空构造 (trace 全零)
+    #[cfg(target_os = "fuchsia")]
+    pub fn capture() -> Self { Self { trace: [0; MAX_TRACES], count: 0 } }
+    /// v8: fuchsia OutputToStream — "#<setw2 i><ip>" (沿用通用格式)
+    #[cfg(target_os = "fuchsia")]
+    pub fn output_to_stream(&self, os: &mut dyn std::io::Write);
+}

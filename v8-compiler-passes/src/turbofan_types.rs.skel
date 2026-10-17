@@ -1,0 +1,366 @@
+// 由 tool/src/compiler/turbofan-types.js 从 v8/src/compiler/turbofan-types.h + turbofan-types.cc 生成; 修订就地改, 复跑覆盖
+// TF 类型系统: 位集/范围/堆常量/元组/联合
+
+//! turbofan-types — Type: bitset (payload 偶数低位) | 指针 (TaggedKind)
+//!
+//! 原子位集 35 个 (internal 5 + low 26 + high 4),
+//! 组合位集 67 个; Any = 0xfffffffffffffffe (bit0 保留给指针判别);
+//! 原子位互不重叠且并集 == Any|1 (脚本内置断言)。
+//! TypeBase::Kind: HeapConstant, OtherNumberConstant, Tuple, Union, Range, Wasm。
+
+/// 原版 BitsetType::bitset
+pub type Bitset = u64;
+
+// —— 原子位集 (internal + low + high) ——
+/// kOtherUnsigned31 = uint64_t{1} << 1
+pub const K_OTHERUNSIGNED31: Bitset = 0x0000000000000002;
+/// kOtherUnsigned32 = uint64_t{1} << 2
+pub const K_OTHERUNSIGNED32: Bitset = 0x0000000000000004;
+/// kOtherSigned32 = uint64_t{1} << 3
+pub const K_OTHERSIGNED32: Bitset = 0x0000000000000008;
+/// kOtherNumber = uint64_t{1} << 4
+pub const K_OTHERNUMBER: Bitset = 0x0000000000000010;
+/// kOtherString = uint64_t{1} << 5
+pub const K_OTHERSTRING: Bitset = 0x0000000000000020;
+/// kNegative31 = uint64_t{1} << 6
+pub const K_NEGATIVE31: Bitset = 0x0000000000000040;
+/// kNull = uint64_t{1} << 7
+pub const K_NULL: Bitset = 0x0000000000000080;
+/// kUndefined = uint64_t{1} << 8
+pub const K_UNDEFINED: Bitset = 0x0000000000000100;
+/// kBoolean = uint64_t{1} << 9
+pub const K_BOOLEAN: Bitset = 0x0000000000000200;
+/// kUnsigned30 = uint64_t{1} << 10
+pub const K_UNSIGNED30: Bitset = 0x0000000000000400;
+/// kMinusZero = uint64_t{1} << 11
+pub const K_MINUSZERO: Bitset = 0x0000000000000800;
+/// kNaN = uint64_t{1} << 12
+pub const K_NAN: Bitset = 0x0000000000001000;
+/// kSymbol = uint64_t{1} << 13
+pub const K_SYMBOL: Bitset = 0x0000000000002000;
+/// kInternalizedString = uint64_t{1} << 14
+pub const K_INTERNALIZEDSTRING: Bitset = 0x0000000000004000;
+/// kOtherCallable = uint64_t{1} << 15
+pub const K_OTHERCALLABLE: Bitset = 0x0000000000008000;
+/// kOtherObject = uint64_t{1} << 16
+pub const K_OTHEROBJECT: Bitset = 0x0000000000010000;
+/// kOtherUndetectable = uint64_t{1} << 17
+pub const K_OTHERUNDETECTABLE: Bitset = 0x0000000000020000;
+/// kCallableProxy = uint64_t{1} << 18
+pub const K_CALLABLEPROXY: Bitset = 0x0000000000040000;
+/// kOtherProxy = uint64_t{1} << 19
+pub const K_OTHERPROXY: Bitset = 0x0000000000080000;
+/// kCallableFunction = uint64_t{1} << 20
+pub const K_CALLABLEFUNCTION: Bitset = 0x0000000000100000;
+/// kClassConstructor = uint64_t{1} << 21
+pub const K_CLASSCONSTRUCTOR: Bitset = 0x0000000000200000;
+/// kBoundFunction = uint64_t{1} << 22
+pub const K_BOUNDFUNCTION: Bitset = 0x0000000000400000;
+/// kOtherInternal = uint64_t{1} << 23
+pub const K_OTHERINTERNAL: Bitset = 0x0000000000800000;
+/// kExternalPointer = uint64_t{1} << 24
+pub const K_EXTERNALPOINTER: Bitset = 0x0000000001000000;
+/// kArray = uint64_t{1} << 25
+pub const K_ARRAY: Bitset = 0x0000000002000000;
+/// kUnsignedBigInt63 = uint64_t{1} << 26
+pub const K_UNSIGNEDBIGINT63: Bitset = 0x0000000004000000;
+/// kOtherUnsignedBigInt64 = uint64_t{1} << 27
+pub const K_OTHERUNSIGNEDBIGINT64: Bitset = 0x0000000008000000;
+/// kNegativeBigInt63 = uint64_t{1} << 28
+pub const K_NEGATIVEBIGINT63: Bitset = 0x0000000010000000;
+/// kOtherBigInt = uint64_t{1} << 29
+pub const K_OTHERBIGINT: Bitset = 0x0000000020000000;
+/// kWasmObject = uint64_t{1} << 30
+pub const K_WASMOBJECT: Bitset = 0x0000000040000000;
+/// kSandboxedPointer = uint64_t{1} << 31
+pub const K_SANDBOXEDPOINTER: Bitset = 0x0000000080000000;
+/// kMachine = uint64_t{1} << 32
+pub const K_MACHINE: Bitset = 0x0000000100000000;
+/// kHole = uint64_t{1} << 33
+pub const K_HOLE: Bitset = 0x0000000200000000;
+/// kStringWrapper = uint64_t{1} << 34
+pub const K_STRINGWRAPPER: Bitset = 0x0000000400000000;
+/// kTypedArray = uint64_t{1} << 35
+pub const K_TYPEDARRAY: Bitset = 0x0000000800000000;
+
+// —— 组合位集 ——
+/// kSigned31 = kUnsigned30 | kNegative31
+pub const K_SIGNED31: Bitset = 0x0000000000000440;
+/// kSigned32 = kSigned31 | kOtherUnsigned31 | kOtherSigned32
+pub const K_SIGNED32: Bitset = 0x000000000000044a;
+/// kSigned32OrMinusZero = kSigned32 | kMinusZero
+pub const K_SIGNED32ORMINUSZERO: Bitset = 0x0000000000000c4a;
+/// kSigned32OrMinusZeroOrNaN = kSigned32 | kMinusZero | kNaN
+pub const K_SIGNED32ORMINUSZEROORNAN: Bitset = 0x0000000000001c4a;
+/// kNegative32 = kNegative31 | kOtherSigned32
+pub const K_NEGATIVE32: Bitset = 0x0000000000000048;
+/// kUnsigned31 = kUnsigned30 | kOtherUnsigned31
+pub const K_UNSIGNED31: Bitset = 0x0000000000000402;
+/// kUnsigned32 = kUnsigned30 | kOtherUnsigned31 | kOtherUnsigned32
+pub const K_UNSIGNED32: Bitset = 0x0000000000000406;
+/// kUnsigned32OrMinusZero = kUnsigned32 | kMinusZero
+pub const K_UNSIGNED32ORMINUSZERO: Bitset = 0x0000000000000c06;
+/// kUnsigned32OrMinusZeroOrNaN = kUnsigned32 | kMinusZero | kNaN
+pub const K_UNSIGNED32ORMINUSZEROORNAN: Bitset = 0x0000000000001c06;
+/// kIntegral32 = kSigned32 | kUnsigned32
+pub const K_INTEGRAL32: Bitset = 0x000000000000044e;
+/// kIntegral32OrMinusZero = kIntegral32 | kMinusZero
+pub const K_INTEGRAL32ORMINUSZERO: Bitset = 0x0000000000000c4e;
+/// kIntegral32OrMinusZeroOrNaN = kIntegral32OrMinusZero | kNaN
+pub const K_INTEGRAL32ORMINUSZEROORNAN: Bitset = 0x0000000000001c4e;
+/// kPlainNumber = kIntegral32 | kOtherNumber
+pub const K_PLAINNUMBER: Bitset = 0x000000000000045e;
+/// kOrderedNumber = kPlainNumber | kMinusZero
+pub const K_ORDEREDNUMBER: Bitset = 0x0000000000000c5e;
+/// kMinusZeroOrNaN = kMinusZero | kNaN
+pub const K_MINUSZEROORNAN: Bitset = 0x0000000000001800;
+/// kNumber = kOrderedNumber | kNaN
+pub const K_NUMBER: Bitset = 0x0000000000001c5e;
+/// kSignedBigInt64 = kUnsignedBigInt63 | kNegativeBigInt63
+pub const K_SIGNEDBIGINT64: Bitset = 0x0000000014000000;
+/// kUnsignedBigInt64 = kUnsignedBigInt63 | kOtherUnsignedBigInt64
+pub const K_UNSIGNEDBIGINT64: Bitset = 0x000000000c000000;
+/// kBigInt = kSignedBigInt64 | kOtherUnsignedBigInt64 | kOtherBigInt
+pub const K_BIGINT: Bitset = 0x000000003c000000;
+/// kNumeric = kNumber | kBigInt
+pub const K_NUMERIC: Bitset = 0x000000003c001c5e;
+/// kString = kInternalizedString | kOtherString
+pub const K_STRING: Bitset = 0x0000000000004020;
+/// kStringOrStringWrapper = kString | kStringWrapper
+pub const K_STRINGORSTRINGWRAPPER: Bitset = 0x0000000400004020;
+/// kUniqueName = kSymbol | kInternalizedString
+pub const K_UNIQUENAME: Bitset = 0x0000000000006000;
+/// kName = kSymbol | kString
+pub const K_NAME: Bitset = 0x0000000000006020;
+/// kInternalizedStringOrNull = kInternalizedString | kNull
+pub const K_INTERNALIZEDSTRINGORNULL: Bitset = 0x0000000000004080;
+/// kBooleanOrNumber = kBoolean | kNumber
+pub const K_BOOLEANORNUMBER: Bitset = 0x0000000000001e5e;
+/// kBooleanOrNullOrNumber = kBooleanOrNumber | kNull
+pub const K_BOOLEANORNULLORNUMBER: Bitset = 0x0000000000001ede;
+/// kBooleanOrNullOrUndefined = kBoolean | kNull | kUndefined
+pub const K_BOOLEANORNULLORUNDEFINED: Bitset = 0x0000000000000380;
+/// kNullOrNumber = kNull | kNumber
+pub const K_NULLORNUMBER: Bitset = 0x0000000000001cde;
+/// kNullOrUndefined = kNull | kUndefined
+pub const K_NULLORUNDEFINED: Bitset = 0x0000000000000180;
+/// kUndetectable = kNullOrUndefined | kOtherUndetectable
+pub const K_UNDETECTABLE: Bitset = 0x0000000000020180;
+/// kNumberOrHole = kNumber | kHole
+pub const K_NUMBERORHOLE: Bitset = 0x0000000200001c5e;
+/// kNumberOrOddball = kNumber | kBooleanOrNullOrUndefined
+pub const K_NUMBERORODDBALL: Bitset = 0x0000000000001fde;
+/// kNumberOrOddballOrHole = kNumberOrOddball| kHole
+pub const K_NUMBERORODDBALLORHOLE: Bitset = 0x0000000200001fde;
+/// kNumericOrString = kNumeric | kString
+pub const K_NUMERICORSTRING: Bitset = 0x000000003c005c7e;
+/// kNumberOrUndefined = kNumber | kUndefined
+pub const K_NUMBERORUNDEFINED: Bitset = 0x0000000000001d5e;
+/// kNumberOrUndefinedOrHole = kNumberOrUndefined | kHole
+pub const K_NUMBERORUNDEFINEDORHOLE: Bitset = 0x0000000200001d5e;
+/// kPlainPrimitive = kNumber | kString | kBoolean | kNullOrUndefined
+pub const K_PLAINPRIMITIVE: Bitset = 0x0000000000005ffe;
+/// kNonBigIntPrimitive = kSymbol | kPlainPrimitive
+pub const K_NONBIGINTPRIMITIVE: Bitset = 0x0000000000007ffe;
+/// kPrimitive = kBigInt | kNonBigIntPrimitive
+pub const K_PRIMITIVE: Bitset = 0x000000003c007ffe;
+/// kOtherUndetectableOrUndefined = kOtherUndetectable | kUndefined
+pub const K_OTHERUNDETECTABLEORUNDEFINED: Bitset = 0x0000000000020100;
+/// kProxy = kCallableProxy | kOtherProxy
+pub const K_PROXY: Bitset = 0x00000000000c0000;
+/// kArrayOrOtherObject = kArray | kOtherObject
+pub const K_ARRAYOROTHEROBJECT: Bitset = 0x0000000002010000;
+/// kArrayOrProxy = kArray | kProxy
+pub const K_ARRAYORPROXY: Bitset = 0x00000000020c0000;
+/// kStringWrapperOrOtherObject = kStringWrapper | kOtherObject
+pub const K_STRINGWRAPPEROROTHEROBJECT: Bitset = 0x0000000400010000;
+/// kFunction = kCallableFunction | kClassConstructor
+pub const K_FUNCTION: Bitset = 0x0000000000300000;
+/// kDetectableCallable = kFunction | kBoundFunction | kOtherCallable | kCallableProxy
+pub const K_DETECTABLECALLABLE: Bitset = 0x0000000000748000;
+/// kCallable = kDetectableCallable | kOtherUndetectable
+pub const K_CALLABLE: Bitset = 0x0000000000768000;
+/// kNonCallable = kArray | kStringWrapper | kTypedArray | kOtherObject | kOtherProxy | kWasmObject
+pub const K_NONCALLABLE: Bitset = 0x0000000c42090000;
+/// kNonCallableOrNull = kNonCallable | kNull
+pub const K_NONCALLABLEORNULL: Bitset = 0x0000000c42090080;
+/// kDetectableObject = kArray | kFunction | kBoundFunction | kStringWrapper | kTypedArray | kOtherCallable | kOtherObject
+pub const K_DETECTABLEOBJECT: Bitset = 0x0000000c02718000;
+/// kDetectableReceiver = kDetectableObject | kProxy | kWasmObject
+pub const K_DETECTABLERECEIVER: Bitset = 0x0000000c427d8000;
+/// kDetectableReceiverOrNull = kDetectableReceiver | kNull
+pub const K_DETECTABLERECEIVERORNULL: Bitset = 0x0000000c427d8080;
+/// kObject = kDetectableObject | kOtherUndetectable
+pub const K_OBJECT: Bitset = 0x0000000c02738000;
+/// kReceiver = kObject | kProxy | kWasmObject
+pub const K_RECEIVER: Bitset = 0x0000000c427f8000;
+/// kReceiverOrUndefined = kReceiver | kUndefined
+pub const K_RECEIVERORUNDEFINED: Bitset = 0x0000000c427f8100;
+/// kReceiverOrNull = kReceiver | kNull
+pub const K_RECEIVERORNULL: Bitset = 0x0000000c427f8080;
+/// kReceiverOrNullOrUndefined = kReceiver | kNull | kUndefined
+pub const K_RECEIVERORNULLORUNDEFINED: Bitset = 0x0000000c427f8180;
+/// kSymbolOrReceiver = kSymbol | kReceiver
+pub const K_SYMBOLORRECEIVER: Bitset = 0x0000000c427fa000;
+/// kStringOrReceiver = kString | kReceiver
+pub const K_STRINGORRECEIVER: Bitset = 0x0000000c427fc020;
+/// kUnique = kBoolean | kUniqueName | kNull | kUndefined | kHole | kReceiver
+pub const K_UNIQUE: Bitset = 0x0000000e427fe380;
+/// kInternal = kHole | kExternalPointer | kSandboxedPointer | kOtherInternal
+pub const K_INTERNAL: Bitset = 0x0000000281800000;
+/// kNonInternal = kPrimitive | kReceiver
+pub const K_NONINTERNAL: Bitset = 0x0000000c7e7ffffe;
+/// kNonBigInt = kNonBigIntPrimitive | kReceiver
+pub const K_NONBIGINT: Bitset = 0x0000000c427ffffe;
+/// kNonNumber = kBigInt | kUnique | kString | kInternal
+pub const K_NONNUMBER: Bitset = 0x0000000effffe3a0;
+/// kStringOrOddball = kString | kBooleanOrNullOrUndefined
+pub const K_STRINGORODDBALL: Bitset = 0x00000000000043a0;
+/// kAny = uint64_t{0xfffffffffffffffe}
+pub const K_ANY: Bitset = 0xfffffffffffffffe;
+
+/// 原版 TypeBase::Kind — 非位集类型的判别
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TypeKind {
+  /// kHeapConstant
+  HeapConstant,
+  /// kOtherNumberConstant
+  OtherNumberConstant,
+  /// kTuple
+  Tuple,
+  /// kUnion
+  Union,
+  /// kRange
+  Range,
+  /// kWasm
+  Wasm,
+}
+
+/// 原版 RangeType::Limits — [min, max] 闭区间
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Limits {
+  /// min
+  pub min: f64,
+  /// max
+  pub max: f64,
+}
+
+impl Limits {
+  /// 原版 IsEmpty — min > max
+  /// v8: src/compiler/turbofan-types.cc RangeType::Limits::IsEmpty
+  pub fn is_empty(&self) -> bool {
+    self.min > self.max
+  }
+
+  /// 原版 Empty — Limits(1, 0)
+  /// v8: src/compiler/turbofan-types.h RangeType::Limits::Empty
+  pub const EMPTY: Self = Self { min: 1.0, max: 0.0 };
+
+  /// 原版 Intersect
+  /// v8: src/compiler/turbofan-types.cc RangeType::Limits::Intersect
+  pub fn intersect(lhs: Self, rhs: Self) -> Self {
+    todo!("v8: src/compiler/turbofan-types.cc RangeType::Limits::Intersect")
+  }
+
+  /// 原版 Union
+  /// v8: src/compiler/turbofan-types.cc RangeType::Limits::Union
+  pub fn union(lhs: Self, rhs: Self) -> Self {
+    todo!("v8: src/compiler/turbofan-types.cc RangeType::Limits::Union")
+  }
+}
+
+/// 原版 BitsetType — 位集代数
+pub struct BitsetType;
+
+impl BitsetType {
+  /// 原版 IsNone / Is — bits ⊆ bits2
+  /// v8: src/compiler/turbofan-types.h BitsetType::Is
+  pub fn is(bits1: Bitset, bits2: Bitset) -> bool {
+    bits1 | bits2 == bits2
+  }
+
+  /// 原版 SignedSmall / UnsignedSmall (依指针压缩配置)
+  /// v8: src/compiler/turbofan-types.cc BitsetType::SignedSmall
+  pub fn signed_small() -> Bitset {
+    todo!("v8: src/compiler/turbofan-types.cc BitsetType::SignedSmall")
+  }
+
+  /// 原版 Lub(double)/Lub(min,max) — 数值的位集上界
+  /// v8: src/compiler/turbofan-types.cc BitsetType::Lub
+  pub fn lub_range(min: f64, max: f64) -> Bitset {
+    todo!("v8: src/compiler/turbofan-types.cc BitsetType::Lub")
+  }
+
+  /// 原版 ExpandInternals — 内部位外化
+  /// v8: src/compiler/turbofan-types.cc BitsetType::ExpandInternals
+  pub fn expand_internals(bits: Bitset) -> Bitset {
+    todo!("v8: src/compiler/turbofan-types.cc BitsetType::ExpandInternals")
+  }
+
+  /// 原版 Min / Max — 位集的数值边界 (Glb 辅助)
+  /// v8: src/compiler/turbofan-types.cc BitsetType::Min
+  pub fn min(bits: Bitset) -> f64 {
+    todo!("v8: src/compiler/turbofan-types.cc BitsetType::Min")
+  }
+}
+
+/// 原版 Type — 类型值 (payload = 位集偶数低位 | 指针)
+pub struct Type {
+  /// payload_
+  pub payload: u64,
+}
+
+impl Type {
+  /// 原版 NewBitset
+  /// v8: src/compiler/turbofan-types.h Type::NewBitset
+  pub const fn new_bitset(bits: Bitset) -> Self {
+    Self { payload: bits }
+  }
+
+  /// 原版 IsBitset — payload & 1
+  /// v8: src/compiler/turbofan-types.h Type::IsBitset
+  pub fn is_bitset(&self) -> bool {
+    self.payload & 1 != 0
+  }
+
+  /// 原版 IsNone / IsAny / IsInvalid / Equals / Maybe
+  /// v8: src/compiler/turbofan-types.h Type::Is
+  pub fn is(&self, that: Type) -> bool {
+    todo!("v8: src/compiler/turbofan-types.cc Type::SlowIs (含位集快路径)")
+  }
+
+  /// 原版 Union
+  /// v8: src/compiler/turbofan-types.cc Type::Union
+  pub fn union(t1: Type, t2: Type, zone: &Zone<'_>) -> Type {
+    todo!("v8: src/compiler/turbofan-types.cc Type::Union")
+  }
+
+  /// 原版 Intersect
+  /// v8: src/compiler/turbofan-types.cc Type::Intersect
+  pub fn intersect(t1: Type, t2: Type, zone: &Zone<'_>) -> Type {
+    todo!("v8: src/compiler/turbofan-types.cc Type::Intersect")
+  }
+
+  /// 原版 Constant — 堆常量类型
+  /// v8: src/compiler/turbofan-types.cc Type::Constant
+  pub fn constant(broker: &JSHeapBroker, value: Handle<Object>, zone: &Zone<'_>) -> Type {
+    todo!("v8: src/compiler/turbofan-types.cc Type::Constant")
+  }
+
+  /// 原版 Range — 区间类型
+  /// v8: src/compiler/turbofan-types.cc Type::Range
+  pub fn range(min: f64, max: f64, zone: &Zone<'_>) -> Type {
+    todo!("v8: src/compiler/turbofan-types.cc Type::Range")
+  }
+
+  /// 原版 Min / Max / GetRange / NumConstants
+  /// v8: src/compiler/turbofan-types.cc Type::Min
+  pub fn min(&self) -> f64 {
+    todo!("v8: src/compiler/turbofan-types.cc Type::Min")
+  }
+
+  /// v8: src/compiler/turbofan-types.cc Type::NumConstants
+  pub fn num_constants(&self) -> i32 {
+    todo!("v8: src/compiler/turbofan-types.cc Type::NumConstants")
+  }
+}

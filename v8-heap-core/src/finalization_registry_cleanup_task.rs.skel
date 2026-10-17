@@ -1,0 +1,28 @@
+// 由 tool/src/heap/finalization-registry-cleanup-task.h.js 从 v8/src/heap/finalization-registry-cleanup-task.{h,cc} 生成; 修订就地改, 复跑覆盖
+// FinalizationRegistry 脏表清理任务骨架
+
+/// 清理任务 (对应 class FinalizationRegistryCleanupTask : public CancelableTask)。
+/// GC 发现脏 FinalizationRegistry 链非空时调度; RunInternal 处理一个注册表,
+/// 若仍有脏表则再排一个清理任务。
+/// v8: src/heap/finalization-registry-cleanup-task.h FinalizationRegistryCleanupTask
+pub struct FinalizationRegistryCleanupTaskSkeleton {
+  /// 对应 Heap* heap_
+  pub heap: *mut (),
+}
+
+impl FinalizationRegistryCleanupTaskSkeleton {
+  /// 对应 RunInternal: 先 SlowAssertNoActiveJavaScript, 再清理一个脏注册表,
+  /// 剩余脏表时 post 新任务
+  /// v8: src/heap/finalization-registry-cleanup-task.cc RunInternal
+  pub fn run_internal(&mut self) {
+    self.slow_assert_no_active_javascript();
+    unimplemented!("骨架: dirty_js_finalization_registries 处理待 weak-refs 对象族就位");
+  }
+
+  /// 对应 SlowAssertNoActiveJavaScript (仅 ENABLE_SLOW_DCHECKS 生效):
+  /// 遍历所有线程栈帧断言无 JS 帧在跑
+  /// v8: src/heap/finalization-registry-cleanup-task.cc SlowAssertNoActiveJavaScript
+  pub fn slow_assert_no_active_javascript(&self) {
+    // 骨架: ThreadVisitor + StackFrameIterator 断言 it.frame()->is_javascript() 全假
+  }
+}

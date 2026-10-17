@@ -1,0 +1,42 @@
+// 由 tool/src/objects/trusted-pointer.h.js 从 v8/src/objects/trusted-pointer.h 生成; 修订就地改, 复跑覆盖
+// trusted.rs 差集骨架 (trusted-pointer.h 部分), 合并后就地修订
+
+//! 差集骨架: TrustedPointerField / TrustedPointerMember / tag→type 映射
+
+// X-macro TRUSTED_POINTER_TAG_TO_TYPE_MAP 机械展开 (14 项, 顺序与原文一致):
+pub const TRUSTED_POINTER_TAG_TO_TYPE: &[(&str, &str)] = &[
+  ("kCodeIndirectPointerTag", "Code"),
+  ("kBytecodeArrayIndirectPointerTag", "BytecodeArray"),
+  ("kInterpreterDataIndirectPointerTag", "InterpreterData"),
+  ("kUncompiledDataIndirectPointerTag", "UncompiledData"),
+  ("kRegExpDataIndirectPointerTag", "RegExpData"),
+  ("kWasmDispatchTableIndirectPointerTag", "WasmDispatchTable"),
+  ("kSharedWasmDispatchTableIndirectPointerTag", "WasmDispatchTable"),
+  ("kWasmTrustedInstanceDataIndirectPointerTag", "WasmTrustedInstanceData"),
+  ("kSharedWasmTrustedInstanceDataIndirectPointerTag", "WasmTrustedInstanceData"),
+  ("kWasmInternalFunctionIndirectPointerTag", "WasmInternalFunction"),
+  ("kWasmSuspenderIndirectPointerTag", "WasmSuspenderObject"),
+  ("kWasmFunctionDataIndirectPointerTagRange", "WasmFunctionData"),
+  ("kWasmExportedFunctionDataIndirectPointerTag", "WasmExportedFunctionData"),
+  ("kWasmCapiFunctionDataIndirectPointerTag", "WasmCapiFunctionData"),
+];
+
+pub struct TrustedPointerField; // AllStatic
+impl TrustedPointerField {
+  pub fn read_trusted_pointer_field<T, const TAG_RANGE: IndirectPointerTagRange>(...); // x2 (默认 acquire)
+  pub fn read_maybe_empty_trusted_pointer_field<T, const TAG_RANGE: IndirectPointerTagRange>(...);
+  pub fn write_trusted_pointer_field<const TAG_RANGE: IndirectPointerTagRange>(...);
+  pub fn is_trusted_pointer_field_empty(host, offset) -> bool;
+  pub fn is_trusted_pointer_field_unpublished<const TAG_RANGE>(...);
+  pub fn clear_trusted_pointer_field(host, offset); // + ReleaseStoreTag 重载
+}
+
+#[repr(C)]
+pub struct TrustedPointerMember<T, const K_TAG_RANGE: IndirectPointerTagRange> {
+  handle: AtomicU32, // 初值 kNullIndirectPointerHandle; 非 sandbox 构建为 TaggedMember<T> (登记差异)
+  _ty: PhantomData<T>,
+}
+// 方法全集 (load/load_maybe_empty/store/store_no_write_barrier/acquire_load/
+// acquire_load_maybe_empty/release_store/release_store_no_write_barrier/is_empty/
+// is_unpublished/clear/storage_address) + 4 AllocationWitness ctor (推迟登记)
+// CodePointerMember = TrustedPointerMember<Code, {CODE}> — Code 属 codegen crate, 别名推迟

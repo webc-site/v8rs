@@ -1,0 +1,59 @@
+// 由 tool/src/compiler/turboshaft/memory-optimization-reducer.h.js 从 v8/src/compiler/turboshaft/memory-optimization-reducer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 内存优化: 折叠分配与写屏障消除
+
+/// 原版 MemoryAnalyzer::AllocationFolding — 分配折叠开关
+/// v8: src/compiler/turboshaft/memory-optimization-reducer.h MemoryAnalyzer::AllocationFolding
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AllocationFolding {
+  DoAllocationFolding,
+  DontAllocationFolding,
+}
+
+/// 原版 MemoryAnalyzer::BlockState — 每块折叠状态
+/// v8: src/compiler/turboshaft/memory-optimization-reducer.h MemoryAnalyzer::BlockState
+pub struct BlockState {
+  /// last_allocation: 该块内最近一次 young 分配
+  pub last_allocation: Option<&'static crate::AllocateOp>,
+  /// reserved_size: 折叠预留字节数
+  pub reserved_size: Option<u32>,
+}
+
+/// 原版 MemoryAnalyzer — 输入图分析面
+/// v8: src/compiler/turboshaft/memory-optimization-reducer.{h,cc} MemoryAnalyzer
+pub struct MemoryAnalyzer {
+  /// 分配折叠状态表: FixedBlockSidetable<Option<BlockState>>
+  pub block_states: Vec<Option<BlockState>>,
+  /// folded_into: AllocateOp -> 折叠进的 AllocateOp
+  pub folded_into: HashMap<AllocKey, AllocKey>,
+  /// skipped_write_barriers: 可省写屏障的 store 集
+  pub skipped_write_barriers: HashSet<OpIndex>,
+  /// reserved_size: 每次分配的折叠预留
+  pub reserved_size: HashMap<AllocKey, u32>,
+  /// allocation_folding: 由 compilation info 的 allocation_folding() 决定
+  pub allocation_folding: AllocationFolding,
+  pub is_wasm: bool,
+}
+
+impl MemoryAnalyzer {
+  /// 分析主循环 (cc): Process / ProcessBlockTerminator 分派
+  pub fn run(&mut self) { /* v8: cc MemoryAnalyzer::Run */ }
+  /// v8: cc MemoryAnalyzer::Process — 单 op 分派
+  pub fn process(&mut self, op: &Operation) { /* ... */ }
+  /// v8: cc MemoryAnalyzer::ProcessBlockTerminator — MergeCurrentStateIntoSuccessor
+  pub fn process_block_terminator(&mut self, op: &Operation) { /* ... */ }
+  /// v8: cc MemoryAnalyzer::ProcessAllocation — 建折叠链
+  pub fn process_allocation(&mut self, alloc: &AllocateOp) { /* ... */ }
+  /// v8: cc MemoryAnalyzer::ProcessStore — 判定写屏障可省
+  pub fn process_store(&mut self, store: &StoreOp) { /* ... */ }
+  /// v8: cc MemoryAnalyzer::MergeCurrentStateIntoSuccessor — 状态合并
+  pub fn merge_current_state_into_successor(&mut self, succ: &Block) { /* ... */ }
+}
+
+/// 原版 reducer 面 (输出图改写):
+/// - REDUCE(Allocate)
+/// - REDUCE(LoadExternalPointer)
+/// - REDUCE(MajorGCForCompilerTesting)
+/// - Allocate: young 且常量 size <= kMaxRegularHeapObjectSize 走折叠/快速路径
+/// - LoadExternalPointer: sandbox 指针表解码
+/// - MajorGCForCompilerTesting: 编译期触发 GC (调 runtime)
+/// v8: src/compiler/turboshaft/memory-optimization-reducer.h MemoryOptimizationReducer

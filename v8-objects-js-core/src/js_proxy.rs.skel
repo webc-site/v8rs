@@ -1,0 +1,33 @@
+// 由 tool/src/objects/js-proxy.h.js 从 v8/src/objects/js-proxy.h + js-proxy-inl.h + js-proxy.tq 生成; 修订就地改, 复跑覆盖
+// JSProxy 槽位/位标志/revocable shape 差集骨架
+
+//! JSProxy: target/handler/flags; target_ 偏移与 JSObject::elements_ 别名 (static_assert)。
+
+/// v8: src/objects/js-proxy.h JSProxy::target_
+pub const K_TARGET_OFFSET: usize = 16;
+/// v8: src/objects/js-proxy.h JSProxy::handler_
+pub const K_HANDLER_OFFSET: usize = 24;
+/// v8: src/objects/js-proxy.h JSProxy::flags_ (int32; 8B 布局下后随 padding_)
+pub const K_FLAGS_OFFSET: usize = 32;
+/// v8: src/objects/js-proxy.h JSProxy::kHeaderSize
+pub const K_HEADER_SIZE_64: usize = 40;
+
+/// v8: src/objects/js-proxy.h JSProxy::IsRevocableBit (bit 0)
+pub const K_IS_REVOCABLE_SHIFT: u32 = 0;
+pub const K_IS_REVOCABLE_MASK: u32 = 1;
+/// v8: src/objects/js-proxy.h JSProxy::kMaxIterationLimit
+pub const K_MAX_ITERATION_LIMIT: i32 = 100 * 1024;
+
+// JSProxyRevocableResult (shape, 无自有存储; 字段住 JSObject in-object 槽):
+/// v8: src/objects/js-proxy.h JSProxyRevocableResult::kProxyOffset
+pub const K_PROXY_OFFSET: usize = 24; // JSObject::kHeaderSize + 0*kTaggedSize
+/// v8: src/objects/js-proxy.h JSProxyRevocableResult::kRevokeOffset
+pub const K_REVOKE_OFFSET: usize = 32;
+/// v8: src/objects/js-proxy.h JSProxyRevocableResult::kSize
+pub const K_REVOCABLE_RESULT_SIZE: usize = 40;
+
+// trap 方法映射 (15 个 ES6 9.5.x 操作 + New/Revoke/GetPropertyAttributes, 全推迟到 trap 执行层):
+//   GetPrototype/SetPrototype/IsExtensible/IsArray/PreventExtensions/GetOwnPropertyDescriptor/
+//   DefineOwnProperty/HasProperty/GetProperty/SetProperty/DeletePropertyOrElement/
+//   CheckHasTrap/CheckDeleteTrap/CheckGetSetTrapResult/SetPrivateSymbol
+// inl 语义: is_revocable = (flags >> 0) & 1; IsRevoked = !IsJSReceiver(handler)

@@ -1,0 +1,22 @@
+// 由 tool/src/objects/js-collection.h.js 从 v8/src/objects/js-collection.{h,-inl.h,tq} 生成; 修订就地改, 复跑覆盖
+// JSCollection/JSWeakCollection 族布局与迭代器类全集
+
+//! 差集骨架: JSCollection (Set/Map) + JSWeakCollection (WeakSet/WeakMap) + 5 个具体迭代器视图。
+//! 配置: 64 位非压缩 (kTaggedSize=8)。哈希表语义 (Rehash/Clear/Set/Delete) 留 Developer。
+
+/// v8: src/objects/js-collection.h JSCollection: table_ offset=24
+pub const K_JS_COLLECTION_HEADER_SIZE: usize = 32;
+/// v8: src/objects/js-collection.h JSWeakCollection: table_ offset=24
+pub const K_JS_WEAK_COLLECTION_HEADER_SIZE: usize = 32;
+/// v8: src/objects/js-collection.h kAddFunctionDescriptorIndex (JSCollection 与 JSWeakCollection 各一处)
+pub const K_ADD_FUNCTION_DESCRIPTOR_INDEX: i32 = 3;
+
+/// v8: src/objects/js-collection-inl.h JSCollection::table / set_table
+/// v8: src/objects/js-collection-inl.h JSMapIterator::CurrentValue — table->ValueAt(InternalIndex(Smi::ToInt(index())))
+pub struct JSCollection { /* table_: Tagged<Object> */ }
+
+/// v8: src/objects/js-collection.h JSSet::Initialize/Clear/Rehash; JSMap::Initialize/Clear/Rehash
+/// v8: src/objects/js-collection.h JSWeakCollection::Initialize/Set/Delete/GetEntries
+/// v8: src/objects/js-collection.tq transient 视图: JSSetWithNoCustomIteration / JSMapWithNoCustomIteration / StableOrderedHashSet / StableOrderedHashMap
+/// v8: src/objects/js-collection.h 迭代器 5 视图 (Map{Key,KeyValue,Value}Iterator / Set{KeyValue,Value}Iterator)
+///   布局归 js-collection-iterator 席 (table_+index_ 两字段)

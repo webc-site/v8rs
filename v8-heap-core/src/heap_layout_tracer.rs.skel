@@ -1,0 +1,59 @@
+// 由 tool/src/heap/heap-layout-tracer.h.js 从 v8/src/heap/heap-layout-tracer.{h,cc} 生成; 修订就地改, 复跑覆盖
+// 堆布局打印: GCType→收集器名表与回调台账
+
+/// 对应 TypeToCollectorName 的 GCType 枚举 (include/v8-callbacks.h, 此处按
+/// switch 臂重建)。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GCType {
+  SCAVENGE,
+  MARK_SWEEP_COMPACT,
+  MINOR_MARK_SWEEP,
+}
+
+/// GCType → 收集器名 (对应 constexpr TypeToCollectorName, 未知 → "Unknown collector")。
+/// v8: src/heap/heap-layout-tracer.cc TypeToCollectorName
+#[must_use]
+pub fn type_to_collector_name(gc_type: GCType) -> &'static str {
+  match gc_type {
+    GCType::SCAVENGE => "Scavenger",
+    GCType::MARK_SWEEP_COMPACT => "Mark-Compact",
+    GCType::MINOR_MARK_SWEEP => "Minor Mark-Sweep",
+  }
+}
+
+/// 堆布局打印器 (对应 class HeapLayoutTracer : AllStatic)。
+/// v8: src/heap/heap-layout-tracer.h HeapLayoutTracer
+pub struct HeapLayoutTracer;
+
+impl HeapLayoutTracer {
+  /// 对应 GCProloguePrintHeapLayout (gc 回调签名)
+  /// v8: src/heap/heap-layout-tracer.cc GCProloguePrintHeapLayout
+  pub fn gc_prologue_print_heap_layout(_isolate: (), _gc_type: GCType, _flags: ()) {
+    unimplemented!("骨架: PrintHeapLayout 待空间迭代就位");
+  }
+
+  /// 对应 GCEpiloguePrintHeapLayout
+  /// v8: src/heap/heap-layout-tracer.cc GCEpiloguePrintHeapLayout
+  pub fn gc_epilogue_print_heap_layout(_isolate: (), _gc_type: GCType, _flags: ()) {
+    unimplemented!("骨架: PrintHeapLayout 待空间迭代就位");
+  }
+
+  /// 对应 PrintMemoryChunk(os, chunk, owner_name)
+  /// v8: src/heap/heap-layout-tracer.cc PrintMemoryChunk
+  pub fn print_memory_chunk(_os: &mut String, _chunk: (), _owner_name: &str) {
+    unimplemented!("骨架: BasePage 遍历待页族就位");
+  }
+
+  /// 对应 PrintHeapLayout(os, heap)
+  /// v8: src/heap/heap-layout-tracer.cc PrintHeapLayout
+  pub fn print_heap_layout(_os: &mut String, _heap: ()) {
+    unimplemented!("骨架: heap->space() 迭代待堆族就位");
+  }
+}
+
+// —— 提取不变式断言 ——
+const _: () = {
+  assert_eq!(type_to_collector_name(GCType::SCAVENGE), "Scavenger");
+  assert_eq!(type_to_collector_name(GCType::MARK_SWEEP_COMPACT), "Mark-Compact");
+  assert_eq!(type_to_collector_name(GCType::MINOR_MARK_SWEEP), "Minor Mark-Sweep");
+};
